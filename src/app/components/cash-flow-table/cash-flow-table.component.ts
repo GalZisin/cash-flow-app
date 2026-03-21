@@ -5,6 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { MatMenuModule } from '@angular/material/menu';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { registerLocaleData } from '@angular/common';
 import localeHe from '@angular/common/locales/he';
@@ -25,7 +26,7 @@ export interface MonthlyCashFlow {
 
 @Component({
   selector: 'app-cash-flow-table',
-  imports: [CommonModule, ReactiveFormsModule, MatTableModule, MatButtonModule, MatIconModule, MatInputModule, MatSnackBarModule],
+  imports: [CommonModule, ReactiveFormsModule, MatTableModule, MatButtonModule, MatIconModule, MatInputModule, MatSnackBarModule, MatMenuModule],
   providers: [{ provide: DatePipe, useFactory: () => new DatePipe('he') }, DecimalPipe],
   templateUrl: './cash-flow-table.component.html',
   styleUrl: './cash-flow-table.component.scss'
@@ -33,7 +34,9 @@ export interface MonthlyCashFlow {
 export class CashFlowTableComponent implements OnInit {
   cashFlowForm!: FormGroup;
   dataSource: any[] = [];
+  activeRowCtrl: any = null;
   displayedColumns = [
+    'rowActions',
     'month',
     'startingBalance',
     'income',
@@ -42,6 +45,12 @@ export class CashFlowTableComponent implements OnInit {
     'regularExpenses',
     'specialExpenses',
     'endingBalance',
+  ];
+
+  readonly ROW_COLORS = [
+    { label: 'אדום', value: '#fee2e2', icon: '🔴' },
+    { label: 'צהוב', value: '#fef9c3', icon: '🟡' },
+    { label: 'ירוק', value: '#dcfce7', icon: '🟢' },
   ];
 
   constructor(private fb: FormBuilder, private datePipe: DatePipe, private cashFlowService: CashFlowService, private snackBar: MatSnackBar, private cdr: ChangeDetectorRef) { }
@@ -91,6 +100,7 @@ export class CashFlowTableComponent implements OnInit {
             )
           );
 
+          if (m.rowColor) monthGroup.get('rowColor')?.setValue(m.rowColor, { emitEvent: false });
           this.months.push(monthGroup, { emitEvent: false });
         });
       } else {
@@ -118,7 +128,8 @@ export class CashFlowTableComponent implements OnInit {
       specialExpenses: this.fb.array([]),
       endingBalance: [startingBalance],
       expanded: [false],
-      expandedSpecial: [false]
+      expandedSpecial: [false],
+      rowColor: [null]
     });
   }
 
@@ -234,11 +245,20 @@ export class CashFlowTableComponent implements OnInit {
         regularExpenses: ctrl.get('regularExpenses')?.value,
         specialExpenses: ctrl.get('specialExpenses')?.value,
         endingBalance: ctrl.get('endingBalance')?.value,
+        rowColor: ctrl.get('rowColor')?.value,
       }))
     };
     this.cashFlowService.save(data).subscribe({
       next: () => this.snackBar.open('הנתונים נשמרו בהצלחה ✅', '', { duration: 3000, panelClass: 'snack-success' })
     });
+  }
+
+  setRowColor(monthCtrl: any, color: string | null) {
+    const current = monthCtrl.get('rowColor')?.value;
+    const next = current === color ? null : color;
+    monthCtrl.get('rowColor')?.setValue(next);
+    this.refreshDataSource();
+    this.cdr.detectChanges();
   }
 
   exportPdf() {

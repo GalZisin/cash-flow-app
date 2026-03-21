@@ -42,13 +42,13 @@ body {
 }
 
 .mat-mdc-row {
-    background-color: #f9f9f9 !important; // רקע עדין לשורות
+    background-color: #f9f9f9; // רקע עדין לשורות
     transition: background 0.2s ease-in-out !important;
     cursor: default !important;
 }
 
 .mat-mdc-row:hover {
-    background-color: #e3f2fd !important; // hover כחול בהיר
+    background-color: #e3f2fd; // hover כחול בהיר
 }
 
 .mat-mdc-cell {
@@ -113,4 +113,58 @@ body {
     background-color: #2e7d32 !important;
     color: #fff !important;
     font-family: 'Heebo', sans-serif !important;
+}
+
+/* ---------- Row Color Menu ---------- */
+.mat-mdc-menu-panel.color-menu {
+    min-width: 140px !important;
+    border-radius: 12px !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12) !important;
+    font-family: 'Heebo', sans-serif !important;
+    direction: rtl;
+}
+
+.mat-mdc-menu-panel.color-menu .mat-mdc-menu-item.color-menu-item {
+    font-family: 'Heebo', sans-serif !important;
+    font-size: 13px !important;
+    height: 40px !important;
+    min-height: 40px !important;
+    padding: 0 14px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    direction: rtl;
+}
+
+.mat-mdc-menu-panel.color-menu .mat-mdc-menu-item.color-menu-item .mat-mdc-menu-item-text {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    width: 100% !important;
+    font-family: 'Heebo', sans-serif !important;
+    font-size: 13px !important;
+}
+
+.mat-mdc-menu-panel.color-menu .color-swatch {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 2px solid rgba(0, 0, 0, 0.1);
+    flex-shrink: 0;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+    display: inline-block;
+
+    &.active {
+        border-color: #4f46e5 !important;
+        box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.3) !important;
+    }
+}
+
+.mat-mdc-menu-panel.color-menu .check-icon {
+    font-size: 16px !important;
+    width: 16px !important;
+    height: 16px !important;
+    color: #4f46e5 !important;
+    margin-right: auto;
+    margin-left: 0;
 }

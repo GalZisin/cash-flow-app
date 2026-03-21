@@ -9,6 +9,17 @@
   <div class="table-container">
   <table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
 
+    <!-- Row Color Actions -->
+    <ng-container matColumnDef="rowActions">
+      <th mat-header-cell *matHeaderCellDef></th>
+      <td mat-cell *matCellDef="let monthCtrl" class="row-actions-cell no-print">
+        <button mat-icon-button [matMenuTriggerFor]="colorMenu"
+          (click)="activeRowCtrl = monthCtrl" class="dots-btn">
+          <mat-icon>more_vert</mat-icon>
+        </button>
+      </td>
+    </ng-container>
+
     <!-- Month Column -->
     <ng-container matColumnDef="month">
       <th mat-header-cell *matHeaderCellDef> חודש </th>
@@ -121,7 +132,21 @@
     </ng-container>
 
     <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
-    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+      [style]="row.get('rowColor')?.value ? 'background: ' + row.get('rowColor')?.value + ' !important' : ''"></tr>
   </table>
   </div>
 </div>
+
+<mat-menu #colorMenu="matMenu" class="color-menu">
+  <button mat-menu-item *ngFor="let c of ROW_COLORS" (click)="setRowColor(activeRowCtrl, c.value)" class="color-menu-item">
+    <span class="color-swatch" [style.background]="c.value"
+      [class.active]="activeRowCtrl?.get('rowColor')?.value === c.value"></span>
+    <span>{{ c.label }}</span>
+    <mat-icon *ngIf="activeRowCtrl?.get('rowColor')?.value === c.value" class="check-icon">check</mat-icon>
+  </button>
+  <button mat-menu-item (click)="setRowColor(activeRowCtrl, null)" *ngIf="activeRowCtrl?.get('rowColor')?.value">
+    <mat-icon>format_color_reset</mat-icon>
+    <span>נקה צבע</span>
+  </button>
+</mat-menu>

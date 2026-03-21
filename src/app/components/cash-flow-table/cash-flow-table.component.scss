@@ -131,6 +131,26 @@ $white: #ffffff;
   }
 }
 
+// Row color actions
+.row-actions-cell {
+  padding: 0 4px !important;
+  width: 36px;
+  min-width: 36px;
+}
+
+.dots-btn {
+  opacity: 0.3;
+  transition: opacity 0.2s;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+.mat-mdc-row:hover .dots-btn {
+  opacity: 0.8;
+}
+
 // הוצאות שוטפות expand
 .expense-row {
   display: flex;
