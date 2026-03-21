@@ -1,0 +1,209 @@
+{
+  "months": [
+    {
+      "month": "2026-02-28T22:00:00.000Z",
+      "startingBalance": 12535,
+      "income": 18300,
+      "mortgagePayment": 6000,
+      "loanPayment": 1135,
+      "regularExpenses": [
+        {
+          "description": "שוטף",
+          "amount": 3781
+        }
+      ],
+      "specialExpenses": [
+        {
+          "description": "יועץ",
+          "amount": 1500
+        },
+        {
+          "description": "ביטוח רכב",
+          "amount": 967
+        },
+        {
+          "description": "תרומה",
+          "amount": 100
+        }
+      ],
+      "endingBalance": 17352
+    },
+    {
+      "month": "2026-03-31T21:00:00.000Z",
+      "startingBalance": 17352,
+      "income": 19000,
+      "mortgagePayment": 5100,
+      "loanPayment": 1135,
+      "regularExpenses": [
+        {
+          "description": "שוטף",
+          "amount": 2000
+        }
+      ],
+      "specialExpenses": [
+        {
+          "description": "לידה ",
+          "amount": 1000
+        },
+        {
+          "description": "ביטוח רכב",
+          "amount": 967
+        }
+      ],
+      "endingBalance": 26150
+    },
+    {
+      "month": "2026-04-30T21:00:00.000Z",
+      "startingBalance": 26150,
+      "income": 24808,
+      "mortgagePayment": 5100,
+      "loanPayment": 1135,
+      "regularExpenses": [
+        {
+          "description": "שוטף",
+          "amount": 2000
+        }
+      ],
+      "specialExpenses": [
+        {
+          "description": "ביטוח רכב",
+          "amount": 967
+        },
+        {
+          "description": "טיפול רכב",
+          "amount": 800
+        },
+        {
+          "description": "רישוי רכב",
+          "amount": 1000
+        }
+      ],
+      "endingBalance": 39956
+    },
+    {
+      "month": "2026-05-31T21:00:00.000Z",
+      "startingBalance": 39956,
+      "income": 19000,
+      "mortgagePayment": 5100,
+      "loanPayment": 1135,
+      "regularExpenses": [
+        {
+          "description": "שוטף",
+          "amount": 2000
+        }
+      ],
+      "specialExpenses": [
+        {
+          "description": "טסט רכב",
+          "amount": 250
+        }
+      ],
+      "endingBalance": 50471
+    },
+    {
+      "month": "2026-06-30T21:00:00.000Z",
+      "startingBalance": 50471,
+      "income": 19000,
+      "mortgagePayment": 5100,
+      "loanPayment": 1135,
+      "regularExpenses": [
+        {
+          "description": "שוטף",
+          "amount": 2000
+        }
+      ],
+      "specialExpenses": [],
+      "endingBalance": 61236
+    },
+    {
+      "month": "2026-07-31T21:00:00.000Z",
+      "startingBalance": 61236,
+      "income": 19000,
+      "mortgagePayment": 5100,
+      "loanPayment": 1135,
+      "regularExpenses": [
+        {
+          "description": "שוטף",
+          "amount": 2000
+        }
+      ],
+      "specialExpenses": [],
+      "endingBalance": 72001
+    },
+    {
+      "month": "2026-08-31T21:00:00.000Z",
+      "startingBalance": 72001,
+      "income": 19000,
+      "mortgagePayment": 5100,
+      "loanPayment": 1135,
+      "regularExpenses": [
+        {
+          "description": "שוטף",
+          "amount": 2000
+        }
+      ],
+      "specialExpenses": [],
+      "endingBalance": 82766
+    },
+    {
+      "month": "2026-09-30T21:00:00.000Z",
+      "startingBalance": 82766,
+      "income": 19000,
+      "mortgagePayment": 5100,
+      "loanPayment": 1135,
+      "regularExpenses": [
+        {
+          "description": "שוטף",
+          "amount": 2000
+        }
+      ],
+      "specialExpenses": [],
+      "endingBalance": 93531
+    },
+    {
+      "month": "2026-10-31T22:00:00.000Z",
+      "startingBalance": 93531,
+      "income": 19000,
+      "mortgagePayment": 5100,
+      "loanPayment": 1135,
+      "regularExpenses": [
+        {
+          "description": "שוטף",
+          "amount": 2000
+        }
+      ],
+      "specialExpenses": [],
+      "endingBalance": 104296
+    },
+    {
+      "month": "2026-11-30T22:00:00.000Z",
+      "startingBalance": 104296,
+      "income": 19000,
+      "mortgagePayment": 5100,
+      "loanPayment": 1135,
+      "regularExpenses": [
+        {
+          "description": "שוטף",
+          "amount": 2000
+        }
+      ],
+      "specialExpenses": [
+        {
+          "description": "פרעון הלוואה",
+          "amount": 92000
+        }
+      ],
+      "endingBalance": 23061
+    },
+    {
+      "month": "2026-12-31T22:00:00.000Z",
+      "startingBalance": 23061,
+      "income": 0,
+      "mortgagePayment": 0,
+      "loanPayment": 0,
+      "regularExpenses": [],
+      "specialExpenses": [],
+      "endingBalance": 23061
+    }
+  ]
+}

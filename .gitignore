@@ -11,6 +11,12 @@
 npm-debug.log
 yarn-error.log
 
+# ignore server dependencies
+server/node_modules/
+dist/
+.angular/
+.env
+
 # IDEs and editors
 .idea/
 .project

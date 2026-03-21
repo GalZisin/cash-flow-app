@@ -1,0 +1,233 @@
+@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700&display=swap');
+
+$primary: #4f46e5;
+$primary-light: #eef2ff;
+$accent: #06b6d4;
+$danger: #ef4444;
+$success: #10b981;
+$text: #1e293b;
+$text-muted: #64748b;
+$border: #e2e8f0;
+$bg: #f8fafc;
+$white: #ffffff;
+
+:host {
+  font-family: 'Heebo', sans-serif;
+  direction: rtl;
+  display: block;
+  height: 100%;
+}
+
+.cash-flow-table {
+  padding: 24px;
+  padding-bottom: 0;
+  background: $bg;
+
+  .table-container {
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: calc(100vh - 120px);
+    padding-bottom: 50px;
+
+    .mat-mdc-table {
+      min-width: 900px;
+    }
+
+  }
+
+  .actions {
+    flex-shrink: 0;
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+    align-items: center;
+    justify-content: space-between;
+
+    .spacer {
+      flex: 1;
+    }
+
+    button {
+      font-family: 'Heebo', sans-serif;
+      font-weight: 600;
+      font-size: 14px;
+      border-radius: 10px;
+      padding: 0 20px;
+      height: 42px;
+      letter-spacing: 0;
+    }
+  }
+}
+
+.mat-mdc-table {
+  width: 100%;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.07) !important;
+  font-family: 'Heebo', sans-serif !important;
+
+  .mat-mdc-header-row {
+    background: $primary;
+
+    .mat-mdc-header-cell {
+      color: $white;
+      font-family: 'Heebo', sans-serif;
+      font-weight: 600;
+      font-size: 13px;
+      letter-spacing: 0;
+      border: none;
+      padding: 14px 16px;
+      text-align: right;
+    }
+  }
+
+  .mat-mdc-row {
+    background: $white;
+    transition: background 0.15s;
+
+    &:nth-child(even) {
+      background: #f1f5f9;
+    }
+
+    &:hover {
+      background: $primary-light;
+    }
+
+    .mat-mdc-cell {
+      font-family: 'Heebo', sans-serif;
+      font-size: 13px;
+      color: $text;
+      border-bottom: 1px solid $border;
+      padding: 10px 16px;
+      text-align: right;
+
+      input[type='number'],
+      input[type='text'] {
+        font-family: 'Heebo', sans-serif;
+        font-size: 13px;
+        color: $text;
+        background: transparent;
+        border: 1px solid transparent;
+        border-radius: 6px;
+        padding: 4px 8px;
+        width: 100%;
+        transition: border 0.2s, background 0.2s;
+        outline: none;
+
+        &:focus {
+          border-color: $primary;
+          background: $white;
+        }
+
+        &:hover {
+          border-color: $border;
+        }
+      }
+    }
+
+    // עמודת יתרה סגירה - צבע ירוק/אדום
+    td:last-child {
+      font-weight: 600;
+      font-size: 14px;
+    }
+  }
+}
+
+// הוצאות שוטפות expand
+.expense-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  direction: rtl;
+
+  input {
+    border: 1px solid $border !important;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-family: 'Heebo', sans-serif;
+    font-size: 12px;
+    text-align: right;
+  }
+}
+
+.mat-mdc-button,
+.mdc-button {
+  font-family: 'Heebo', sans-serif !important;
+  letter-spacing: 0 !important;
+}
+
+.print-only {
+  display: none;
+  font-size: 11px;
+  line-height: 1.6;
+
+  div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px 6px;
+
+    span.label {
+      white-space: nowrap;
+    }
+
+    span.amount {
+      white-space: nowrap;
+      font-weight: 600;
+    }
+  }
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  button {
+    display: none !important;
+  }
+
+  input {
+    border: none !important;
+    background: transparent !important;
+  }
+
+  .cash-flow-table {
+    width: 100%;
+    padding: 0;
+    background: white;
+  }
+
+  .table-container {
+    overflow: visible !important;
+    max-height: none !important;
+    height: auto !important;
+    padding-bottom: 0 !important;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    page-break-inside: auto;
+  }
+
+  tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+
+  th,
+  td {
+    border: 1px solid #000;
+    padding: 4px;
+    font-size: 11px;
+  }
+
+  * {
+    overflow: visible !important;
+    height: auto !important;
+    min-height: 0 !important;
+  }
+}

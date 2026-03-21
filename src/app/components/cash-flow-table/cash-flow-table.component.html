@@ -1,0 +1,127 @@
+<div class="cash-flow-table" dir="rtl">
+  <div class="actions">
+    <button mat-raised-button color="primary" (click)="addMonth()">הוסף חודש</button>
+    <span class="spacer"></span>
+    <button mat-raised-button color="warn" (click)="save()">שמור</button>
+    <button mat-raised-button color="accent" (click)="exportPdf()">ייצא PDF</button>
+  </div>
+
+  <div class="table-container">
+  <table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
+
+    <!-- Month Column -->
+    <ng-container matColumnDef="month">
+      <th mat-header-cell *matHeaderCellDef> חודש </th>
+      <td mat-cell *matCellDef="let monthCtrl; let i = index">
+        {{ monthCtrl.get('month')?.value | date:'MMMM yyyy':'':'he' }}
+      </td>
+    </ng-container>
+
+    <!-- Starting Balance -->
+    <ng-container matColumnDef="startingBalance">
+      <th mat-header-cell *matHeaderCellDef> יתרה בתחילת החודש </th>
+      <td mat-cell *matCellDef="let monthCtrl; let i = index">
+        <span *ngIf="i > 0">{{ monthCtrl.get('startingBalance')?.value | number:'1.0-0' }} ₪</span>
+        <input *ngIf="i === 0" matInput type="number" placeholder="יתרה בתחילת החודש" [formControl]="monthCtrl.get('startingBalance')"
+          (input)="calculateEndingBalances()" />
+      </td>
+    </ng-container>
+
+    <!-- Income -->
+    <ng-container matColumnDef="income">
+      <th mat-header-cell *matHeaderCellDef> הכנסות </th>
+      <td mat-cell *matCellDef="let monthCtrl; let i = index">
+        <input matInput type="number" placeholder="הכנסות" [formControl]="monthCtrl.get('income')"
+          (input)="calculateEndingBalances()" />
+      </td>
+    </ng-container>
+
+    <!-- Mortgage -->
+    <ng-container matColumnDef="mortgagePayment">
+      <th mat-header-cell *matHeaderCellDef> משכנתא </th>
+      <td mat-cell *matCellDef="let monthCtrl; let i = index">
+        <input matInput type="number" placeholder="משכנתא" [formControl]="monthCtrl.get('mortgagePayment')"
+          (input)="calculateEndingBalances()" />
+      </td>
+    </ng-container>
+
+    <!-- Loan Payment -->
+    <ng-container matColumnDef="loanPayment">
+      <th mat-header-cell *matHeaderCellDef> הלוואה חודשית </th>
+      <td mat-cell *matCellDef="let monthCtrl; let i = index">
+        <input matInput type="number" placeholder=" הלוואה חודשית " [formControl]="monthCtrl.get('loanPayment')"
+          (input)="calculateEndingBalances()" />
+      </td>
+    </ng-container>
+
+
+
+    <!-- Regular Expenses (Expandable) -->
+    <ng-container matColumnDef="regularExpenses">
+      <th mat-header-cell *matHeaderCellDef> הוצאות שוטפות </th>
+      <td mat-cell *matCellDef="let monthCtrl; let i = index">
+        <button mat-icon-button class="no-print" (click)="monthCtrl.get('expanded')?.setValue(!monthCtrl.get('expanded')?.value)">
+          <mat-icon>{{ monthCtrl.get('expanded')?.value ? 'expand_less' : 'expand_more' }}</mat-icon>
+        </button>
+
+        <div *ngIf="monthCtrl.get('expanded')?.value" class="no-print">
+          <div *ngFor="let expCtrl of getRegularExpenses(i).controls; let j=index" class="expense-row">
+            <input placeholder="תיאור" [formControl]="getExpenseDescription(i, j)" />
+            <input type="number" placeholder="סכום" [formControl]="getExpenseAmount(i, j)"
+              (input)="calculateEndingBalances()" />
+            <button mat-icon-button color="warn" (click)="removeRegularExpense(i,j)">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+          <button mat-button (click)="addRegularExpense(i)">הוסף הוצאה</button>
+        </div>
+
+        <div class="print-only">
+          <div *ngFor="let expCtrl of getRegularExpenses(i).controls; let j=index">
+            <span class="label">{{ getExpenseDescription(i, j).value }}:</span>
+            <span class="amount">{{ getExpenseAmount(i, j).value | number:'1.0-0' }} ₪</span>
+          </div>
+        </div>
+      </td>
+    </ng-container>
+
+    <!-- Special Expenses -->
+    <ng-container matColumnDef="specialExpenses">
+      <th mat-header-cell *matHeaderCellDef> הוצאות מיוחדות </th>
+      <td mat-cell *matCellDef="let monthCtrl; let i = index">
+        <button mat-icon-button class="no-print" (click)="monthCtrl.get('expandedSpecial')?.setValue(!monthCtrl.get('expandedSpecial')?.value)">
+          <mat-icon>{{ monthCtrl.get('expandedSpecial')?.value ? 'expand_less' : 'expand_more' }}</mat-icon>
+        </button>
+
+        <div *ngIf="monthCtrl.get('expandedSpecial')?.value" class="no-print">
+          <div *ngFor="let expCtrl of getSpecialExpenses(i).controls; let j=index" class="expense-row">
+            <input placeholder="תיאור" [formControl]="getSpecialExpenseDescription(i, j)" />
+            <input type="number" placeholder="סכום" [formControl]="getSpecialExpenseAmount(i, j)"
+              (input)="calculateEndingBalances()" />
+            <button mat-icon-button color="warn" (click)="removeSpecialExpense(i, j)">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+          <button mat-button (click)="addSpecialExpense(i)">הוסף הוצאה</button>
+        </div>
+
+        <div class="print-only">
+          <div *ngFor="let expCtrl of getSpecialExpenses(i).controls; let j=index">
+            <span class="label">{{ getSpecialExpenseDescription(i, j).value }}:</span>
+            <span class="amount">{{ getSpecialExpenseAmount(i, j).value | number:'1.0-0' }} ₪</span>
+          </div>
+        </div>
+      </td>
+    </ng-container>
+
+    <!-- Ending Balance -->
+    <ng-container matColumnDef="endingBalance">
+      <th mat-header-cell *matHeaderCellDef> יתרה בסוף החודש </th>
+      <td mat-cell *matCellDef="let monthCtrl"> {{ monthCtrl.get('endingBalance')?.value | number:'1.0-0' }} ₪</td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+  </table>
+  </div>
+</div>
