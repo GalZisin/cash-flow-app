@@ -26,7 +26,8 @@
           "amount": 100
         }
       ],
-      "endingBalance": 17352
+      "endingBalance": 17352,
+      "rowColor": "#fef9c3"
     },
     {
       "month": "2026-03-31T21:00:00.000Z",
@@ -50,7 +51,8 @@
           "amount": 967
         }
       ],
-      "endingBalance": 26150
+      "endingBalance": 26150,
+      "rowColor": null
     },
     {
       "month": "2026-04-30T21:00:00.000Z",
@@ -78,7 +80,8 @@
           "amount": 1000
         }
       ],
-      "endingBalance": 39973
+      "endingBalance": 39973,
+      "rowColor": null
     },
     {
       "month": "2026-05-31T21:00:00.000Z",
@@ -98,7 +101,8 @@
           "amount": 250
         }
       ],
-      "endingBalance": 50491
+      "endingBalance": 50491,
+      "rowColor": null
     },
     {
       "month": "2026-06-30T21:00:00.000Z",
@@ -113,7 +117,8 @@
         }
       ],
       "specialExpenses": [],
-      "endingBalance": 61273
+      "endingBalance": 61273,
+      "rowColor": null
     },
     {
       "month": "2026-07-31T21:00:00.000Z",
@@ -137,7 +142,8 @@
           "amount": 0
         }
       ],
-      "endingBalance": 71738
+      "endingBalance": 71738,
+      "rowColor": null
     },
     {
       "month": "2026-08-31T21:00:00.000Z",
@@ -152,7 +158,8 @@
         }
       ],
       "specialExpenses": [],
-      "endingBalance": 82503
+      "endingBalance": 82503,
+      "rowColor": null
     },
     {
       "month": "2026-09-30T21:00:00.000Z",
@@ -167,7 +174,8 @@
         }
       ],
       "specialExpenses": [],
-      "endingBalance": 93284
+      "endingBalance": 93284,
+      "rowColor": null
     },
     {
       "month": "2026-10-31T22:00:00.000Z",
@@ -182,7 +190,8 @@
         }
       ],
       "specialExpenses": [],
-      "endingBalance": 104048
+      "endingBalance": 104048,
+      "rowColor": null
     },
     {
       "month": "2026-11-30T22:00:00.000Z",
@@ -202,7 +211,8 @@
           "amount": 92000
         }
       ],
-      "endingBalance": 22828
+      "endingBalance": 22828,
+      "rowColor": "#dcfce7"
     },
     {
       "month": "2026-12-31T22:00:00.000Z",
@@ -217,7 +227,8 @@
         }
       ],
       "specialExpenses": [],
-      "endingBalance": 34028
+      "endingBalance": 34028,
+      "rowColor": null
     },
     {
       "month": "2027-01-31T22:00:00.000Z",
@@ -232,7 +243,8 @@
         }
       ],
       "specialExpenses": [],
-      "endingBalance": 45228
+      "endingBalance": 45228,
+      "rowColor": null
     },
     {
       "month": "2027-02-28T22:00:00.000Z",
@@ -256,7 +268,8 @@
           "amount": 500
         }
       ],
-      "endingBalance": 54928
+      "endingBalance": 54928,
+      "rowColor": null
     },
     {
       "month": "2027-03-31T21:00:00.000Z",
@@ -276,7 +289,8 @@
           "amount": 1000
         }
       ],
-      "endingBalance": 65128
+      "endingBalance": 65128,
+      "rowColor": null
     },
     {
       "month": "2027-04-30T21:00:00.000Z",
@@ -304,7 +318,8 @@
           "amount": 1000
         }
       ],
-      "endingBalance": 73528
+      "endingBalance": 73528,
+      "rowColor": null
     },
     {
       "month": "2027-05-31T21:00:00.000Z",
@@ -324,7 +339,8 @@
           "amount": 250
         }
       ],
-      "endingBalance": 84478
+      "endingBalance": 84478,
+      "rowColor": null
     },
     {
       "month": "2027-06-30T21:00:00.000Z",
@@ -339,7 +355,8 @@
         }
       ],
       "specialExpenses": [],
-      "endingBalance": 95678
+      "endingBalance": 95678,
+      "rowColor": null
     },
     {
       "month": "2027-07-31T21:00:00.000Z",
@@ -359,7 +376,8 @@
           "amount": 300
         }
       ],
-      "endingBalance": 106578
+      "endingBalance": 106578,
+      "rowColor": null
     },
     {
       "month": "2027-08-31T21:00:00.000Z",
@@ -374,7 +392,8 @@
         }
       ],
       "specialExpenses": [],
-      "endingBalance": 117778
+      "endingBalance": 117778,
+      "rowColor": null
     },
     {
       "month": "2027-09-30T21:00:00.000Z",
@@ -389,7 +408,8 @@
         }
       ],
       "specialExpenses": [],
-      "endingBalance": 128978
+      "endingBalance": 128978,
+      "rowColor": null
     },
     {
       "month": "2027-10-31T22:00:00.000Z",
@@ -409,7 +429,8 @@
           "amount": 120000
         }
       ],
-      "endingBalance": 20178
+      "endingBalance": 20178,
+      "rowColor": "#dcfce7"
     },
     {
       "month": "2027-11-30T22:00:00.000Z",
@@ -424,7 +445,8 @@
         }
       ],
       "specialExpenses": [],
-      "endingBalance": 31378
+      "endingBalance": 31378,
+      "rowColor": null
     },
     {
       "month": "2027-12-31T22:00:00.000Z",
@@ -444,7 +466,8 @@
           "amount": 1000
         }
       ],
-      "endingBalance": 41578
+      "endingBalance": 41578,
+      "rowColor": null
     },
     {
       "month": "2028-01-31T22:00:00.000Z",
@@ -464,7 +487,8 @@
           "amount": 1000
         }
       ],
-      "endingBalance": 51778
+      "endingBalance": 51778,
+      "rowColor": null
     },
     {
       "month": "2028-02-29T22:00:00.000Z",
@@ -488,7 +512,8 @@
           "amount": 1000
         }
       ],
-      "endingBalance": 61478
+      "endingBalance": 61478,
+      "rowColor": null
     },
     {
       "month": "2028-03-31T21:00:00.000Z",
@@ -512,7 +537,8 @@
           "amount": 1000
         }
       ],
-      "endingBalance": 71428
+      "endingBalance": 71428,
+      "rowColor": null
     },
     {
       "month": "2028-04-30T21:00:00.000Z",
@@ -527,7 +553,8 @@
         }
       ],
       "specialExpenses": [],
-      "endingBalance": 82628
+      "endingBalance": 82628,
+      "rowColor": null
     },
     {
       "month": "2028-05-31T21:00:00.000Z",
@@ -542,7 +569,8 @@
         }
       ],
       "specialExpenses": [],
-      "endingBalance": 93828
+      "endingBalance": 93828,
+      "rowColor": null
     },
     {
       "month": "2028-06-30T21:00:00.000Z",
@@ -570,7 +598,8 @@
           "amount": 5000
         }
       ],
-      "endingBalance": 74028
+      "endingBalance": 74028,
+      "rowColor": "#dcfce7"
     },
     {
       "month": "2028-07-31T21:00:00.000Z",
@@ -602,7 +631,8 @@
           "amount": 1500
         }
       ],
-      "endingBalance": 74428
+      "endingBalance": 74428,
+      "rowColor": null
     },
     {
       "month": "2028-08-31T21:00:00.000Z",
@@ -638,7 +668,8 @@
           "amount": 1800
         }
       ],
-      "endingBalance": 75028
+      "endingBalance": 75028,
+      "rowColor": null
     },
     {
       "month": "2028-09-30T21:00:00.000Z",
@@ -670,7 +701,8 @@
           "amount": 1500
         }
       ],
-      "endingBalance": 47228
+      "endingBalance": 47228,
+      "rowColor": null
     },
     {
       "month": "2028-10-31T22:00:00.000Z",
@@ -698,7 +730,8 @@
           "amount": 7000
         }
       ],
-      "endingBalance": 42428
+      "endingBalance": 42428,
+      "rowColor": null
     },
     {
       "month": "2028-11-30T22:00:00.000Z",
@@ -718,7 +751,8 @@
           "amount": 20000
         }
       ],
-      "endingBalance": 33628
+      "endingBalance": 33628,
+      "rowColor": "#fef9c3"
     },
     {
       "month": "2028-12-31T22:00:00.000Z",
@@ -738,7 +772,8 @@
           "amount": 20000
         }
       ],
-      "endingBalance": 24828
+      "endingBalance": 24828,
+      "rowColor": "#fef9c3"
     },
     {
       "month": "2029-01-31T22:00:00.000Z",
@@ -758,7 +793,8 @@
           "amount": 7000
         }
       ],
-      "endingBalance": 29028
+      "endingBalance": 29028,
+      "rowColor": "#fef9c3"
     },
     {
       "month": "2029-02-28T22:00:00.000Z",
@@ -768,7 +804,8 @@
       "loanPayment": 0,
       "regularExpenses": [],
       "specialExpenses": [],
-      "endingBalance": 29028
+      "endingBalance": 29028,
+      "rowColor": null
     }
   ]
 }
