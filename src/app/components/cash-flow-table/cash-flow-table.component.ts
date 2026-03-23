@@ -119,6 +119,7 @@ export class CashFlowTableComponent implements OnInit {
 
   createMonth(month: Date, startingBalance: number = 0): FormGroup {
     return this.fb.group({
+      rowColor: [null],
       month: [month],
       startingBalance: [startingBalance],
       income: [0],
@@ -128,8 +129,7 @@ export class CashFlowTableComponent implements OnInit {
       specialExpenses: this.fb.array([]),
       endingBalance: [startingBalance],
       expanded: [false],
-      expandedSpecial: [false],
-      rowColor: [null]
+      expandedSpecial: [false]
     });
   }
 
@@ -237,6 +237,7 @@ export class CashFlowTableComponent implements OnInit {
   save() {
     const data = {
       months: this.months.controls.map(ctrl => ({
+        rowColor: ctrl.get('rowColor')?.value,
         month: ctrl.get('month')?.value,
         startingBalance: ctrl.get('startingBalance')?.value,
         income: ctrl.get('income')?.value,
@@ -244,8 +245,7 @@ export class CashFlowTableComponent implements OnInit {
         loanPayment: ctrl.get('loanPayment')?.value,
         regularExpenses: ctrl.get('regularExpenses')?.value,
         specialExpenses: ctrl.get('specialExpenses')?.value,
-        endingBalance: ctrl.get('endingBalance')?.value,
-        rowColor: ctrl.get('rowColor')?.value,
+        endingBalance: ctrl.get('endingBalance')?.value
       }))
     };
     this.cashFlowService.save(data).subscribe({
