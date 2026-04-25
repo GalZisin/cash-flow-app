@@ -5,7 +5,7 @@ const path = require('path');
 
 const app = express();
 const PORT = 3000;
-const DATA_FILE = path.join(__dirname, 'cash-flow-data.json');
+const DATA_FILE = path.join(__dirname, 'cash-flow-data-child.json');
 
 app.use(cors());
 app.use(express.json());

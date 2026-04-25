@@ -440,7 +440,7 @@
       "specialExpenses": [
         {
           "description": "קניית רכב",
-          "amount": 100000
+          "amount": 80000
         },
         {
           "description": "רישוי",
@@ -451,15 +451,15 @@
           "amount": 7200
         }
       ],
-      "endingBalance": 31343
+      "endingBalance": 51343
     },
     {
       "rowColor": "#fef9c3",
       "month": "2027-11-30T22:00:00.000Z",
-      "startingBalance": 31343,
+      "startingBalance": 51343,
       "income": 18300,
       "mortgagePayment": 5100,
-      "loanPayment": 1750,
+      "loanPayment": 1700,
       "regularExpenses": [
         {
           "description": "שוטף",
@@ -478,17 +478,21 @@
         {
           "description": "מתנה לאבא ",
           "amount": 400
+        },
+        {
+          "description": "ילד",
+          "amount": 3000
         }
       ],
-      "endingBalance": 41293
+      "endingBalance": 58343
     },
     {
       "rowColor": null,
       "month": "2027-12-31T22:00:00.000Z",
-      "startingBalance": 41293,
+      "startingBalance": 58343,
       "income": 18300,
       "mortgagePayment": 5100,
-      "loanPayment": 1750,
+      "loanPayment": 1700,
       "regularExpenses": [
         {
           "description": "שוטף",
@@ -499,17 +503,21 @@
         {
           "description": "ביטוח רכב",
           "amount": 0
+        },
+        {
+          "description": "",
+          "amount": 3000
         }
       ],
-      "endingBalance": 50743
+      "endingBalance": 64843
     },
     {
       "rowColor": null,
       "month": "2028-01-31T22:00:00.000Z",
-      "startingBalance": 50743,
+      "startingBalance": 64843,
       "income": 18300,
       "mortgagePayment": 5100,
-      "loanPayment": 1750,
+      "loanPayment": 1700,
       "regularExpenses": [
         {
           "description": "שוטף",
@@ -520,17 +528,21 @@
         {
           "description": "ביטוח רכב",
           "amount": 0
+        },
+        {
+          "description": "",
+          "amount": 3000
         }
       ],
-      "endingBalance": 60193
+      "endingBalance": 71343
     },
     {
       "rowColor": null,
       "month": "2028-02-29T22:00:00.000Z",
-      "startingBalance": 60193,
+      "startingBalance": 71343,
       "income": 18300,
       "mortgagePayment": 5100,
-      "loanPayment": 1750,
+      "loanPayment": 1700,
       "regularExpenses": [
         {
           "description": "שוטף",
@@ -545,17 +557,21 @@
         {
           "description": "ביטוח רכב",
           "amount": 0
+        },
+        {
+          "description": "",
+          "amount": 3000
         }
       ],
-      "endingBalance": 69143
+      "endingBalance": 77343
     },
     {
       "rowColor": null,
       "month": "2028-03-31T21:00:00.000Z",
-      "startingBalance": 69143,
+      "startingBalance": 77343,
       "income": 18300,
       "mortgagePayment": 5100,
-      "loanPayment": 1750,
+      "loanPayment": 1700,
       "regularExpenses": [
         {
           "description": "שוטף",
@@ -566,17 +582,21 @@
         {
           "description": "ביטוח רכב",
           "amount": 0
+        },
+        {
+          "description": "",
+          "amount": 3000
         }
       ],
-      "endingBalance": 78593
+      "endingBalance": 83843
     },
     {
       "rowColor": null,
       "month": "2028-04-30T21:00:00.000Z",
-      "startingBalance": 78593,
+      "startingBalance": 83843,
       "income": 18300,
       "mortgagePayment": 5100,
-      "loanPayment": 1750,
+      "loanPayment": 1700,
       "regularExpenses": [
         {
           "description": "שוטף",
@@ -587,17 +607,21 @@
         {
           "description": "ביטוח רכב",
           "amount": 0
+        },
+        {
+          "description": "",
+          "amount": 3000
         }
       ],
-      "endingBalance": 88043
+      "endingBalance": 90343
     },
     {
       "rowColor": null,
       "month": "2028-05-31T21:00:00.000Z",
-      "startingBalance": 88043,
+      "startingBalance": 90343,
       "income": 18300,
       "mortgagePayment": 5100,
-      "loanPayment": 1750,
+      "loanPayment": 1700,
       "regularExpenses": [
         {
           "description": "שוטף",
@@ -608,17 +632,21 @@
         {
           "description": "ביטוח רכב",
           "amount": 0
+        },
+        {
+          "description": "",
+          "amount": 3000
         }
       ],
-      "endingBalance": 97493
+      "endingBalance": 96843
     },
     {
       "rowColor": "#fee2e2",
       "month": "2028-06-30T21:00:00.000Z",
-      "startingBalance": 97493,
+      "startingBalance": 96843,
       "income": 18300,
       "mortgagePayment": 5100,
-      "loanPayment": 1750,
+      "loanPayment": 1700,
       "regularExpenses": [
         {
           "description": "שוטף",
@@ -649,17 +677,21 @@
         {
           "description": "בדק בית",
           "amount": 1640
+        },
+        {
+          "description": "",
+          "amount": 3000
         }
       ],
-      "endingBalance": 80303
+      "endingBalance": 76703
     },
     {
       "rowColor": "#fee2e2",
       "month": "2028-07-31T21:00:00.000Z",
-      "startingBalance": 80303,
+      "startingBalance": 76703,
       "income": 18300,
       "mortgagePayment": 5100,
-      "loanPayment": 1750,
+      "loanPayment": 1700,
       "regularExpenses": [
         {
           "description": "שוטף",
@@ -686,17 +718,21 @@
         {
           "description": "ביטוח רכב",
           "amount": 0
+        },
+        {
+          "description": "",
+          "amount": 3000
         }
       ],
-      "endingBalance": 78953
+      "endingBalance": 72403
     },
     {
       "rowColor": "#fee2e2",
       "month": "2028-08-31T21:00:00.000Z",
-      "startingBalance": 78953,
+      "startingBalance": 72403,
       "income": 18300,
       "mortgagePayment": 5100,
-      "loanPayment": 1750,
+      "loanPayment": 1700,
       "regularExpenses": [
         {
           "description": "שוטף",
@@ -727,17 +763,21 @@
         {
           "description": "ביטוח רכב",
           "amount": 0
+        },
+        {
+          "description": "",
+          "amount": 3000
         }
       ],
-      "endingBalance": 77803
+      "endingBalance": 68303
     },
     {
       "rowColor": "#fee2e2",
       "month": "2028-09-30T21:00:00.000Z",
-      "startingBalance": 77803,
+      "startingBalance": 68303,
       "income": 18300,
       "mortgagePayment": 5100,
-      "loanPayment": 1750,
+      "loanPayment": 1700,
       "regularExpenses": [
         {
           "description": "שוטף",
@@ -764,17 +804,21 @@
         {
           "description": "ביטוח רכב",
           "amount": 0
+        },
+        {
+          "description": "",
+          "amount": 3000
         }
       ],
-      "endingBalance": 48253
+      "endingBalance": 35803
     },
     {
       "rowColor": "#fee2e2",
       "month": "2028-10-31T22:00:00.000Z",
-      "startingBalance": 48253,
+      "startingBalance": 35803,
       "income": 18300,
       "mortgagePayment": 5100,
-      "loanPayment": 1750,
+      "loanPayment": 1700,
       "regularExpenses": [
         {
           "description": "שוטף",
@@ -801,17 +845,21 @@
         {
           "description": "רישוי רכב",
           "amount": 2067
+        },
+        {
+          "description": "",
+          "amount": 3000
         }
       ],
-      "endingBalance": 37836
+      "endingBalance": 22436
     },
     {
       "rowColor": null,
       "month": "2028-11-30T22:00:00.000Z",
-      "startingBalance": 37836,
+      "startingBalance": 22436,
       "income": 18300,
       "mortgagePayment": 5100,
-      "loanPayment": 1750,
+      "loanPayment": 1700,
       "regularExpenses": [
         {
           "description": "שוטף",
@@ -842,17 +890,21 @@
         {
           "description": "מתנה לאבא ",
           "amount": 400
+        },
+        {
+          "description": "",
+          "amount": 3000
         }
       ],
-      "endingBalance": 42386
+      "endingBalance": 24036
     },
     {
       "rowColor": null,
       "month": "2028-12-31T22:00:00.000Z",
-      "startingBalance": 42386,
+      "startingBalance": 24036,
       "income": 18300,
       "mortgagePayment": 5100,
-      "loanPayment": 1750,
+      "loanPayment": 1700,
       "regularExpenses": [
         {
           "description": "שוטף",
@@ -879,17 +931,21 @@
         {
           "description": "ביטוח רכב",
           "amount": 1800
+        },
+        {
+          "description": "",
+          "amount": 3000
         }
       ],
-      "endingBalance": 47336
+      "endingBalance": 26036
     },
     {
       "rowColor": "#fef9c3",
       "month": "2029-01-31T22:00:00.000Z",
-      "startingBalance": 47336,
+      "startingBalance": 26036,
       "income": 18300,
       "mortgagePayment": 5100,
-      "loanPayment": 1750,
+      "loanPayment": 1700,
       "regularExpenses": [
         {
           "description": "שוטף",
@@ -911,22 +967,26 @@
       "specialExpenses": [
         {
           "description": "החזר להורים",
-          "amount": 12000
+          "amount": 0
         },
         {
           "description": "ביטוח רכב",
           "amount": 1800
+        },
+        {
+          "description": "",
+          "amount": 3000
         }
       ],
-      "endingBalance": 40286
+      "endingBalance": 28036
     },
     {
       "rowColor": "#fef9c3",
       "month": "2029-02-28T22:00:00.000Z",
-      "startingBalance": 40286,
+      "startingBalance": 28036,
       "income": 18300,
       "mortgagePayment": 5100,
-      "loanPayment": 1750,
+      "loanPayment": 1700,
       "regularExpenses": [
         {
           "description": "שוטף",
@@ -952,22 +1012,26 @@
         },
         {
           "description": "החזר להורים",
-          "amount": 10000
+          "amount": 0
         },
         {
           "description": "מתנה לאחותי",
           "amount": 500
+        },
+        {
+          "description": "",
+          "amount": 3000
         }
       ],
-      "endingBalance": 36538
+      "endingBalance": 31338
     },
     {
       "rowColor": "#fef9c3",
       "month": "2029-03-31T21:00:00.000Z",
-      "startingBalance": 36538,
+      "startingBalance": 31338,
       "income": 18300,
       "mortgagePayment": 5100,
-      "loanPayment": 1750,
+      "loanPayment": 1700,
       "regularExpenses": [
         {
           "description": "שוטף",
@@ -993,18 +1057,22 @@
         },
         {
           "description": "החזר להורים",
-          "amount": 10000
+          "amount": 0
+        },
+        {
+          "description": "",
+          "amount": 3000
         }
       ],
-      "endingBalance": 33288
+      "endingBalance": 35138
     },
     {
       "rowColor": "#fef9c3",
       "month": "2029-04-30T21:00:00.000Z",
-      "startingBalance": 33288,
+      "startingBalance": 35138,
       "income": 18300,
       "mortgagePayment": 5100,
-      "loanPayment": 1750,
+      "loanPayment": 1700,
       "regularExpenses": [
         {
           "description": "שוטף",
@@ -1030,18 +1098,22 @@
         },
         {
           "description": "החזר להורים",
-          "amount": 10000
+          "amount": 0
+        },
+        {
+          "description": "",
+          "amount": 3000
         }
       ],
-      "endingBalance": 30038
+      "endingBalance": 38938
     },
     {
       "rowColor": "#fef9c3",
       "month": "2029-05-31T21:00:00.000Z",
-      "startingBalance": 30038,
+      "startingBalance": 38938,
       "income": 18300,
       "mortgagePayment": 5100,
-      "loanPayment": 1750,
+      "loanPayment": 1700,
       "regularExpenses": [
         {
           "description": "שוטף",
@@ -1063,18 +1135,22 @@
       "specialExpenses": [
         {
           "description": "",
-          "amount": 5000
+          "amount": 0
+        },
+        {
+          "description": "",
+          "amount": 3000
         }
       ],
-      "endingBalance": 31788
+      "endingBalance": 42738
     },
     {
       "rowColor": null,
       "month": "2029-06-30T21:00:00.000Z",
-      "startingBalance": 31788,
+      "startingBalance": 42738,
       "income": 18300,
       "mortgagePayment": 5100,
-      "loanPayment": 1750,
+      "loanPayment": 1700,
       "regularExpenses": [
         {
           "description": "שוטף",
@@ -1093,16 +1169,21 @@
           "amount": 1100
         }
       ],
-      "specialExpenses": [],
-      "endingBalance": 38538
+      "specialExpenses": [
+        {
+          "description": "",
+          "amount": 3000
+        }
+      ],
+      "endingBalance": 46538
     },
     {
       "rowColor": null,
       "month": "2029-07-31T21:00:00.000Z",
-      "startingBalance": 38538,
+      "startingBalance": 46538,
       "income": 18300,
       "mortgagePayment": 5100,
-      "loanPayment": 1750,
+      "loanPayment": 1700,
       "regularExpenses": [
         {
           "description": "שוטף",
@@ -1125,17 +1206,21 @@
         {
           "description": "מתנה לאמא",
           "amount": 300
+        },
+        {
+          "description": "",
+          "amount": 3000
         }
       ],
-      "endingBalance": 44988
+      "endingBalance": 50038
     },
     {
       "rowColor": null,
       "month": "2029-08-31T21:00:00.000Z",
-      "startingBalance": 44988,
+      "startingBalance": 50038,
       "income": 18300,
       "mortgagePayment": 5100,
-      "loanPayment": 1750,
+      "loanPayment": 1700,
       "regularExpenses": [
         {
           "description": "שוטף",
@@ -1154,16 +1239,21 @@
           "amount": 1100
         }
       ],
-      "specialExpenses": [],
-      "endingBalance": 51738
+      "specialExpenses": [
+        {
+          "description": "",
+          "amount": 3000
+        }
+      ],
+      "endingBalance": 53838
     },
     {
       "rowColor": null,
       "month": "2029-09-30T21:00:00.000Z",
-      "startingBalance": 51738,
+      "startingBalance": 53838,
       "income": 18300,
       "mortgagePayment": 5100,
-      "loanPayment": 1750,
+      "loanPayment": 1700,
       "regularExpenses": [
         {
           "description": "שוטף",
@@ -1182,16 +1272,21 @@
           "amount": 1100
         }
       ],
-      "specialExpenses": [],
-      "endingBalance": 58488
+      "specialExpenses": [
+        {
+          "description": "",
+          "amount": 3000
+        }
+      ],
+      "endingBalance": 57638
     },
     {
       "rowColor": null,
       "month": "2029-10-31T22:00:00.000Z",
-      "startingBalance": 58488,
+      "startingBalance": 57638,
       "income": 18300,
       "mortgagePayment": 5100,
-      "loanPayment": 1750,
+      "loanPayment": 1700,
       "regularExpenses": [
         {
           "description": "שוטף",
@@ -1221,18 +1316,22 @@
         },
         {
           "description": "פרעון הלוואה",
-          "amount": 21000
+          "amount": 0
+        },
+        {
+          "description": "",
+          "amount": 3000
         }
       ],
-      "endingBalance": 40362
+      "endingBalance": 57562
     },
     {
       "rowColor": null,
       "month": "2029-11-30T22:00:00.000Z",
-      "startingBalance": 40362,
+      "startingBalance": 57562,
       "income": 18300,
       "mortgagePayment": 5100,
-      "loanPayment": 0,
+      "loanPayment": 1700,
       "regularExpenses": [
         {
           "description": "",
@@ -1255,17 +1354,21 @@
         {
           "description": "מתנה לאבא ",
           "amount": 400
+        },
+        {
+          "description": "",
+          "amount": 3000
         }
       ],
-      "endingBalance": 47762
+      "endingBalance": 60262
     },
     {
       "rowColor": null,
       "month": "2029-12-31T22:00:00.000Z",
-      "startingBalance": 47762,
+      "startingBalance": 60262,
       "income": 18300,
       "mortgagePayment": 5100,
-      "loanPayment": 0,
+      "loanPayment": 1700,
       "regularExpenses": [
         {
           "description": "",
@@ -1288,17 +1391,21 @@
         {
           "description": "ביטוח רכב",
           "amount": 1800
+        },
+        {
+          "description": "",
+          "amount": 3000
         }
       ],
-      "endingBalance": 54462
+      "endingBalance": 62262
     },
     {
       "rowColor": null,
       "month": "2030-01-31T22:00:00.000Z",
-      "startingBalance": 54462,
+      "startingBalance": 62262,
       "income": 18300,
       "mortgagePayment": 5100,
-      "loanPayment": 0,
+      "loanPayment": 1700,
       "regularExpenses": [
         {
           "description": "",
@@ -1321,17 +1428,21 @@
         {
           "description": "ביטוח רכב",
           "amount": 1800
+        },
+        {
+          "description": "",
+          "amount": 3000
         }
       ],
-      "endingBalance": 61162
+      "endingBalance": 64262
     },
     {
       "rowColor": null,
       "month": "2030-02-28T22:00:00.000Z",
-      "startingBalance": 61162,
+      "startingBalance": 64262,
       "income": 18300,
       "mortgagePayment": 5100,
-      "loanPayment": 0,
+      "loanPayment": 1700,
       "regularExpenses": [
         {
           "description": "",
@@ -1354,17 +1465,21 @@
         {
           "description": "מתנה לאחותי ",
           "amount": 500
+        },
+        {
+          "description": "",
+          "amount": 3000
         }
       ],
-      "endingBalance": 69162
+      "endingBalance": 67562
     },
     {
       "rowColor": null,
       "month": "2030-03-31T21:00:00.000Z",
-      "startingBalance": 69162,
+      "startingBalance": 67562,
       "income": 18300,
       "mortgagePayment": 5100,
-      "loanPayment": 0,
+      "loanPayment": 1700,
       "regularExpenses": [
         {
           "description": "",
@@ -1383,16 +1498,21 @@
           "amount": 1100
         }
       ],
-      "specialExpenses": [],
-      "endingBalance": 77662
+      "specialExpenses": [
+        {
+          "description": "",
+          "amount": 3000
+        }
+      ],
+      "endingBalance": 71362
     },
     {
       "rowColor": null,
       "month": "2030-04-30T21:00:00.000Z",
-      "startingBalance": 77662,
+      "startingBalance": 71362,
       "income": 18300,
       "mortgagePayment": 5100,
-      "loanPayment": 0,
+      "loanPayment": 1700,
       "regularExpenses": [
         {
           "description": "",
@@ -1411,16 +1531,21 @@
           "amount": 1100
         }
       ],
-      "specialExpenses": [],
-      "endingBalance": 86162
+      "specialExpenses": [
+        {
+          "description": "",
+          "amount": 3000
+        }
+      ],
+      "endingBalance": 75162
     },
     {
-      "rowColor": null,
+      "rowColor": "#fef9c3",
       "month": "2030-05-31T21:00:00.000Z",
-      "startingBalance": 86162,
+      "startingBalance": 75162,
       "income": 18300,
       "mortgagePayment": 5100,
-      "loanPayment": 0,
+      "loanPayment": 1700,
       "regularExpenses": [
         {
           "description": "",
@@ -1439,16 +1564,25 @@
           "amount": 1100
         }
       ],
-      "specialExpenses": [],
-      "endingBalance": 94662
+      "specialExpenses": [
+        {
+          "description": "",
+          "amount": 3000
+        },
+        {
+          "description": "החזר להורים",
+          "amount": 16000
+        }
+      ],
+      "endingBalance": 62962
     },
     {
-      "rowColor": null,
+      "rowColor": "#fef9c3",
       "month": "2030-06-30T21:00:00.000Z",
-      "startingBalance": 94662,
+      "startingBalance": 62962,
       "income": 18300,
       "mortgagePayment": 5100,
-      "loanPayment": 0,
+      "loanPayment": 1700,
       "regularExpenses": [
         {
           "description": "",
@@ -1467,16 +1601,25 @@
           "amount": 1100
         }
       ],
-      "specialExpenses": [],
-      "endingBalance": 103162
+      "specialExpenses": [
+        {
+          "description": "",
+          "amount": 3000
+        },
+        {
+          "description": "החזר להורים",
+          "amount": 16000
+        }
+      ],
+      "endingBalance": 50762
     },
     {
-      "rowColor": null,
+      "rowColor": "#fef9c3",
       "month": "2030-07-31T21:00:00.000Z",
-      "startingBalance": 103162,
+      "startingBalance": 50762,
       "income": 18300,
       "mortgagePayment": 5100,
-      "loanPayment": 0,
+      "loanPayment": 1700,
       "regularExpenses": [
         {
           "description": "",
@@ -1499,17 +1642,25 @@
         {
           "description": "מתנה לאמא",
           "amount": 300
+        },
+        {
+          "description": "",
+          "amount": 3000
+        },
+        {
+          "description": "",
+          "amount": 15000
         }
       ],
-      "endingBalance": 111362
+      "endingBalance": 39262
     },
     {
       "rowColor": null,
       "month": "2030-08-31T21:00:00.000Z",
-      "startingBalance": 111362,
+      "startingBalance": 39262,
       "income": 18300,
       "mortgagePayment": 5100,
-      "loanPayment": 0,
+      "loanPayment": 1700,
       "regularExpenses": [
         {
           "description": "",
@@ -1528,16 +1679,21 @@
           "amount": 1100
         }
       ],
-      "specialExpenses": [],
-      "endingBalance": 119862
+      "specialExpenses": [
+        {
+          "description": "",
+          "amount": 3000
+        }
+      ],
+      "endingBalance": 43062
     },
     {
       "rowColor": null,
       "month": "2030-09-30T21:00:00.000Z",
-      "startingBalance": 119862,
+      "startingBalance": 43062,
       "income": 18300,
       "mortgagePayment": 5100,
-      "loanPayment": 0,
+      "loanPayment": 1700,
       "regularExpenses": [
         {
           "description": "",
@@ -1556,16 +1712,21 @@
           "amount": 1100
         }
       ],
-      "specialExpenses": [],
-      "endingBalance": 128362
+      "specialExpenses": [
+        {
+          "description": "",
+          "amount": 3000
+        }
+      ],
+      "endingBalance": 46862
     },
     {
       "rowColor": null,
       "month": "2030-10-31T22:00:00.000Z",
-      "startingBalance": 128362,
+      "startingBalance": 46862,
       "income": 18300,
       "mortgagePayment": 5100,
-      "loanPayment": 0,
+      "loanPayment": 1700,
       "regularExpenses": [
         {
           "description": "",
@@ -1580,16 +1741,21 @@
           "amount": 1400
         }
       ],
-      "specialExpenses": [],
-      "endingBalance": 137962
+      "specialExpenses": [
+        {
+          "description": "",
+          "amount": 3000
+        }
+      ],
+      "endingBalance": 51762
     },
     {
       "rowColor": null,
       "month": "2030-11-30T22:00:00.000Z",
-      "startingBalance": 137962,
+      "startingBalance": 51762,
       "income": 18300,
       "mortgagePayment": 5100,
-      "loanPayment": 0,
+      "loanPayment": 1700,
       "regularExpenses": [
         {
           "description": "",
@@ -1608,16 +1774,21 @@
           "amount": 1100
         }
       ],
-      "specialExpenses": [],
-      "endingBalance": 146462
+      "specialExpenses": [
+        {
+          "description": "",
+          "amount": 3000
+        }
+      ],
+      "endingBalance": 55562
     },
     {
       "rowColor": null,
       "month": "2030-12-31T22:00:00.000Z",
-      "startingBalance": 146462,
+      "startingBalance": 55562,
       "income": 18300,
       "mortgagePayment": 5100,
-      "loanPayment": 0,
+      "loanPayment": 1700,
       "regularExpenses": [
         {
           "description": "",
@@ -1636,16 +1807,21 @@
           "amount": 1100
         }
       ],
-      "specialExpenses": [],
-      "endingBalance": 154962
+      "specialExpenses": [
+        {
+          "description": "",
+          "amount": 3000
+        }
+      ],
+      "endingBalance": 59362
     },
     {
       "rowColor": null,
       "month": "2031-01-31T22:00:00.000Z",
-      "startingBalance": 154962,
+      "startingBalance": 59362,
       "income": 18300,
       "mortgagePayment": 5100,
-      "loanPayment": 0,
+      "loanPayment": 1700,
       "regularExpenses": [
         {
           "description": "",
@@ -1664,16 +1840,21 @@
           "amount": 1100
         }
       ],
-      "specialExpenses": [],
-      "endingBalance": 163462
+      "specialExpenses": [
+        {
+          "description": "",
+          "amount": 3000
+        }
+      ],
+      "endingBalance": 63162
     },
     {
       "rowColor": null,
       "month": "2031-02-28T22:00:00.000Z",
-      "startingBalance": 163462,
+      "startingBalance": 63162,
       "income": 18300,
       "mortgagePayment": 5100,
-      "loanPayment": 0,
+      "loanPayment": 1700,
       "regularExpenses": [
         {
           "description": "",
@@ -1696,20 +1877,29 @@
         {
           "description": "מתנה לאחותי ",
           "amount": 500
+        },
+        {
+          "description": "",
+          "amount": 3000
         }
       ],
-      "endingBalance": 171462
+      "endingBalance": 66462
     },
     {
       "rowColor": null,
       "month": "2031-03-31T21:00:00.000Z",
-      "startingBalance": 171462,
+      "startingBalance": 66462,
       "income": 18300,
       "mortgagePayment": 5100,
-      "loanPayment": 0,
+      "loanPayment": 1700,
       "regularExpenses": [],
-      "specialExpenses": [],
-      "endingBalance": 184662
+      "specialExpenses": [
+        {
+          "description": "",
+          "amount": 3000
+        }
+      ],
+      "endingBalance": 74962
     }
   ]
 }
