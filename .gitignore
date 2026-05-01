@@ -13,6 +13,7 @@ yarn-error.log
 
 # ignore server dependencies
 server/node_modules/
+server/cash-flow-data.json
 dist/
 .angular/
 .env
