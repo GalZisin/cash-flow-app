@@ -54,7 +54,8 @@
     "DELETE_CONFIRM_TITLE": "Delete Investment",
     "DELETE_CONFIRM_MSG": "Are you sure you want to permanently delete \"{{name}}\"?",
     "DELETE_YES": "Yes, delete",
-    "CAGR_TOOLTIP": "Compound Annual Growth Rate"
+    "DELETE_NO": "No, keep it",
+    "CAGR_TOOLTIP": "Compound Annual Growth Rate",
     "COLLAPSE": "Click to collapse",
     "EXPAND": "Click to expand",
     "SIMULATION_TITLE": "Future Value Simulation",

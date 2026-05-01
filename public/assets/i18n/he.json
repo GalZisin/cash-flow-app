@@ -54,6 +54,7 @@
     "DELETE_CONFIRM_TITLE": "מחיקת השקעה",
     "DELETE_CONFIRM_MSG": "האם למחוק את \"{{name}}\" לצמיתות?",
     "DELETE_YES": "כן, מחק",
+    "DELETE_NO": "לא, שמור",
     "CAGR_TOOLTIP": "קצב צמיחה שנתי ממוצע (בריבית דריבית)",
     "COLLAPSE": "לחץ לסגירה",
     "EXPAND": "לחץ לפתיחה",

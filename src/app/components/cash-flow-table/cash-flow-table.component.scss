@@ -28,8 +28,8 @@ $white: #ffffff;
   .table-container {
     overflow-x: auto;
     overflow-y: auto;
-    max-height: calc(100vh - 120px);
-    padding-bottom: 50px;
+    max-height: calc(100vh - 175px);
+    padding-bottom: 20px;
     direction: rtl;
 
     .mat-mdc-table {
