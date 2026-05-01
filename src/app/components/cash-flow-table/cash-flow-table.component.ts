@@ -6,9 +6,11 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { MatMenuModule } from '@angular/material/menu';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { registerLocaleData } from '@angular/common';
 import localeHe from '@angular/common/locales/he';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { CashFlowService } from '../../services/cash-flow.service';
 
 registerLocaleData(localeHe);
@@ -26,7 +28,7 @@ export interface MonthlyCashFlow {
 
 @Component({
   selector: 'app-cash-flow-table',
-  imports: [CommonModule, ReactiveFormsModule, MatTableModule, MatButtonModule, MatIconModule, MatInputModule, MatSnackBarModule, MatMenuModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslateModule, MatTableModule, MatButtonModule, MatIconModule, MatInputModule, MatSnackBarModule, MatMenuModule, MatDialogModule],
   providers: [{ provide: DatePipe, useFactory: () => new DatePipe('he') }, DecimalPipe],
   templateUrl: './cash-flow-table.component.html',
   styleUrl: './cash-flow-table.component.scss'
@@ -35,6 +37,7 @@ export class CashFlowTableComponent implements OnInit {
   cashFlowForm!: FormGroup;
   dataSource: any[] = [];
   activeRowCtrl: any = null;
+  focusedField: Record<string, boolean> = {};
   displayedColumns = [
     'rowActions',
     'month',
@@ -48,12 +51,12 @@ export class CashFlowTableComponent implements OnInit {
   ];
 
   readonly ROW_COLORS = [
-    { label: 'אדום', value: '#fee2e2', icon: '🔴' },
-    { label: 'צהוב', value: '#fef9c3', icon: '🟡' },
-    { label: 'ירוק', value: '#dcfce7', icon: '🟢' },
+    { labelKey: 'CASH_FLOW.COLOR_RED', value: '#fee2e2' },
+    { labelKey: 'CASH_FLOW.COLOR_YELLOW', value: '#fef9c3' },
+    { labelKey: 'CASH_FLOW.COLOR_GREEN', value: '#dcfce7' },
   ];
 
-  constructor(private fb: FormBuilder, private datePipe: DatePipe, private cashFlowService: CashFlowService, private snackBar: MatSnackBar, private cdr: ChangeDetectorRef) { }
+  constructor(private fb: FormBuilder, private datePipe: DatePipe, private cashFlowService: CashFlowService, private snackBar: MatSnackBar, private cdr: ChangeDetectorRef, private translate: TranslateService, private dialog: MatDialog) { }
 
   getExpenseAmount(monthIndex: number, expenseIndex: number): FormControl<number> {
     const control = this.getRegularExpenses(monthIndex)
@@ -81,7 +84,9 @@ export class CashFlowTableComponent implements OnInit {
     this.cashFlowService.load().subscribe(data => {
       if (data && data.months?.length) {
         data.months.forEach((m: any) => {
-          const monthGroup = this.createMonth(new Date(m.month), m.startingBalance ?? 0);
+          const rawDate = new Date(m.month);
+          const monthDate = new Date(rawDate.getUTCFullYear(), rawDate.getUTCMonth(), 1);
+          const monthGroup = this.createMonth(monthDate, m.startingBalance ?? 0);
           monthGroup.get('income')?.setValue(m.income ?? 0, { emitEvent: false });
           monthGroup.get('mortgagePayment')?.setValue(m.mortgagePayment ?? 0, { emitEvent: false });
           monthGroup.get('loanPayment')?.setValue(m.loanPayment ?? 0, { emitEvent: false });
@@ -147,6 +152,7 @@ export class CashFlowTableComponent implements OnInit {
   }
 
   removeRegularExpense(monthIndex: number, expenseIndex: number) {
+    if (!confirm(this.translate.instant('CASH_FLOW.CONFIRM_DELETE'))) return;
     this.getRegularExpenses(monthIndex).removeAt(expenseIndex);
     this.calculateEndingBalances();
   }
@@ -157,6 +163,7 @@ export class CashFlowTableComponent implements OnInit {
   }
 
   removeSpecialExpense(monthIndex: number, expenseIndex: number) {
+    if (!confirm(this.translate.instant('CASH_FLOW.CONFIRM_DELETE'))) return;
     this.getSpecialExpenses(monthIndex).removeAt(expenseIndex);
     this.calculateEndingBalances();
   }
@@ -227,18 +234,22 @@ export class CashFlowTableComponent implements OnInit {
     const lastCtrl = this.months.at(this.months.length - 1);
     this.calculateEndingBalances();
     const lastMonthDate: Date = lastCtrl.get('month')?.value;
-    const nextMonth = new Date(lastMonthDate);
-    nextMonth.setMonth(nextMonth.getMonth() + 1);
+    const nextMonth = new Date(lastMonthDate.getFullYear(), lastMonthDate.getMonth() + 1, 1);
     const lastEndingBalance = lastCtrl.get('endingBalance')?.value || 0;
     this.months.push(this.createMonth(nextMonth, lastEndingBalance));
     this.refreshDataSource();
+  }
+
+  toMonthString(date: Date): string {
+    const d = new Date(date);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01T00:00:00.000Z`;
   }
 
   save() {
     const data = {
       months: this.months.controls.map(ctrl => ({
         rowColor: ctrl.get('rowColor')?.value,
-        month: ctrl.get('month')?.value,
+        month: this.toMonthString(ctrl.get('month')?.value),
         startingBalance: ctrl.get('startingBalance')?.value,
         income: ctrl.get('income')?.value,
         mortgagePayment: ctrl.get('mortgagePayment')?.value,
@@ -249,7 +260,9 @@ export class CashFlowTableComponent implements OnInit {
       }))
     };
     this.cashFlowService.save(data).subscribe({
-      next: () => this.snackBar.open('הנתונים נשמרו בהצלחה ✅', '', { duration: 3000, panelClass: 'snack-success' })
+      next: () => this.translate.get('CASH_FLOW.SAVED_SUCCESS').subscribe(msg =>
+        this.snackBar.open(msg, '', { duration: 3000, panelClass: 'snack-success' })
+      )
     });
   }
 
@@ -260,6 +273,9 @@ export class CashFlowTableComponent implements OnInit {
     this.refreshDataSource();
     this.cdr.detectChanges();
   }
+
+  focusField(key: string) { this.focusedField[key] = true; }
+  blurField(key: string) { this.focusedField[key] = false; }
 
   exportPdf() {
     window.print();

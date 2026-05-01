@@ -8,14 +8,36 @@ body {
 
 body {
     margin: 0;
-    font-family: Roboto, "Helvetica Neue", sans-serif;
+    font-family: 'Inter', 'Roboto', 'Helvetica Neue', sans-serif;
+}
+
+.app-navbar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.app-content {
+    height: calc(100vh - 57px);
+    overflow-y: auto;
+}
+
+.app-content.no-scroll {
+    overflow-y: hidden;
+}
+
+.app-content>app-investment-dashboard {
+    display: block;
+    height: 100%;
 }
 
 @media print {
-  html, body {
-    overflow: visible !important;
-    height: auto !important;
-  }
+
+    html,
+    body {
+        overflow: visible !important;
+        height: auto !important;
+    }
 }
 
 
@@ -113,6 +135,37 @@ body {
     background-color: #2e7d32 !important;
     color: #fff !important;
     font-family: 'Heebo', sans-serif !important;
+}
+
+/* ---------- Cash Flow Table RTL Fix ---------- */
+app-cash-flow-table {
+    direction: rtl !important;
+}
+
+app-cash-flow-table .mat-mdc-header-cell,
+app-cash-flow-table .mat-mdc-cell {
+    text-align: right !important;
+}
+
+app-cash-flow-table .actions {
+    direction: rtl;
+    justify-content: flex-start !important;
+}
+
+/* ---------- Modern Tooltips ---------- */
+.mat-mdc-tooltip .mdc-tooltip__surface {
+    background: #344765 !important;
+    color: #f8fafc !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 0.78rem !important;
+    font-weight: 500 !important;
+    padding: 6px 12px !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18) !important;
+    letter-spacing: 0.1px !important;
+    line-height: 1.5 !important;
+    max-width: 240px !important;
+    white-space: pre-line !important;
 }
 
 /* ---------- Row Color Menu ---------- */

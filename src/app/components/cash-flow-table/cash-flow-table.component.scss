@@ -20,19 +20,22 @@ $white: #ffffff;
 
 .cash-flow-table {
   padding: 24px;
-  padding-bottom: 0;
+  padding-bottom: 40px;
   background: $bg;
+  direction: rtl;
+  text-align: right;
 
   .table-container {
     overflow-x: auto;
     overflow-y: auto;
     max-height: calc(100vh - 120px);
     padding-bottom: 50px;
+    direction: rtl;
 
     .mat-mdc-table {
       min-width: 900px;
+      direction: rtl;
     }
-
   }
 
   .actions {
@@ -100,7 +103,8 @@ $white: #ffffff;
       text-align: right;
 
       input[type='number'],
-      input[type='text'] {
+      input[type='text'],
+      input:not([type]) {
         font-family: 'Heebo', sans-serif;
         font-size: 13px;
         color: $text;
@@ -109,8 +113,11 @@ $white: #ffffff;
         border-radius: 6px;
         padding: 4px 8px;
         width: 100%;
+        max-width: 100%;
         transition: border 0.2s, background 0.2s;
         outline: none;
+        direction: rtl;
+        text-align: right;
 
         &:focus {
           border-color: $primary;
@@ -149,6 +156,21 @@ $white: #ffffff;
 
 .mat-mdc-row:hover .dots-btn {
   opacity: 0.8;
+}
+
+.amount-display {
+  cursor: pointer;
+  display: inline-block;
+  min-width: 20%;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  transition: border 0.15s, background 0.15s;
+
+  &:hover {
+    border-color: $border;
+    background: $white;
+  }
 }
 
 // הוצאות שוטפות expand

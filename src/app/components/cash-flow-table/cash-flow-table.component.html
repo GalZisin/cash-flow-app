@@ -1,9 +1,9 @@
 <div class="cash-flow-table" dir="rtl">
   <div class="actions">
-    <button mat-raised-button color="primary" (click)="addMonth()">הוסף חודש</button>
+    <button mat-raised-button color="primary" (click)="addMonth()">{{ 'CASH_FLOW.ADD_MONTH' | translate }}</button>
     <span class="spacer"></span>
-    <button mat-raised-button color="warn" (click)="save()">שמור</button>
-    <button mat-raised-button color="accent" (click)="exportPdf()">ייצא PDF</button>
+    <button mat-raised-button color="warn" (click)="save()">{{ 'CASH_FLOW.SAVE' | translate }}</button>
+    <button mat-raised-button color="accent" (click)="exportPdf()">{{ 'CASH_FLOW.EXPORT_PDF' | translate }}</button>
   </div>
 
   <div class="table-container">
@@ -22,7 +22,7 @@
 
     <!-- Month Column -->
     <ng-container matColumnDef="month">
-      <th mat-header-cell *matHeaderCellDef> חודש </th>
+      <th mat-header-cell *matHeaderCellDef> {{ 'CASH_FLOW.MONTH' | translate }} </th>
       <td mat-cell *matCellDef="let monthCtrl; let i = index">
         {{ monthCtrl.get('month')?.value | date:'MMMM yyyy':'':'he' }}
       </td>
@@ -30,46 +30,71 @@
 
     <!-- Starting Balance -->
     <ng-container matColumnDef="startingBalance">
-      <th mat-header-cell *matHeaderCellDef> יתרה בתחילת החודש </th>
+      <th mat-header-cell *matHeaderCellDef> {{ 'CASH_FLOW.STARTING_BALANCE' | translate }} </th>
       <td mat-cell *matCellDef="let monthCtrl; let i = index">
         <span *ngIf="i > 0">{{ monthCtrl.get('startingBalance')?.value | number:'1.0-0' }} ₪</span>
-        <input *ngIf="i === 0" matInput type="number" placeholder="יתרה בתחילת החודש" [formControl]="monthCtrl.get('startingBalance')"
-          (input)="calculateEndingBalances()" />
+        <ng-container *ngIf="i === 0">
+          <span *ngIf="!focusedField['startingBalance_' + i]" class="amount-display" (click)="focusField('startingBalance_' + i)">
+            {{ monthCtrl.get('startingBalance')?.value | number:'1.0-0' }} ₪
+          </span>
+          <input *ngIf="focusedField['startingBalance_' + i]" matInput type="number" dir="rtl"
+            placeholder="יתרה בתחילת החודש" title="יתרה בתחילת החודש" aria-label="יתרה בתחילת החודש"
+            [formControl]="monthCtrl.get('startingBalance')"
+            (input)="calculateEndingBalances()"
+            (blur)="blurField('startingBalance_' + i)"
+            #autoFocus />
+        </ng-container>
       </td>
     </ng-container>
 
     <!-- Income -->
     <ng-container matColumnDef="income">
-      <th mat-header-cell *matHeaderCellDef> הכנסות </th>
+      <th mat-header-cell *matHeaderCellDef> {{ 'CASH_FLOW.INCOME' | translate }} </th>
       <td mat-cell *matCellDef="let monthCtrl; let i = index">
-        <input matInput type="number" placeholder="הכנסות" [formControl]="monthCtrl.get('income')"
-          (input)="calculateEndingBalances()" />
+        <span *ngIf="!focusedField['income_' + i]" class="amount-display" (click)="focusField('income_' + i)">
+          {{ monthCtrl.get('income')?.value | number:'1.0-0' }} ₪
+        </span>
+        <input *ngIf="focusedField['income_' + i]" matInput type="number" dir="rtl"
+          placeholder="הכנסות" title="הכנסות" aria-label="הכנסות"
+          [formControl]="monthCtrl.get('income')"
+          (input)="calculateEndingBalances()"
+          (blur)="blurField('income_' + i)" />
       </td>
     </ng-container>
 
     <!-- Mortgage -->
     <ng-container matColumnDef="mortgagePayment">
-      <th mat-header-cell *matHeaderCellDef> משכנתא </th>
+      <th mat-header-cell *matHeaderCellDef> {{ 'CASH_FLOW.MORTGAGE' | translate }} </th>
       <td mat-cell *matCellDef="let monthCtrl; let i = index">
-        <input matInput type="number" placeholder="משכנתא" [formControl]="monthCtrl.get('mortgagePayment')"
-          (input)="calculateEndingBalances()" />
+        <span *ngIf="!focusedField['mortgage_' + i]" class="amount-display" (click)="focusField('mortgage_' + i)">
+          {{ monthCtrl.get('mortgagePayment')?.value | number:'1.0-0' }} ₪
+        </span>
+        <input *ngIf="focusedField['mortgage_' + i]" matInput type="number" dir="rtl"
+          placeholder="משכנתא" title="משכנתא" aria-label="משכנתא"
+          [formControl]="monthCtrl.get('mortgagePayment')"
+          (input)="calculateEndingBalances()"
+          (blur)="blurField('mortgage_' + i)" />
       </td>
     </ng-container>
 
     <!-- Loan Payment -->
     <ng-container matColumnDef="loanPayment">
-      <th mat-header-cell *matHeaderCellDef> הלוואה חודשית </th>
+      <th mat-header-cell *matHeaderCellDef> {{ 'CASH_FLOW.LOAN' | translate }} </th>
       <td mat-cell *matCellDef="let monthCtrl; let i = index">
-        <input matInput type="number" placeholder=" הלוואה חודשית " [formControl]="monthCtrl.get('loanPayment')"
-          (input)="calculateEndingBalances()" />
+        <span *ngIf="!focusedField['loan_' + i]" class="amount-display" (click)="focusField('loan_' + i)">
+          {{ monthCtrl.get('loanPayment')?.value | number:'1.0-0' }} ₪
+        </span>
+        <input *ngIf="focusedField['loan_' + i]" matInput type="number" dir="rtl"
+          placeholder="הלוואה חודשית" title="הלוואה חודשית" aria-label="הלוואה חודשית"
+          [formControl]="monthCtrl.get('loanPayment')"
+          (input)="calculateEndingBalances()"
+          (blur)="blurField('loan_' + i)" />
       </td>
     </ng-container>
 
-
-
     <!-- Regular Expenses (Expandable) -->
     <ng-container matColumnDef="regularExpenses">
-      <th mat-header-cell *matHeaderCellDef> הוצאות שוטפות </th>
+      <th mat-header-cell *matHeaderCellDef> {{ 'CASH_FLOW.REGULAR_EXPENSES' | translate }} </th>
       <td mat-cell *matCellDef="let monthCtrl; let i = index">
         <button mat-icon-button class="no-print" (click)="monthCtrl.get('expanded')?.setValue(!monthCtrl.get('expanded')?.value)">
           <mat-icon>{{ monthCtrl.get('expanded')?.value ? 'expand_less' : 'expand_more' }}</mat-icon>
@@ -77,14 +102,20 @@
 
         <div *ngIf="monthCtrl.get('expanded')?.value" class="no-print">
           <div *ngFor="let expCtrl of getRegularExpenses(i).controls; let j=index" class="expense-row">
-            <input placeholder="תיאור" [formControl]="getExpenseDescription(i, j)" />
-            <input type="number" placeholder="סכום" [formControl]="getExpenseAmount(i, j)"
-              (input)="calculateEndingBalances()" />
+            <input dir="rtl" placeholder="תיאור" title="תיאור" aria-label="תיאור" [formControl]="getExpenseDescription(i, j)" />
+            <span *ngIf="!focusedField['reg_' + i + '_' + j]" class="amount-display" (click)="focusField('reg_' + i + '_' + j)">
+              {{ getExpenseAmount(i, j).value | number:'1.0-0' }} ₪
+            </span>
+            <input *ngIf="focusedField['reg_' + i + '_' + j]" type="number" dir="rtl"
+              placeholder="סכום" title="סכום" aria-label="סכום"
+              [formControl]="getExpenseAmount(i, j)"
+              (input)="calculateEndingBalances()"
+              (blur)="blurField('reg_' + i + '_' + j)" />
             <button mat-icon-button color="warn" (click)="removeRegularExpense(i,j)">
               <mat-icon>delete</mat-icon>
             </button>
           </div>
-          <button mat-button (click)="addRegularExpense(i)">הוסף הוצאה</button>
+          <button mat-button (click)="addRegularExpense(i)">{{ 'CASH_FLOW.ADD_EXPENSE' | translate }}</button>
         </div>
 
         <div class="print-only">
@@ -98,7 +129,7 @@
 
     <!-- Special Expenses -->
     <ng-container matColumnDef="specialExpenses">
-      <th mat-header-cell *matHeaderCellDef> הוצאות מיוחדות </th>
+      <th mat-header-cell *matHeaderCellDef> {{ 'CASH_FLOW.SPECIAL_EXPENSES' | translate }} </th>
       <td mat-cell *matCellDef="let monthCtrl; let i = index">
         <button mat-icon-button class="no-print" (click)="monthCtrl.get('expandedSpecial')?.setValue(!monthCtrl.get('expandedSpecial')?.value)">
           <mat-icon>{{ monthCtrl.get('expandedSpecial')?.value ? 'expand_less' : 'expand_more' }}</mat-icon>
@@ -106,14 +137,20 @@
 
         <div *ngIf="monthCtrl.get('expandedSpecial')?.value" class="no-print">
           <div *ngFor="let expCtrl of getSpecialExpenses(i).controls; let j=index" class="expense-row">
-            <input placeholder="תיאור" [formControl]="getSpecialExpenseDescription(i, j)" />
-            <input type="number" placeholder="סכום" [formControl]="getSpecialExpenseAmount(i, j)"
-              (input)="calculateEndingBalances()" />
+            <input dir="rtl" placeholder="תיאור" title="תיאור" aria-label="תיאור" [formControl]="getSpecialExpenseDescription(i, j)" />
+            <span *ngIf="!focusedField['spec_' + i + '_' + j]" class="amount-display" (click)="focusField('spec_' + i + '_' + j)">
+              {{ getSpecialExpenseAmount(i, j).value | number:'1.0-0' }} ₪
+            </span>
+            <input *ngIf="focusedField['spec_' + i + '_' + j]" type="number" dir="rtl"
+              placeholder="סכום" title="סכום" aria-label="סכום"
+              [formControl]="getSpecialExpenseAmount(i, j)"
+              (input)="calculateEndingBalances()"
+              (blur)="blurField('spec_' + i + '_' + j)" />
             <button mat-icon-button color="warn" (click)="removeSpecialExpense(i, j)">
               <mat-icon>delete</mat-icon>
             </button>
           </div>
-          <button mat-button (click)="addSpecialExpense(i)">הוסף הוצאה</button>
+          <button mat-button (click)="addSpecialExpense(i)">{{ 'CASH_FLOW.ADD_EXPENSE' | translate }}</button>
         </div>
 
         <div class="print-only">
@@ -127,7 +164,7 @@
 
     <!-- Ending Balance -->
     <ng-container matColumnDef="endingBalance">
-      <th mat-header-cell *matHeaderCellDef> יתרה בסוף החודש </th>
+      <th mat-header-cell *matHeaderCellDef> {{ 'CASH_FLOW.ENDING_BALANCE' | translate }} </th>
       <td mat-cell *matCellDef="let monthCtrl"> {{ monthCtrl.get('endingBalance')?.value | number:'1.0-0' }} ₪</td>
     </ng-container>
 
@@ -142,11 +179,11 @@
   <button mat-menu-item *ngFor="let c of ROW_COLORS" (click)="setRowColor(activeRowCtrl, c.value)" class="color-menu-item">
     <span class="color-swatch" [style.background]="c.value"
       [class.active]="activeRowCtrl?.get('rowColor')?.value === c.value"></span>
-    <span>{{ c.label }}</span>
+    <span>{{ c.labelKey | translate }}</span>
     <mat-icon *ngIf="activeRowCtrl?.get('rowColor')?.value === c.value" class="check-icon">check</mat-icon>
   </button>
   <button mat-menu-item (click)="setRowColor(activeRowCtrl, null)" *ngIf="activeRowCtrl?.get('rowColor')?.value">
     <mat-icon>format_color_reset</mat-icon>
-    <span>נקה צבע</span>
+    <span>{{ 'CASH_FLOW.CLEAR_COLOR' | translate }}</span>
   </button>
 </mat-menu>
