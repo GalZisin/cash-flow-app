@@ -345,19 +345,24 @@ export class InvestmentDetailComponent implements OnChanges {
 
   saveSnapshot(i: number) {
     if (!this.editSnap.date || this.editSnap.value == null) return;
-
-    const snapshot = this.sortedSnapshots[i]; // 🔥 לוקחים את האובייקט
-
-    this.svc.updateSnapshot(this.investment.id, snapshot.id, {
+    const original = this.sortedSnapshots[i];
+    const realIndex = this.investment.snapshots.findIndex(
+      s => s.date === original.date && s.value === original.value
+    );
+    if (realIndex === -1) return;
+    this.svc.updateSnapshot(this.investment.id, realIndex, {
       date: this.editSnap.date,
       value: +this.editSnap.value
-    }).subscribe();
-
+    }).subscribe(() => this.recalc());
     this.editingSnapIndex = null;
   }
 
   deleteSnapshot(s: Snapshot) {
-    this.svc.deleteSnapshot(this.investment.id, s.id).subscribe();
+    const realIndex = this.investment.snapshots.findIndex(
+      snap => snap.date === s.date && snap.value === s.value
+    );
+    if (realIndex === -1) return;
+    this.svc.deleteSnapshot(this.investment.id, realIndex).subscribe(() => this.recalc());
   }
 
   snapChange(i: number): number {
@@ -384,17 +389,23 @@ export class InvestmentDetailComponent implements OnChanges {
   }
 
   saveTransaction() {
-    if (!this.editTx.date || this.editTx.amount == null) return;
-
-    this.svc.updateTransaction(this.investment.id, this.editTx as Transaction)
+    if (!this.editTx.date || this.editTx.amount == null || this.editingTxIndex === null) return;
+    const original = this.sortedTransactions[this.editingTxIndex];
+    const realIndex = this.investment.transactions.findIndex(
+      t => t.date === original.date && t.amount === original.amount && t.type === original.type
+    );
+    if (realIndex === -1) return;
+    this.svc.updateTransaction(this.investment.id, realIndex, this.editTx as Transaction)
       .subscribe(() => this.recalc());
-
     this.editingTxIndex = null;
   }
 
   deleteTransaction(tx: Transaction) {
-    this.svc.deleteTransaction(this.investment.id, tx.id)
-      .subscribe(() => this.recalc());
+    const realIndex = this.investment.transactions.findIndex(
+      t => t.date === tx.date && t.amount === tx.amount && t.type === tx.type
+    );
+    if (realIndex === -1) return;
+    this.svc.deleteTransaction(this.investment.id, realIndex).subscribe(() => this.recalc());
   }
 
   // --- Chart ---

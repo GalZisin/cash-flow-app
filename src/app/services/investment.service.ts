@@ -11,7 +11,7 @@ export class InvestmentService {
   private _investments = new BehaviorSubject<Investment[]>([]);
   investments$ = this._investments.asObservable();
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) {}
 
   private patch(updated: Investment) {
     this._investments.next(this._investments.value.map(i => i.id === updated.id ? updated : i));
@@ -46,45 +46,44 @@ export class InvestmentService {
   }
 
   // --- Snapshot CRUD ---
-  addSnapshot(investmentId: string, snapshot: Omit<Snapshot, 'id'>) {
-    return this.http
-      .post<Investment>(`${this.url}/${investmentId}/snapshot`, snapshot)
-      .pipe(tap(updated => this.patch(updated)));
+  addSnapshot(id: string, snapshot: Snapshot) {
+    return this.http.post<Investment>(`${this.url}/${id}/snapshot`, snapshot).pipe(
+      tap(updated => this.patch(updated))
+    );
   }
 
-  updateSnapshot(investmentId: string, snapshotId: string, snapshot: Partial<Snapshot>) {
-    return this.http
-      .put<Investment>(`${this.url}/${investmentId}/snapshot/${snapshotId}`, snapshot)
-      .pipe(tap(updated => this.patch(updated)));
+  updateSnapshot(id: string, index: number, snapshot: Snapshot) {
+    return this.http.put<Investment>(`${this.url}/${id}/snapshot/${index}`, snapshot).pipe(
+      tap(updated => this.patch(updated))
+    );
   }
 
-  deleteSnapshot(investmentId: string, snapshotId: string) {
-    return this.http
-      .delete<Investment>(`${this.url}/${investmentId}/snapshot/${snapshotId}`)
-      .pipe(tap(updated => this.patch(updated)));
+  deleteSnapshot(id: string, index: number) {
+    return this.http.delete<Investment>(`${this.url}/${id}/snapshot/${index}`).pipe(
+      tap(updated => this.patch(updated))
+    );
   }
 
   // --- Transaction CRUD ---
-  addTransaction(investmentId: string, tx: Omit<Transaction, 'id'>) {
-    return this.http
-      .post<Investment>(`${this.url}/${investmentId}/transaction`, tx)
-      .pipe(tap(updated => this.patch(updated)));
+  addTransaction(id: string, tx: Transaction) {
+    return this.http.post<Investment>(`${this.url}/${id}/transaction`, tx).pipe(
+      tap(updated => this.patch(updated))
+    );
   }
 
-  updateTransaction(investmentId: string, tx: Transaction) {
-    return this.http
-      .put<Investment>(`${this.url}/${investmentId}/transaction/${tx.id}`, tx)
-      .pipe(tap(updated => this.patch(updated)));
+  updateTransaction(id: string, index: number, tx: Transaction) {
+    return this.http.put<Investment>(`${this.url}/${id}/transaction/${index}`, tx).pipe(
+      tap(updated => this.patch(updated))
+    );
   }
 
-  deleteTransaction(investmentId: string, txId: string) {
-    return this.http
-      .delete<Investment>(`${this.url}/${investmentId}/transaction/${txId}`)
-      .pipe(tap(updated => this.patch(updated)));
+  deleteTransaction(id: string, index: number) {
+    return this.http.delete<Investment>(`${this.url}/${id}/transaction/${index}`).pipe(
+      tap(updated => this.patch(updated))
+    );
   }
 
   // --- Calculations ---
-
   percentChange(snapshots: Snapshot[]): number | null {
     if (!snapshots || snapshots.length < 2) return null;
     const sorted = this.sortedSnapshots(snapshots);
@@ -131,7 +130,6 @@ export class InvestmentService {
   private _xirrCalc(flows: { date: Date; amount: number }[], initialRate: number): number | null {
     let rate = initialRate;
     const t0 = flows[0].date.getTime();
-
     for (let i = 0; i < 200; i++) {
       let f = 0, df = 0;
       for (const cf of flows) {
@@ -139,7 +137,7 @@ export class InvestmentService {
         const base = 1 + rate;
         if (base <= 0) return null;
         const denom = Math.pow(base, t);
-        f += cf.amount / denom;
+        f  += cf.amount / denom;
         df += (-t * cf.amount) / (denom * base);
       }
       if (!isFinite(f) || !isFinite(df) || Math.abs(df) < 1e-10) return null;
