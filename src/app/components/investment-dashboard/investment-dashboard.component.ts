@@ -101,7 +101,7 @@ import { InvestmentSimulationComponent } from '../investment-simulation/investme
           </div>
           <div class="col-md-7">
             @if (selectedInvestment) {
-              <app-investment-detail [investment]="selectedInvestment" (snapshotAdded)="onSnapshotAdded($event)" />
+              <app-investment-detail [investment]="selectedInvestment" />
             }
           </div>
         </div>
@@ -119,7 +119,7 @@ export class InvestmentDashboardComponent implements OnInit {
   investments: Investment[] = [];
   selectedId: string | null = null;
 
-  constructor(private svc: InvestmentService) {}
+  constructor(private svc: InvestmentService) { }
 
   ngOnInit() {
     this.svc.load().subscribe();
@@ -163,10 +163,6 @@ export class InvestmentDashboardComponent implements OnInit {
   }
 
   onAdd(data: { name: string; type: Investment['type'] }) {
-    this.svc.add(data).subscribe();
-  }
-
-  onSnapshotAdded({ id, snapshot }: any) {
-    this.svc.addSnapshot(id, snapshot).subscribe();
+    this.svc.add({ name: data.name, type: data.type, transactions: [], snapshots: [] }).subscribe();
   }
 }

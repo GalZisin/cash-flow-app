@@ -1,7 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, tap } from 'rxjs';
-import { Investment, Snapshot } from '../models/investment.model';
+import { Investment, Snapshot, Transaction } from '../models/investment.model';
+
+const MS_YEAR = 365.25 * 24 * 3600 * 1000;
 
 @Injectable({ providedIn: 'root' })
 export class InvestmentService {
@@ -11,13 +13,21 @@ export class InvestmentService {
 
   constructor(private http: HttpClient) {}
 
+  private patch(updated: Investment) {
+    this._investments.next(this._investments.value.map(i => i.id === updated.id ? updated : i));
+  }
+
   load() {
     return this.http.get<Investment[]>(this.url).pipe(
-      tap(data => this._investments.next(data))
+      tap(data => this._investments.next(data.map(inv => ({
+        ...inv,
+        snapshots: inv.snapshots ?? [],
+        transactions: inv.transactions ?? []
+      }))))
     );
   }
 
-  add(investment: Omit<Investment, 'id' | 'snapshots'>) {
+  add(investment: Omit<Investment, 'id'>) {
     return this.http.post<Investment>(this.url, investment).pipe(
       tap(inv => this._investments.next([...this._investments.value, inv]))
     );
@@ -25,17 +35,7 @@ export class InvestmentService {
 
   update(id: string, changes: Partial<Investment>) {
     return this.http.put<Investment>(`${this.url}/${id}`, changes).pipe(
-      tap(updated => this._investments.next(
-        this._investments.value.map(i => i.id === id ? updated : i)
-      ))
-    );
-  }
-
-  addSnapshot(id: string, snapshot: Snapshot) {
-    return this.http.post<Investment>(`${this.url}/${id}/snapshot`, snapshot).pipe(
-      tap(updated => this._investments.next(
-        this._investments.value.map(i => i.id === id ? updated : i)
-      ))
+      tap(updated => this.patch(updated))
     );
   }
 
@@ -45,48 +45,108 @@ export class InvestmentService {
     );
   }
 
+  // --- Snapshot CRUD ---
+  addSnapshot(id: string, snapshot: Snapshot) {
+    return this.http.post<Investment>(`${this.url}/${id}/snapshot`, snapshot).pipe(
+      tap(updated => this.patch(updated))
+    );
+  }
+
+  updateSnapshot(id: string, index: number, snapshot: Snapshot) {
+    return this.http.put<Investment>(`${this.url}/${id}/snapshot/${index}`, snapshot).pipe(
+      tap(updated => this.patch(updated))
+    );
+  }
+
+  deleteSnapshot(id: string, index: number) {
+    return this.http.delete<Investment>(`${this.url}/${id}/snapshot/${index}`).pipe(
+      tap(updated => this.patch(updated))
+    );
+  }
+
+  // --- Transaction CRUD ---
+  addTransaction(id: string, tx: Transaction) {
+    return this.http.post<Investment>(`${this.url}/${id}/transaction`, tx).pipe(
+      tap(updated => this.patch(updated))
+    );
+  }
+
+  updateTransaction(id: string, index: number, tx: Transaction) {
+    return this.http.put<Investment>(`${this.url}/${id}/transaction/${index}`, tx).pipe(
+      tap(updated => this.patch(updated))
+    );
+  }
+
+  deleteTransaction(id: string, index: number) {
+    return this.http.delete<Investment>(`${this.url}/${id}/transaction/${index}`).pipe(
+      tap(updated => this.patch(updated))
+    );
+  }
+
   // --- Calculations ---
+
   percentChange(snapshots: Snapshot[]): number | null {
-    if (snapshots.length < 2) return null;
-    const first = snapshots[0].value;
-    const last = snapshots[snapshots.length - 1].value;
-    return ((last - first) / first) * 100;
+    if (!snapshots || snapshots.length < 2) return null;
+    const sorted = this.sortedSnapshots(snapshots);
+    return ((sorted.at(-1)!.value - sorted[0].value) / sorted[0].value) * 100;
   }
 
   cagr(snapshots: Snapshot[]): number | null {
-    if (snapshots.length < 2) return null;
-    const first = snapshots[0];
-    const last = snapshots[snapshots.length - 1];
-    const years = (new Date(last.date).getTime() - new Date(first.date).getTime()) / (365.25 * 24 * 3600 * 1000);
+    if (!snapshots || snapshots.length < 2) return null;
+    const sorted = this.sortedSnapshots(snapshots);
+    const years = (new Date(sorted.at(-1)!.date).getTime() - new Date(sorted[0].date).getTime()) / MS_YEAR;
     if (years <= 0) return null;
-    return (Math.pow(last.value / first.value, 1 / years) - 1) * 100;
+    return (Math.pow(sorted.at(-1)!.value / sorted[0].value, 1 / years) - 1) * 100;
   }
 
-  xirr(snapshots: Snapshot[]): number | null {
-    const cashflows = snapshots
-      .filter(s => s.deposit != null)
-      .map(s => ({ date: new Date(s.date), amount: -(s.deposit!) }));
-    if (snapshots.length === 0) return null;
-    const last = snapshots[snapshots.length - 1];
-    cashflows.push({ date: new Date(last.date), amount: last.value });
-    if (cashflows.length < 2) return null;
-    return this._xirrCalc(cashflows);
+  xirr(investment: Investment): number | null {
+    const txs = investment.transactions ?? [];
+    const snaps = investment.snapshots ?? [];
+    if (!txs.length || !snaps.length) return null;
+
+    const flows: { date: Date; amount: number }[] = txs.map(t => ({
+      date: new Date(t.date),
+      amount: t.type === 'deposit' ? -Math.abs(t.amount) : Math.abs(t.amount)
+    }));
+
+    const lastSnap = this.sortedSnapshots(snaps).at(-1)!;
+    flows.push({ date: new Date(lastSnap.date), amount: lastSnap.value });
+    flows.sort((a, b) => a.date.getTime() - b.date.getTime());
+
+    const hasPos = flows.some(f => f.amount > 0);
+    const hasNeg = flows.some(f => f.amount < 0);
+    if (!hasPos || !hasNeg) return null;
+
+    for (const start of [0.1, 0.05, 0.2, 0.0, -0.05]) {
+      const r = this._xirrCalc(flows, start);
+      if (r !== null && r > -99 && r < 500) return r;
+    }
+    return null;
   }
 
-  private _xirrCalc(flows: { date: Date; amount: number }[]): number | null {
-    const maxIter = 100;
-    let rate = 0.1;
-    for (let i = 0; i < maxIter; i++) {
+  private sortedSnapshots(snapshots: Snapshot[]): Snapshot[] {
+    return [...snapshots].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }
+
+  private _xirrCalc(flows: { date: Date; amount: number }[], initialRate: number): number | null {
+    let rate = initialRate;
+    const t0 = flows[0].date.getTime();
+
+    for (let i = 0; i < 200; i++) {
       let f = 0, df = 0;
-      const t0 = flows[0].date.getTime();
       for (const cf of flows) {
-        const t = (cf.date.getTime() - t0) / (365.25 * 24 * 3600 * 1000);
-        f += cf.amount / Math.pow(1 + rate, t);
-        df += -t * cf.amount / Math.pow(1 + rate, t + 1);
+        const t = (cf.date.getTime() - t0) / MS_YEAR;
+        const base = 1 + rate;
+        if (base <= 0) return null;
+        const denom = Math.pow(base, t);
+        f  += cf.amount / denom;
+        df += (-t * cf.amount) / (denom * base);
       }
-      const newRate = rate - f / df;
-      if (Math.abs(newRate - rate) < 1e-7) return newRate * 100;
-      rate = newRate;
+      if (!isFinite(f) || !isFinite(df) || Math.abs(df) < 1e-10) return null;
+      const next = rate - f / df;
+      if (!isFinite(next)) return null;
+      if (Math.abs(next - rate) < 1e-6) return next * 100;
+      rate = Math.max(next, -0.999);
     }
     return null;
   }
