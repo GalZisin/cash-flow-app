@@ -41,7 +41,9 @@ function writeInvestments(data) {
 }
 
 app.get('/api/investments', (req, res) => {
-  res.json(readInvestments());
+  const investments = readInvestments();
+  investments.forEach(inv => sortInvestment(inv)); // 🔥
+  res.json(investments);
 });
 
 app.post('/api/investments', (req, res) => {
@@ -63,58 +65,109 @@ app.put('/api/investments/:id', (req, res) => {
 
 // Snapshot routes
 app.post('/api/investments/:id/snapshot', (req, res) => {
+  if (!req.body.date || req.body.value == null) {
+    return res.status(400).json({ error: 'Invalid snapshot' });
+  }
   const investments = readInvestments();
   const inv = investments.find(i => i.id === req.params.id);
   if (!inv) return res.status(404).json({ error: 'Not found' });
   if (!inv.snapshots) inv.snapshots = [];
-  inv.snapshots.push(req.body);
+
+  const newSnapshot = {
+    id: Date.now().toString(),
+    date: req.body.date,
+    value: Number(req.body.value)
+  };
+
+  inv.snapshots.push(newSnapshot);
+
+  sortInvestment(inv); // 🔥 כאן
   writeInvestments(investments);
   res.json(inv);
 });
 
-app.put('/api/investments/:id/snapshot/:index', (req, res) => {
+
+
+app.put('/api/investments/:id/snapshot/:snapshotId', (req, res) => {
+  if (!req.body.date || req.body.value == null) {
+    return res.status(400).json({ error: 'Invalid snapshot' });
+  }
   const investments = readInvestments();
   const inv = investments.find(i => i.id === req.params.id);
+
   if (!inv) return res.status(404).json({ error: 'Not found' });
-  inv.snapshots[+req.params.index] = req.body;
+  const snap = inv.snapshots.find(s => s.id === req.params.snapshotId);
+  if (!snap) return res.status(404).json({ error: 'Snapshot not found' });
+
+  snap.date = req.body.date;
+  snap.value = Number(req.body.value);
+
+  sortInvestment(inv);
   writeInvestments(investments);
   res.json(inv);
 });
 
-app.delete('/api/investments/:id/snapshot/:index', (req, res) => {
+app.delete('/api/investments/:id/snapshot/:snapshotId', (req, res) => {
   const investments = readInvestments();
   const inv = investments.find(i => i.id === req.params.id);
   if (!inv) return res.status(404).json({ error: 'Not found' });
-  inv.snapshots.splice(+req.params.index, 1);
+  inv.snapshots = inv.snapshots.filter(s => s.id !== req.params.snapshotId);
   writeInvestments(investments);
   res.json(inv);
 });
 
 // Transaction routes
 app.post('/api/investments/:id/transaction', (req, res) => {
+  if (!req.body.date || req.body.amount == null || !req.body.type) {
+    return res.status(400).json({ error: 'Invalid transaction' });
+  }
   const investments = readInvestments();
   const inv = investments.find(i => i.id === req.params.id);
   if (!inv) return res.status(404).json({ error: 'Not found' });
-  if (!inv.transactions) inv.transactions = [];
-  inv.transactions.push(req.body);
+
+  const newTx = {
+    id: Date.now().toString(),
+    date: req.body.date,
+    amount: Number(req.body.amount),
+    type: req.body.type
+  };
+
+  inv.transactions.push(newTx);
+  inv.transactions.sort((a, b) => new Date(a.date) - new Date(b.date));
+  ortInvestment(inv); // 🔥 כאן
   writeInvestments(investments);
   res.json(inv);
 });
 
-app.put('/api/investments/:id/transaction/:index', (req, res) => {
+app.put('/api/investments/:id/transaction/:txId', (req, res) => {
+  if (!req.body.date || req.body.amount == null || !req.body.type) { //if (!req.body.date || isNaN(Number(req.body.value)))  יותר קשוח
+    return res.status(400).json({ error: 'Invalid transaction' });
+  }
   const investments = readInvestments();
   const inv = investments.find(i => i.id === req.params.id);
   if (!inv) return res.status(404).json({ error: 'Not found' });
-  inv.transactions[+req.params.index] = req.body;
+
+  inv.transactions[index] = {
+    ...inv.transactions[index],
+    ...req.body
+  };
+
+  sortInvestment(inv); // 🔥 כאן
   writeInvestments(investments);
   res.json(inv);
 });
 
-app.delete('/api/investments/:id/transaction/:index', (req, res) => {
+app.delete('/api/investments/:id/transaction/:txId', (req, res) => {
+  if (!req.body.date || req.body.amount == null || !req.body.type) { //if (!req.body.date || isNaN(Number(req.body.value)))  יותר קשוח
+    return res.status(400).json({ error: 'Invalid transaction' });
+  }
   const investments = readInvestments();
   const inv = investments.find(i => i.id === req.params.id);
   if (!inv) return res.status(404).json({ error: 'Not found' });
-  inv.transactions.splice(+req.params.index, 1);
+
+  inv.transactions = inv.transactions.filter(t => t.id !== req.params.txId);
+
+  sortInvestment(inv);
   writeInvestments(investments);
   res.json(inv);
 });
@@ -123,7 +176,17 @@ app.delete('/api/investments/:id', (req, res) => {
   let investments = readInvestments();
   investments = investments.filter(i => i.id !== req.params.id);
   writeInvestments(investments);
-  res.json({ success: true });
+  res.json(investments); // 🔥 תחזיר את הרשימה המעודכנת
 });
 
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+
+function sortInvestment(inv) {
+  if (inv.transactions) {
+    inv.transactions.sort((a, b) => new Date(a.date) - new Date(b.date));
+  }
+
+  if (inv.snapshots) {
+    inv.snapshots.sort((a, b) => new Date(a.date) - new Date(b.date));
+  }
+}

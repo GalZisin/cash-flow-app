@@ -30,6 +30,8 @@ const CH = H - PAD.top - PAD.bottom;
     .snap-table th { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8; border-bottom: 1px solid #f0f2f5; padding: 8px 10px; }
     .snap-table td { font-size: 0.85rem; color: #1e293b; padding: 8px 10px; border-bottom: 1px solid #f8f9fb; vertical-align: middle; }
     .snap-table tr:last-child td { border-bottom: none; }
+    .table-scroll { max-height: 250px; overflow-y: auto; display: block; }
+    .table-scroll thead th { position: sticky; top: 0; background: #fff; z-index: 1; }
     .pct-pos { color: #1a7a52; font-weight: 600; }
     .pct-neg { color: #c0392b; font-weight: 600; }
     .add-row { background: #f8f9fb; border-top: 1px solid #f0f2f5; padding: 12px 16px; }
@@ -111,6 +113,7 @@ const CH = H - PAD.top - PAD.bottom;
 
       <!-- ═══ SNAPSHOTS TABLE ═══ -->
       <div class="section-title">📈 {{ 'INVESTMENTS.SNAPSHOTS_SECTION' | translate }}</div>
+      <div class="table-scroll">
       <table class="snap-table w-100">
         <thead><tr>
           <th>{{ 'INVESTMENTS.DATE' | translate }}</th>
@@ -147,7 +150,7 @@ const CH = H - PAD.top - PAD.bottom;
                       [matTooltip]="'INVESTMENTS.EDIT_TOOLTIP' | translate"
                       (click)="startEditSnapshot(i)">✏️</button>
                     <button class="del-btn" [matTooltip]="'INVESTMENTS.DELETE_SNAPSHOT_TOOLTIP' | translate"
-                      (click)="deleteSnapshot(i)">
+                      (click)="deleteSnapshot(s)">
                       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
                         <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
                       </svg>
@@ -159,6 +162,7 @@ const CH = H - PAD.top - PAD.bottom;
           }
         </tbody>
       </table>
+      </div>
 
       <!-- Add Snapshot -->
       <div class="add-row">
@@ -180,6 +184,7 @@ const CH = H - PAD.top - PAD.bottom;
 
       <!-- ═══ TRANSACTIONS TABLE ═══ -->
       <div class="section-title">💸 {{ 'INVESTMENTS.TRANSACTIONS_SECTION' | translate }}</div>
+      <div class="table-scroll">
       <table class="snap-table w-100">
         <thead><tr>
           <th>{{ 'INVESTMENTS.DATE' | translate }}</th>
@@ -201,7 +206,7 @@ const CH = H - PAD.top - PAD.bottom;
                 <td><input type="number" class="form-control form-control-sm" [(ngModel)]="editTx.amount" /></td>
                 <td>
                   <div class="d-flex gap-1">
-                    <button class="row-save-btn" (click)="saveTransaction(i)">✓</button>
+                    <button class="row-save-btn" (click)="saveTransaction()">✓</button>
                     <button class="row-cancel-btn" (click)="editingTxIndex = null">✕</button>
                   </div>
                 </td>
@@ -219,7 +224,7 @@ const CH = H - PAD.top - PAD.bottom;
                       [matTooltip]="'INVESTMENTS.EDIT_TOOLTIP' | translate"
                       (click)="startEditTransaction(i)">✏️</button>
                     <button class="del-btn" [matTooltip]="'INVESTMENTS.DELETE_SNAPSHOT_TOOLTIP' | translate"
-                      (click)="deleteTransaction(i)">
+                      (click)="deleteTransaction(t)">
                       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
                         <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
                       </svg>
@@ -231,6 +236,7 @@ const CH = H - PAD.top - PAD.bottom;
           }
         </tbody>
       </table>
+      </div>
 
       <!-- Add Transaction -->
       <div class="add-row">
@@ -286,7 +292,7 @@ export class InvestmentDetailComponent implements OnChanges {
   editTx: Partial<Transaction> = {};
   newTx: Partial<Transaction> = { date: today(), type: 'deposit' };
 
-  constructor(private svc: InvestmentService) {}
+  constructor(private svc: InvestmentService) { }
 
   ngOnChanges() {
     this.editingName = false;
@@ -322,7 +328,12 @@ export class InvestmentDetailComponent implements OnChanges {
   // --- Snapshots ---
   addSnapshot() {
     if (!this.newSnap.date || this.newSnap.value == null) return;
-    this.svc.addSnapshot(this.investment.id, { date: this.newSnap.date, value: +this.newSnap.value }).subscribe(() => this.recalc());
+
+    this.svc.addSnapshot(this.investment.id, {
+      date: this.newSnap.date,
+      value: +this.newSnap.value
+    }).subscribe();
+
     this.newSnap = { date: today() };
   }
 
@@ -334,14 +345,19 @@ export class InvestmentDetailComponent implements OnChanges {
 
   saveSnapshot(i: number) {
     if (!this.editSnap.date || this.editSnap.value == null) return;
-    const realIndex = this.investment.snapshots.indexOf(this.sortedSnapshots[i]);
-    this.svc.updateSnapshot(this.investment.id, realIndex, { date: this.editSnap.date, value: +this.editSnap.value! }).subscribe(() => this.recalc());
+
+    const snapshot = this.sortedSnapshots[i]; // 🔥 לוקחים את האובייקט
+
+    this.svc.updateSnapshot(this.investment.id, snapshot.id, {
+      date: this.editSnap.date,
+      value: +this.editSnap.value
+    }).subscribe();
+
     this.editingSnapIndex = null;
   }
 
-  deleteSnapshot(i: number) {
-    const realIndex = this.investment.snapshots.indexOf(this.sortedSnapshots[i]);
-    this.svc.deleteSnapshot(this.investment.id, realIndex).subscribe(() => this.recalc());
+  deleteSnapshot(s: Snapshot) {
+    this.svc.deleteSnapshot(this.investment.id, s.id).subscribe();
   }
 
   snapChange(i: number): number {
@@ -352,9 +368,13 @@ export class InvestmentDetailComponent implements OnChanges {
   // --- Transactions ---
   addTransaction() {
     if (!this.newTx.date || this.newTx.amount == null || !this.newTx.type) return;
+
     this.svc.addTransaction(this.investment.id, {
-      date: this.newTx.date, amount: +this.newTx.amount, type: this.newTx.type as 'deposit' | 'withdraw'
-    }).subscribe(() => this.recalc());
+      date: this.newTx.date,
+      amount: +this.newTx.amount,
+      type: this.newTx.type
+    }).subscribe();
+
     this.newTx = { date: today(), type: 'deposit' };
   }
 
@@ -363,16 +383,18 @@ export class InvestmentDetailComponent implements OnChanges {
     this.editingTxIndex = i;
   }
 
-  saveTransaction(i: number) {
+  saveTransaction() {
     if (!this.editTx.date || this.editTx.amount == null) return;
-    const realIndex = this.investment.transactions.indexOf(this.sortedTransactions[i]);
-    this.svc.updateTransaction(this.investment.id, realIndex, this.editTx as Transaction).subscribe(() => this.recalc());
+
+    this.svc.updateTransaction(this.investment.id, this.editTx as Transaction)
+      .subscribe(() => this.recalc());
+
     this.editingTxIndex = null;
   }
 
-  deleteTransaction(i: number) {
-    const realIndex = this.investment.transactions.indexOf(this.sortedTransactions[i]);
-    this.svc.deleteTransaction(this.investment.id, realIndex).subscribe(() => this.recalc());
+  deleteTransaction(tx: Transaction) {
+    this.svc.deleteTransaction(this.investment.id, tx.id)
+      .subscribe(() => this.recalc());
   }
 
   // --- Chart ---

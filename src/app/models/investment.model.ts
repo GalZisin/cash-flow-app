@@ -28,12 +28,14 @@
 export type TransactionType = 'deposit' | 'withdraw';
 
 export interface Transaction {
+  id: string;
   date: string;
   amount: number; // deposit = שלילי, withdrawal = חיובי
   type: TransactionType;
 }
 
 export interface Snapshot {
+  id: string;
   date: string;
   value: number;
 }
