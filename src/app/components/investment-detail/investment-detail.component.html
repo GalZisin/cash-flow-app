@@ -1,0 +1,356 @@
+<div class="det-card">
+
+  <!-- Sticky name bar -->
+  @if (!editingName) {
+  <div class="det-name-bar d-flex justify-content-between align-items-center">
+    <span class="det-name">{{ investment.name }}</span>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge-type">{{ investment.type }}</span>
+      @if (cagr !== null) {
+      <span class="badge-cagr" [matTooltip]="'INVESTMENTS.CAGR_TOOLTIP' | translate">
+        CAGR {{ cagr | number:'1.1-1' }}%
+      </span>
+      }
+      @if (xirr !== null) {
+      <span class="badge-xirr" matTooltip="Internal Rate of Return (XIRR)">
+        XIRR {{ xirr | number:'1.1-1' }}%
+      </span>
+      }
+      <button class="edit-btn" [matTooltip]="'INVESTMENTS.EDIT_TOOLTIP' | translate"
+        (click)="startEditName()">✏️</button>
+    </div>
+  </div>
+  }
+
+  <!-- Header (edit form only) -->
+  <div class="det-header">
+    @if (editingName) {
+    <div class="d-flex gap-2 align-items-center flex-wrap">
+      <input aria-label="name" type="text" class="form-control form-control-sm edit-name-input" [(ngModel)]="editNameVal" />
+      <select aria-label="type" class="form-select form-select-sm edit-type-select" [(ngModel)]="editTypeVal">
+        <option value="pension">{{ 'INVESTMENTS.PENSION' | translate }}</option>
+        <option value="fund">{{ 'INVESTMENTS.FUND' | translate }}</option>
+        <option value="stock">{{ 'INVESTMENTS.STOCK' | translate }}</option>
+        <option value="other">{{ 'INVESTMENTS.OTHER' | translate }}</option>
+      </select>
+      <button class="row-save-btn" (click)="saveName()">{{ 'INVESTMENTS.SAVE' | translate }}</button>
+      <button class="row-cancel-btn" (click)="editingName = false">✕</button>
+    </div>
+    }
+  </div>
+
+  <!-- Scrollable content -->
+  <div class="det-wrapper">
+  <!-- Chart -->
+    @if (investment.snapshots.length > 1) {
+    <div class="chart-wrap mx-3 mt-3">
+      <svg [attr.viewBox]="'0 0 ' + W + ' ' + H" class="det-chart-svg">
+        <g [attr.transform]="'translate(' + PAD.left + ',' + PAD.top + ')'">
+          @for (tick of yTicks; track tick.y) {
+          <line [attr.x1]="0" [attr.y1]="tick.y" [attr.x2]="CW" [attr.y2]="tick.y" stroke="#e8eaed" stroke-width="1"
+            stroke-dasharray="3" />
+          <text [attr.x]="-8" [attr.y]="tick.y + 4" text-anchor="end" font-size="9" fill="#94a3b8">{{ tick.label
+            }}</text>
+          }
+          @for (pt of chartData; track pt.date; let i = $index) {
+          @if (shouldShowXLabel(i)) {
+          <text [attr.x]="pt.x" [attr.y]="CH + 20" text-anchor="middle" font-size="9" fill="#94a3b8">{{ pt.date |
+            slice:0:7 }}</text>
+          }
+          }
+          <line x1="0" [attr.y1]="CH" [attr.x2]="CW" [attr.y2]="CH" stroke="#e8eaed" stroke-width="1" />
+          <line x1="0" y1="0" x2="0" [attr.y2]="CH" stroke="#e8eaed" stroke-width="1" />
+          <path [attr.d]="areaPath" fill="#4f6ef7" fill-opacity="0.07" />
+          <polyline [attr.points]="linePoints" fill="none" stroke="#4f6ef7" stroke-width="2" stroke-linejoin="round" />
+          @for (pt of chartData; track pt.date) {
+          <circle class="dot" [attr.cx]="pt.x" [attr.cy]="pt.y" r="4" fill="#fff" stroke="#4f6ef7" stroke-width="2"
+            [matTooltip]="pt.date + ' — ' + (pt.value | number:'1.0-0') + ' ₪'" />
+          }
+        </g>
+      </svg>
+    </div>
+    }
+
+    <!-- ═══ PERFORMANCE PANEL ═══ -->
+    <div class="perf-panel mx-3 mb-3">
+
+      <!-- KPI cards -->
+      <div class="d-flex gap-2 flex-wrap mb-3">
+        <div class="kpi-card kpi-main">
+          <div class="kpi-label">XIRR {{ 'INVESTMENTS.TOTAL' | translate }}</div>
+          <div class="kpi-value" [class.pos]="xirr && xirr > 0" [class.neg]="xirr && xirr < 0">
+            @if (xirr !== null) { {{ xirr > 0 ? '▲' : '▼' }} {{ xirr | number:'1.1-1' }}% }
+            @else { - }
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">{{ 'INVESTMENTS.TOTAL_PROFIT' | translate }}</div>
+          <div class="kpi-value" [class.pos]="totalProfit && totalProfit > 0"
+            [class.neg]="totalProfit && totalProfit < 0">
+            @if (totalProfit !== null) { {{ totalProfit | number:'1.0-0' }} ₪ }
+            @else { - }
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">{{ 'INVESTMENTS.CURRENT_VALUE' | translate }}</div>
+          <div class="kpi-value">{{ currentValue !== null ? (currentValue | number:'1.0-0') + ' ₪' : '-' }}</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">{{ 'INVESTMENTS.TOTAL_DEPOSITS' | translate }}</div>
+          <div class="kpi-value">{{ totalDeposits !== null ? (totalDeposits | number:'1.0-0') + ' ₪' : '-' }}</div>
+        </div>
+      </div>
+
+      <!-- Yearly XIRR bar chart -->
+      @if (xirrYears.length > 0) {
+      <div class="yearly-chart mb-2">
+        <svg [attr.viewBox]="'-110 40 ' + (xirrYears.length * 110 + 50) + ' 90'" class="w-100 yearly-chart-svg">
+          @for (yr of xirrYears; track yr.year; let i = $index) {
+          @let barH = yr.value !== null ? Math.min(Math.abs(yr.value) * 2, 70) : 0;
+          @let barY = yr.value !== null && yr.value >= 0 ? 75 - barH : 75;
+          @let barColor = yr.value === null ? '#e2e8f0' : yr.value >= 0 ? '#4f6ef7' : '#ef4444';
+          @let x = i * 60 + 20;
+          <rect [attr.x]="x" [attr.y]="barY" width="32" [attr.height]="barH || 2" [attr.fill]="barColor" rx="4"
+            class="bar-rect"
+            [matTooltip]="yr.year + ': ' + (yr.value !== null ? (yr.value | number:'1.1-1') + '%' : '-') + (yr.profit !== null ? ' | ' + (yr.profit | number:'1.0-0') + ' ₪' : '')" />
+          <text [attr.x]="x + 16" y="92" text-anchor="middle" font-size="9" fill="#94a3b8">{{ yr.year }}</text>
+          @if (yr.value !== null) {
+          <text [attr.x]="x + 16" [attr.y]="barY - 3" text-anchor="middle" font-size="8" [attr.fill]="barColor">{{
+            yr.value | number:'1.0-0' }}%</text>
+          }
+          }
+          <!-- baseline -->
+          <line x1="10" y1="75" [attr.x2]="xirrYears.length * 60 + 30" y2="75" stroke="#e8eaed" stroke-width="1" />
+        </svg>
+      </div>
+
+      <!-- Yearly table -->
+      <div class="table-scroll table-scroll-sm" dir="ltr">
+        <table class="snap-table w-100" dir="rtl">
+          <thead>
+            <tr>
+              <th>{{ 'INVESTMENTS.YEAR' | translate }}</th>
+              <th>XIRR %</th>
+              <th>{{ 'INVESTMENTS.PROFIT_YEAR' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (yr of xirrYears; track yr.year) {
+            <tr>
+              <td>{{ yr.year }}</td>
+              <td>
+                @if (yr.value !== null) {
+                <span [class]="yr.value > 0 ? 'pct-pos' : 'pct-neg'">
+                  {{ yr.value > 0 ? '▲' : '▼' }} {{ yr.value | number:'1.1-1' }}%
+                </span>
+                } @else { <span class="text-muted">-</span> }
+              </td>
+              <td>
+                @if (yr.profit !== null) {
+                <span [class]="yr.profit > 0 ? 'pct-pos' : 'pct-neg'">
+                  {{ yr.profit > 0 ? '+' : '' }}{{ yr.profit | number:'1.0-0' }} ₪
+                </span>
+                } @else { <span class="text-muted">-</span> }
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      }
+    </div>
+
+    <!-- ═══ SNAPSHOTS TABLE ═══ -->
+    <div class="section-title">📈 {{ 'INVESTMENTS.SNAPSHOTS_SECTION' | translate }}</div>
+    <div class="table-scroll" dir="ltr">
+      <table class="snap-table w-100" dir="rtl">
+        <thead>
+          <tr>
+            <th>{{ 'INVESTMENTS.DATE' | translate }}</th>
+            <th>{{ 'INVESTMENTS.VALUE' | translate }}</th>
+            <th>{{ 'INVESTMENTS.CHANGE' | translate }}</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (s of sortedSnapshots; track s.id ?? s.date; let i = $index) {
+          <tr>
+            @if (editingSnapIndex === i) {
+            <td><input aria-label="date" type="date" class="form-control form-control-sm" [(ngModel)]="editSnap.date" />
+            </td>
+            <td><input aria-label="value" type="number" class="form-control form-control-sm"
+                [(ngModel)]="editSnap.value" /></td>
+            <td></td>
+            <td>
+              <div class="d-flex gap-1">
+                <button class="row-save-btn" (click)="saveSnapshot(i)">✓</button>
+                <button class="row-cancel-btn" (click)="editingSnapIndex = null">✕</button>
+              </div>
+            </td>
+            } @else {
+            <td>{{ s.date }}</td>
+            <td>{{ s.value | number:'1.0-0' }} ₪</td>
+            <td>
+              @if (i > 0) {
+              @let change = snapChange(i);
+              @if (change !== null) {
+              <span [class]="change > 0 ? 'pct-pos' : 'pct-neg'">
+                {{ change > 0 ? '▲' : '▼' }} {{ change | number:'1.1-1' }}%
+              </span>
+              }
+              }
+            </td>
+            <td>
+              <div class="d-flex gap-1">
+                <button class="edit-btn edit-btn-sm"
+                  [matTooltip]="'INVESTMENTS.EDIT_TOOLTIP' | translate" (click)="startEditSnapshot(i)">✏️</button>
+                <button aria-label="del-btn" class="del-btn"
+                  [matTooltip]="'INVESTMENTS.DELETE_SNAPSHOT_TOOLTIP' | translate" (click)="confirmDeleteSnapshot(s)">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              </div>
+            </td>
+            }
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Add Snapshot -->
+    <div class="add-row">
+      <div class="row g-2 align-items-end">
+        <div class="col-md-4">
+          <input aria-label="date" type="date" class="form-control form-control-sm" [(ngModel)]="newSnap.date" />
+        </div>
+        <div class="col-md-4">
+          <input aria-label="value" type="number" class="form-control form-control-sm" [(ngModel)]="newSnap.value"
+            [placeholder]="'INVESTMENTS.VALUE' | translate" />
+        </div>
+        <div class="col-md-4">
+          <button class="save-btn w-100" (click)="addSnapshot()">{{ 'INVESTMENTS.ADD_SNAPSHOT' | translate }}</button>
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- ═══ TRANSACTIONS TABLE ═══ -->
+    <div class="section-title">💸 {{ 'INVESTMENTS.TRANSACTIONS_SECTION' | translate }}</div>
+    <div class="table-scroll" dir="ltr">
+      <table class="snap-table w-100" dir="rtl">
+        <thead>
+          <tr>
+            <th>{{ 'INVESTMENTS.DATE' | translate }}</th>
+            <th>{{ 'INVESTMENTS.TX_TYPE' | translate }}</th>
+            <th>{{ 'INVESTMENTS.AMOUNT' | translate }}</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (t of sortedTransactions; track t.id ?? t.date; let i = $index) {
+          <tr>
+            @if (editingTxIndex === i) {
+            <td><input aria-label="date" type="date" class="form-control form-control-sm" [(ngModel)]="editTx.date" />
+            </td>
+            <td>
+              <select aria-label="type" class="form-select form-select-sm" [(ngModel)]="editTx.type">
+                <option value="deposit">{{ 'INVESTMENTS.DEPOSIT' | translate }}</option>
+                <option value="withdraw">{{ 'INVESTMENTS.WITHDRAW' | translate }}</option>
+              </select>
+            </td>
+            <td><input aria-label="amount" type="number" class="form-control form-control-sm"
+                [(ngModel)]="editTx.amount" /></td>
+            <td>
+              <div class="d-flex gap-1">
+                <button class="row-save-btn" (click)="saveTransaction()">✓</button>
+                <button class="row-cancel-btn" (click)="editingTxIndex = null">✕</button>
+              </div>
+            </td>
+            } @else {
+            <td>{{ t.date }}</td>
+            <td>
+              <span [class]="t.type === 'deposit' ? 'badge-deposit' : 'badge-withdraw'">
+                {{ t.type === 'deposit' ? ('INVESTMENTS.DEPOSIT' | translate) : ('INVESTMENTS.WITHDRAW' | translate) }}
+              </span>
+            </td>
+            <td>{{ t.amount | number:'1.0-0' }} ₪</td>
+            <td>
+              <div class="d-flex gap-1">
+                <button class="edit-btn edit-btn-sm"
+                  [matTooltip]="'INVESTMENTS.EDIT_TOOLTIP' | translate" (click)="startEditTransaction(i)">✏️</button>
+                <button aria-label="del-btn" class="del-btn"
+                  [matTooltip]="'INVESTMENTS.DELETE_TX_TOOLTIP' | translate" (click)="confirmDeleteTransaction(t)">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              </div>
+            </td>
+            }
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Add Transaction -->
+    <div class="add-row">
+      <div class="row g-2 align-items-end">
+        <div class="col-md-3">
+          <input aria-label="date" type="date" class="form-control form-control-sm" [(ngModel)]="newTx.date" />
+        </div>
+        <div class="col-md-3">
+          <select aria-label="type" class="form-select form-select-sm" [(ngModel)]="newTx.type">
+            <option value="deposit">{{ 'INVESTMENTS.DEPOSIT' | translate }}</option>
+            <option value="withdraw">{{ 'INVESTMENTS.WITHDRAW' | translate }}</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <input aria-label="amount" type="number" class="form-control form-control-sm" [(ngModel)]="newTx.amount"
+            [placeholder]="'INVESTMENTS.AMOUNT' | translate" />
+        </div>
+        <div class="col-md-3">
+          <button class="save-btn w-100" (click)="addTransaction()">{{ 'INVESTMENTS.ADD_TX' | translate }}</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Snapshot delete confirmation -->
+@if (pendingDeleteSnapshot) {
+<div class="det-overlay position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center">
+  <div class="det-confirm-card card p-4 text-center">
+    <div class="det-confirm-icon mb-2">🗑️</div>
+    <div class="det-confirm-title mb-1">{{ 'INVESTMENTS.DELETE_SNAPSHOT_CONFIRM_TITLE' | translate }}</div>
+    <div class="det-confirm-msg mb-4">{{ 'INVESTMENTS.DELETE_SNAPSHOT_CONFIRM_MSG' | translate }}</div>
+    <div class="d-flex gap-2 justify-content-center">
+      <button class="btn-delete-confirm" (click)="doDeleteSnapshot()">{{ 'INVESTMENTS.DELETE_YES' | translate }}</button>
+      <button class="btn-cancel-confirm" (click)="cancelDeleteSnapshot()">{{ 'INVESTMENTS.DELETE_NO' | translate }}</button>
+    </div>
+  </div>
+</div>
+}
+
+<!-- Transaction delete confirmation -->
+@if (pendingDeleteTransaction) {
+<div class="det-overlay position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center">
+  <div class="det-confirm-card card p-4 text-center">
+    <div class="det-confirm-icon mb-2">🗑️</div>
+    <div class="det-confirm-title mb-1">{{ 'INVESTMENTS.DELETE_TX_CONFIRM_TITLE' | translate }}</div>
+    <div class="det-confirm-msg mb-4">{{ 'INVESTMENTS.DELETE_TX_CONFIRM_MSG' | translate }}</div>
+    <div class="d-flex gap-2 justify-content-center">
+      <button class="btn-delete-confirm" (click)="doDeleteTransaction()">{{ 'INVESTMENTS.DELETE_YES' | translate }}</button>
+      <button class="btn-cancel-confirm" (click)="cancelDeleteTransaction()">{{ 'INVESTMENTS.DELETE_NO' | translate }}</button>
+    </div>
+  </div>
+</div>
+}

@@ -23,7 +23,11 @@
     "SAVED_SUCCESS": "הנתונים נשמרו בהצלחה ✅",
     "COLOR_RED": "אדום",
     "COLOR_YELLOW": "צהוב",
-    "COLOR_GREEN": "ירוק"
+    "COLOR_GREEN": "ירוק",
+    "DELETE_CONFIRM_TITLE": "מחיקת הוצאה",
+    "DELETE_CONFIRM_MSG": "האם למחוק הוצאה זו לצמיתות?",
+    "DELETE_YES": "כן, מחק",
+    "DELETE_NO": "לא, שמור"
   },
   "INVESTMENTS": {
     "TITLE": "מעקב השקעות",
@@ -62,6 +66,11 @@
     "DELETE_CONFIRM_MSG": "האם למחוק את \"{{name}}\" לצמיתות?",
     "DELETE_YES": "כן, מחק",
     "DELETE_NO": "לא, שמור",
+    "DELETE_SNAPSHOT_CONFIRM_TITLE": "מחיקת נקודת זמן",
+    "DELETE_SNAPSHOT_CONFIRM_MSG": "האם למחוק נקודת זמן זו לצמיתות?",
+    "DELETE_TX_CONFIRM_TITLE": "מחיקת תנועה",
+    "DELETE_TX_CONFIRM_MSG": "האם למחוק תנועה זו לצמיתות?",
+    "DELETE_TX_TOOLTIP": "מחק תנועה",
     "CAGR_TOOLTIP": "קצב צמיחה שנתי ממוצע (בריבית דריבית)",
     "COLLAPSE": "לחץ לסגירה",
     "EXPAND": "לחץ לפתיחה",
@@ -75,6 +84,17 @@
     "GAIN": "רווח",
     "PROJECTED_VALUE": "ערך צפוי",
     "DEPOSITS_ONLY": "הפקדות בלבד",
-    "YEAR": "שנה"
+    "YEAR": "שנה",
+    "TOTAL_PROFIT": "רווח כולל",
+    "CURRENT_VALUE": "שווי נוכחי",
+    "TOTAL_DEPOSITS": "סהכ הפקדות",
+    "PROFIT_YEAR": "רווח שנתי",
+    "SIMULATION_RULES_SECTION": "תזמון הפקדות (סימולציה)",
+    "FROM_MONTH": "מחודש",
+    "TO_MONTH": "עד חודש",
+    "MONTHLY_DEPOSIT_LABEL": "הפקדה חודשית",
+    "ONE_TIME_DEPOSIT": "הפקדה חד-פעמית",
+    "ADD_RULE": "הוסף שלב בהפקדות",
+    "DESCRIPTION": "תיאור/מטרה"
   }
 }

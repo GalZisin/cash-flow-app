@@ -1,0 +1,359 @@
+    .det-card {
+        border-radius: 14px;
+        border: 1px solid #e8eaed;
+        background: #fff;
+        // overflow: hidden removed — it breaks position: sticky on det-name-bar
+    }
+
+    .det-header {
+        background: #fff;
+        direction: rtl !important;
+    }
+
+    .det-name-bar {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: #fff;
+        padding: 10px 16px;
+        border-bottom: 1px solid #f0f2f5;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    }
+
+    .det-wrapper {
+        direction: ltr;
+    }
+
+    .det-name {
+        font-weight: 700;
+        font-size: 1rem;
+        color: #1e293b;
+    }
+
+    .badge-type {
+        background: #f1f5f9;
+        color: #475569;
+        font-size: 0.72rem;
+        font-weight: 600;
+        padding: 3px 10px;
+        border-radius: 20px;
+    }
+
+    .badge-cagr {
+        background: #e8eeff;
+        color: #2d4fd6;
+        font-size: 0.72rem;
+        font-weight: 600;
+        padding: 3px 10px;
+        border-radius: 20px;
+        cursor: help;
+    }
+
+    .badge-xirr {
+        background: #fff4e0;
+        color: #a05c00;
+        font-size: 0.72rem;
+        font-weight: 600;
+        padding: 3px 10px;
+        border-radius: 20px;
+        cursor: help;
+    }
+
+    .edit-btn {
+        background: #f1f5f9;
+        border: none;
+        border-radius: 8px;
+        padding: 4px 10px;
+        color: #475569;
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: background 0.12s;
+    }
+
+    .edit-btn:hover {
+        background: #e2e8f0;
+    }
+
+    .edit-btn-sm {
+        padding: 2px 8px;
+        font-size: 0.75rem;
+    }
+
+    .del-btn {
+        background: transparent;
+        border: none;
+        border-radius: 6px;
+        padding: 3px 7px;
+        color: #cbd5e1;
+        cursor: pointer;
+        transition: all 0.12s;
+    }
+
+    .del-btn:hover {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+
+    .chart-wrap {
+        background: #f8f9fb;
+        border-radius: 10px;
+        padding: 20px 16px 24px 16px;
+        margin-bottom: 14px;
+        overflow: hidden;
+        display: flex;
+        justify-content: center;
+    }
+
+    .det-chart-svg {
+        display: block;
+        overflow: visible;
+        width: 100%;
+        height: auto;
+    }
+
+    .dot {
+        cursor: pointer;
+    }
+
+    .yearly-chart-svg {
+        display: block;
+        height: 120px;
+    }
+
+    .section-title {
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        color: #94a3b8;
+        padding: 12px 16px 6px;
+    }
+
+    .snap-table th {
+        font-size: 0.72rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #94a3b8;
+        border-bottom: 1px solid #f0f2f5;
+        padding: 8px 10px;
+    }
+
+    .snap-table td {
+        font-size: 0.85rem;
+        color: #1e293b;
+        padding: 8px 10px;
+        border-bottom: 1px solid #f8f9fb;
+        vertical-align: middle;
+    }
+
+    .snap-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .table-scroll {
+        overflow-y: visible;
+        display: block;
+    }
+
+    .table-scroll-sm {
+        overflow-y: visible;
+        display: block;
+    }
+
+    .table-scroll thead th {
+        position: sticky;
+        top: 0;
+        background: #fff;
+        z-index: 1;
+    }
+
+    .pct-pos {
+        color: #1a7a52;
+        font-weight: 600;
+    }
+
+    .pct-neg {
+        color: #c0392b;
+        font-weight: 600;
+    }
+
+    .add-row {
+        background: #f8f9fb;
+        border-top: 1px solid #f0f2f5;
+        padding: 12px 16px;
+    }
+
+    .save-btn {
+        background: #4f6ef7;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.82rem;
+        padding: 6px 14px;
+        white-space: nowrap;
+    }
+
+    .save-btn:hover {
+        background: #3b5bdb;
+    }
+
+    .row-save-btn {
+        background: #e6f7f0;
+        color: #1a7a52;
+        border: none;
+        border-radius: 6px;
+        padding: 3px 10px;
+        font-weight: 600;
+    }
+
+    .row-cancel-btn {
+        background: #f1f5f9;
+        color: #475569;
+        border: none;
+        border-radius: 6px;
+        padding: 3px 10px;
+    }
+
+    .badge-deposit {
+        background: #e6f7f0;
+        color: #1a7a52;
+        font-size: 0.72rem;
+        font-weight: 600;
+        padding: 2px 8px;
+        border-radius: 20px;
+    }
+
+    .badge-withdraw {
+        background: #fee2e2;
+        color: #dc2626;
+        font-size: 0.72rem;
+        font-weight: 600;
+        padding: 2px 8px;
+        border-radius: 20px;
+    }
+
+    .divider {
+        border: none;
+        border-top: 1px solid #f0f2f5;
+        margin: 0;
+    }
+
+    .perf-panel {
+        background: #f8f9fb;
+        border-radius: 12px;
+        padding: 14px;
+    }
+
+    .kpi-card {
+        background: #fff;
+        border: 1px solid #e8eaed;
+        border-radius: 10px;
+        padding: 10px 16px;
+        min-width: 120px;
+        flex: 1;
+    }
+
+    .kpi-main {
+        border-color: #4f6ef7;
+        background: #f0f4ff;
+    }
+
+    .kpi-label {
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #94a3b8;
+        margin-bottom: 4px;
+    }
+
+    .kpi-value {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #1e293b;
+    }
+
+    .kpi-value.pos {
+        color: #1a7a52;
+    }
+
+    .kpi-value.neg {
+        color: #dc2626;
+    }
+
+    .yearly-chart {
+        background: #fff;
+        border-radius: 8px;
+        padding: 8px;
+        border: 1px solid #f0f2f5;
+        overflow: hidden;
+    }
+
+    .bar-rect {
+        transition: height 0.3s;
+    }
+
+    .edit-name-input {
+        max-width: 180px;
+    }
+
+    .edit-type-select {
+        max-width: 120px;
+    }
+
+    .det-overlay {
+        background: rgba(15, 23, 42, 0.5);
+        z-index: 1050;
+    }
+
+    .det-confirm-card {
+        border-radius: 16px;
+        border: none;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+        min-width: 300px;
+    }
+
+    .det-confirm-icon {
+        font-size: 2rem;
+    }
+
+    .det-confirm-title {
+        font-weight: 700;
+        color: #1e293b;
+        font-size: 1rem;
+    }
+
+    .det-confirm-msg {
+        color: #64748b;
+        font-size: 0.875rem;
+    }
+
+    .btn-delete-confirm {
+        background: #dc2626;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        padding: 8px 24px;
+        font-weight: 600;
+        cursor: pointer;
+
+        &:hover {
+            background: #b91c1c;
+        }
+    }
+
+    .btn-cancel-confirm {
+        background: #f1f5f9;
+        color: #475569;
+        border: none;
+        border-radius: 8px;
+        padding: 8px 24px;
+        font-weight: 500;
+        cursor: pointer;
+
+        &:hover {
+            background: #e2e8f0;
+        }
+    }

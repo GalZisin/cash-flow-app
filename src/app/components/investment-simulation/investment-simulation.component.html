@@ -1,0 +1,89 @@
+  <div class="sim-card">
+      <div class="sim-header">📊 {{ 'INVESTMENTS.SIMULATION_TITLE' | translate }}</div>
+      <div class="sim-body">
+        <div class="row g-3 mb-4">
+          <div class="col-6 col-md-3">
+            <div class="sim-label">{{ 'INVESTMENTS.INITIAL' | translate }}</div>
+            <input aria-label="initial" type="number" class="form-control form-control-sm" [(ngModel)]="initial" (ngModelChange)="calculate()" />
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="sim-label">{{ 'INVESTMENTS.MONTHLY_DEPOSIT' | translate }}</div>
+            <input aria-label="monthly" type="number" class="form-control form-control-sm" [(ngModel)]="monthly" (ngModelChange)="calculate()" />
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="sim-label">{{ 'INVESTMENTS.ANNUAL_RETURN' | translate }}</div>
+            <input aria-label="annualRate" type="number" class="form-control form-control-sm" [(ngModel)]="annualRate" (ngModelChange)="calculate()" />
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="sim-label">{{ 'INVESTMENTS.YEARS' | translate }}</div>
+            <input aria-label="years" type="number" class="form-control form-control-sm" [(ngModel)]="years" (ngModelChange)="calculate()" />
+          </div>
+        </div>
+
+        @if (result !== null) {
+          <div class="result-bar d-flex flex-wrap gap-4">
+            <div class="result-item">
+              <span class="rl">{{ 'INVESTMENTS.FUTURE_VALUE' | translate:{ years: years } }}</span>
+              <span class="rv rv-main">{{ result | number:'1.0-0' }} ₪</span>
+            </div>
+            <div class="result-item">
+              <span class="rl">{{ 'INVESTMENTS.TOTAL_DEPOSITED' | translate }}</span>
+              <span class="rv">{{ totalDeposited | number:'1.0-0' }} ₪</span>
+            </div>
+            <div class="result-item">
+              <span class="rl">{{ 'INVESTMENTS.GAIN' | translate }}</span>
+              <span class="rv rv-gain">{{ result - totalDeposited | number:'1.0-0' }} ₪</span>
+            </div>
+          </div>
+
+          <div class="chart-wrap">
+            <svg [attr.viewBox]="'0 0 ' + W + ' ' + H" class="w-100 sim-chart-svg">
+              <g [attr.transform]="'translate(' + PAD.left + ',' + PAD.top + ')'">
+
+                <!-- Gridlines + Y labels -->
+                @for (tick of yTicks; track tick.y) {
+                  <line [attr.x1]="0" [attr.y1]="tick.y" [attr.x2]="CW" [attr.y2]="tick.y"
+                    stroke="#e8eaed" stroke-width="1" stroke-dasharray="3"/>
+                  <text [attr.x]="-8" [attr.y]="tick.y + 4" text-anchor="end"
+                    font-size="9" fill="#94a3b8">{{ tick.label }}</text>
+                }
+
+                <!-- X labels (years) -->
+                @for (pt of yearPoints; track pt.year) {
+                  <text [attr.x]="pt.x" [attr.y]="CH + 20" text-anchor="middle"
+                    font-size="9" fill="#94a3b8">{{ 'INVESTMENTS.YEAR' | translate }} {{ pt.year }}</text>
+                }
+
+                <!-- Axes -->
+                <line x1="0" [attr.y1]="CH" [attr.x2]="CW" [attr.y2]="CH" stroke="#e8eaed" stroke-width="1"/>
+                <line x1="0" y1="0" x2="0" [attr.y2]="CH" stroke="#e8eaed" stroke-width="1"/>
+
+                <!-- Deposit area -->
+                <path [attr.d]="depAreaPath" fill="#cbd5e1" fill-opacity="0.15"/>
+                <!-- Deposit line -->
+                <polyline [attr.points]="depLinePoints" fill="none" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="5"/>
+
+                <!-- Projected area -->
+                <path [attr.d]="projAreaPath" fill="#4f6ef7" fill-opacity="0.08"/>
+                <!-- Projected line -->
+                <polyline [attr.points]="projLinePoints" fill="none" stroke="#4f6ef7" stroke-width="2" stroke-linejoin="round"/>
+
+                <!-- Yearly dots with tooltip -->
+                @for (pt of yearPoints; track pt.year) {
+                  <circle class="dot"
+                    [attr.cx]="pt.x" [attr.cy]="pt.projY" r="4"
+                    fill="#fff" stroke="#4f6ef7" stroke-width="2"
+                    [title]="'שנה ' + pt.year + ': ' + pt.projVal + ' ₪'"
+                    [matTooltip]="('INVESTMENTS.YEAR' | translate) + ' ' + pt.year + ' — ' + (pt.projVal | number:'1.0-0') + ' ₪'"
+                  />
+                }
+              </g>
+            </svg>
+            <div class="legend d-flex gap-3">
+              <span><span class="legend-proj">—</span> {{ 'INVESTMENTS.PROJECTED_VALUE' | translate }}</span>
+              <span><span class="legend-dep">- -</span> {{ 'INVESTMENTS.DEPOSITS_ONLY' | translate }}</span>
+            </div>
+          </div>
+        }
+      </div>
+    </div>

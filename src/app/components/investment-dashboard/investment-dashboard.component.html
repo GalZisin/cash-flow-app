@@ -1,0 +1,59 @@
+<div class="dash-wrap">
+      <div class="sticky-header">
+        <div class="d-flex align-items-center mb-3">
+          <span class="page-title">{{ 'INVESTMENTS.TITLE' | translate }}</span>
+        </div>
+        <!-- Summary cards -->
+        <div class="row g-3 align-items-stretch">
+          <div class="col-6 col-md-3 d-flex">
+            <div class="stat-card stat-blue w-100">
+              <span class="label">{{ 'INVESTMENTS.TOTAL' | translate }}</span>
+              <span class="value">{{ investments.length }}</span>
+            </div>
+          </div>
+          <div class="col-6 col-md-3 d-flex">
+            <div class="stat-card stat-green w-100">
+              <span class="label">{{ 'INVESTMENTS.TOTAL_VALUE' | translate }}</span>
+              <span class="value">{{ totalValue | number:'1.0-0' }} ₪</span>
+            </div>
+          </div>
+          <div class="col-6 col-md-3 d-flex">
+            <div class="stat-card stat-violet w-100">
+              <span class="label">{{ 'INVESTMENTS.BEST_PERFORMER' | translate }}</span>
+              <span class="value value-sm">{{ bestPerformer?.name || '-' }}</span>
+            </div>
+          </div>
+          <div class="col-6 col-md-3 d-flex">
+            <div class="stat-card stat-amber w-100">
+              <span class="label">{{ 'INVESTMENTS.AVG_CAGR' | translate }}</span>
+              <span class="value">{{ avgCagr !== null ? (avgCagr | number:'1.1-1') + '%' : '-' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="scroll-body">
+        <div class="col-panels mb-3" dir="rtl">
+          <div class="col-list">
+            <app-investment-list
+              [investments]="investments"
+              [selectedId]="selectedId"
+              (selected)="onSelect($event)"
+              (deleted)="onDelete($event)"
+              (added)="onAdd($event)"
+            />
+          </div>
+          <div class="col-detail">
+            @if (selectedInvestment) {
+              <app-investment-detail [investment]="selectedInvestment" />
+            }
+          </div>
+        </div>
+
+        <div class="row mt-3" dir="ltr">
+          <div class="col-12">
+            <app-investment-simulation />
+          </div>
+        </div>
+      </div>
+    </div>

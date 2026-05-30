@@ -1,17 +1,18 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, tap } from 'rxjs';
-import { Investment, Snapshot, Transaction } from '../models/investment.model';
+import { Investment, Snapshot, Transaction, SimulationRule } from '../models/investment.model';
+import { environment } from '../../environments/environment';
 
 const MS_YEAR = 365.25 * 24 * 3600 * 1000;
 
 @Injectable({ providedIn: 'root' })
 export class InvestmentService {
-  private readonly url = 'http://localhost:3000/api/investments';
+  private readonly url = `${environment.apiUrl}/investments`;
   private _investments = new BehaviorSubject<Investment[]>([]);
   investments$ = this._investments.asObservable();
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   private patch(updated: Investment) {
     this._investments.next(this._investments.value.map(i => i.id === updated.id ? updated : i));
@@ -52,14 +53,14 @@ export class InvestmentService {
     );
   }
 
-  updateSnapshot(id: string, index: number, snapshot: Snapshot) {
-    return this.http.put<Investment>(`${this.url}/${id}/snapshot/${index}`, snapshot).pipe(
+  updateSnapshot(id: string, snapshotId: string, snapshot: Snapshot) {
+    return this.http.put<Investment>(`${this.url}/${id}/snapshot/${snapshotId}`, snapshot).pipe(
       tap(updated => this.patch(updated))
     );
   }
 
-  deleteSnapshot(id: string, index: number) {
-    return this.http.delete<Investment>(`${this.url}/${id}/snapshot/${index}`).pipe(
+  deleteSnapshot(id: string, snapshotId: string) {
+    return this.http.delete<Investment>(`${this.url}/${id}/snapshot/${snapshotId}`).pipe(
       tap(updated => this.patch(updated))
     );
   }
@@ -71,14 +72,14 @@ export class InvestmentService {
     );
   }
 
-  updateTransaction(id: string, index: number, tx: Transaction) {
-    return this.http.put<Investment>(`${this.url}/${id}/transaction/${index}`, tx).pipe(
+  updateTransaction(id: string, txId: string, tx: Transaction) {
+    return this.http.put<Investment>(`${this.url}/${id}/transaction/${txId}`, tx).pipe(
       tap(updated => this.patch(updated))
     );
   }
 
-  deleteTransaction(id: string, index: number) {
-    return this.http.delete<Investment>(`${this.url}/${id}/transaction/${index}`).pipe(
+  deleteTransaction(id: string, txId: string) {
+    return this.http.delete<Investment>(`${this.url}/${id}/transaction/${txId}`).pipe(
       tap(updated => this.patch(updated))
     );
   }
@@ -137,7 +138,7 @@ export class InvestmentService {
         const base = 1 + rate;
         if (base <= 0) return null;
         const denom = Math.pow(base, t);
-        f  += cf.amount / denom;
+        f += cf.amount / denom;
         df += (-t * cf.amount) / (denom * base);
       }
       if (!isFinite(f) || !isFinite(df) || Math.abs(df) < 1e-10) return null;
@@ -147,5 +148,94 @@ export class InvestmentService {
       rate = Math.max(next, -0.999);
     }
     return null;
+  }
+
+  xirrByYear(investment: Investment): { year: number; value: number | null }[] {
+    const snaps = this.sortedSnapshots(investment.snapshots ?? []);
+    const txs = investment.transactions ?? [];
+
+    const years = [...new Set(snaps.map(s => new Date(s.date).getFullYear()))];
+
+    return years.map(year => {
+      const startSnap = snaps.find(s => new Date(s.date).getFullYear() === year - 1)?.value;
+      const endSnap = snaps.find(s => new Date(s.date).getFullYear() === year)?.value;
+
+      if (!endSnap) return { year, value: null };
+
+      const flows: { date: Date; amount: number }[] = [];
+
+      if (startSnap != null) {
+        flows.push({ date: new Date(`${year}-01-01`), amount: -startSnap });
+      }
+
+      txs
+        .filter(t => new Date(t.date).getFullYear() === year)
+        .forEach(t => {
+          flows.push({
+            date: new Date(t.date),
+            amount: t.type === 'deposit' ? -Math.abs(t.amount) : Math.abs(t.amount)
+          });
+        });
+
+      flows.push({ date: new Date(`${year}-12-31`), amount: endSnap });
+
+      const result = this._xirrCalc(flows, 0.1);
+      return { year, value: result };
+    });
+  }
+
+  // --- Simulation Logic ---
+  calculateSimulation(initial: number, annualRate: number, years: number, rules: SimulationRule[] = []) {
+    const r = annualRate / 100 / 12;
+    const n = years * 12;
+    const projVals: number[] = [];
+    const depVals: number[] = [];
+    let val = initial;
+    let dep = initial;
+
+    for (let m = 0; m <= n; m++) {
+      projVals.push(val);
+      depVals.push(dep);
+
+      const nextMonth = m + 1;
+      const activeRules = rules.filter(rule => nextMonth >= rule.fromMonth && nextMonth <= rule.toMonth);
+
+      let monthlyDeposit = 0;
+      activeRules.forEach(rule => {
+        monthlyDeposit += Number(rule.monthlyAmount || 0);
+        if (nextMonth === rule.fromMonth) {
+          monthlyDeposit += Number(rule.oneTimeAmount || 0);
+        }
+      });
+
+      val = val * (1 + r) + monthlyDeposit;
+      dep += monthlyDeposit;
+    }
+
+    return {
+      projVals,
+      depVals,
+      totalDeposited: depVals[n],
+      finalValue: projVals[n]
+    };
+  }
+
+  // --- Simulation Rule CRUD ---
+  addSimulationRule(investmentId: string, rule: Partial<SimulationRule>) {
+    return this.http.post<Investment>(`${this.url}/${investmentId}/simulation-rule`, rule).pipe(
+      tap(updated => this.patch(updated))
+    );
+  }
+
+  updateSimulationRule(investmentId: string, ruleId: string, rule: Partial<SimulationRule>) {
+    return this.http.put<Investment>(`${this.url}/${investmentId}/simulation-rule/${ruleId}`, rule).pipe(
+      tap(updated => this.patch(updated))
+    );
+  }
+
+  deleteSimulationRule(investmentId: string, ruleId: string) {
+    return this.http.delete<Investment>(`${this.url}/${investmentId}/simulation-rule/${ruleId}`).pipe(
+      tap(updated => this.patch(updated))
+    );
   }
 }

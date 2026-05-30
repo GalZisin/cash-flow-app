@@ -6,7 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { MatMenuModule } from '@angular/material/menu';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatDialogModule } from '@angular/material/dialog';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { registerLocaleData } from '@angular/common';
 import localeHe from '@angular/common/locales/he';
@@ -15,21 +15,10 @@ import { CashFlowService } from '../../services/cash-flow.service';
 
 registerLocaleData(localeHe);
 
-export interface MonthlyCashFlow {
-  month: Date;
-  startingBalance: number;
-  income: number;
-  loanPayment: number;
-  regularExpenses: { description: string; amount: number }[];
-  specialExpenses: number;
-  endingBalance?: number;
-  expanded?: boolean; // בשביל Expandable row
-}
-
 @Component({
   selector: 'app-cash-flow-table',
   imports: [CommonModule, ReactiveFormsModule, TranslateModule, MatTableModule, MatButtonModule, MatIconModule, MatInputModule, MatSnackBarModule, MatMenuModule, MatDialogModule],
-  providers: [{ provide: DatePipe, useFactory: () => new DatePipe('he') }, DecimalPipe],
+  providers: [DecimalPipe],
   templateUrl: './cash-flow-table.component.html',
   styleUrl: './cash-flow-table.component.scss'
 })
@@ -56,7 +45,7 @@ export class CashFlowTableComponent implements OnInit {
     { labelKey: 'CASH_FLOW.COLOR_GREEN', value: '#dcfce7' },
   ];
 
-  constructor(private fb: FormBuilder, private datePipe: DatePipe, private cashFlowService: CashFlowService, private snackBar: MatSnackBar, private cdr: ChangeDetectorRef, private translate: TranslateService, private dialog: MatDialog) { }
+  constructor(private fb: FormBuilder, private cashFlowService: CashFlowService, private snackBar: MatSnackBar, private cdr: ChangeDetectorRef, private translate: TranslateService) { }
 
   getExpenseAmount(monthIndex: number, expenseIndex: number): FormControl<number> {
     const control = this.getRegularExpenses(monthIndex)
@@ -111,7 +100,7 @@ export class CashFlowTableComponent implements OnInit {
       } else {
         this.months.push(this.createMonth(new Date(2026, 2, 1)), { emitEvent: false });
       }
-      this.calculateEndingBalancesOnLoad();
+      this.calculateEndingBalances(false);
       this.refreshDataSource();
       this.cashFlowForm.updateValueAndValidity();
       this.cdr.detectChanges();
@@ -152,9 +141,29 @@ export class CashFlowTableComponent implements OnInit {
   }
 
   removeRegularExpense(monthIndex: number, expenseIndex: number) {
-    if (!confirm(this.translate.instant('CASH_FLOW.CONFIRM_DELETE'))) return;
-    this.getRegularExpenses(monthIndex).removeAt(expenseIndex);
+    this.confirmDeleteExpense(monthIndex, expenseIndex, 'regular');
+  }
+
+  pendingDeleteExpense: { monthIndex: number; expenseIndex: number; type: 'regular' | 'special' } | null = null;
+
+  confirmDeleteExpense(monthIndex: number, expenseIndex: number, type: 'regular' | 'special') {
+    this.pendingDeleteExpense = { monthIndex, expenseIndex, type };
+  }
+
+  doDeleteExpense() {
+    if (!this.pendingDeleteExpense) return;
+    const { monthIndex, expenseIndex, type } = this.pendingDeleteExpense;
+    if (type === 'regular') {
+      this.getRegularExpenses(monthIndex).removeAt(expenseIndex);
+    } else {
+      this.getSpecialExpenses(monthIndex).removeAt(expenseIndex);
+    }
     this.calculateEndingBalances();
+    this.pendingDeleteExpense = null;
+  }
+
+  cancelDeleteExpense() {
+    this.pendingDeleteExpense = null;
   }
 
   addSpecialExpense(monthIndex: number) {
@@ -163,9 +172,7 @@ export class CashFlowTableComponent implements OnInit {
   }
 
   removeSpecialExpense(monthIndex: number, expenseIndex: number) {
-    if (!confirm(this.translate.instant('CASH_FLOW.CONFIRM_DELETE'))) return;
-    this.getSpecialExpenses(monthIndex).removeAt(expenseIndex);
-    this.calculateEndingBalances();
+    this.confirmDeleteExpense(monthIndex, expenseIndex, 'special');
   }
 
   getSpecialExpenseAmount(monthIndex: number, expenseIndex: number): FormControl<number> {
@@ -180,7 +187,13 @@ export class CashFlowTableComponent implements OnInit {
     return control as FormControl<string>;
   }
 
-  calculateEndingBalances() {
+  /**
+   * Recalculates ending balances for all months in sequence.
+   * @param updateStartingBalances When true (default), also propagates each month's
+   *   ending balance as the next month's starting balance. Pass false on initial load
+   *   to preserve the starting balances that were saved to the server.
+   */
+  calculateEndingBalances(updateStartingBalances = true) {
     let prevEndingBalance = 0;
     this.months.controls.forEach((monthCtrl, i) => {
       const startingBalance = Number(monthCtrl.get('startingBalance')?.value) || 0;
@@ -197,33 +210,13 @@ export class CashFlowTableComponent implements OnInit {
       const totalStarting = i === 0 ? startingBalance : prevEndingBalance;
       const endingBalance = totalStarting + income - mortgage - loanPayment - specialExpenses - regularExpenses;
 
-      if (i > 0) monthCtrl.get('startingBalance')?.setValue(prevEndingBalance, { emitEvent: false });
+      if (updateStartingBalances && i > 0) {
+        monthCtrl.get('startingBalance')?.setValue(prevEndingBalance, { emitEvent: false });
+      }
       monthCtrl.get('endingBalance')?.setValue(endingBalance, { emitEvent: false });
       prevEndingBalance = endingBalance;
     });
     this.cdr.detectChanges();
-  }
-
-  calculateEndingBalancesOnLoad() {
-    let prevEndingBalance = 0;
-    this.months.controls.forEach((monthCtrl, i) => {
-      const startingBalance = Number(monthCtrl.get('startingBalance')?.value) || 0;
-      const income = Number(monthCtrl.get('income')?.value) || 0;
-      const mortgage = Number(monthCtrl.get('mortgagePayment')?.value) || 0;
-      const loanPayment = Number(monthCtrl.get('loanPayment')?.value) || 0;
-      const specialExpenses = (monthCtrl.get('specialExpenses')?.value || []).reduce(
-        (sum: number, r: any) => sum + (Number(r.amount) || 0), 0
-      );
-      const regularExpenses = (monthCtrl.get('regularExpenses')?.value || []).reduce(
-        (sum: number, r: any) => sum + (Number(r.amount) || 0), 0
-      );
-
-      const totalStarting = i === 0 ? startingBalance : prevEndingBalance;
-      const endingBalance = totalStarting + income - mortgage - loanPayment - specialExpenses - regularExpenses;
-
-      monthCtrl.get('endingBalance')?.setValue(endingBalance, { emitEvent: false });
-      prevEndingBalance = endingBalance;
-    });
   }
 
   refreshDataSource() {
@@ -237,6 +230,7 @@ export class CashFlowTableComponent implements OnInit {
     const nextMonth = new Date(lastMonthDate.getFullYear(), lastMonthDate.getMonth() + 1, 1);
     const lastEndingBalance = lastCtrl.get('endingBalance')?.value || 0;
     this.months.push(this.createMonth(nextMonth, lastEndingBalance));
+    this.calculateEndingBalances();
     this.refreshDataSource();
   }
 
@@ -277,7 +271,7 @@ export class CashFlowTableComponent implements OnInit {
   focusField(key: string) { this.focusedField[key] = true; }
   blurField(key: string) { this.focusedField[key] = false; }
 
-  exportPdf() {
+  print() {
     window.print();
   }
 

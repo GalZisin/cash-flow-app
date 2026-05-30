@@ -273,3 +273,31 @@ $white: #ffffff;
     min-height: 0 !important;
   }
 }
+
+// Delete expense confirmation overlay
+.cf-overlay {
+  background: rgba(15, 23, 42, 0.5);
+  z-index: 1050;
+}
+
+.cf-confirm-card {
+  border-radius: 16px;
+  border: none;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+  min-width: 300px;
+}
+
+.cf-confirm-icon {
+  font-size: 2rem;
+}
+
+.cf-confirm-title {
+  font-weight: 700;
+  color: #1e293b;
+  font-size: 1rem;
+}
+
+.cf-confirm-msg {
+  color: #64748b;
+  font-size: 0.875rem;
+}

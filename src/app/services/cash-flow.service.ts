@@ -1,18 +1,40 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
+
+export interface ExpenseItem {
+  description: string;
+  amount: number;
+}
+
+export interface MonthData {
+  month: string;
+  startingBalance: number;
+  income: number;
+  mortgagePayment: number;
+  loanPayment: number;
+  regularExpenses: ExpenseItem[];
+  specialExpenses: ExpenseItem[];
+  endingBalance: number;
+  rowColor?: string | null;
+}
+
+export interface CashFlowData {
+  months: MonthData[];
+}
 
 @Injectable({ providedIn: 'root' })
 export class CashFlowService {
-  private apiUrl = 'http://localhost:3000/api/cash-flow';
+  private readonly apiUrl = `${environment.apiUrl}/cash-flow`;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
-  load(): Observable<any> {
-    return this.http.get(this.apiUrl);
+  load(): Observable<CashFlowData> {
+    return this.http.get<CashFlowData>(this.apiUrl);
   }
 
-  save(data: any): Observable<any> {
-    return this.http.post(this.apiUrl, data);
+  save(data: CashFlowData): Observable<CashFlowData> {
+    return this.http.post<CashFlowData>(this.apiUrl, data);
   }
 }
