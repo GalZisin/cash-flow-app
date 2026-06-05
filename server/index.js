@@ -25,7 +25,6 @@ function writeInstallments(data) {
 
 // --- Installments API ---
 app.get('/api/installments', (req, res) => {
-  console.log('GET /api/installments', req);
   res.json(readInstallments());
 });
 
