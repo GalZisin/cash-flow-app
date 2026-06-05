@@ -8,6 +8,74 @@ const PORT = 3000;
 const DATA_FILE = path.join(__dirname, 'cash-flow-data-miluim.json');
 const INVESTMENTS_FILE = path.join(__dirname, 'investments.json');
 const DEFAULTS_FILE = path.join(__dirname, 'cash-flow-defaults.json');
+const INSTALLMENTS_FILE = path.join(__dirname, 'installments.json');
+
+app.use(cors());
+app.use(express.json());
+
+// --- Installments helpers ---
+function readInstallments() {
+  if (!fs.existsSync(INSTALLMENTS_FILE)) return [];
+  return JSON.parse(fs.readFileSync(INSTALLMENTS_FILE, { encoding: 'utf8' }));
+}
+
+function writeInstallments(data) {
+  fs.writeFileSync(INSTALLMENTS_FILE, JSON.stringify(data, null, 2), { encoding: 'utf8' });
+}
+
+// --- Installments API ---
+app.get('/api/installments', (req, res) => {
+  console.log('GET /api/installments', req);
+  res.json(readInstallments());
+});
+
+app.post('/api/installments', (req, res) => {
+  const items = readInstallments();
+  const item = {
+    id: Date.now().toString(),
+    name: req.body.name || '',
+    totalAmount: Number(req.body.totalAmount) || 0,
+    downPayment: Number(req.body.downPayment) || 0,
+    monthlyPayment: Number(req.body.monthlyPayment) || 0,
+    installmentsCount: Number(req.body.installmentsCount) || 0,
+    startDate: req.body.startDate || new Date().toISOString().slice(0, 10),
+    color: req.body.color || '#4f6ef7',
+    notes: req.body.notes || '',
+    manualPaidCount: Number(req.body.manualPaidCount) || 0,
+    lastManualPaymentDate: req.body.lastManualPaymentDate || undefined
+  };
+  items.push(item);
+  writeInstallments(items);
+  res.json(item);
+});
+
+app.put('/api/installments/:id', (req, res) => {
+  const items = readInstallments();
+  const idx = items.findIndex(i => i.id === req.params.id);
+  if (idx === -1) return res.status(404).json({ error: 'Not found' });
+  items[idx] = {
+    ...items[idx],
+    name: req.body.name ?? items[idx].name,
+    totalAmount: req.body.totalAmount !== undefined ? Number(req.body.totalAmount) : items[idx].totalAmount,
+    downPayment: req.body.downPayment !== undefined ? Number(req.body.downPayment) : items[idx].downPayment,
+    monthlyPayment: req.body.monthlyPayment !== undefined ? Number(req.body.monthlyPayment) : items[idx].monthlyPayment,
+    installmentsCount: req.body.installmentsCount !== undefined ? Number(req.body.installmentsCount) : items[idx].installmentsCount,
+    startDate: req.body.startDate ?? items[idx].startDate,
+    color: req.body.color ?? items[idx].color,
+    notes: req.body.notes ?? items[idx].notes,
+    manualPaidCount: req.body.manualPaidCount !== undefined ? Number(req.body.manualPaidCount) : items[idx].manualPaidCount, // Ensure it's a number
+    lastManualPaymentDate: req.body.lastManualPaymentDate ?? items[idx].lastManualPaymentDate,
+    id: req.params.id
+  };
+  writeInstallments(items);
+  res.json(items[idx]);
+});
+
+app.delete('/api/installments/:id', (req, res) => {
+  const items = readInstallments().filter(i => i.id !== req.params.id);
+  writeInstallments(items);
+  res.json({ success: true });
+});
 
 // --- Cash Flow Defaults helpers ---
 function readDefaults() {
@@ -20,9 +88,6 @@ function readDefaults() {
 function writeDefaults(data) {
   fs.writeFileSync(DEFAULTS_FILE, JSON.stringify(data, null, 2), { encoding: 'utf8' });
 }
-
-app.use(cors());
-app.use(express.json());
 
 // --- Cash Flow ---
 app.get('/api/cash-flow', (req, res) => {

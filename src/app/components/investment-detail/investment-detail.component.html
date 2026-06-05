@@ -104,7 +104,7 @@
       <!-- Yearly XIRR bar chart -->
       @if (xirrYears.length > 0) {
       <div class="yearly-chart mb-2">
-        <svg [attr.viewBox]="'-110 40 ' + (xirrYears.length * 110 + 50) + ' 90'" class="w-100 yearly-chart-svg">
+        <svg [attr.viewBox]="'-110 40 ' + (xirrYears.length * 100 + 50) + ' 100'" class="w-100 yearly-chart-svg">
           @for (yr of xirrYears; track yr.year; let i = $index) {
           @let barH = yr.value !== null ? Math.min(Math.abs(yr.value) * 2, 70) : 0;
           @let barY = yr.value !== null && yr.value >= 0 ? 75 - barH : 75;

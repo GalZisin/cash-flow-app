@@ -128,14 +128,16 @@ body {
 .snack-error .mdc-snackbar__surface {
     background-color: #c62828 !important;
     color: #fff !important;
-    font-family: 'Inter', sans-serif !important;
-    font-size: 16px !important;
+    font-family: 'Heebo', sans-serif !important;
+    font-size: 14px !important;
 }
 
 .snack-success .mdc-snackbar__surface {
     background-color: #2e7d32 !important;
     color: #fff !important;
-    font-weight: 500 !important
+    font-family: 'Heebo', sans-serif !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
 }
 
 /* ---------- Cash Flow Table RTL Fix ---------- */
@@ -199,6 +201,12 @@ app-cash-flow-table .actions {
     font-size: 13px !important;
 }
 
+// כל פריט בתפריט (כולל שכפל חודש)
+.mat-mdc-menu-panel.color-menu .mat-mdc-menu-item {
+    font-family: 'Heebo', sans-serif !important;
+    font-size: 13px !important;
+}
+
 .mat-mdc-menu-panel.color-menu .color-swatch {
     width: 16px;
     height: 16px;
@@ -221,4 +229,12 @@ app-cash-flow-table .actions {
     color: #4f46e5 !important;
     margin-right: auto;
     margin-left: 0;
+}
+
+/* ---------- Installments Dialog ---------- */
+.inst-dialog {
+    width: 95% !important;
+    max-width: 600px !important;
+    /* הגדלת הרוחב כדי ש-4 עמודות הסכומים יכנסו בשורה אחת בנוחות */
+    z-index: 1001;
 }
