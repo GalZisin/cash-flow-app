@@ -15,6 +15,7 @@ yarn-error.log
 server/node_modules/
 server/cash-flow-data*.json
 server/investments.json
+server/cash-flow-defaults.json
 dist/
 .angular/
 .env

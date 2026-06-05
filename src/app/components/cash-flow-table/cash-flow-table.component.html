@@ -1,6 +1,10 @@
 <div class="cash-flow-table" dir="rtl">
   <div class="actions">
     <button mat-raised-button color="primary" (click)="addMonth()">{{ 'CASH_FLOW.ADD_MONTH' | translate }}</button>
+    <button mat-stroked-button (click)="openDefaultsDialog()">
+      <mat-icon>tune</mat-icon>
+      {{ 'CASH_FLOW.DEFAULTS_BTN' | translate }}
+    </button>
     <span class="spacer"></span>
     <button mat-raised-button color="warn" (click)="save()">{{ 'CASH_FLOW.SAVE' | translate }}</button>
     <button mat-raised-button color="accent" (click)="print()">{{ 'CASH_FLOW.EXPORT_PDF' | translate }}</button>
@@ -12,9 +16,9 @@
     <!-- Row Color Actions -->
     <ng-container matColumnDef="rowActions">
       <th mat-header-cell *matHeaderCellDef class="no-print"></th>
-      <td mat-cell *matCellDef="let monthCtrl" class="row-actions-cell no-print">
+      <td mat-cell *matCellDef="let monthCtrl; let i = index" class="row-actions-cell no-print">
         <button mat-icon-button [matMenuTriggerFor]="colorMenu"
-          (click)="activeRowCtrl = monthCtrl" class="dots-btn">
+          (click)="activeRowCtrl = monthCtrl; activeRowIndex = i" class="dots-btn">
           <mat-icon>more_vert</mat-icon>
         </button>
       </td>
@@ -186,6 +190,11 @@
     <mat-icon>format_color_reset</mat-icon>
     <span>{{ 'CASH_FLOW.CLEAR_COLOR' | translate }}</span>
   </button>
+  <mat-divider></mat-divider>
+  <button mat-menu-item (click)="duplicateMonth(activeRowIndex)">
+    <mat-icon>content_copy</mat-icon>
+    <span>{{ 'CASH_FLOW.DUPLICATE_MONTH' | translate }}</span>
+  </button>
 </mat-menu>
 
 <!-- Delete expense confirmation overlay -->
@@ -199,6 +208,100 @@
       <button mat-raised-button color="warn" (click)="doDeleteExpense()">{{ 'CASH_FLOW.DELETE_YES' | translate }}</button>
       <button mat-button (click)="cancelDeleteExpense()">{{ 'CASH_FLOW.DELETE_NO' | translate }}</button>
     </div>
+  </div>
+</div>
+}
+
+<!-- Defaults dialog overlay -->
+@if (showDefaultsDialog) {
+<div class="cf-overlay position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center no-print"
+  (click)="closeDefaultsDialog()">
+  <div class="cf-defaults-card card" dir="rtl" (click)="$event.stopPropagation()">
+
+    <div class="cf-defaults-header d-flex justify-content-between align-items-center">
+      <span class="cf-defaults-title">{{ 'CASH_FLOW.DEFAULTS_TITLE' | translate }}</span>
+      <button mat-icon-button type="button" (click)="closeDefaultsDialog()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    <div class="cf-defaults-body" [formGroup]="defaultsForm">
+
+      <!-- שדות בסיס -->
+      <div class="row g-3 mb-3">
+        <div class="col-md-4">
+          <label class="cf-field-label" for="def-income">{{ 'CASH_FLOW.INCOME' | translate }}</label>
+          <input id="def-income" type="number" class="form-control form-control-sm" dir="rtl"
+            formControlName="income"
+            placeholder="הכנסות" title="הכנסות" aria-label="הכנסות" />
+        </div>
+        <div class="col-md-4">
+          <label class="cf-field-label" for="def-mortgage">{{ 'CASH_FLOW.MORTGAGE' | translate }}</label>
+          <input id="def-mortgage" type="number" class="form-control form-control-sm" dir="rtl"
+            formControlName="mortgagePayment"
+            placeholder="משכנתא" title="משכנתא" aria-label="משכנתא" />
+        </div>
+        <div class="col-md-4">
+          <label class="cf-field-label" for="def-loan">{{ 'CASH_FLOW.LOAN' | translate }}</label>
+          <input id="def-loan" type="number" class="form-control form-control-sm" dir="rtl"
+            formControlName="loanPayment"
+            placeholder="הלוואה" title="הלוואה" aria-label="הלוואה" />
+        </div>
+      </div>
+
+      <mat-divider class="mb-3"></mat-divider>
+
+      <!-- הוצאות שוטפות -->
+      <div class="cf-section-title mb-2">{{ 'CASH_FLOW.REGULAR_EXPENSES' | translate }}</div>
+      <div formArrayName="regularExpenses">
+        <div *ngFor="let ctrl of defaultsRegularExpenses.controls; let j = index"
+          [formGroupName]="j" class="expense-row mb-2">
+          <input type="text" class="form-control form-control-sm" dir="rtl"
+            formControlName="description"
+            placeholder="תיאור" title="תיאור" aria-label="תיאור" />
+          <input type="number" class="form-control form-control-sm" dir="rtl"
+            formControlName="amount"
+            placeholder="סכום" title="סכום" aria-label="סכום" />
+          <button mat-icon-button type="button" color="warn" (click)="removeDefaultRegularExpense(j)">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+      </div>
+      <button mat-button type="button" (click)="addDefaultRegularExpense()">
+        <mat-icon>add</mat-icon> {{ 'CASH_FLOW.ADD_EXPENSE' | translate }}
+      </button>
+
+      <mat-divider class="my-3"></mat-divider>
+
+      <!-- הוצאות מיוחדות -->
+      <div class="cf-section-title mb-2">{{ 'CASH_FLOW.SPECIAL_EXPENSES' | translate }}</div>
+      <div formArrayName="specialExpenses">
+        <div *ngFor="let ctrl of defaultsSpecialExpenses.controls; let j = index"
+          [formGroupName]="j" class="expense-row mb-2">
+          <input type="text" class="form-control form-control-sm" dir="rtl"
+            formControlName="description"
+            placeholder="תיאור" title="תיאור" aria-label="תיאור" />
+          <input type="number" class="form-control form-control-sm" dir="rtl"
+            formControlName="amount"
+            placeholder="סכום" title="סכום" aria-label="סכום" />
+          <button mat-icon-button type="button" color="warn" (click)="removeDefaultSpecialExpense(j)">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+      </div>
+      <button mat-button type="button" (click)="addDefaultSpecialExpense()">
+        <mat-icon>add</mat-icon> {{ 'CASH_FLOW.ADD_EXPENSE' | translate }}
+      </button>
+
+    </div>
+
+    <div class="cf-defaults-footer d-flex justify-content-end gap-2">
+      <button mat-button type="button" (click)="closeDefaultsDialog()">{{ 'CASH_FLOW.DELETE_NO' | translate }}</button>
+      <button mat-raised-button color="primary" type="button" (click)="saveDefaults()">
+        {{ 'CASH_FLOW.SAVE' | translate }}
+      </button>
+    </div>
+
   </div>
 </div>
 }

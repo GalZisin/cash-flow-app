@@ -6,18 +6,19 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { MatMenuModule } from '@angular/material/menu';
+import { MatDividerModule } from '@angular/material/divider';
 import { MatDialogModule } from '@angular/material/dialog';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { registerLocaleData } from '@angular/common';
 import localeHe from '@angular/common/locales/he';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { CashFlowService } from '../../services/cash-flow.service';
+import { CashFlowService, CashFlowDefaults } from '../../services/cash-flow.service';
 
 registerLocaleData(localeHe);
 
 @Component({
   selector: 'app-cash-flow-table',
-  imports: [CommonModule, ReactiveFormsModule, TranslateModule, MatTableModule, MatButtonModule, MatIconModule, MatInputModule, MatSnackBarModule, MatMenuModule, MatDialogModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslateModule, MatTableModule, MatButtonModule, MatIconModule, MatInputModule, MatSnackBarModule, MatMenuModule, MatDividerModule, MatDialogModule],
   providers: [DecimalPipe],
   templateUrl: './cash-flow-table.component.html',
   styleUrl: './cash-flow-table.component.scss'
@@ -26,6 +27,7 @@ export class CashFlowTableComponent implements OnInit {
   cashFlowForm!: FormGroup;
   dataSource: any[] = [];
   activeRowCtrl: any = null;
+  activeRowIndex = 0;
   focusedField: Record<string, boolean> = {};
   displayedColumns = [
     'rowActions',
@@ -146,6 +148,86 @@ export class CashFlowTableComponent implements OnInit {
 
   pendingDeleteExpense: { monthIndex: number; expenseIndex: number; type: 'regular' | 'special' } | null = null;
 
+  // --- Defaults dialog ---
+  showDefaultsDialog = false;
+  defaultsForm!: FormGroup;
+
+  openDefaultsDialog() {
+    this.cashFlowService.loadDefaults().subscribe(defaults => {
+      this.defaultsForm = this.fb.group({
+        income: [defaults.income],
+        mortgagePayment: [defaults.mortgagePayment],
+        loanPayment: [defaults.loanPayment],
+        regularExpenses: this.fb.array(
+          defaults.regularExpenses.map(e => this.fb.group({ description: [e.description], amount: [e.amount] }))
+        ),
+        specialExpenses: this.fb.array(
+          defaults.specialExpenses.map(e => this.fb.group({ description: [e.description], amount: [e.amount] }))
+        )
+      });
+      this.showDefaultsDialog = true;
+    });
+  }
+
+  closeDefaultsDialog() { this.showDefaultsDialog = false; }
+
+  get defaultsRegularExpenses(): FormArray { return this.defaultsForm.get('regularExpenses') as FormArray; }
+  get defaultsSpecialExpenses(): FormArray { return this.defaultsForm.get('specialExpenses') as FormArray; }
+
+  addDefaultRegularExpense() {
+    this.defaultsRegularExpenses.push(this.fb.group({ description: [''], amount: [0] }));
+  }
+  removeDefaultRegularExpense(i: number) { this.defaultsRegularExpenses.removeAt(i); }
+  addDefaultSpecialExpense() {
+    this.defaultsSpecialExpenses.push(this.fb.group({ description: [''], amount: [0] }));
+  }
+  removeDefaultSpecialExpense(i: number) { this.defaultsSpecialExpenses.removeAt(i); }
+
+  saveDefaults() {
+    const val = this.defaultsForm.value as CashFlowDefaults;
+    this.cashFlowService.saveDefaults(val).subscribe(() => {
+      this.translate.get('CASH_FLOW.DEFAULTS_SAVED').subscribe(msg =>
+        this.snackBar.open(msg, '', { duration: 2500, panelClass: 'snack-success' })
+      );
+      this.showDefaultsDialog = false;
+    });
+  }
+
+  // --- Duplicate month ---
+  duplicateMonth(monthIndex: number) {
+    const src = this.months.at(monthIndex);
+    const lastCtrl = this.months.at(this.months.length - 1);
+    this.calculateEndingBalances();
+    const lastMonthDate: Date = lastCtrl.get('month')?.value;
+    const nextMonth = new Date(lastMonthDate.getFullYear(), lastMonthDate.getMonth() + 1, 1);
+    const lastEndingBalance = lastCtrl.get('endingBalance')?.value || 0;
+
+    const newMonth = this.createMonth(nextMonth, lastEndingBalance);
+    newMonth.get('income')?.setValue(src.get('income')?.value, { emitEvent: false });
+    newMonth.get('mortgagePayment')?.setValue(src.get('mortgagePayment')?.value, { emitEvent: false });
+    newMonth.get('loanPayment')?.setValue(src.get('loanPayment')?.value, { emitEvent: false });
+
+    const srcRegular: { description: string; amount: number }[] = src.get('regularExpenses')?.value || [];
+    srcRegular.forEach(e =>
+      (newMonth.get('regularExpenses') as FormArray).push(
+        this.fb.group({ description: [e.description], amount: [e.amount] })
+      )
+    );
+    if (srcRegular.length > 0) newMonth.get('expanded')?.setValue(true, { emitEvent: false });
+
+    const srcSpecial: { description: string; amount: number }[] = src.get('specialExpenses')?.value || [];
+    srcSpecial.forEach(e =>
+      (newMonth.get('specialExpenses') as FormArray).push(
+        this.fb.group({ description: [e.description], amount: [e.amount] })
+      )
+    );
+    if (srcSpecial.length > 0) newMonth.get('expandedSpecial')?.setValue(true, { emitEvent: false });
+
+    this.months.push(newMonth);
+    this.calculateEndingBalances();
+    this.refreshDataSource();
+  }
+
   confirmDeleteExpense(monthIndex: number, expenseIndex: number, type: 'regular' | 'special') {
     this.pendingDeleteExpense = { monthIndex, expenseIndex, type };
   }
@@ -229,9 +311,31 @@ export class CashFlowTableComponent implements OnInit {
     const lastMonthDate: Date = lastCtrl.get('month')?.value;
     const nextMonth = new Date(lastMonthDate.getFullYear(), lastMonthDate.getMonth() + 1, 1);
     const lastEndingBalance = lastCtrl.get('endingBalance')?.value || 0;
-    this.months.push(this.createMonth(nextMonth, lastEndingBalance));
-    this.calculateEndingBalances();
-    this.refreshDataSource();
+
+    this.cashFlowService.loadDefaults().subscribe(defaults => {
+      const newMonth = this.createMonth(nextMonth, lastEndingBalance);
+      newMonth.get('income')?.setValue(defaults.income, { emitEvent: false });
+      newMonth.get('mortgagePayment')?.setValue(defaults.mortgagePayment, { emitEvent: false });
+      newMonth.get('loanPayment')?.setValue(defaults.loanPayment, { emitEvent: false });
+
+      defaults.regularExpenses.forEach(e =>
+        (newMonth.get('regularExpenses') as FormArray).push(
+          this.fb.group({ description: [e.description], amount: [e.amount] })
+        )
+      );
+      if (defaults.regularExpenses.length > 0) newMonth.get('expanded')?.setValue(true, { emitEvent: false });
+
+      defaults.specialExpenses.forEach(e =>
+        (newMonth.get('specialExpenses') as FormArray).push(
+          this.fb.group({ description: [e.description], amount: [e.amount] })
+        )
+      );
+      if (defaults.specialExpenses.length > 0) newMonth.get('expandedSpecial')?.setValue(true, { emitEvent: false });
+
+      this.months.push(newMonth);
+      this.calculateEndingBalances();
+      this.refreshDataSource();
+    });
   }
 
   toMonthString(date: Date): string {

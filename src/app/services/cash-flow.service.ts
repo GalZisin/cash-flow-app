@@ -24,9 +24,18 @@ export interface CashFlowData {
   months: MonthData[];
 }
 
+export interface CashFlowDefaults {
+  income: number;
+  mortgagePayment: number;
+  loanPayment: number;
+  regularExpenses: ExpenseItem[];
+  specialExpenses: ExpenseItem[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class CashFlowService {
   private readonly apiUrl = `${environment.apiUrl}/cash-flow`;
+  private readonly defaultsUrl = `${environment.apiUrl}/cash-flow-defaults`;
 
   constructor(private http: HttpClient) { }
 
@@ -36,5 +45,13 @@ export class CashFlowService {
 
   save(data: CashFlowData): Observable<CashFlowData> {
     return this.http.post<CashFlowData>(this.apiUrl, data);
+  }
+
+  loadDefaults(): Observable<CashFlowDefaults> {
+    return this.http.get<CashFlowDefaults>(this.defaultsUrl);
+  }
+
+  saveDefaults(defaults: CashFlowDefaults): Observable<CashFlowDefaults> {
+    return this.http.post<CashFlowDefaults>(this.defaultsUrl, defaults);
   }
 }

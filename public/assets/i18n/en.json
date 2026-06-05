@@ -27,7 +27,11 @@
     "DELETE_CONFIRM_TITLE": "Delete Expense",
     "DELETE_CONFIRM_MSG": "Are you sure you want to permanently delete this expense?",
     "DELETE_YES": "Yes, delete",
-    "DELETE_NO": "No, keep it"
+    "DELETE_NO": "No, keep it",
+    "DUPLICATE_MONTH": "Duplicate Month",
+    "DEFAULTS_BTN": "Defaults",
+    "DEFAULTS_SAVED": "Defaults saved ✅",
+    "DEFAULTS_TITLE": "Default Settings for New Month"
   },
   "INVESTMENTS": {
     "TITLE": "Investment Tracker",

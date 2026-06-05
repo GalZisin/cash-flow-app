@@ -301,3 +301,59 @@ $white: #ffffff;
   color: #64748b;
   font-size: 0.875rem;
 }
+
+// Defaults dialog
+.cf-defaults-card {
+  border-radius: 16px;
+  border: none;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  width: 560px;
+  max-width: 95vw;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.cf-defaults-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #f0f2f5;
+  flex-shrink: 0;
+}
+
+.cf-defaults-title {
+  font-weight: 700;
+  font-size: 1rem;
+  color: #1e293b;
+}
+
+.cf-defaults-body {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.cf-defaults-footer {
+  padding: 12px 20px;
+  border-top: 1px solid #f0f2f5;
+  flex-shrink: 0;
+  background: #f8fafc;
+}
+
+.cf-field-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.cf-section-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #94a3b8;
+}

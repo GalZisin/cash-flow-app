@@ -7,6 +7,19 @@ const app = express();
 const PORT = 3000;
 const DATA_FILE = path.join(__dirname, 'cash-flow-data-miluim.json');
 const INVESTMENTS_FILE = path.join(__dirname, 'investments.json');
+const DEFAULTS_FILE = path.join(__dirname, 'cash-flow-defaults.json');
+
+// --- Cash Flow Defaults helpers ---
+function readDefaults() {
+  if (!fs.existsSync(DEFAULTS_FILE)) {
+    return { income: 0, mortgagePayment: 0, loanPayment: 0, regularExpenses: [], specialExpenses: [] };
+  }
+  return JSON.parse(fs.readFileSync(DEFAULTS_FILE, { encoding: 'utf8' }));
+}
+
+function writeDefaults(data) {
+  fs.writeFileSync(DEFAULTS_FILE, JSON.stringify(data, null, 2), { encoding: 'utf8' });
+}
 
 app.use(cors());
 app.use(express.json());
@@ -22,6 +35,29 @@ app.get('/api/cash-flow', (req, res) => {
 app.post('/api/cash-flow', (req, res) => {
   fs.writeFileSync(DATA_FILE, JSON.stringify(req.body, null, 2), { encoding: 'utf8' });
   res.json({ success: true });
+});
+
+// --- Cash Flow Defaults ---
+app.get('/api/cash-flow-defaults', (req, res) => {
+  res.json(readDefaults());
+});
+
+app.post('/api/cash-flow-defaults', (req, res) => {
+  const defaults = {
+    income: Number(req.body.income) || 0,
+    mortgagePayment: Number(req.body.mortgagePayment) || 0,
+    loanPayment: Number(req.body.loanPayment) || 0,
+    regularExpenses: (req.body.regularExpenses || []).map(e => ({
+      description: e.description ?? '',
+      amount: Number(e.amount) || 0
+    })),
+    specialExpenses: (req.body.specialExpenses || []).map(e => ({
+      description: e.description ?? '',
+      amount: Number(e.amount) || 0
+    }))
+  };
+  writeDefaults(defaults);
+  res.json(defaults);
 });
 
 // --- Investments ---

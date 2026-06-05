@@ -27,7 +27,11 @@
     "DELETE_CONFIRM_TITLE": "מחיקת הוצאה",
     "DELETE_CONFIRM_MSG": "האם למחוק הוצאה זו לצמיתות?",
     "DELETE_YES": "כן, מחק",
-    "DELETE_NO": "לא, שמור"
+    "DELETE_NO": "ביטול",
+    "DUPLICATE_MONTH": "שכפל חודש",
+    "DEFAULTS_BTN": "ברירות מחדל",
+    "DEFAULTS_SAVED": "ברירות המחדל נשמרו ✅",
+    "DEFAULTS_TITLE": "הגדרות ברירת מחדל לחודש חדש"
   },
   "INVESTMENTS": {
     "TITLE": "מעקב השקעות",
