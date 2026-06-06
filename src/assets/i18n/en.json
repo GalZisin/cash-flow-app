@@ -12,12 +12,14 @@
     "MONTH": "Month",
     "STARTING_BALANCE": "Starting Balance",
     "INCOME": "Income",
+    "ADDITIONAL_INCOMES": "Additional Incomes",
     "MORTGAGE": "Mortgage",
     "LOAN": "Monthly Loan",
     "REGULAR_EXPENSES": "Regular Expenses",
     "SPECIAL_EXPENSES": "Special Expenses",
     "ENDING_BALANCE": "Ending Balance",
     "ADD_EXPENSE": "Add Expense",
+    "ADD_INCOME": "Add Income",
     "DESCRIPTION": "Description",
     "AMOUNT": "Amount",
     "CLEAR_COLOR": "Clear Color",
@@ -27,7 +29,8 @@
     "COLOR_GREEN": "Green",
     "CONFIRM_DELETE": "Are you sure you want to delete?",
     "REGULAR_EXPENSES_TOTAL": "Total Regular Expenses",
-    "SPECIAL_EXPENSES_TOTAL": "Total Special Expenses"
+    "SPECIAL_EXPENSES_TOTAL": "Total Special Expenses",
+    "ADDITIONAL_INCOMES_TOTAL": "Total Additional Incomes"
   },
   "INVESTMENTS": {
     "TITLE": "Investment Tracker",

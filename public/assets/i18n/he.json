@@ -12,12 +12,14 @@
     "MONTH": "חודש",
     "STARTING_BALANCE": "יתרה בתחילת החודש",
     "INCOME": "הכנסות",
+    "ADDITIONAL_INCOMES": "הכנסות נוספות",
     "MORTGAGE": "משכנתא",
     "LOAN": "הלוואה חודשית",
     "REGULAR_EXPENSES": "הוצאות שוטפות",
     "SPECIAL_EXPENSES": "הוצאות מיוחדות",
     "ENDING_BALANCE": "יתרה בסוף החודש",
     "ADD_EXPENSE": "הוסף הוצאה",
+    "ADD_INCOME": "הוסף הכנסה",
     "DESCRIPTION": "תיאור",
     "AMOUNT": "סכום",
     "CLEAR_COLOR": "נקה צבע",
@@ -34,7 +36,8 @@
     "DEFAULTS_SAVED": "ברירות המחדל נשמרו ✅",
     "DEFAULTS_TITLE": "הגדרות ברירת מחדל לחודש חדש",
     "REGULAR_EXPENSES_TOTAL": "סה\"כ הוצאות שוטפות",
-    "SPECIAL_EXPENSES_TOTAL": "סה\"כ הוצאות מיוחדות"
+    "SPECIAL_EXPENSES_TOTAL": "סה\"כ הוצאות מיוחדות",
+    "ADDITIONAL_INCOMES_TOTAL": "סה\"כ הכנסות נוספות"
   },
   "INVESTMENTS": {
     "TITLE": "מעקב השקעות",

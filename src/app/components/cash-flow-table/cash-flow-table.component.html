@@ -66,6 +66,46 @@
       </td>
     </ng-container>
 
+    <!-- Additional Incomes (Expandable) -->
+    <ng-container matColumnDef="additionalIncomes">
+      <th mat-header-cell *matHeaderCellDef> {{ 'CASH_FLOW.ADDITIONAL_INCOMES' | translate }} </th>
+      <td mat-cell *matCellDef="let monthCtrl; let i = index">
+        <button mat-icon-button class="no-print" (click)="monthCtrl.get('expandedAdditionalIncomes')?.setValue(!monthCtrl.get('expandedAdditionalIncomes')?.value)">
+          <mat-icon>{{ monthCtrl.get('expandedAdditionalIncomes')?.value ? 'expand_less' : 'expand_more' }}</mat-icon>
+        </button>
+        @if (!monthCtrl.get('expandedAdditionalIncomes')?.value && getAdditionalIncomes(i).length > 0) {
+          <span class="no-print badge rounded-pill bg-success ms-1 expense-count-badge align-top" [matTooltip]="'CASH_FLOW.ADDITIONAL_INCOMES_TOTAL' | translate">
+            {{ getAdditionalIncomes(i).length }} | {{ getAdditionalIncomesSum(i) | number:'1.0-0' }} ₪
+          </span>
+        }
+
+        <div *ngIf="monthCtrl.get('expandedAdditionalIncomes')?.value" class="no-print">
+          <div *ngFor="let expCtrl of getAdditionalIncomes(i).controls; let j=index" class="expense-row">
+            <input dir="rtl" placeholder="תיאור" title="תיאור" aria-label="תיאור" [formControl]="getAdditionalIncomeDescription(i, j)" />
+            <span *ngIf="!focusedField['add_inc_' + i + '_' + j]" class="amount-display" (click)="focusField('add_inc_' + i + '_' + j)">
+              {{ getAdditionalIncomeAmount(i, j).value | number:'1.0-0' }} ₪
+            </span>
+            <input *ngIf="focusedField['add_inc_' + i + '_' + j]" type="number" dir="rtl"
+              placeholder="סכום" title="סכום" aria-label="סכום"
+              [formControl]="getAdditionalIncomeAmount(i, j)"
+              (input)="calculateEndingBalances()"
+              (blur)="blurField('add_inc_' + i + '_' + j)" />
+            <button mat-icon-button color="warn" (click)="confirmDeleteExpense(i, j, 'additionalIncome')">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+          <button mat-button (click)="addAdditionalIncome(i)">{{ 'CASH_FLOW.ADD_INCOME' | translate }}</button>
+        </div>
+
+        <div class="print-only">
+          <div *ngFor="let expCtrl of getAdditionalIncomes(i).controls; let j=index">
+            <span class="label">{{ getAdditionalIncomeDescription(i, j).value }}:</span>
+            <span class="amount">{{ getAdditionalIncomeAmount(i, j).value | number:'1.0-0' }} ₪</span>
+          </div>
+        </div>
+      </td>
+    </ng-container>
+
     <!-- Mortgage -->
     <ng-container matColumnDef="mortgagePayment">
       <th mat-header-cell *matHeaderCellDef> {{ 'CASH_FLOW.MORTGAGE' | translate }} </th>

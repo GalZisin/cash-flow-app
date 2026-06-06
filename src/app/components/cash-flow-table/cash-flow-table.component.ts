@@ -40,6 +40,7 @@ export class CashFlowTableComponent implements OnInit {
     'month',
     'startingBalance',
     'income',
+    'additionalIncomes',
     'mortgagePayment',
     'loanPayment',
     'regularExpenses',
@@ -84,11 +85,20 @@ export class CashFlowTableComponent implements OnInit {
           const rawDate = new Date(m.month);
           const monthDate = new Date(rawDate.getUTCFullYear(), rawDate.getUTCMonth(), 1);
           const monthGroup = this.createMonth(monthDate, m.startingBalance ?? 0);
+          const isGreen = m.rowColor === '#dcfce7';
+
           monthGroup.get('income')?.setValue(m.income ?? 0, { emitEvent: false });
           monthGroup.get('mortgagePayment')?.setValue(m.mortgagePayment ?? 0, { emitEvent: false });
           monthGroup.get('loanPayment')?.setValue(m.loanPayment ?? 0, { emitEvent: false });
-          monthGroup.get('expanded')?.setValue(m.regularExpenses?.length > 0, { emitEvent: false });
-          monthGroup.get('expandedSpecial')?.setValue(m.specialExpenses?.length > 0, { emitEvent: false });
+          monthGroup.get('expanded')?.setValue(!isGreen && m.regularExpenses?.length > 0, { emitEvent: false });
+          monthGroup.get('expandedSpecial')?.setValue(!isGreen && m.specialExpenses?.length > 0, { emitEvent: false });
+          monthGroup.get('expandedAdditionalIncomes')?.setValue(!isGreen && m.additionalIncomes?.length > 0, { emitEvent: false });
+
+          m.additionalIncomes?.forEach((e: any) =>
+            (monthGroup.get('additionalIncomes') as FormArray).push(
+              this.fb.group({ description: [e.description ?? ''], amount: [e.amount ?? 0] })
+            )
+          );
 
           m.regularExpenses?.forEach((e: any) =>
             (monthGroup.get('regularExpenses') as FormArray).push(
@@ -127,16 +137,28 @@ export class CashFlowTableComponent implements OnInit {
       income: [0],
       mortgagePayment: [0],
       loanPayment: [0],
+      additionalIncomes: this.fb.array([]),
       regularExpenses: this.fb.array([]),
       specialExpenses: this.fb.array([]),
       endingBalance: [startingBalance],
       expanded: [false],
-      expandedSpecial: [false]
+      expandedSpecial: [false],
+      expandedAdditionalIncomes: [false]
     });
   }
 
   getRegularExpenses(monthIndex: number): FormArray {
     return this.months.at(monthIndex).get('regularExpenses') as FormArray;
+  }
+
+  getAdditionalIncomes(monthIndex: number): FormArray {
+    return this.months.at(monthIndex).get('additionalIncomes') as FormArray;
+  }
+
+  getAdditionalIncomesSum(index: number): number {
+    return this.getAdditionalIncomes(index).controls.reduce((sum, control) => {
+      return sum + (Number(control.get('amount')?.value) || 0);
+    }, 0);
   }
 
   getRegularExpensesSum(index: number): number {
@@ -160,11 +182,16 @@ export class CashFlowTableComponent implements OnInit {
     this.calculateEndingBalances();
   }
 
+  addAdditionalIncome(monthIndex: number) {
+    this.getAdditionalIncomes(monthIndex).push(this.fb.group({ description: [''], amount: [0] }));
+    this.calculateEndingBalances();
+  }
+
   removeRegularExpense(monthIndex: number, expenseIndex: number) {
     this.confirmDeleteExpense(monthIndex, expenseIndex, 'regular');
   }
 
-  pendingDeleteExpense: { monthIndex: number; expenseIndex: number; type: 'regular' | 'special' } | null = null;
+  pendingDeleteExpense: { monthIndex: number; expenseIndex: number; type: 'regular' | 'special' | 'additionalIncome' } | null = null;
 
   // --- Defaults dialog ---
   showDefaultsDialog = false;
@@ -176,6 +203,9 @@ export class CashFlowTableComponent implements OnInit {
         income: [defaults.income],
         mortgagePayment: [defaults.mortgagePayment],
         loanPayment: [defaults.loanPayment],
+        additionalIncomes: this.fb.array(
+          (defaults as any).additionalIncomes?.map((e: any) => this.fb.group({ description: [e.description], amount: [e.amount] })) || []
+        ),
         regularExpenses: this.fb.array(
           defaults.regularExpenses.map(e => this.fb.group({ description: [e.description], amount: [e.amount] }))
         ),
@@ -189,6 +219,7 @@ export class CashFlowTableComponent implements OnInit {
 
   closeDefaultsDialog() { this.showDefaultsDialog = false; }
 
+  get defaultsAdditionalIncomes(): FormArray { return this.defaultsForm.get('additionalIncomes') as FormArray; }
   get defaultsRegularExpenses(): FormArray { return this.defaultsForm.get('regularExpenses') as FormArray; }
   get defaultsSpecialExpenses(): FormArray { return this.defaultsForm.get('specialExpenses') as FormArray; }
 
@@ -196,6 +227,10 @@ export class CashFlowTableComponent implements OnInit {
     this.defaultsRegularExpenses.push(this.fb.group({ description: [''], amount: [0] }));
   }
   removeDefaultRegularExpense(i: number) { this.defaultsRegularExpenses.removeAt(i); }
+  addDefaultAdditionalIncome() {
+    this.defaultsAdditionalIncomes.push(this.fb.group({ description: [''], amount: [0] }));
+  }
+  removeDefaultAdditionalIncome(i: number) { this.defaultsAdditionalIncomes.removeAt(i); }
   addDefaultSpecialExpense() {
     this.defaultsSpecialExpenses.push(this.fb.group({ description: [''], amount: [0] }));
   }
@@ -219,11 +254,20 @@ export class CashFlowTableComponent implements OnInit {
     const lastMonthDate: Date = lastCtrl.get('month')?.value;
     const nextMonth = new Date(lastMonthDate.getFullYear(), lastMonthDate.getMonth() + 1, 1);
     const lastEndingBalance = lastCtrl.get('endingBalance')?.value || 0;
+    const isGreen = src.get('rowColor')?.value === '#dcfce7';
 
     const newMonth = this.createMonth(nextMonth, lastEndingBalance);
     newMonth.get('income')?.setValue(src.get('income')?.value, { emitEvent: false });
     newMonth.get('mortgagePayment')?.setValue(src.get('mortgagePayment')?.value, { emitEvent: false });
     newMonth.get('loanPayment')?.setValue(src.get('loanPayment')?.value, { emitEvent: false });
+
+    const srcAddIncome: { description: string; amount: number }[] = src.get('additionalIncomes')?.value || [];
+    srcAddIncome.forEach(e =>
+      (newMonth.get('additionalIncomes') as FormArray).push(
+        this.fb.group({ description: [e.description], amount: [e.amount] })
+      )
+    );
+    if (!isGreen && srcAddIncome.length > 0) newMonth.get('expandedAdditionalIncomes')?.setValue(true, { emitEvent: false });
 
     const srcRegular: { description: string; amount: number }[] = src.get('regularExpenses')?.value || [];
     srcRegular.forEach(e =>
@@ -231,7 +275,7 @@ export class CashFlowTableComponent implements OnInit {
         this.fb.group({ description: [e.description], amount: [e.amount] })
       )
     );
-    if (srcRegular.length > 0) newMonth.get('expanded')?.setValue(true, { emitEvent: false });
+    if (!isGreen && srcRegular.length > 0) newMonth.get('expanded')?.setValue(true, { emitEvent: false });
 
     const srcSpecial: { description: string; amount: number }[] = src.get('specialExpenses')?.value || [];
     srcSpecial.forEach(e =>
@@ -239,14 +283,14 @@ export class CashFlowTableComponent implements OnInit {
         this.fb.group({ description: [e.description], amount: [e.amount] })
       )
     );
-    if (srcSpecial.length > 0) newMonth.get('expandedSpecial')?.setValue(true, { emitEvent: false });
+    if (!isGreen && srcSpecial.length > 0) newMonth.get('expandedSpecial')?.setValue(true, { emitEvent: false });
 
     this.months.push(newMonth);
     this.calculateEndingBalances();
     this.refreshDataSource();
   }
 
-  confirmDeleteExpense(monthIndex: number, expenseIndex: number, type: 'regular' | 'special') {
+  confirmDeleteExpense(monthIndex: number, expenseIndex: number, type: 'regular' | 'special' | 'additionalIncome') {
     this.pendingDeleteExpense = { monthIndex, expenseIndex, type };
   }
 
@@ -255,6 +299,8 @@ export class CashFlowTableComponent implements OnInit {
     const { monthIndex, expenseIndex, type } = this.pendingDeleteExpense;
     if (type === 'regular') {
       this.getRegularExpenses(monthIndex).removeAt(expenseIndex);
+    } else if (type === 'additionalIncome') {
+      this.getAdditionalIncomes(monthIndex).removeAt(expenseIndex);
     } else {
       this.getSpecialExpenses(monthIndex).removeAt(expenseIndex);
     }
@@ -273,6 +319,18 @@ export class CashFlowTableComponent implements OnInit {
 
   removeSpecialExpense(monthIndex: number, expenseIndex: number) {
     this.confirmDeleteExpense(monthIndex, expenseIndex, 'special');
+  }
+
+  getAdditionalIncomeAmount(monthIndex: number, expenseIndex: number): FormControl<number> {
+    const control = this.getAdditionalIncomes(monthIndex).at(expenseIndex).get('amount');
+    if (!control) throw new Error('amount control is missing!');
+    return control as FormControl<number>;
+  }
+
+  getAdditionalIncomeDescription(monthIndex: number, expenseIndex: number): FormControl<string> {
+    const control = this.getAdditionalIncomes(monthIndex).at(expenseIndex).get('description');
+    if (!control) throw new Error('description control is missing!');
+    return control as FormControl<string>;
   }
 
   getSpecialExpenseAmount(monthIndex: number, expenseIndex: number): FormControl<number> {
@@ -300,6 +358,9 @@ export class CashFlowTableComponent implements OnInit {
       const income = Number(monthCtrl.get('income')?.value) || 0;
       const mortgage = Number(monthCtrl.get('mortgagePayment')?.value) || 0;
       const loanPayment = Number(monthCtrl.get('loanPayment')?.value) || 0;
+      const additionalIncomes = (monthCtrl.get('additionalIncomes')?.value || []).reduce(
+        (sum: number, r: any) => sum + (Number(r.amount) || 0), 0
+      );
       const specialExpenses = (monthCtrl.get('specialExpenses')?.value || []).reduce(
         (sum: number, r: any) => sum + (Number(r.amount) || 0), 0
       );
@@ -308,7 +369,7 @@ export class CashFlowTableComponent implements OnInit {
       );
 
       const totalStarting = i === 0 ? startingBalance : prevEndingBalance;
-      const endingBalance = totalStarting + income - mortgage - loanPayment - specialExpenses - regularExpenses;
+      const endingBalance = totalStarting + income + additionalIncomes - mortgage - loanPayment - specialExpenses - regularExpenses;
 
       if (updateStartingBalances && i > 0) {
         monthCtrl.get('startingBalance')?.setValue(prevEndingBalance, { emitEvent: false });
@@ -335,6 +396,13 @@ export class CashFlowTableComponent implements OnInit {
       newMonth.get('income')?.setValue(defaults.income, { emitEvent: false });
       newMonth.get('mortgagePayment')?.setValue(defaults.mortgagePayment, { emitEvent: false });
       newMonth.get('loanPayment')?.setValue(defaults.loanPayment, { emitEvent: false });
+
+      (defaults as any).additionalIncomes?.forEach((e: any) =>
+        (newMonth.get('additionalIncomes') as FormArray).push(
+          this.fb.group({ description: [e.description], amount: [e.amount] })
+        )
+      );
+      if ((defaults as any).additionalIncomes?.length > 0) newMonth.get('expandedAdditionalIncomes')?.setValue(true, { emitEvent: false });
 
       defaults.regularExpenses.forEach(e =>
         (newMonth.get('regularExpenses') as FormArray).push(
@@ -370,6 +438,7 @@ export class CashFlowTableComponent implements OnInit {
         income: ctrl.get('income')?.value,
         mortgagePayment: ctrl.get('mortgagePayment')?.value,
         loanPayment: ctrl.get('loanPayment')?.value,
+        additionalIncomes: ctrl.get('additionalIncomes')?.value,
         regularExpenses: ctrl.get('regularExpenses')?.value,
         specialExpenses: ctrl.get('specialExpenses')?.value,
         endingBalance: ctrl.get('endingBalance')?.value
@@ -386,6 +455,14 @@ export class CashFlowTableComponent implements OnInit {
     const current = monthCtrl.get('rowColor')?.value;
     const next = current === color ? null : color;
     monthCtrl.get('rowColor')?.setValue(next);
+
+    // אם נבחר צבע ירוק, נצמצם את הכל אוטומטית
+    if (next === '#dcfce7') {
+      monthCtrl.get('expanded')?.setValue(false);
+      monthCtrl.get('expandedSpecial')?.setValue(false);
+      monthCtrl.get('expandedAdditionalIncomes')?.setValue(false);
+    }
+
     this.refreshDataSource();
     this.cdr.detectChanges();
   }

@@ -40,6 +40,10 @@ router.post('/cash-flow-defaults', (req, res) => {
         income: Number(req.body.income) || 0,
         mortgagePayment: Number(req.body.mortgagePayment) || 0,
         loanPayment: Number(req.body.loanPayment) || 0,
+        additionalIncomes: (req.body.additionalIncomes || []).map(e => ({
+            description: e.description ?? '',
+            amount: Number(e.amount) || 0
+        })),
         regularExpenses: (req.body.regularExpenses || []).map(e => ({
             description: e.description ?? '',
             amount: Number(e.amount) || 0
