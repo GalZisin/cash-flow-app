@@ -16,6 +16,7 @@
     "MORTGAGE": "Mortgage",
     "LOAN": "Monthly Loan",
     "REGULAR_EXPENSES": "Regular Expenses",
+    "EXPENSES": "Expenses",
     "SPECIAL_EXPENSES": "Special Expenses",
     "ENDING_BALANCE": "Ending Balance",
     "ADD_EXPENSE": "Add Expense",
