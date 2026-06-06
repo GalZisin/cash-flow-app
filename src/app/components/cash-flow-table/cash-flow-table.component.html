@@ -222,7 +222,7 @@
       <td mat-cell *matCellDef="let monthCtrl; let i = index">
         <div class="mini-chart-container" 
              [matTooltip]="('CASH_FLOW.INCOME' | translate) + ': ' + (getTotalIncome(i) | number:'1.0-0') + ' ₪\n' + 
-                           ('CASH_FLOW.REGULAR_EXPENSES' | translate) + ': ' + (getTotalExpenses(i) | number:'1.0-0') + ' ₪'">
+                           ('CASH_FLOW.EXPENSES' | translate) + ': ' + (getTotalExpenses(i) | number:'1.0-0') + ' ₪'">
           <div class="mini-bar income-bar" [style.width.%]="getBarWidth(getTotalIncome(i), i)"></div>
           <div class="mini-bar expense-bar" [style.width.%]="getBarWidth(getTotalExpenses(i), i)"></div>
         </div>
@@ -313,6 +313,24 @@
       </div>
 
       <mat-divider class="mb-3"></mat-divider>
+
+      <!-- הכנסות נוספות -->
+      <div class="cf-section-title mb-2">{{ 'CASH_FLOW.ADDITIONAL_INCOMES' | translate }}</div>
+      <div formArrayName="additionalIncomes">
+        <div *ngFor="let ctrl of defaultsAdditionalIncomes.controls; let j = index"
+          [formGroupName]="j" class="expense-row mb-2">
+          <input type="text" class="form-control form-control-sm" dir="rtl" formControlName="description" placeholder="תיאור" />
+          <input type="number" class="form-control form-control-sm" dir="rtl" formControlName="amount" placeholder="סכום" />
+          <button mat-icon-button type="button" color="warn" (click)="removeDefaultAdditionalIncome(j)">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+      </div>
+      <button mat-button type="button" (click)="addDefaultAdditionalIncome()">
+        <mat-icon>add</mat-icon> {{ 'CASH_FLOW.ADD_INCOME' | translate }}
+      </button>
+
+      <mat-divider class="my-3"></mat-divider>
 
       <!-- הוצאות שוטפות -->
       <div class="cf-section-title mb-2">{{ 'CASH_FLOW.REGULAR_EXPENSES' | translate }}</div>
