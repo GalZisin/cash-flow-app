@@ -407,3 +407,16 @@ app-cash-flow-table .actions {
 .inst-loan-header-row {
     font-size: 0.7rem !important;
 }
+
+/* עיצוב עבור שדות קריאה בלבד שמציגים Tooltip בתזרים */
+.amount-display-read-only {
+    display: inline-block;
+    padding: 2px 4px;
+    border-radius: 4px;
+    cursor: help;
+
+    /* נותן אינדיקציה שיש מידע נוסף */
+    &:hover {
+        background-color: rgba(0, 0, 0, 0.04);
+    }
+}

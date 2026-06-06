@@ -12,6 +12,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { registerLocaleData } from '@angular/common';
 import localeHe from '@angular/common/locales/he'; // Import Hebrew locale data
+import { combineLatest } from 'rxjs';
 import { TranslateModule, TranslateService, LangChangeEvent } from '@ngx-translate/core';
 import { CashFlowService, CashFlowDefaults } from '../../services/cash-flow.service';
 import { InstallmentService } from '../../services/installment.service';
@@ -36,6 +37,7 @@ export class CashFlowTableComponent implements OnInit {
   activeRowCtrl: any = null;
   activeRowIndex = 0;
   focusedField: Record<string, boolean> = {};
+  private isInitialized = false;
   displayedColumns = [
     'rowActions',
     'month',
@@ -63,7 +65,8 @@ export class CashFlowTableComponent implements OnInit {
     private snackBar: MatSnackBar,
     private cdr: ChangeDetectorRef,
     private translate: TranslateService,
-    private installmentService: InstallmentService // Inject InstallmentService
+    private installmentService: InstallmentService,
+    private decimalPipe: DecimalPipe
   ) { }
 
   getExpenseAmount(monthIndex: number, expenseIndex: number): FormControl<number> {
@@ -89,12 +92,18 @@ export class CashFlowTableComponent implements OnInit {
       months: this.fb.array([]),
     });
 
-    // Recalculate balances when installments change
+    // האזנה לשינויים בפריסות - עדכון התצוגה ושמירה אוטומטית לקובץ ה-JSON
     this.installmentService.items$.subscribe(() => {
+      if (!this.isInitialized) return;
       this.calculateEndingBalances();
+      this.save(true); // שמירה שקטה כדי לסנכרן את ה-loanPayment החדש לקובץ
     });
 
-    this.cashFlowService.load().subscribe(data => {
+    // הבטחת טעינה מסונכרנת: קודם פריסות/הלוואות ואז תזרים
+    combineLatest([
+      this.installmentService.load(),
+      this.cashFlowService.load()
+    ]).subscribe(([_, data]) => {
       if (data && data.months?.length) {
         data.months.forEach((m: any) => {
           const rawDate = new Date(m.month);
@@ -146,6 +155,7 @@ export class CashFlowTableComponent implements OnInit {
       this.calculateEndingBalances(false);
       this.refreshDataSource();
       this.cashFlowForm.updateValueAndValidity();
+      this.isInitialized = true;
       this.cdr.detectChanges();
     });
   }
@@ -534,7 +544,12 @@ export class CashFlowTableComponent implements OnInit {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01T00:00:00.000Z`;
   }
 
-  save() {
+  save(silent: boolean = false) {
+    // הגנה מפני שמירה של מערך ריק במקרה של תקלה בטעינה או מרוץ תהליכים
+    if (!this.isInitialized || !this.months || this.months.length === 0) {
+      return;
+    }
+
     const data = {
       months: this.months.controls.map(ctrl => ({
         rowColor: ctrl.get('rowColor')?.value,
@@ -542,7 +557,7 @@ export class CashFlowTableComponent implements OnInit {
         startingBalance: ctrl.get('startingBalance')?.value,
         income: ctrl.get('income')?.value,
         mortgagePayment: ctrl.get('mortgagePayment')?.value,
-        loanPayment: ctrl.get('manualLoanPayment')?.value, // שומרים לשרת רק את החלק הידני
+        loanPayment: ctrl.get('loanPayment')?.value,
         installmentsPayment: ctrl.get('installmentsPayment')?.value,
         additionalIncomes: ctrl.get('additionalIncomes')?.value,
         regularExpenses: ctrl.get('regularExpenses')?.value,
@@ -551,9 +566,13 @@ export class CashFlowTableComponent implements OnInit {
       }))
     };
     this.cashFlowService.save(data).subscribe({
-      next: () => this.translate.get('CASH_FLOW.SAVED_SUCCESS').subscribe(msg =>
-        this.snackBar.open(msg, '', { duration: 3000, panelClass: 'snack-success' })
-      )
+      next: () => {
+        if (!silent) {
+          this.translate.get('CASH_FLOW.SAVED_SUCCESS').subscribe(msg =>
+            this.snackBar.open(msg, '', { duration: 3000, panelClass: 'snack-success' })
+          );
+        }
+      }
     });
   }
 
@@ -571,6 +590,24 @@ export class CashFlowTableComponent implements OnInit {
 
     this.refreshDataSource();
     this.cdr.detectChanges();
+  }
+
+  getInstallmentTooltip(monthIndex: number, type: 'installments' | 'loans'): string {
+    const monthCtrl = this.months.at(monthIndex);
+    const dateValue = monthCtrl.get('month')?.value;
+    if (!dateValue) return '';
+
+    const breakdown = this.installmentService.getMonthlyBreakdownForMonth(
+      new Date(dateValue),
+      this.installmentService.itemsValue
+    );
+
+    const relevant = breakdown.filter(b => type === 'loans' ? b.isLoan : !b.isLoan);
+    if (relevant.length === 0) return '';
+
+    return relevant
+      .map(r => `${r.name}: ${this.decimalPipe.transform(r.amount, '1.0-0')} ₪`)
+      .join('\n');
   }
 
   focusField(key: string) {

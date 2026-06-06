@@ -236,6 +236,49 @@ export class InstallmentService {
     }
 
     /**
+     * מחזירה פירוט של כל הפריטים והסכומים שהם תורמים לחודש מסוים.
+     * משמש להצגת Tooltip בתזרים המזומנים.
+     */
+    getMonthlyBreakdownForMonth(targetMonthDate: Date, allInstallments: Installment[]): { name: string, amount: number, isLoan: boolean }[] {
+        const breakdown: { name: string, amount: number, isLoan: boolean }[] = [];
+
+        for (const item of allInstallments) {
+            if (item.loanComponents && item.loanComponents.length > 0) {
+                let itemLoanTotal = 0;
+                for (const loan of item.loanComponents) {
+                    const start = new Date(loan.startDate);
+                    const end = new Date(start.getFullYear(), start.getMonth() + loan.installmentsCount, 1);
+
+                    if (loan.payoffDate) {
+                        const payoff = new Date(loan.payoffDate + "-01");
+                        if (targetMonthDate.getFullYear() === payoff.getFullYear() && targetMonthDate.getMonth() === payoff.getMonth()) {
+                            itemLoanTotal += loan.payoffAmount || 0;
+                        } else if (targetMonthDate < payoff && targetMonthDate >= start) {
+                            itemLoanTotal += loan.monthlyPayment;
+                        }
+                    } else if (targetMonthDate >= start && targetMonthDate < end) {
+                        itemLoanTotal += loan.monthlyPayment;
+                    }
+                }
+                if (itemLoanTotal > 0) {
+                    breakdown.push({ name: item.name, amount: itemLoanTotal, isLoan: true });
+                }
+            } else {
+                const start = new Date(item.startDate);
+                const end = new Date(start.getFullYear(), start.getMonth() + item.installmentsCount, 1);
+                if (targetMonthDate >= start && targetMonthDate < end) {
+                    breakdown.push({
+                        name: item.name,
+                        amount: item.monthlyPayment,
+                        isLoan: false
+                    });
+                }
+            }
+        }
+        return breakdown;
+    }
+
+    /**
      * Simulates the impact of a proposed installment on the cash flow and returns warnings if any.
      * @param proposedInstallment The installment being added or updated.
      * @param currentCashFlowMonths The current state of the cash flow months.
