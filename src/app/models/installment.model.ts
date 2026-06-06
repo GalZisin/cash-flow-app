@@ -48,3 +48,10 @@ export interface InstallmentStatus {
     monthsLeft: number;         // חודשים שנותרו
     loanStatuses: LoanComponentStatus[];
 }
+
+export interface CashFlowWarning {
+    month: string; // YYYY-MM
+    balance: number;
+    threshold: number;
+    message: string;
+}

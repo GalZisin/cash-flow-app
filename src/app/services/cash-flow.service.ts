@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 export interface ExpenseItem {
@@ -37,14 +37,23 @@ export class CashFlowService {
   private readonly apiUrl = `${environment.apiUrl}/cash-flow`;
   private readonly defaultsUrl = `${environment.apiUrl}/cash-flow-defaults`;
 
+  private _cashFlowMonths = new BehaviorSubject<MonthData[]>([]);
+  public cashFlowMonths$ = this._cashFlowMonths.asObservable();
+
   constructor(private http: HttpClient) { }
 
   load(): Observable<CashFlowData> {
-    return this.http.get<CashFlowData>(this.apiUrl);
+    return this.http.get<CashFlowData>(this.apiUrl).pipe(
+      tap(data => {
+        if (data && data.months) this._cashFlowMonths.next(data.months);
+      })
+    );
   }
 
   save(data: CashFlowData): Observable<CashFlowData> {
-    return this.http.post<CashFlowData>(this.apiUrl, data);
+    return this.http.post<CashFlowData>(this.apiUrl, data).pipe(
+      tap(() => this._cashFlowMonths.next(data.months))
+    );
   }
 
   loadDefaults(): Observable<CashFlowDefaults> {

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, tap } from 'rxjs';
-import { Installment, InstallmentStatus, LoanComponentStatus } from '../models/installment.model';
+import { BehaviorSubject, Observable, tap, of } from 'rxjs';
+import { Installment, InstallmentStatus, LoanComponentStatus, CashFlowWarning } from '../models/installment.model';
 import { environment } from '../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
@@ -11,6 +11,10 @@ export class InstallmentService {
     items$ = this._items.asObservable();
 
     constructor(private http: HttpClient) { }
+
+    get itemsValue(): Installment[] {
+        return this._items.value;
+    }
 
     load() {
         return this.http.get<Installment[]>(this.url).pipe(
@@ -184,23 +188,16 @@ export class InstallmentService {
         };
     }
 
-    /** סה"כ תשלום חודשי פעיל מכל הפריסות */
-    totalMonthlyActive(items: Installment[]): number {
-        return items
-            .filter(i => !this.getStatus(i).isCompleted)
-            .reduce((sum, i) => sum + i.monthlyPayment, 0);
-    }
-
     /**
-     * Calculates the total monthly installment payment for a specific month.
+     * Calculates the total monthly installment payment for a specific month from a given list of installments.
      * @param targetMonthDate The date representing the month for which to calculate payments (e.g., new Date(YYYY, MM, 1)).
+     * @param allInstallments The list of installments to consider for the calculation.
      * @returns The sum of monthly payments for all active installments in that month.
      */
-    getMonthlyInstallmentsForMonth(targetMonthDate: Date): number {
+    getMonthlyInstallmentsForMonth(targetMonthDate: Date, allInstallments: Installment[]): number {
         let total = 0;
-        const currentItems = this._items.value;
 
-        for (const item of currentItems) {
+        for (const item of allInstallments) {
             if (item.loanComponents && item.loanComponents.length > 0) {
                 // סכימת תשלומים מכל רכיבי ההלוואה
                 for (const loan of item.loanComponents) {
@@ -221,4 +218,72 @@ export class InstallmentService {
         }
         return total;
     }
+
+    /**
+     * Simulates the impact of a proposed installment on the cash flow and returns warnings if any.
+     * @param proposedInstallment The installment being added or updated.
+     * @param currentCashFlowMonths The current state of the cash flow months.
+     * @returns An array of CashFlowWarning objects.
+     */
+    simulateInstallmentImpact(proposedInstallment: Omit<Installment, 'id'> | Installment, currentCashFlowMonths: any[]): CashFlowWarning[] {
+        const warnings: CashFlowWarning[] = [];
+        const THRESHOLD = 30000; // סף האזהרה
+
+        // יצירת עותק עמוק של חודשי תזרים המזומנים כדי לא לשנות את הנתונים המקוריים
+        const simulatedMonths = JSON.parse(JSON.stringify(currentCashFlowMonths));
+
+        // יצירת רשימה היפותטית של פריסות
+        let hypotheticalInstallments: Installment[];
+        if ((proposedInstallment as Installment).id) { // פריסה קיימת שעוברת עדכון
+            hypotheticalInstallments = this._items.value.map(i =>
+                i.id === (proposedInstallment as Installment).id ? { ...i, ...proposedInstallment } as Installment : i
+            );
+        } else { // פריסה חדשה
+            hypotheticalInstallments = [...this._items.value, { ...proposedInstallment, id: 'temp-sim-id' } as Installment];
+        }
+
+        let prevEndingBalance = 0;
+        simulatedMonths.forEach((monthCtrl: any, i: number) => {
+            const monthDateValue = monthCtrl.month;
+            const targetDate = new Date(monthDateValue);
+
+            // חישוב תשלומי הפריסות עבור החודש הספציפי מהרשימה ההיפותטית
+            const installmentsPayment = this.getMonthlyInstallmentsForMonth(targetDate, hypotheticalInstallments);
+            monthCtrl.installmentsPayment = installmentsPayment; // עדכון החודש המדומה
+
+            // ... (העתק את לוגיקת חישוב היתרה מ-CashFlowTableComponent.calculateEndingBalances) ...
+            // מכיוון שאין לנו גישה ישירה ל-FormGroup/FormArray כאן, נצטרך לשחזר את החישוב
+            // זהו חישוב מקוצר לדוגמה, יש להשלים אותו בהתאם ללוגיקה המלאה שלכם ב-CashFlowTableComponent
+            const totalStarting = i === 0 ? (Number(monthCtrl.startingBalance) || 0) : prevEndingBalance;
+            const income = (Number(monthCtrl.income) || 0) + (monthCtrl.additionalIncomes || []).reduce((sum: number, r: any) => sum + (Number(r.amount) || 0), 0);
+            const expenses = (Number(monthCtrl.mortgagePayment) || 0) + (Number(monthCtrl.loanPayment) || 0) + installmentsPayment + (monthCtrl.specialExpenses || []).reduce((sum: number, r: any) => sum + (Number(r.amount) || 0), 0) + (monthCtrl.regularExpenses || []).reduce((sum: number, r: any) => sum + (Number(r.amount) || 0), 0);
+            const endingBalance = totalStarting + income - expenses;
+
+            if (i < simulatedMonths.length - 1) {
+                simulatedMonths[i + 1].startingBalance = endingBalance;
+            }
+            monthCtrl.endingBalance = endingBalance; // עדכון עבור החודש הנוכחי
+
+            // בדיקת אזהרות
+            if (endingBalance < THRESHOLD) {
+                warnings.push({
+                    month: new Date(monthDateValue).toISOString().slice(0, 7),
+                    balance: endingBalance,
+                    threshold: THRESHOLD,
+                    message: `היתרה בסוף חודש ${new Date(monthDateValue).toLocaleDateString('he-IL', { year: 'numeric', month: 'long' })} צפויה להיות ${endingBalance.toFixed(0)} ₪, שהיא מתחת לסף של ${THRESHOLD.toFixed(0)} ₪.`
+                });
+            }
+            prevEndingBalance = endingBalance;
+        });
+
+        return warnings;
+    }
+
+    /** סה"כ תשלום חודשי פעיל מכל הפריסות */
+    totalMonthlyActive(items: Installment[]): number {
+        return items
+            .filter(i => !this.getStatus(i).isCompleted)
+            .reduce((sum, i) => sum + i.monthlyPayment, 0);
+    }
+
 }

@@ -261,6 +261,54 @@ app-cash-flow-table .actions {
     z-index: 1001;
 }
 
+/* סגנונות לחלוניות אישור (מחיקה, ביטול תשלום, אזהרת תזרים) */
+.inst-overlay {
+    background: rgba(0, 0, 0, 0.5);
+    -webkit-backdrop-filter: blur(2px);
+    backdrop-filter: blur(2px);
+    z-index: 2000;
+}
+
+.inst-confirm-card {
+    max-width: 550px;
+    width: 90%;
+    border-radius: 16px !important;
+    border: none !important;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25) !important;
+}
+
+.inst-confirm-msg {
+    max-height: 65vh;
+    /* מאפשר גלילה אם רשימת האזהרות ארוכה */
+    overflow-y: auto;
+    padding: 0.5rem 1.5rem;
+    text-align: right;
+}
+
+.inst-warning-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0;
+    margin: 1rem 0;
+}
+
+.inst-warning-item {
+    position: relative;
+    padding-right: 1.2rem;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    color: $error-color;
+
+    &::before {
+        content: "•";
+        position: absolute;
+        right: 0;
+        color: $error-color;
+        font-weight: bold;
+    }
+}
+
 /* שיפור המראה של כרטיסי הפריסה ברשימה הכללית */
 .inst-card {
     background: #ffffff;
@@ -302,6 +350,8 @@ app-cash-flow-table .actions {
 }
 
 .inst-loans-detail {
+    font-size: 0.85rem;
+
     .progress {
         background-color: #e2e8f0 !important;
         border-radius: 10px;
@@ -327,4 +377,27 @@ app-cash-flow-table .actions {
 
 .cursor-pointer {
     cursor: pointer !important;
+}
+
+/* מחלקות חדשות לביטול inline styles */
+.inst-toggle-arrow {
+    font-size: 0.6rem;
+}
+
+.inst-history-text {
+    font-size: 0.75rem !important;
+}
+
+.inst-line-height-reset {
+    line-height: 1 !important;
+}
+
+.inst-mini-progress-track {
+    height: 4px !important;
+    background-color: rgba(0, 0, 0, 0.05) !important;
+    border-radius: 10px;
+}
+
+.inst-loan-header-row {
+    font-size: 0.7rem !important;
 }

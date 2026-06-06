@@ -1,6 +1,6 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, FormArray, ReactiveFormsModule, FormControl } from '@angular/forms';
-import { MatTableModule } from '@angular/material/table';
+import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
@@ -11,7 +11,7 @@ import { MatDialogModule } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { registerLocaleData } from '@angular/common';
-import localeHe from '@angular/common/locales/he';
+import localeHe from '@angular/common/locales/he'; // Import Hebrew locale data
 import { TranslateModule, TranslateService, LangChangeEvent } from '@ngx-translate/core';
 import { CashFlowService, CashFlowDefaults } from '../../services/cash-flow.service';
 import { InstallmentService } from '../../services/installment.service';
@@ -32,7 +32,7 @@ registerLocaleData(localeHe);
 })
 export class CashFlowTableComponent implements OnInit {
   cashFlowForm!: FormGroup;
-  dataSource: any[] = [];
+  dataSource = new MatTableDataSource<any>(); // Use MatTableDataSource
   activeRowCtrl: any = null;
   activeRowIndex = 0;
   focusedField: Record<string, boolean> = {};
@@ -101,11 +101,13 @@ export class CashFlowTableComponent implements OnInit {
           const monthDate = new Date(rawDate.getUTCFullYear(), rawDate.getUTCMonth(), 1);
           const monthGroup = this.createMonth(monthDate, m.startingBalance ?? 0);
           const isGreen = m.rowColor === '#dcfce7';
-
           monthGroup.get('income')?.setValue(m.income ?? 0, { emitEvent: false });
           monthGroup.get('mortgagePayment')?.setValue(m.mortgagePayment ?? 0, { emitEvent: false });
           monthGroup.get('loanPayment')?.setValue(m.loanPayment ?? 0, { emitEvent: false });
-          monthGroup.get('installmentsPayment')?.setValue(this.installmentService.getMonthlyInstallmentsForMonth(monthDate), { emitEvent: false });
+          monthGroup.get('installmentsPayment')?.setValue(
+            this.installmentService.getMonthlyInstallmentsForMonth(monthDate, this.installmentService.itemsValue),
+            { emitEvent: false }
+          );
           monthGroup.get('expanded')?.setValue(!isGreen && m.regularExpenses?.length > 0, { emitEvent: false });
           monthGroup.get('expandedSpecial')?.setValue(!isGreen && m.specialExpenses?.length > 0, { emitEvent: false });
           monthGroup.get('expandedAdditionalIncomes')?.setValue(!isGreen && m.additionalIncomes?.length > 0, { emitEvent: false });
@@ -395,7 +397,10 @@ export class CashFlowTableComponent implements OnInit {
       const monthDateValue = monthCtrl.get('month')?.value;
       if (monthDateValue) {
         const targetDate = new Date(monthDateValue);
-        const installmentsPayment = this.installmentService.getMonthlyInstallmentsForMonth(targetDate);
+        const installmentsPayment = this.installmentService.getMonthlyInstallmentsForMonth(
+          targetDate,
+          this.installmentService.itemsValue
+        );
         monthCtrl.get('installmentsPayment')?.setValue(installmentsPayment, { emitEvent: false });
       }
 
@@ -427,7 +432,7 @@ export class CashFlowTableComponent implements OnInit {
   }
 
   refreshDataSource() {
-    this.dataSource = [...this.months.controls];
+    this.dataSource.data = [...this.months.controls];
   }
 
   addMonth() {
@@ -442,7 +447,10 @@ export class CashFlowTableComponent implements OnInit {
       newMonth.get('income')?.setValue(defaults.income, { emitEvent: false });
       newMonth.get('mortgagePayment')?.setValue(defaults.mortgagePayment, { emitEvent: false });
       newMonth.get('loanPayment')?.setValue(defaults.loanPayment, { emitEvent: false });
-      newMonth.get('installmentsPayment')?.setValue(this.installmentService.getMonthlyInstallmentsForMonth(nextMonth), { emitEvent: false }); // Set for new month
+      newMonth.get('installmentsPayment')?.setValue(
+        this.installmentService.getMonthlyInstallmentsForMonth(nextMonth, this.installmentService.itemsValue),
+        { emitEvent: false }
+      ); // Set for new month
 
       (defaults as any).additionalIncomes?.forEach((e: any) =>
         (newMonth.get('additionalIncomes') as FormArray).push(

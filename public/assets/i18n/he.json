@@ -169,6 +169,10 @@
     "UNDO_PAYMENT": "ביטול תשלום",
     "UNDO_MSG": "האם לבטל את התשלום האחרון שבוצע?",
     "CONFIRM_UNDO": "כן, בטל",
-    "PAYMENT_HISTORY": "היסטוריית תשלומים"
+    "PAYMENT_HISTORY": "היסטוריית תשלומים",
+    "WARNING_TITLE": "אזהרת תזרים מזומנים",
+    "WARNING_MESSAGE": "הוספה/עדכון של פריסה זו עלול לגרום לחריגות בתזרים המזומנים בחודשים הבאים:",
+    "WARNING_PROCEED_QUESTION": "האם ברצונך להמשיך למרות האזהרות?",
+    "WARNING_PROCEED_BUTTON": "כן, המשך"
   }
 }

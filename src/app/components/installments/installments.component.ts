@@ -7,8 +7,10 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { take } from 'rxjs';
 import { InstallmentService } from '../../services/installment.service';
-import { Installment, InstallmentStatus, LoanComponent } from '../../models/installment.model';
+import { Installment, InstallmentStatus, LoanComponent, CashFlowWarning } from '../../models/installment.model';
+import { CashFlowService } from '../../services/cash-flow.service'; // Import CashFlowService
 
 const COLORS = [
     '#4f6ef7', '#1a7a52', '#a05c00', '#6d3fd6',
@@ -46,6 +48,7 @@ export class InstallmentsComponent implements OnInit {
     editingId: string | null = null;
     form = EMPTY_FORM();
     pendingDeleteId: string | null = null;
+    pendingWarnings: CashFlowWarning[] | null = null; // New state for warnings
     pendingUndoAction: { item: Installment, loanId?: string } | null = null;
     expandedLoans: Record<string, boolean> = {}; // Track expand state for history
 
@@ -60,6 +63,7 @@ export class InstallmentsComponent implements OnInit {
         private svc: InstallmentService,
         private snackBar: MatSnackBar,
         private translate: TranslateService,
+        private cashFlowService: CashFlowService, // Inject CashFlowService
         private cdr: ChangeDetectorRef // Inject ChangeDetectorRef
     ) {
         this.svc.items$.pipe(takeUntilDestroyed()).subscribe(items => {
@@ -245,7 +249,7 @@ export class InstallmentsComponent implements OnInit {
         return Math.max(0, item.totalAmount - item.downPayment);
     }
 
-    submit() {
+    submit(ignoreWarnings: boolean = false) {
         // Ensure all relevant fields are numbers and handle potential NaN from empty inputs
         this.form.totalAmount = Number(this.form.totalAmount) || 0;
         this.form.downPayment = Number(this.form.downPayment) || 0; // Ensure it's a number
@@ -282,6 +286,24 @@ export class InstallmentsComponent implements OnInit {
             }
         }
 
+        // --- Simulation for warnings ---
+        if (!ignoreWarnings) {
+            this.cashFlowService.cashFlowMonths$.pipe(take(1)).subscribe((cashFlowMonths: any[]) => {
+                const warnings = this.svc.simulateInstallmentImpact(this.form, cashFlowMonths);
+                if (warnings.length > 0) {
+                    this.pendingWarnings = warnings;
+                    // Display warning dialog (handled by HTML @if)
+                    return; // Stop submission, wait for user confirmation
+                } else {
+                    this.executeSubmit(); // No warnings, proceed
+                }
+            });
+        } else {
+            this.executeSubmit(); // Warnings ignored, proceed
+        }
+    }
+
+    private executeSubmit() {
         const obs = this.editingId
             ? this.svc.update(this.editingId, this.form)
             : this.svc.add(this.form);
@@ -290,6 +312,18 @@ export class InstallmentsComponent implements OnInit {
             this.translate.get(this.editingId ? 'INSTALLMENTS.UPDATED' : 'INSTALLMENTS.ADDED')
                 .subscribe(msg => this.snackBar.open(msg, '', { duration: 2500, panelClass: 'snack-success' }));
             this.closeForm();
+            // After successful submission, recalculate cash flow to reflect changes
+            // This is handled by CashFlowTableComponent subscribing to installmentService.items$
         });
+    }
+
+    confirmWarnings() {
+        this.pendingWarnings = null;
+        this.submit(true); // Proceed with submission, ignoring warnings
+    }
+
+    cancelWarnings() {
+        this.pendingWarnings = null;
+        // User chose not to proceed, form remains open
     }
 }

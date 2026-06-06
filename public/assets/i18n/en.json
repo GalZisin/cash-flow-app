@@ -160,6 +160,10 @@
     "REMAINING_TO_INSTALL": "Remaining to spread",
     "UNDO_PAYMENT": "Undo Payment",
     "UNDO_MSG": "Are you sure you want to undo the last payment?",
-    "CONFIRM_UNDO": "Yes, undo"
+    "CONFIRM_UNDO": "Yes, undo",
+    "WARNING_TITLE": "Cash Flow Warning",
+    "WARNING_MESSAGE": "Adding/updating this installment may cause cash flow discrepancies in the following months:",
+    "WARNING_PROCEED_QUESTION": "Do you wish to proceed despite the warnings?",
+    "WARNING_PROCEED_BUTTON": "Yes, proceed"
   }
 }
