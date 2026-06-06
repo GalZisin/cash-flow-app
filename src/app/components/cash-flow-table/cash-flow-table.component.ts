@@ -8,6 +8,7 @@ import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatDialogModule } from '@angular/material/dialog';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { registerLocaleData } from '@angular/common';
 import localeHe from '@angular/common/locales/he';
@@ -18,7 +19,12 @@ registerLocaleData(localeHe);
 
 @Component({
   selector: 'app-cash-flow-table',
-  imports: [CommonModule, ReactiveFormsModule, TranslateModule, MatTableModule, MatButtonModule, MatIconModule, MatInputModule, MatSnackBarModule, MatMenuModule, MatDividerModule, MatDialogModule],
+  imports: [
+    CommonModule, ReactiveFormsModule, TranslateModule,
+    MatTableModule, MatButtonModule, MatIconModule,
+    MatInputModule, MatSnackBarModule, MatMenuModule,
+    MatDividerModule, MatDialogModule, MatTooltipModule
+  ],
   providers: [DecimalPipe],
   templateUrl: './cash-flow-table.component.html',
   styleUrl: './cash-flow-table.component.scss'
@@ -133,8 +139,20 @@ export class CashFlowTableComponent implements OnInit {
     return this.months.at(monthIndex).get('regularExpenses') as FormArray;
   }
 
+  getRegularExpensesSum(index: number): number {
+    return this.getRegularExpenses(index).controls.reduce((sum, control) => {
+      return sum + (Number(control.get('amount')?.value) || 0);
+    }, 0);
+  }
+
   getSpecialExpenses(monthIndex: number): FormArray {
     return this.months.at(monthIndex).get('specialExpenses') as FormArray;
+  }
+
+  getSpecialExpensesSum(index: number): number {
+    return this.getSpecialExpenses(index).controls.reduce((sum, control) => {
+      return sum + (Number(control.get('amount')?.value) || 0);
+    }, 0);
   }
 
   addRegularExpense(monthIndex: number) {

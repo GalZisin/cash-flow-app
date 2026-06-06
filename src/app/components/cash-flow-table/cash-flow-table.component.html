@@ -104,8 +104,8 @@
           <mat-icon>{{ monthCtrl.get('expanded')?.value ? 'expand_less' : 'expand_more' }}</mat-icon>
         </button>
         @if (!monthCtrl.get('expanded')?.value && getRegularExpenses(i).length > 0) {
-          <span class="no-print badge rounded-pill bg-primary ms-1 expense-count-badge align-top">
-            {{ getRegularExpenses(i).length }}
+          <span class="no-print badge rounded-pill bg-primary ms-1 expense-count-badge align-top" [matTooltip]="'CASH_FLOW.REGULAR_EXPENSES_TOTAL' | translate">
+            {{ getRegularExpenses(i).length }} | {{ getRegularExpensesSum(i) | number:'1.0-0' }} ₪
           </span>
         }
 
@@ -144,8 +144,8 @@
           <mat-icon>{{ monthCtrl.get('expandedSpecial')?.value ? 'expand_less' : 'expand_more' }}</mat-icon>
         </button>
         @if (!monthCtrl.get('expandedSpecial')?.value && getSpecialExpenses(i).length > 0) {
-          <span class="no-print badge rounded-pill bg-warning text-dark ms-1 expense-count-badge">
-            {{ getSpecialExpenses(i).length }}
+          <span class="no-print badge rounded-pill bg-warning text-dark ms-1 expense-count-badge" [matTooltip]="'CASH_FLOW.SPECIAL_EXPENSES_TOTAL' | translate">
+            {{ getSpecialExpenses(i).length }} | {{ getSpecialExpensesSum(i) | number:'1.0-0' }} ₪
           </span>
         }
 

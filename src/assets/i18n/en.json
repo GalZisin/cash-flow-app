@@ -25,7 +25,9 @@
     "COLOR_RED": "Red",
     "COLOR_YELLOW": "Yellow",
     "COLOR_GREEN": "Green",
-    "CONFIRM_DELETE": "Are you sure you want to delete?"
+    "CONFIRM_DELETE": "Are you sure you want to delete?",
+    "REGULAR_EXPENSES_TOTAL": "Total Regular Expenses",
+    "SPECIAL_EXPENSES_TOTAL": "Total Special Expenses"
   },
   "INVESTMENTS": {
     "TITLE": "Investment Tracker",

@@ -262,8 +262,10 @@ app-cash-flow-table .actions {
 }
 
 .expense-count-badge {
-    font-size: 0.7rem !important;
+    font-size: 0.72rem !important;
     vertical-align: top !important;
+    padding: 4px 8px !important;
+    letter-spacing: 0.3px;
 
     &.align-top {
         vertical-align: top !important;

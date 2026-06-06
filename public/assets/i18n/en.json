@@ -32,7 +32,9 @@
     "DUPLICATE_MONTH": "Duplicate Month",
     "DEFAULTS_BTN": "Defaults",
     "DEFAULTS_SAVED": "Defaults saved ✅",
-    "DEFAULTS_TITLE": "Default Settings for New Month"
+    "DEFAULTS_TITLE": "Default Settings for New Month",
+    "REGULAR_EXPENSES_TOTAL": "Total Regular Expenses",
+    "SPECIAL_EXPENSES_TOTAL": "Total Special Expenses"
   },
   "INVESTMENTS": {
     "TITLE": "Investment Tracker",

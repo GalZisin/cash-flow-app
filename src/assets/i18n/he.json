@@ -25,7 +25,9 @@
     "COLOR_RED": "אדום",
     "COLOR_YELLOW": "צהוב",
     "COLOR_GREEN": "ירוק",
-    "CONFIRM_DELETE": "האם אתה בטוח שברצונך למחוק?"
+    "CONFIRM_DELETE": "האם אתה בטוח שברצונך למחוק?",
+    "REGULAR_EXPENSES_TOTAL": "סה\"כ הוצאות שוטפות",
+    "SPECIAL_EXPENSES_TOTAL": "סה\"כ הוצאות מיוחדות"
   },
   "INVESTMENTS": {
     "TITLE": "מעקב השקעות",

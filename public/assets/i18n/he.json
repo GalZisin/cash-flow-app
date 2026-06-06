@@ -32,7 +32,9 @@
     "DUPLICATE_MONTH": "שכפל חודש",
     "DEFAULTS_BTN": "ברירות מחדל",
     "DEFAULTS_SAVED": "ברירות המחדל נשמרו ✅",
-    "DEFAULTS_TITLE": "הגדרות ברירת מחדל לחודש חדש"
+    "DEFAULTS_TITLE": "הגדרות ברירת מחדל לחודש חדש",
+    "REGULAR_EXPENSES_TOTAL": "סה\"כ הוצאות שוטפות",
+    "SPECIAL_EXPENSES_TOTAL": "סה\"כ הוצאות מיוחדות"
   },
   "INVESTMENTS": {
     "TITLE": "מעקב השקעות",
