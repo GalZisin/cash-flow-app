@@ -194,29 +194,30 @@ export class InstallmentService {
      * @param allInstallments The list of installments to consider for the calculation.
      * @returns The sum of monthly payments for all active installments in that month.
      */
-    getMonthlyInstallmentsForMonth(targetMonthDate: Date, allInstallments: Installment[]): number {
-        let total = 0;
+    getMonthlyInstallmentsForMonth(targetMonthDate: Date, allInstallments: Installment[]): { installments: number, loans: number } {
+        let installments = 0;
+        let loans = 0;
 
         for (const item of allInstallments) {
             if (item.loanComponents && item.loanComponents.length > 0) {
-                // סכימת תשלומים מכל רכיבי ההלוואה
+                // זו רכישה עם רכיבי הלוואה מפורטים - נסכום לעמודת ההלוואות
                 for (const loan of item.loanComponents) {
                     const start = new Date(loan.startDate);
                     const end = new Date(start.getFullYear(), start.getMonth() + loan.installmentsCount, 1);
                     if (targetMonthDate >= start && targetMonthDate < end) {
-                        total += loan.monthlyPayment;
+                        loans += loan.monthlyPayment;
                     }
                 }
             } else {
-                // לוגיקת תאימות אחורה לפריסות פשוטות
+                // זו פריסת תשלומים רגילה (ללא רכיבי הלוואה) - נסכום לעמודת הפריסות
                 const start = new Date(item.startDate);
                 const end = new Date(start.getFullYear(), start.getMonth() + item.installmentsCount, 1);
                 if (targetMonthDate >= start && targetMonthDate < end) {
-                    total += item.monthlyPayment;
+                    installments += item.monthlyPayment;
                 }
             }
         }
-        return total;
+        return { installments, loans };
     }
 
     /**
@@ -248,15 +249,17 @@ export class InstallmentService {
             const targetDate = new Date(monthDateValue);
 
             // חישוב תשלומי הפריסות עבור החודש הספציפי מהרשימה ההיפותטית
-            const installmentsPayment = this.getMonthlyInstallmentsForMonth(targetDate, hypotheticalInstallments);
-            monthCtrl.installmentsPayment = installmentsPayment; // עדכון החודש המדומה
+            const totals = this.getMonthlyInstallmentsForMonth(targetDate, hypotheticalInstallments);
+            const effectiveLoan = totals.loans || (Number(monthCtrl.loanPayment) || 0);
+            monthCtrl.loanPayment = effectiveLoan;
+            monthCtrl.installmentsPayment = totals.installments;
 
             // ... (העתק את לוגיקת חישוב היתרה מ-CashFlowTableComponent.calculateEndingBalances) ...
             // מכיוון שאין לנו גישה ישירה ל-FormGroup/FormArray כאן, נצטרך לשחזר את החישוב
             // זהו חישוב מקוצר לדוגמה, יש להשלים אותו בהתאם ללוגיקה המלאה שלכם ב-CashFlowTableComponent
             const totalStarting = i === 0 ? (Number(monthCtrl.startingBalance) || 0) : prevEndingBalance;
             const income = (Number(monthCtrl.income) || 0) + (monthCtrl.additionalIncomes || []).reduce((sum: number, r: any) => sum + (Number(r.amount) || 0), 0);
-            const expenses = (Number(monthCtrl.mortgagePayment) || 0) + (Number(monthCtrl.loanPayment) || 0) + installmentsPayment + (monthCtrl.specialExpenses || []).reduce((sum: number, r: any) => sum + (Number(r.amount) || 0), 0) + (monthCtrl.regularExpenses || []).reduce((sum: number, r: any) => sum + (Number(r.amount) || 0), 0);
+            const expenses = (Number(monthCtrl.mortgagePayment) || 0) + effectiveLoan + totals.installments + (monthCtrl.specialExpenses || []).reduce((sum: number, r: any) => sum + (Number(r.amount) || 0), 0) + (monthCtrl.regularExpenses || []).reduce((sum: number, r: any) => sum + (Number(r.amount) || 0), 0);
             const endingBalance = totalStarting + income - expenses;
 
             if (i < simulatedMonths.length - 1) {

@@ -103,11 +103,12 @@ export class CashFlowTableComponent implements OnInit {
           const isGreen = m.rowColor === '#dcfce7';
           monthGroup.get('income')?.setValue(m.income ?? 0, { emitEvent: false });
           monthGroup.get('mortgagePayment')?.setValue(m.mortgagePayment ?? 0, { emitEvent: false });
-          monthGroup.get('loanPayment')?.setValue(m.loanPayment ?? 0, { emitEvent: false });
-          monthGroup.get('installmentsPayment')?.setValue(
-            this.installmentService.getMonthlyInstallmentsForMonth(monthDate, this.installmentService.itemsValue),
-            { emitEvent: false }
-          );
+
+          const totals = this.installmentService.getMonthlyInstallmentsForMonth(monthDate, this.installmentService.itemsValue);
+          // אם יש הלוואות מנוהלות בפריסות, הן ידרסו/יתווספו לעמודה (בהתאם להחלטתך, כאן אנו מגדירים את הערך)
+          monthGroup.get('loanPayment')?.setValue(totals.loans || (m.loanPayment ?? 0), { emitEvent: false });
+          monthGroup.get('installmentsPayment')?.setValue(totals.installments, { emitEvent: false });
+
           monthGroup.get('expanded')?.setValue(!isGreen && m.regularExpenses?.length > 0, { emitEvent: false });
           monthGroup.get('expandedSpecial')?.setValue(!isGreen && m.specialExpenses?.length > 0, { emitEvent: false });
           monthGroup.get('expandedAdditionalIncomes')?.setValue(!isGreen && m.additionalIncomes?.length > 0, { emitEvent: false });
@@ -397,11 +398,13 @@ export class CashFlowTableComponent implements OnInit {
       const monthDateValue = monthCtrl.get('month')?.value;
       if (monthDateValue) {
         const targetDate = new Date(monthDateValue);
-        const installmentsPayment = this.installmentService.getMonthlyInstallmentsForMonth(
+        const totals = this.installmentService.getMonthlyInstallmentsForMonth(
           targetDate,
           this.installmentService.itemsValue
         );
-        monthCtrl.get('installmentsPayment')?.setValue(installmentsPayment, { emitEvent: false });
+
+        monthCtrl.get('installmentsPayment')?.setValue(totals.installments, { emitEvent: false });
+        monthCtrl.get('loanPayment')?.setValue(totals.loans, { emitEvent: false });
       }
 
       const startingBalance = Number(monthCtrl.get('startingBalance')?.value) || 0;
@@ -446,11 +449,10 @@ export class CashFlowTableComponent implements OnInit {
       const newMonth = this.createMonth(nextMonth, lastEndingBalance);
       newMonth.get('income')?.setValue(defaults.income, { emitEvent: false });
       newMonth.get('mortgagePayment')?.setValue(defaults.mortgagePayment, { emitEvent: false });
-      newMonth.get('loanPayment')?.setValue(defaults.loanPayment, { emitEvent: false });
-      newMonth.get('installmentsPayment')?.setValue(
-        this.installmentService.getMonthlyInstallmentsForMonth(nextMonth, this.installmentService.itemsValue),
-        { emitEvent: false }
-      ); // Set for new month
+
+      const totals = this.installmentService.getMonthlyInstallmentsForMonth(nextMonth, this.installmentService.itemsValue);
+      newMonth.get('loanPayment')?.setValue(totals.loans || defaults.loanPayment, { emitEvent: false });
+      newMonth.get('installmentsPayment')?.setValue(totals.installments, { emitEvent: false });
 
       (defaults as any).additionalIncomes?.forEach((e: any) =>
         (newMonth.get('additionalIncomes') as FormArray).push(
