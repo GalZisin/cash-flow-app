@@ -55,29 +55,44 @@ export class InstallmentService {
             return this.update(item.id, { loanComponents: updatedLoans });
         }
 
-        const newCount = (item.manualPaidCount || 0) + 1;
+        const payments = item.payments || [];
+        const newCount = payments.length + 1;
         return this.update(item.id, {
             manualPaidCount: newCount,
-            lastManualPaymentDate: paymentDate
+            lastManualPaymentDate: paymentDate,
+            payments: [...payments, { date: paymentDate, amount: item.monthlyPayment }]
         });
     }
 
-    undoPayment(item: Installment, loanId: string): Observable<any> {
-        const updatedLoans = (item.loanComponents || []).map(l => {
-            if (l.id === loanId) {
-                const payments = [...(l.payments || [])];
-                if (payments.length === 0) return l;
-                payments.pop(); // הסרת התשלום האחרון
-                return {
-                    ...l,
-                    paidCount: payments.length,
-                    lastPaidDate: payments.length > 0 ? payments[payments.length - 1].date : undefined,
-                    payments: payments
-                };
-            }
-            return l;
+    undoPayment(item: Installment, loanId?: string): Observable<any> {
+        if (loanId) {
+            const updatedLoans = (item.loanComponents || []).map(l => {
+                if (l.id === loanId) {
+                    const payments = [...(l.payments || [])];
+                    if (payments.length === 0) return l;
+                    payments.pop(); // הסרת התשלום האחרון
+                    return {
+                        ...l,
+                        paidCount: payments.length,
+                        lastPaidDate: payments.length > 0 ? payments[payments.length - 1].date : undefined,
+                        payments: payments
+                    };
+                }
+                return l;
+            });
+            return this.update(item.id, { loanComponents: updatedLoans });
+        }
+
+        // ביטול תשלום ברמה הראשית
+        const payments = [...(item.payments || [])];
+        if (payments.length === 0) return this.load();
+
+        payments.pop();
+        return this.update(item.id, {
+            manualPaidCount: payments.length,
+            lastManualPaymentDate: payments.length > 0 ? payments[payments.length - 1].date : undefined,
+            payments: payments
         });
-        return this.update(item.id, { loanComponents: updatedLoans });
     }
 
     /** מחשב את סטטוס הפריסה נכון להיום */
@@ -124,8 +139,16 @@ export class InstallmentService {
             (today.getFullYear() - itemStart.getFullYear()) * 12 +
             (today.getMonth() - itemStart.getMonth())
         );
-        const legacyPaidCount = item.loanComponents?.length > 0 ? 0 : Math.min(item.installmentsCount, Math.max(monthsSinceItemStart, item.manualPaidCount || 0));
-        const legacyPaidAmount = legacyPaidCount * item.monthlyPayment;
+
+        // חישוב תשלומים ידניים לרמה הראשית (עבור פריסות ללא הלוואות משנה, או תשלומים כלליים שבוצעו)
+        const manualCount = item.payments ? item.payments.length : (item.manualPaidCount || 0);
+        const legacyPaidCount = item.payments
+            ? item.payments.length
+            : (item.loanComponents?.length > 0 ? 0 : Math.min(item.installmentsCount, Math.max(monthsSinceItemStart, manualCount)));
+
+        const legacyPaidAmount = item.payments
+            ? item.payments.reduce((sum, p) => sum + p.amount, 0)
+            : (item.loanComponents?.length > 0 ? 0 : legacyPaidCount * item.monthlyPayment);
 
         const paidAmount = item.downPayment + totalLoansPaid + legacyPaidAmount;
         const remainingAmount = Math.max(0, item.totalAmount - paidAmount);

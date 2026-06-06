@@ -22,6 +22,7 @@ export interface Installment {
     notes: string;
     manualPaidCount: number;   // מספר תשלומים שסומנו כבוצעו ידנית
     lastManualPaymentDate?: string; // תאריך התשלום הידני האחרון
+    payments?: { date: string, amount: number }[]; // היסטוריית תשלומים ברמה הראשית
     loanComponents: LoanComponent[]; // רשימת ההלוואות המשויכות
 }
 

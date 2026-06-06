@@ -37,7 +37,8 @@ router.post('/', (req, res) => {
         notes: req.body.notes || '',
         manualPaidCount: Number(req.body.manualPaidCount) || 0,
         lastManualPaymentDate: req.body.lastManualPaymentDate || undefined,
-        loanComponents: req.body.loanComponents || []
+        loanComponents: req.body.loanComponents || [],
+        payments: req.body.payments || []
     };
     items.push(item);
     writeInstallments(items);
@@ -61,6 +62,7 @@ router.put('/:id', (req, res) => {
         manualPaidCount: req.body.manualPaidCount !== undefined ? Number(req.body.manualPaidCount) : items[idx].manualPaidCount,
         lastManualPaymentDate: req.body.lastManualPaymentDate ?? items[idx].lastManualPaymentDate,
         loanComponents: req.body.loanComponents ?? items[idx].loanComponents,
+        payments: req.body.payments ?? items[idx].payments,
         id: req.params.id
     };
     writeInstallments(items);

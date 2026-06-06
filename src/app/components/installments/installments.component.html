@@ -63,6 +63,12 @@
             <div class="inst-card-header">
               <span class="inst-card-name">{{ item.name }}</span>
               <div class="d-flex gap-1">
+                <!-- Undo main payment (only for simple installments) -->
+                @if (st.paidInstallments > 0 && st.loanStatuses.length === 0) {
+                  <button class="inst-icon-btn" type="button" matTooltip="ביטול תשלום אחרון" (click)="undoPayment(item)">
+                    ↺
+                  </button>
+                }
                 @if (!st.isCompleted) {
                   <button class="inst-icon-btn" type="button"
                     [matTooltip]="'INSTALLMENTS.MARK_PAID' | translate"
@@ -97,7 +103,10 @@
                 </div>
               </div>
               <div class="d-flex justify-content-between mt-1">
-                <span class="inst-pct-label">{{ st.progressPct }}%</span>
+                <span class="inst-pct-label cursor-pointer" (click)="toggleTopHistory(item.id)">
+                  {{ st.progressPct }}%
+                  <span class="ms-1" style="font-size: 0.6rem;">{{ expandedLoans['top_' + item.id] ? '▼' : '▶' }}</span>
+                </span>
                 @if (st.isCompleted) {
                   <span class="inst-done-badge">✅ {{ 'INSTALLMENTS.COMPLETED' | translate }}</span>
                 } @else {
@@ -107,6 +116,19 @@
                 }
               </div>
             </div>
+
+            <!-- Main installment payment history -->
+            @if (expandedLoans['top_' + item.id] && item.payments?.length) {
+              <div class="inst-history-popup bg-light p-2 mb-2 rounded shadow-sm border" style="font-size: 0.75rem;">
+                <div class="fw-bold mb-1 border-bottom pb-1">{{ 'INSTALLMENTS.PAYMENT_HISTORY' | translate }}</div>
+                @for (p of item.payments; track $index) {
+                  <div class="text-muted border-bottom-dashed py-1 d-flex justify-content-between">
+                    <span>✓ {{ p.date | date:'shortDate' }} (תשלום {{ $index + 1 }})</span>
+                    <span class="fw-bold">{{ p.amount | number:'1.0-0' }} ₪</span>
+                  </div>
+                }
+              </div>
+            }
 
             <!-- amounts grid -->
             <div class="inst-amounts">
@@ -303,7 +325,7 @@
         <div class="inst-calc-hint mb-3">
           💡 {{ 'INSTALLMENTS.REMAINING_TO_INSTALL' | translate }}:
           <strong>{{ amountAfterDown(form) | number:'1.0-0' }} ₪</strong> —
-          {{ Math.ceil(amountAfterDown(form) / form.monthlyPayment) }}
+          {{ form.installmentsCount }}
           {{ 'INSTALLMENTS.MONTHS' | translate }}
         </div>
       }

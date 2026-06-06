@@ -132,7 +132,8 @@ export class InstallmentsComponent implements OnInit {
         const remaining = this.amountAfterDown(this.form);
         if (this.form.monthlyPayment > 0 && !(this.form.loanComponents && this.form.loanComponents.length > 0)) { // Only if no loan components
             // חישוב מספר תשלומים לפי סכום חודשי
-            this.form.installmentsCount = Math.ceil(remaining / this.form.monthlyPayment);
+            // נשתמש ב-epsilon קטן (0.001) כדי למנוע קפיצה למספר הבא בגלל עיגול של שקלים/אגורות (toFixed)
+            this.form.installmentsCount = Math.ceil((remaining / this.form.monthlyPayment) - 0.001);
         }
     }
 
@@ -175,7 +176,7 @@ export class InstallmentsComponent implements OnInit {
         });
     }
 
-    undoPayment(item: Installment, loanId: string) {
+    undoPayment(item: Installment, loanId?: string) {
         this.svc.undoPayment(item, loanId).subscribe(() => {
             this.snackBar.open('התשלום בוטל בהצלחה', '', { duration: 2000 });
         });
@@ -183,6 +184,10 @@ export class InstallmentsComponent implements OnInit {
 
     toggleLoanHistory(loanId: string) {
         this.expandedLoans[loanId] = !this.expandedLoans[loanId];
+    }
+
+    toggleTopHistory(id: string) {
+        this.expandedLoans['top_' + id] = !this.expandedLoans['top_' + id];
     }
 
     // Closes the mark as paid dialog
