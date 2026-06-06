@@ -46,6 +46,7 @@ export class InstallmentsComponent implements OnInit {
     editingId: string | null = null;
     form = EMPTY_FORM();
     pendingDeleteId: string | null = null;
+    pendingUndoAction: { item: Installment, loanId?: string } | null = null;
     expandedLoans: Record<string, boolean> = {}; // Track expand state for history
 
     showMarkAsPaidDialog: boolean = false;
@@ -177,9 +178,20 @@ export class InstallmentsComponent implements OnInit {
     }
 
     undoPayment(item: Installment, loanId?: string) {
+        this.pendingUndoAction = { item, loanId };
+    }
+
+    doUndoPayment() {
+        if (!this.pendingUndoAction) return;
+        const { item, loanId } = this.pendingUndoAction;
+        this.pendingUndoAction = null;
         this.svc.undoPayment(item, loanId).subscribe(() => {
             this.snackBar.open('התשלום בוטל בהצלחה', '', { duration: 2000 });
         });
+    }
+
+    cancelUndoPayment() {
+        this.pendingUndoAction = null;
     }
 
     toggleLoanHistory(loanId: string) {

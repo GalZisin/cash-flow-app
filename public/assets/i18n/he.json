@@ -167,6 +167,8 @@
     "TOTAL_LOAN_AMOUNT": "סכום הלוואה",
     "REMAINING_TO_INSTALL": "יתרה לפריסה",
     "UNDO_PAYMENT": "ביטול תשלום",
+    "UNDO_MSG": "האם לבטל את התשלום האחרון שבוצע?",
+    "CONFIRM_UNDO": "כן, בטל",
     "PAYMENT_HISTORY": "היסטוריית תשלומים"
   }
 }

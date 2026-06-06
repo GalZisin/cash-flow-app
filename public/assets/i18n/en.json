@@ -157,6 +157,9 @@
     "LOANS_DETAIL_FORM": "Loan / Payment Details",
     "ADD_LOAN_COMPONENT": "Add Loan",
     "TOTAL_LOAN_AMOUNT": "Loan Amount",
-    "REMAINING_TO_INSTALL": "Remaining to spread"
+    "REMAINING_TO_INSTALL": "Remaining to spread",
+    "UNDO_PAYMENT": "Undo Payment",
+    "UNDO_MSG": "Are you sure you want to undo the last payment?",
+    "CONFIRM_UNDO": "Yes, undo"
   }
 }
