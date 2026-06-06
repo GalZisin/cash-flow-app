@@ -7,6 +7,9 @@ export interface LoanComponent {
     startDate: string;        // תאריך תחילת ההלוואה
     paidCount: number;        // כמה שולם ידנית
     lastPaidDate?: string;    // תאריך תשלום אחרון
+    interestRate?: number;    // ריבית שנתית באחוזים
+    payoffDate?: string;      // תאריך פירעון (YYYY-MM)
+    payoffAmount?: number;    // סכום פירעון מוקדם
     payments?: { date: string, amount: number }[]; // היסטוריית תשלומים הכוללת סכום ותאריך
 }
 

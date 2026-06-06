@@ -101,13 +101,17 @@ export class CashFlowTableComponent implements OnInit {
           const monthDate = new Date(rawDate.getUTCFullYear(), rawDate.getUTCMonth(), 1);
           const monthGroup = this.createMonth(monthDate, m.startingBalance ?? 0);
           const isGreen = m.rowColor === '#dcfce7';
-          monthGroup.get('income')?.setValue(m.income ?? 0, { emitEvent: false });
-          monthGroup.get('mortgagePayment')?.setValue(m.mortgagePayment ?? 0, { emitEvent: false });
 
+          // חישוב החלק הידני המקורי: הסכום השמור ב-JSON פחות מה שמחושב אוטומטית בפריסות
           const totals = this.installmentService.getMonthlyInstallmentsForMonth(monthDate, this.installmentService.itemsValue);
-          // אם יש הלוואות מנוהלות בפריסות, הן ידרסו/יתווספו לעמודה (בהתאם להחלטתך, כאן אנו מגדירים את הערך)
-          monthGroup.get('loanPayment')?.setValue(totals.loans || (m.loanPayment ?? 0), { emitEvent: false });
-          monthGroup.get('installmentsPayment')?.setValue(totals.installments, { emitEvent: false });
+          const savedTotal = Number(m.loanPayment) || 0;
+          const manualPart = Math.max(0, savedTotal - totals.loans);
+
+          monthGroup.patchValue({
+            income: m.income ?? 0,
+            mortgagePayment: m.mortgagePayment ?? 0,
+            manualLoanPayment: manualPart
+          }, { emitEvent: false });
 
           monthGroup.get('expanded')?.setValue(!isGreen && m.regularExpenses?.length > 0, { emitEvent: false });
           monthGroup.get('expandedSpecial')?.setValue(!isGreen && m.specialExpenses?.length > 0, { emitEvent: false });
@@ -158,6 +162,7 @@ export class CashFlowTableComponent implements OnInit {
       income: [0],
       mortgagePayment: [0],
       loanPayment: [0],
+      manualLoanPayment: [0], // שדה פנימי לשמירת הערך הידני מהטבלה
       installmentsPayment: [0], // Initialize new field
       additionalIncomes: this.fb.array([]),
       regularExpenses: this.fb.array([]),
@@ -208,6 +213,7 @@ export class CashFlowTableComponent implements OnInit {
     const month = this.months.at(index);
     return (Number(month.get('mortgagePayment')?.value) || 0) +
       (Number(month.get('loanPayment')?.value) || 0) +
+      (Number(month.get('installmentsPayment')?.value) || 0) +
       this.getRegularExpensesSum(index) +
       this.getSpecialExpensesSum(index);
   }
@@ -299,7 +305,8 @@ export class CashFlowTableComponent implements OnInit {
     const newMonth = this.createMonth(nextMonth, lastEndingBalance);
     newMonth.get('income')?.setValue(src.get('income')?.value, { emitEvent: false });
     newMonth.get('mortgagePayment')?.setValue(src.get('mortgagePayment')?.value, { emitEvent: false });
-    newMonth.get('loanPayment')?.setValue(src.get('loanPayment')?.value, { emitEvent: false });
+    // שכפול החלק הידני של ההלוואה
+    newMonth.get('manualLoanPayment')?.setValue(src.get('manualLoanPayment')?.value, { emitEvent: false });
 
     const srcAddIncome: { description: string; amount: number }[] = src.get('additionalIncomes')?.value || [];
     srcAddIncome.forEach(e =>
@@ -385,6 +392,24 @@ export class CashFlowTableComponent implements OnInit {
     return control as FormControl<string>;
   }
 
+  /** 
+   * מתודה לעדכון החלק הידני כאשר המשתמש מקליד ישירות בעמודת ההלוואות בטבלה.
+   * יש לקרוא לה ב-HTML מהאירוע (blur) או (change) של שדה ה-loanPayment.
+   */
+  onLoanPaymentChange(index: number) {
+    const monthCtrl = this.months.at(index);
+    const monthDateValue = monthCtrl.get('month')?.value;
+    if (!monthDateValue) return;
+
+    const totals = this.installmentService.getMonthlyInstallmentsForMonth(new Date(monthDateValue), this.installmentService.itemsValue);
+    const totalEntered = Number(monthCtrl.get('loanPayment')?.value) || 0;
+
+    // החלק הידני הוא הסכום שהוכנס פחות מה שמגיע אוטומטית מהפריסות
+    const manualPart = Math.max(0, totalEntered - totals.loans);
+    monthCtrl.get('manualLoanPayment')?.setValue(manualPart, { emitEvent: false });
+    this.calculateEndingBalances();
+  }
+
   /**
    * Recalculates ending balances for all months in sequence.
    * @param updateStartingBalances When true (default), also propagates each month's
@@ -403,8 +428,11 @@ export class CashFlowTableComponent implements OnInit {
           this.installmentService.itemsValue
         );
 
+        const manualValue = Number(monthCtrl.get('manualLoanPayment')?.value) || 0;
+
         monthCtrl.get('installmentsPayment')?.setValue(totals.installments, { emitEvent: false });
-        monthCtrl.get('loanPayment')?.setValue(totals.loans, { emitEvent: false });
+        // עדכון התצוגה בטבלה כסכום של ידני + אוטומטי
+        monthCtrl.get('loanPayment')?.setValue(manualValue + totals.loans, { emitEvent: false });
       }
 
       const startingBalance = Number(monthCtrl.get('startingBalance')?.value) || 0;
@@ -431,7 +459,25 @@ export class CashFlowTableComponent implements OnInit {
       monthCtrl.get('endingBalance')?.setValue(endingBalance, { emitEvent: false });
       prevEndingBalance = endingBalance;
     });
+
+    // עדכון ה-Service בנתונים העדכניים ביותר עבור הסימולטור של הפריסות
+    this.syncServiceWithCurrentData();
     this.cdr.detectChanges();
+  }
+
+  private syncServiceWithCurrentData() {
+    const monthsData = this.months.controls.map(ctrl => ({
+      rowColor: ctrl.get('rowColor')?.value,
+      month: this.toMonthString(ctrl.get('month')?.value),
+      startingBalance: Number(ctrl.get('startingBalance')?.value) || 0,
+      income: Number(ctrl.get('income')?.value) || 0,
+      mortgagePayment: Number(ctrl.get('mortgagePayment')?.value) || 0,
+      loanPayment: Number(ctrl.get('manualLoanPayment')?.value) || 0, // שומרים את החלק הידני
+      regularExpenses: ctrl.get('regularExpenses')?.value || [],
+      specialExpenses: ctrl.get('specialExpenses')?.value || [],
+      endingBalance: Number(ctrl.get('endingBalance')?.value) || 0
+    }));
+    this.cashFlowService.updateMonths(monthsData);
   }
 
   refreshDataSource() {
@@ -451,7 +497,9 @@ export class CashFlowTableComponent implements OnInit {
       newMonth.get('mortgagePayment')?.setValue(defaults.mortgagePayment, { emitEvent: false });
 
       const totals = this.installmentService.getMonthlyInstallmentsForMonth(nextMonth, this.installmentService.itemsValue);
-      newMonth.get('loanPayment')?.setValue(totals.loans || defaults.loanPayment, { emitEvent: false });
+      // הגדרת ברירת המחדל בשדה הידני
+      newMonth.get('manualLoanPayment')?.setValue(defaults.loanPayment, { emitEvent: false });
+      newMonth.get('loanPayment')?.setValue(totals.loans + defaults.loanPayment, { emitEvent: false });
       newMonth.get('installmentsPayment')?.setValue(totals.installments, { emitEvent: false });
 
       (defaults as any).additionalIncomes?.forEach((e: any) =>
@@ -494,7 +542,7 @@ export class CashFlowTableComponent implements OnInit {
         startingBalance: ctrl.get('startingBalance')?.value,
         income: ctrl.get('income')?.value,
         mortgagePayment: ctrl.get('mortgagePayment')?.value,
-        loanPayment: ctrl.get('loanPayment')?.value,
+        loanPayment: ctrl.get('manualLoanPayment')?.value, // שומרים לשרת רק את החלק הידני
         installmentsPayment: ctrl.get('installmentsPayment')?.value,
         additionalIncomes: ctrl.get('additionalIncomes')?.value,
         regularExpenses: ctrl.get('regularExpenses')?.value,
@@ -525,7 +573,15 @@ export class CashFlowTableComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
-  focusField(key: string) { this.focusedField[key] = true; }
+  focusField(key: string) {
+    this.focusedField[key] = true;
+    // המתנה לרינדור של ה-input (בגלל ה-ngIf) ואז ביצוע פוקוס
+    setTimeout(() => {
+      const el = document.querySelector(`input[data-focus-key="${key}"]`) as HTMLInputElement;
+      if (el) el.focus();
+    }, 0);
+  }
+
   blurField(key: string) { this.focusedField[key] = false; }
 
   print() {

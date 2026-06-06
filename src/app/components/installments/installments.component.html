@@ -69,11 +69,11 @@
                     ↺
                   </button>
                 }
-                @if (!st.isCompleted) {
+                @if (!st.isCompleted && st.loanStatuses.length === 0) {
                   <button class="inst-icon-btn" type="button"
                     [matTooltip]="'INSTALLMENTS.MARK_PAID' | translate"
                     [attr.aria-label]="'INSTALLMENTS.MARK_PAID' | translate"
-                    (click)="markAsPaid(item)"> <!-- This will now open the dialog -->
+                    (click)="markAsPaid(item)">
                     ✅
                   </button>
                 }
@@ -281,48 +281,65 @@
         @if (form.loanComponents && form.loanComponents.length > 0) {
           <!-- כותרות לשדות הלוואה -->
           <div class="row g-1 mb-1 fw-medium text-muted px-2 inst-loan-header-row">
-            <div class="col-3">{{ 'CASH_FLOW.DESCRIPTION' | translate }}</div>
-            <div class="col-2">{{ 'INSTALLMENTS.TOTAL_LOAN_AMOUNT' | translate }}</div>
-            <div class="col-2">{{ 'INSTALLMENTS.MONTHLY_PAYMENT' | translate }}</div>
-            <div class="col-2">{{ 'INSTALLMENTS.INSTALLMENTS_COUNT' | translate }}</div>
-            <div class="col-2">{{ 'INSTALLMENTS.START_DATE' | translate }}</div>
-            <div class="col-1"></div>
+            <div class="col-2">{{ 'CASH_FLOW.DESCRIPTION' | translate }}</div>
+            <div class="col-1">{{ 'INSTALLMENTS.TOTAL_LOAN_AMOUNT' | translate }}</div>
+            <div class="col-1">ריבית %</div>
+            <div class="col-1">{{ 'INSTALLMENTS.MONTHLY_PAYMENT' | translate }}</div>
+            <div class="col-1">חודשים</div>
+            <div class="col-1">תחילת הלוואה</div>
+            <div class="col-2">חודש פירעון</div>
+            <div class="col-2">סכום פירעון</div>
+            <div class="col-1 text-center">הסרה</div>
           </div>
         }
 
         @for (loan of form.loanComponents; track loan.id; let idx = $index) {
-          <div class="row g-1 mb-2 align-items-end border p-2 rounded">
-            <div class="col-3">
+          <div class="row g-1 mb-2 align-items-center border p-2 rounded">
+            <div class="col-2">
               <input type="text" class="form-control form-control-sm" 
                 placeholder="{{ 'CASH_FLOW.DESCRIPTION' | translate }}" 
                 title="{{ 'CASH_FLOW.DESCRIPTION' | translate }}"
                 [(ngModel)]="loan.description">
             </div>
-            <div class="col-2">
+            <div class="col-1">
               <input type="number" class="form-control form-control-sm" 
                 placeholder="{{ 'INSTALLMENTS.TOTAL_LOAN_AMOUNT' | translate }}" 
                 title="{{ 'INSTALLMENTS.TOTAL_LOAN_AMOUNT' | translate }}"
-                [(ngModel)]="loan.totalLoanAmount" (ngModelChange)="updateTotalsFromLoans()">
+                [(ngModel)]="loan.totalLoanAmount" (ngModelChange)="calculateLoanPMT(loan)">
             </div>
-            <div class="col-2">
+            <div class="col-1">
+              <input type="number" class="form-control form-control-sm" 
+                placeholder="%" title="ריבית שנתית"
+                [(ngModel)]="loan.interestRate" (ngModelChange)="calculateLoanPMT(loan)">
+            </div>
+            <div class="col-1">
               <input type="number" class="form-control form-control-sm" 
                 placeholder="{{ 'INSTALLMENTS.MONTHLY_PAYMENT' | translate }}" 
                 title="{{ 'INSTALLMENTS.MONTHLY_PAYMENT' | translate }}"
                 [(ngModel)]="loan.monthlyPayment" (ngModelChange)="updateTotalsFromLoans()">
             </div>
-            <div class="col-2">
+            <div class="col-1">
               <input type="number" class="form-control form-control-sm" 
-                placeholder="{{ 'INSTALLMENTS.INSTALLMENTS_COUNT' | translate }}" 
-                title="{{ 'INSTALLMENTS.INSTALLMENTS_COUNT' | translate }}"
-                [(ngModel)]="loan.installmentsCount">
+                placeholder="חודשים" title="{{ 'INSTALLMENTS.INSTALLMENTS_COUNT' | translate }}"
+                [(ngModel)]="loan.installmentsCount" (ngModelChange)="calculateLoanPMT(loan)">
             </div>
-            <div class="col-2">
+            <div class="col-1">
               <input type="date" class="form-control form-control-sm" 
                 placeholder="{{ 'INSTALLMENTS.START_DATE' | translate }}"
                 title="{{ 'INSTALLMENTS.START_DATE' | translate }}"
                 [(ngModel)]="loan.startDate">
             </div>
-            <div class="col-1">
+            <div class="col-2">
+              <input type="month" class="form-control form-control-sm" 
+                placeholder="חודש פירעון" title="חודש פירעון"
+                [(ngModel)]="loan.payoffDate" (ngModelChange)="calculatePayoffAmount(loan)">
+            </div>
+            <div class="col-2">
+              <input type="number" class="form-control form-control-sm" 
+                placeholder="סכום" title="סכום פירעון"
+                [(ngModel)]="loan.payoffAmount">
+            </div>
+            <div class="col-1 text-center">
               <button type="button" class="btn btn-link text-danger p-0" (click)="removeLoanComponent(idx)">✕</button>
             </div>
           </div>

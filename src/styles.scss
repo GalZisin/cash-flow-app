@@ -256,8 +256,8 @@ app-cash-flow-table .actions {
 /* ---------- Installments Dialog ---------- */
 .inst-dialog {
     width: 95% !important;
-    max-width: 950px !important;
-    /* הרחבת החלון כדי לתמוך בטבלת פירוט ההלוואות (6 עמודות) בצורה מרווחת */
+    max-width: 1450px !important;
+    /* הרחבת החלון כדי לתת יותר מקום לשדות התאריכים ולמנוע דחיסות בפירוט ההלוואות */
     z-index: 1001;
 }
 
@@ -377,6 +377,12 @@ app-cash-flow-table .actions {
 
 .cursor-pointer {
     cursor: pointer !important;
+}
+
+/* עמודת הסרה קומפקטית */
+.inst-col-remove {
+    flex: 1;
+    /* שינוי לניצול יתרת המקום בגריד */
 }
 
 /* מחלקות חדשות לביטול inline styles */

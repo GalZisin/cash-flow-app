@@ -50,6 +50,10 @@ export class CashFlowService {
     );
   }
 
+  updateMonths(months: MonthData[]) {
+    this._cashFlowMonths.next(months);
+  }
+
   save(data: CashFlowData): Observable<CashFlowData> {
     return this.http.post<CashFlowData>(this.apiUrl, data).pipe(
       tap(() => this._cashFlowMonths.next(data.months))

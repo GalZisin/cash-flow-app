@@ -204,9 +204,24 @@ export class InstallmentService {
                 for (const loan of item.loanComponents) {
                     const start = new Date(loan.startDate);
                     const end = new Date(start.getFullYear(), start.getMonth() + loan.installmentsCount, 1);
-                    if (targetMonthDate >= start && targetMonthDate < end) {
-                        loans += loan.monthlyPayment;
+
+                    let currentPayment = 0;
+                    if (loan.payoffDate) {
+                        const payoff = new Date(loan.payoffDate + "-01");
+                        if (targetMonthDate.getFullYear() === payoff.getFullYear() && targetMonthDate.getMonth() === payoff.getMonth()) {
+                            // חודש הפירעון - מציגים את סכום הפירעון
+                            currentPayment = loan.payoffAmount || 0;
+                        } else if (targetMonthDate > payoff) {
+                            // אחרי הפירעון - אין יותר תשלומים
+                            currentPayment = 0;
+                        } else if (targetMonthDate >= start && targetMonthDate < end) {
+                            currentPayment = loan.monthlyPayment;
+                        }
+                    } else if (targetMonthDate >= start && targetMonthDate < end) {
+                        currentPayment = loan.monthlyPayment;
                     }
+
+                    loans += currentPayment;
                 }
             } else {
                 // זו פריסת תשלומים רגילה (ללא רכיבי הלוואה) - נסכום לעמודת הפריסות
@@ -229,54 +244,78 @@ export class InstallmentService {
     simulateInstallmentImpact(proposedInstallment: Omit<Installment, 'id'> | Installment, currentCashFlowMonths: any[]): CashFlowWarning[] {
         const warnings: CashFlowWarning[] = [];
         const THRESHOLD = 30000; // סף האזהרה
+        const SIGNIFICANCE_THRESHOLD = 100; // התעלמות משינויים קטנים ברמת היתרה
 
-        // יצירת עותק עמוק של חודשי תזרים המזומנים כדי לא לשנות את הנתונים המקוריים
-        const simulatedMonths = JSON.parse(JSON.stringify(currentCashFlowMonths));
+        const baselineInstallments = this._items.value;
+        const proposedId = (proposedInstallment as Installment).id;
 
-        // יצירת רשימה היפותטית של פריסות
-        let hypotheticalInstallments: Installment[];
-        if ((proposedInstallment as Installment).id) { // פריסה קיימת שעוברת עדכון
-            hypotheticalInstallments = this._items.value.map(i =>
-                i.id === (proposedInstallment as Installment).id ? { ...i, ...proposedInstallment } as Installment : i
-            );
-        } else { // פריסה חדשה
-            hypotheticalInstallments = [...this._items.value, { ...proposedInstallment, id: 'temp-sim-id' } as Installment];
-        }
+        // יצירת רשימה היפותטית המשלבת את העדכון
+        const hypotheticalInstallments = proposedId
+            ? baselineInstallments.map(i => String(i.id) === String(proposedId) ? { ...i, ...proposedInstallment } as any : i)
+            : [...baselineInstallments, { ...proposedInstallment, id: 'temp-sim-id' } as any];
 
-        let prevEndingBalance = 0;
-        simulatedMonths.forEach((monthCtrl: any, i: number) => {
-            const monthDateValue = monthCtrl.month;
-            const targetDate = new Date(monthDateValue);
+        let prevBaseBalance = 0;
+        let prevSimBalance = 0;
 
-            // חישוב תשלומי הפריסות עבור החודש הספציפי מהרשימה ההיפותטית
-            const totals = this.getMonthlyInstallmentsForMonth(targetDate, hypotheticalInstallments);
-            const effectiveLoan = totals.loans || (Number(monthCtrl.loanPayment) || 0);
-            monthCtrl.loanPayment = effectiveLoan;
-            monthCtrl.installmentsPayment = totals.installments;
+        // דגלים למניעת חזרה על אותה אזהרה לאורך חודשים רצופים
+        let warnedNegative = false;
+        let warnedThreshold = false;
 
-            // ... (העתק את לוגיקת חישוב היתרה מ-CashFlowTableComponent.calculateEndingBalances) ...
-            // מכיוון שאין לנו גישה ישירה ל-FormGroup/FormArray כאן, נצטרך לשחזר את החישוב
-            // זהו חישוב מקוצר לדוגמה, יש להשלים אותו בהתאם ללוגיקה המלאה שלכם ב-CashFlowTableComponent
-            const totalStarting = i === 0 ? (Number(monthCtrl.startingBalance) || 0) : prevEndingBalance;
-            const income = (Number(monthCtrl.income) || 0) + (monthCtrl.additionalIncomes || []).reduce((sum: number, r: any) => sum + (Number(r.amount) || 0), 0);
-            const expenses = (Number(monthCtrl.mortgagePayment) || 0) + effectiveLoan + totals.installments + (monthCtrl.specialExpenses || []).reduce((sum: number, r: any) => sum + (Number(r.amount) || 0), 0) + (monthCtrl.regularExpenses || []).reduce((sum: number, r: any) => sum + (Number(r.amount) || 0), 0);
-            const endingBalance = totalStarting + income - expenses;
+        currentCashFlowMonths.forEach((month, i) => {
+            const targetDate = new Date(month.month);
 
-            if (i < simulatedMonths.length - 1) {
-                simulatedMonths[i + 1].startingBalance = endingBalance;
+            // 1. חישוב הוצאות בסיס (לפני השינוי)
+            const baseTotals = this.getMonthlyInstallmentsForMonth(targetDate, baselineInstallments);
+            const baseManualLoan = Number(month.loanPayment) || 0; // manualLoanPayment מהטבלה
+            const baseExpenses = (Number(month.mortgagePayment) || 0) + (baseManualLoan + baseTotals.loans) + baseTotals.installments +
+                (month.specialExpenses || []).reduce((s: number, r: any) => s + (Number(r.amount) || 0), 0) +
+                (month.regularExpenses || []).reduce((s: number, r: any) => s + (Number(r.amount) || 0), 0);
+
+            // 2. חישוב הוצאות מדומות (אחרי השינוי)
+            const simTotals = this.getMonthlyInstallmentsForMonth(targetDate, hypotheticalInstallments);
+            const simExpenses = (Number(month.mortgagePayment) || 0) + (baseManualLoan + simTotals.loans) + simTotals.installments +
+                (month.specialExpenses || []).reduce((s: number, r: any) => s + (Number(r.amount) || 0), 0) +
+                (month.regularExpenses || []).reduce((s: number, r: any) => s + (Number(r.amount) || 0), 0);
+
+            const income = (Number(month.income) || 0) + (month.additionalIncomes || []).reduce((s: number, r: any) => s + (Number(r.amount) || 0), 0);
+
+            // 3. חישוב יתרות
+            const startBase = i === 0 ? (Number(month.startingBalance) || 0) : prevBaseBalance;
+            const startSim = i === 0 ? (Number(month.startingBalance) || 0) : prevSimBalance;
+
+            const endBase = startBase + income - baseExpenses;
+            const endSim = startSim + income - simExpenses;
+
+            prevBaseBalance = endBase;
+            prevSimBalance = endSim;
+
+            // 4. לוגיקת אזהרה חכמה - האם השינוי יצר בעיה חדשה?
+            const isNewNegative = !warnedNegative && endSim < -1 && endBase >= -1;
+            const isNewBelowThreshold = !warnedThreshold && !warnedNegative && endSim < THRESHOLD && endBase >= THRESHOLD;
+
+            // האם המצב הקיים הוחמר משמעותית (למשל תשלום פירעון גדול בתוך חודש שכבר במינוס)
+            const isSignificantlyWorse = endSim < -1 && (endBase - endSim) > 500 && !warnedNegative;
+
+            let warningMsg = '';
+            if (isNewNegative) {
+                warningMsg = `היתרה הופכת לשלילית בעקבות השינוי (${endSim.toFixed(0)} ₪)`;
+                warnedNegative = true;
+            } else if (isNewBelowThreshold) {
+                warningMsg = `היתרה יורדת מתחת לסף האזהרה (${endSim.toFixed(0)} ₪)`;
+                warnedThreshold = true;
+            } else if (isSignificantlyWorse) {
+                warningMsg = `הגירעון הקיים גדל משמעותית בעקבות השינוי (${endSim.toFixed(0)} ₪)`;
+                warnedNegative = true;
             }
-            monthCtrl.endingBalance = endingBalance; // עדכון עבור החודש הנוכחי
 
-            // בדיקת אזהרות
-            if (endingBalance < THRESHOLD) {
+            if (warningMsg) {
                 warnings.push({
-                    month: new Date(monthDateValue).toISOString().slice(0, 7),
-                    balance: endingBalance,
+                    month: targetDate.toISOString().slice(0, 7),
+                    balance: endSim,
                     threshold: THRESHOLD,
-                    message: `היתרה בסוף חודש ${new Date(monthDateValue).toLocaleDateString('he-IL', { year: 'numeric', month: 'long' })} צפויה להיות ${endingBalance.toFixed(0)} ₪, שהיא מתחת לסף של ${THRESHOLD.toFixed(0)} ₪.`
+                    message: `חודש ${targetDate.toLocaleDateString('he-IL', { year: 'numeric', month: 'long' })}: ${warningMsg}`
                 });
             }
-            prevEndingBalance = endingBalance;
         });
 
         return warnings;

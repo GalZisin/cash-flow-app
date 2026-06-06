@@ -121,11 +121,69 @@ export class InstallmentsComponent implements OnInit {
             monthlyPayment: 0, // Default to 0
             installmentsCount: 12,
             startDate: new Date().toISOString().slice(0, 10), // Default to today's date
+            interestRate: 0,
             paidCount: 0,
             lastPaidDate: undefined
         };
         this.form.loanComponents = [...(this.form.loanComponents || []), newLoan];
         this.cdr.detectChanges(); // Force change detection to update the view
+    }
+
+    calculateLoanPMT(loan: LoanComponent) {
+        const total = Math.max(0, Number(loan.totalLoanAmount) || 0);
+        const count = Math.max(1, Number(loan.installmentsCount) || 0);
+        const rate = Number(loan.interestRate) || 0;
+
+        if (rate > 0 && total > 0 && count > 0) {
+            // נוסחת PMT: [r*PV] / [1 - (1+r)^-n]
+            const annualRate = rate / 100;
+            const monthlyRate = annualRate / 12;
+            const pmt = (monthlyRate * total) / (1 - Math.pow(1 + monthlyRate, -count));
+            loan.monthlyPayment = Math.round(pmt * 100) / 100;
+        } else {
+            // הלוואה ללא ריבית (או ריבית 0) - חלוקה פשוטה של הקרן
+            loan.monthlyPayment = Math.round((total / count) * 100) / 100;
+        }
+
+        // אם כבר הוגדר תאריך פירעון, נעדכן את הסכום שלו בהתאם לנתונים החדשים
+        if (loan.payoffDate) {
+            this.calculatePayoffAmount(loan);
+        }
+
+        this.updateTotalsFromLoans();
+    }
+
+    calculatePayoffAmount(loan: LoanComponent) {
+        if (!loan.payoffDate || !loan.startDate || !loan.totalLoanAmount) return;
+
+        const start = new Date(loan.startDate);
+        const payoff = new Date(loan.payoffDate + "-01");
+
+        // חישוב מספר התשלומים שיבוצעו עד חודש הפירעון (כולל)
+        const p = (payoff.getFullYear() - start.getFullYear()) * 12 + (payoff.getMonth() - start.getMonth());
+
+        if (p < 0) return;
+        if (p >= loan.installmentsCount) {
+            loan.payoffAmount = 0;
+            return;
+        }
+
+        const total = Number(loan.totalLoanAmount);
+        const rate = Number(loan.interestRate) || 0;
+        const n = Number(loan.installmentsCount);
+
+        if (rate > 0) {
+            const r = (rate / 100) / 12;
+            // נוסחת יתרת קרן שפיצר: PV * [(1+r)^n - (1+r)^p] / [(1+r)^n - 1]
+            const powN = Math.pow(1 + r, n);
+            const powP = Math.pow(1 + r, p);
+            const balance = total * (powN - powP) / (powN - 1);
+            loan.payoffAmount = Math.round(balance);
+        } else {
+            // הלוואה ללא ריבית - יתרה לינארית פשוטה
+            const monthly = total / n;
+            loan.payoffAmount = Math.round(total - (p * monthly));
+        }
     }
 
     removeLoanComponent(index: number) {
@@ -250,34 +308,37 @@ export class InstallmentsComponent implements OnInit {
     }
 
     submit(ignoreWarnings: boolean = false) {
-        // Ensure all relevant fields are numbers and handle potential NaN from empty inputs
-        this.form.totalAmount = Number(this.form.totalAmount) || 0;
-        this.form.downPayment = Number(this.form.downPayment) || 0; // Ensure it's a number
-        this.form.manualPaidCount = Number(this.form.manualPaidCount) || 0; // Ensure it's a number
+        console.log("submit ignoreWarnings: ", ignoreWarnings)
+        // 1. קיבוע ה-ID עבור הסימולטור והשרת
+        if (this.editingId) {
+            (this.form as any).id = this.editingId;
+        }
 
-        // Ensure loanComponents is always an array and its numeric fields are numbers
+        // 2. המרה למספרים
+        this.form.totalAmount = Number(this.form.totalAmount) || 0;
+        this.form.downPayment = Number(this.form.downPayment) || 0;
+        this.form.manualPaidCount = Number(this.form.manualPaidCount) || 0;
+
         this.form.loanComponents = (this.form.loanComponents || []).map(loan => ({
             ...loan,
             totalLoanAmount: Number(loan.totalLoanAmount) || 0,
             monthlyPayment: Number(loan.monthlyPayment) || 0,
             installmentsCount: Number(loan.installmentsCount) || 0,
-            paidCount: Number(loan.paidCount) || 0
+            paidCount: Number(loan.paidCount) || 0,
+            interestRate: loan.interestRate !== undefined ? Number(loan.interestRate) : 0,
+            payoffAmount: Number(loan.payoffAmount) || 0
         }));
 
-        // The lastManualPaymentDate is updated by markAsPaid, or can be set manually if needed in the form.
-        // Basic validation
         if (!this.formValid) {
-            this.translate.get('INSTALLMENTS.INVALID_FORM_FIELDS')
-                .subscribe(msg => this.snackBar.open(msg, '', { duration: 2500, panelClass: 'snack-error' }));
+            this.translate.get('INSTALLMENTS.INVALID_FORM_FIELDS').subscribe(msg => this.snackBar.open(msg, '', { duration: 2500, panelClass: 'snack-error' }));
             return;
         }
 
-        // If loan components exist, derive main monthlyPayment and installmentsCount from them
+        // 3. עדכון סופי של סכומי האב לפני הסימולציה
         if (this.form.loanComponents && this.form.loanComponents.length > 0) {
-            this.form.monthlyPayment = this.form.loanComponents.reduce((sum, l) => sum + Number(l.monthlyPayment || 0), 0);
+            this.form.monthlyPayment = Math.round(this.form.loanComponents.reduce((sum, l) => sum + Number(l.monthlyPayment || 0), 0) * 100) / 100;
             this.form.installmentsCount = Math.max(1, ...this.form.loanComponents.map(l => Number(l.installmentsCount || 0))); // Ensure at least 1
         } else {
-            // Fallback for legacy/simple installments without loan components
             const remaining = this.amountAfterDown(this.form);
             if (this.form.installmentsCount === 0 && this.form.monthlyPayment > 0) {
                 this.form.installmentsCount = Math.ceil(remaining / this.form.monthlyPayment);

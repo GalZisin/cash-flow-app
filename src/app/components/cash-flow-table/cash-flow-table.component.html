@@ -46,7 +46,7 @@
             [formControl]="monthCtrl.get('startingBalance')"
             (input)="calculateEndingBalances()"
             (blur)="blurField('startingBalance_' + i)"
-            #autoFocus />
+            [attr.data-focus-key]="'startingBalance_' + i" />
         </ng-container>
       </td>
     </ng-container>
@@ -62,7 +62,8 @@
           placeholder="הכנסות" title="הכנסות" aria-label="הכנסות"
           [formControl]="monthCtrl.get('income')"
           (input)="calculateEndingBalances()"
-          (blur)="blurField('income_' + i)" />
+          (blur)="blurField('income_' + i)"
+          [attr.data-focus-key]="'income_' + i" />
       </td>
     </ng-container>
 
@@ -89,7 +90,8 @@
               placeholder="סכום" title="סכום" aria-label="סכום"
               [formControl]="getAdditionalIncomeAmount(i, j)"
               (input)="calculateEndingBalances()"
-              (blur)="blurField('add_inc_' + i + '_' + j)" />
+              (blur)="blurField('add_inc_' + i + '_' + j)"
+              [attr.data-focus-key]="'add_inc_' + i + '_' + j" />
             <button mat-icon-button color="warn" (click)="confirmDeleteExpense(i, j, 'additionalIncome')">
               <mat-icon>delete</mat-icon>
             </button>
@@ -117,7 +119,8 @@
           placeholder="משכנתא" title="משכנתא" aria-label="משכנתא"
           [formControl]="monthCtrl.get('mortgagePayment')"
           (input)="calculateEndingBalances()"
-          (blur)="blurField('mortgage_' + i)" />
+          (blur)="blurField('mortgage_' + i)"
+          [attr.data-focus-key]="'mortgage_' + i" />
       </td>
     </ng-container>
 
@@ -129,10 +132,11 @@
           {{ monthCtrl.get('loanPayment')?.value | number:'1.0-0' }} ₪
         </span>
         <input *ngIf="focusedField['loan_' + i]" matInput type="number" dir="rtl"
-          placeholder="הלוואה חודשית" title="הלוואה חודשית" aria-label="הלוואה חודשית"
+          placeholder="הלוואה חודשית (סה״כ)" title="הלוואה חודשית" aria-label="הלוואה חודשית"
           [formControl]="monthCtrl.get('loanPayment')"
-          (input)="calculateEndingBalances()"
-          (blur)="blurField('loan_' + i)" />
+          (blur)="onLoanPaymentChange(i); blurField('loan_' + i)"
+          (keydown.enter)="onLoanPaymentChange(i); blurField('loan_' + i)"
+          [attr.data-focus-key]="'loan_' + i" />
       </td>
     </ng-container>
 
@@ -167,7 +171,8 @@
               placeholder="סכום" title="סכום" aria-label="סכום"
               [formControl]="getExpenseAmount(i, j)"
               (input)="calculateEndingBalances()"
-              (blur)="blurField('reg_' + i + '_' + j)" />
+              (blur)="blurField('reg_' + i + '_' + j)"
+              [attr.data-focus-key]="'reg_' + i + '_' + j" />
             <button mat-icon-button color="warn" (click)="removeRegularExpense(i,j)">
               <mat-icon>delete</mat-icon>
             </button>
@@ -207,7 +212,8 @@
               placeholder="סכום" title="סכום" aria-label="סכום"
               [formControl]="getSpecialExpenseAmount(i, j)"
               (input)="calculateEndingBalances()"
-              (blur)="blurField('spec_' + i + '_' + j)" />
+              (blur)="blurField('spec_' + i + '_' + j)"
+              [attr.data-focus-key]="'spec_' + i + '_' + j" />
             <button mat-icon-button color="warn" (click)="removeSpecialExpense(i, j)">
               <mat-icon>delete</mat-icon>
             </button>
