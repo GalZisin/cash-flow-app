@@ -103,6 +103,11 @@
         <button mat-icon-button class="no-print" (click)="monthCtrl.get('expanded')?.setValue(!monthCtrl.get('expanded')?.value)">
           <mat-icon>{{ monthCtrl.get('expanded')?.value ? 'expand_less' : 'expand_more' }}</mat-icon>
         </button>
+        @if (!monthCtrl.get('expanded')?.value && getRegularExpenses(i).length > 0) {
+          <span class="no-print badge rounded-pill bg-primary ms-1 expense-count-badge align-top">
+            {{ getRegularExpenses(i).length }}
+          </span>
+        }
 
         <div *ngIf="monthCtrl.get('expanded')?.value" class="no-print">
           <div *ngFor="let expCtrl of getRegularExpenses(i).controls; let j=index" class="expense-row">
@@ -138,6 +143,11 @@
         <button mat-icon-button class="no-print" (click)="monthCtrl.get('expandedSpecial')?.setValue(!monthCtrl.get('expandedSpecial')?.value)">
           <mat-icon>{{ monthCtrl.get('expandedSpecial')?.value ? 'expand_less' : 'expand_more' }}</mat-icon>
         </button>
+        @if (!monthCtrl.get('expandedSpecial')?.value && getSpecialExpenses(i).length > 0) {
+          <span class="no-print badge rounded-pill bg-warning text-dark ms-1 expense-count-badge">
+            {{ getSpecialExpenses(i).length }}
+          </span>
+        }
 
         <div *ngIf="monthCtrl.get('expandedSpecial')?.value" class="no-print">
           <div *ngFor="let expCtrl of getSpecialExpenses(i).controls; let j=index" class="expense-row">

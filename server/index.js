@@ -15,6 +15,6 @@ app.use(express.json());
 // Routes
 app.use('/api/installments', installmentRoutes);
 app.use('/api/investments', investmentRoutes);
-app.use('/api/cash-flow', cashFlowRoutes);
+app.use('/api', cashFlowRoutes);
 
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));

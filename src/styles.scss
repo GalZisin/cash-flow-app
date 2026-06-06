@@ -1,5 +1,27 @@
 /* You can add global styles to this file, and also import other style files */
 
+// ---------- Color Palette Variables ----------
+$primary-color: #1976d2;
+$accent-color: #4f46e5;
+$white-color: #ffffff;
+$text-color-main: #333333;
+
+$table-header-bg: #1976d2;
+$table-row-bg: #f9f9f9;
+$table-row-hover: #e3f2fd;
+$table-row-expanded: #eaf4fc;
+
+$error-color: #c62828;
+$success-color: #2e7d32;
+
+$tooltip-bg: #344765;
+$tooltip-text: #f8fafc;
+
+$shadow-menu: rgba(0, 0, 0, 0.12);
+$shadow-tooltip: rgba(0, 0, 0, 0.18);
+$border-subtle: rgba(0, 0, 0, 0.1);
+$accent-glow: rgba(79, 70, 229, 0.3);
+
 html,
 body {
     height: 100%;
@@ -48,12 +70,12 @@ body {
     border-spacing: 0 8px !important; // רווח בין שורות
     font-family: 'Arial', sans-serif !important;
     font-size: 14px !important;
-    color: #333 !important;
+    color: $text-color-main !important;
 }
 
 .mat-mdc-header-row {
-    background-color: #1976d2 !important; // כחול עדכני
-    color: #fff !important;
+    background-color: $table-header-bg !important;
+    color: $white-color !important;
     font-weight: 600 !important;
     text-transform: uppercase !important;
     height: 50px !important;
@@ -64,13 +86,13 @@ body {
 }
 
 .mat-mdc-row {
-    background-color: #f9f9f9; // רקע עדין לשורות
+    background-color: $table-row-bg; // רקע עדין לשורות
     transition: background 0.2s ease-in-out !important;
     cursor: default !important;
 }
 
 .mat-mdc-row:hover {
-    background-color: #e3f2fd; // hover כחול בהיר
+    background-color: $table-row-hover; // hover כחול בהיר
 }
 
 .mat-mdc-cell {
@@ -93,7 +115,7 @@ body {
 
 /* Expandable rows */
 .expanded-row {
-    background-color: #eaf4fc !important; // צבע קצת שונה למצב פתוח
+    background-color: $table-row-expanded !important; // צבע קצת שונה למצב פתוח
 }
 
 /* Sticky header */
@@ -126,15 +148,15 @@ body {
 }
 
 .snack-error .mdc-snackbar__surface {
-    background-color: #c62828 !important;
-    color: #fff !important;
+    background-color: $error-color !important;
+    color: $white-color !important;
     font-family: 'Heebo', sans-serif !important;
     font-size: 14px !important;
 }
 
 .snack-success .mdc-snackbar__surface {
-    background-color: #2e7d32 !important;
-    color: #fff !important;
+    background-color: $success-color !important;
+    color: $white-color !important;
     font-family: 'Heebo', sans-serif !important;
     font-size: 14px !important;
     font-weight: 500 !important;
@@ -157,14 +179,14 @@ app-cash-flow-table .actions {
 
 /* ---------- Modern Tooltips ---------- */
 .mat-mdc-tooltip .mdc-tooltip__surface {
-    background: #344765 !important;
-    color: #f8fafc !important;
+    background: $tooltip-bg !important;
+    color: $tooltip-text !important;
     font-family: 'Inter', sans-serif !important;
     font-size: 0.78rem !important;
     font-weight: 500 !important;
     padding: 6px 12px !important;
     border-radius: 8px !important;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18) !important;
+    box-shadow: 0 4px 16px $shadow-tooltip !important;
     letter-spacing: 0.1px !important;
     line-height: 1.5 !important;
     max-width: 240px !important;
@@ -175,7 +197,7 @@ app-cash-flow-table .actions {
 .mat-mdc-menu-panel.color-menu {
     min-width: 140px !important;
     border-radius: 12px !important;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12) !important;
+    box-shadow: 0 8px 24px $shadow-menu !important;
     font-family: 'Heebo', sans-serif !important;
     direction: rtl;
 }
@@ -211,14 +233,14 @@ app-cash-flow-table .actions {
     width: 16px;
     height: 16px;
     border-radius: 50%;
-    border: 2px solid rgba(0, 0, 0, 0.1);
+    border: 2px solid $border-subtle;
     flex-shrink: 0;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
     display: inline-block;
 
     &.active {
-        border-color: #4f46e5 !important;
-        box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.3) !important;
+        border-color: $accent-color !important;
+        box-shadow: 0 0 0 2px $accent-glow !important;
     }
 }
 
@@ -226,7 +248,7 @@ app-cash-flow-table .actions {
     font-size: 16px !important;
     width: 16px !important;
     height: 16px !important;
-    color: #4f46e5 !important;
+    color: $accent-color !important;
     margin-right: auto;
     margin-left: 0;
 }
@@ -237,4 +259,18 @@ app-cash-flow-table .actions {
     max-width: 600px !important;
     /* הגדלת הרוחב כדי ש-4 עמודות הסכומים יכנסו בשורה אחת בנוחות */
     z-index: 1001;
+}
+
+.expense-count-badge {
+    font-size: 0.7rem !important;
+    vertical-align: top !important;
+
+    &.align-top {
+        vertical-align: top !important;
+    }
+}
+
+/* Utility for medium font weight if not provided by Bootstrap version */
+.fw-medium {
+    font-weight: 500 !important;
 }

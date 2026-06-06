@@ -18,24 +18,24 @@ function writeDefaults(data) {
 }
 
 // --- Cash Flow ---
-router.get('/', (req, res) => {
+router.get('/cash-flow', (req, res) => {
     if (!fs.existsSync(DATA_FILE)) return res.json(null);
     const data = JSON.parse(fs.readFileSync(DATA_FILE, { encoding: 'utf8' }));
     data.months = data.months.map(m => ({ loanPayment: 0, ...m }));
     res.json(data);
 });
 
-router.post('/', (req, res) => {
+router.post('/cash-flow', (req, res) => {
     fs.writeFileSync(DATA_FILE, JSON.stringify(req.body, null, 2), { encoding: 'utf8' });
     res.json({ success: true });
 });
 
 // --- Cash Flow Defaults ---
-router.get('/defaults', (req, res) => {
+router.get('/cash-flow-defaults', (req, res) => {
     res.json(readDefaults());
 });
 
-router.post('/defaults', (req, res) => {
+router.post('/cash-flow-defaults', (req, res) => {
     const defaults = {
         income: Number(req.body.income) || 0,
         mortgagePayment: Number(req.body.mortgagePayment) || 0,
