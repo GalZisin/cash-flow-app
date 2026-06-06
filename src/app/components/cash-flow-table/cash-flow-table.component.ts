@@ -45,6 +45,7 @@ export class CashFlowTableComponent implements OnInit {
     'loanPayment',
     'regularExpenses',
     'specialExpenses',
+    'visualSummary',
     'endingBalance',
   ];
 
@@ -175,6 +176,24 @@ export class CashFlowTableComponent implements OnInit {
     return this.getSpecialExpenses(index).controls.reduce((sum, control) => {
       return sum + (Number(control.get('amount')?.value) || 0);
     }, 0);
+  }
+
+  getTotalIncome(index: number): number {
+    const month = this.months.at(index);
+    return (Number(month.get('income')?.value) || 0) + this.getAdditionalIncomesSum(index);
+  }
+
+  getTotalExpenses(index: number): number {
+    const month = this.months.at(index);
+    return (Number(month.get('mortgagePayment')?.value) || 0) +
+      (Number(month.get('loanPayment')?.value) || 0) +
+      this.getRegularExpensesSum(index) +
+      this.getSpecialExpensesSum(index);
+  }
+
+  getBarWidth(value: number, index: number): number {
+    const max = Math.max(this.getTotalIncome(index), this.getTotalExpenses(index), 1);
+    return (value / max) * 100;
   }
 
   addRegularExpense(monthIndex: number) {

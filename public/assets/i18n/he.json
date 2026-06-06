@@ -37,7 +37,8 @@
     "DEFAULTS_TITLE": "הגדרות ברירת מחדל לחודש חדש",
     "REGULAR_EXPENSES_TOTAL": "סה\"כ הוצאות שוטפות",
     "SPECIAL_EXPENSES_TOTAL": "סה\"כ הוצאות מיוחדות",
-    "ADDITIONAL_INCOMES_TOTAL": "סה\"כ הכנסות נוספות"
+    "ADDITIONAL_INCOMES_TOTAL": "סה\"כ הכנסות נוספות",
+    "VISUAL_SUMMARY": "גרף"
   },
   "INVESTMENTS": {
     "TITLE": "מעקב השקעות",
