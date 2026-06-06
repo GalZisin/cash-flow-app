@@ -136,6 +136,14 @@
       </td>
     </ng-container>
 
+    <!-- Installments Payment -->
+    <ng-container matColumnDef="installmentsPayment">
+      <th mat-header-cell *matHeaderCellDef> {{ 'CASH_FLOW.INSTALLMENTS_PAYMENT' | translate }} </th>
+      <td mat-cell *matCellDef="let monthCtrl; let i = index">
+        {{ monthCtrl.get('installmentsPayment')?.value | number:'1.0-0' }} ₪
+      </td>
+    </ng-container>
+
     <!-- Regular Expenses (Expandable) -->
     <ng-container matColumnDef="regularExpenses">
       <th mat-header-cell *matHeaderCellDef> {{ 'CASH_FLOW.REGULAR_EXPENSES' | translate }} </th>

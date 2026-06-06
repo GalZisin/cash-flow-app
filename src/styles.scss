@@ -256,9 +256,57 @@ app-cash-flow-table .actions {
 /* ---------- Installments Dialog ---------- */
 .inst-dialog {
     width: 95% !important;
-    max-width: 600px !important;
-    /* הגדלת הרוחב כדי ש-4 עמודות הסכומים יכנסו בשורה אחת בנוחות */
+    max-width: 950px !important;
+    /* הרחבת החלון כדי לתמוך בטבלת פירוט ההלוואות (6 עמודות) בצורה מרווחת */
     z-index: 1001;
+}
+
+/* שיפור המראה של כרטיסי הפריסה ברשימה הכללית */
+.inst-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1.5rem;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+
+    &:hover {
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+    }
+
+    &.inst-card-done {
+        border-color: #d1fae5;
+        background-color: #fcfdfd;
+    }
+}
+
+/* התאמת גריד הסכומים בתוך הכרטיס */
+.inst-amounts {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    padding: 1.25rem;
+    background: #f8fafc;
+    border-radius: 10px;
+    margin: 1rem 0;
+}
+
+/* במסכים רחבים, כשהכרטיס תופס חצי מסך, נפרוס את הנתונים ל-4 עמודות */
+@media (min-width: 1200px) {
+    .inst-amounts {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+.inst-loans-detail {
+    .progress {
+        background-color: #e2e8f0 !important;
+        border-radius: 10px;
+        overflow: hidden;
+    }
 }
 
 .expense-count-badge {

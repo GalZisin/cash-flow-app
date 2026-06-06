@@ -7,7 +7,12 @@ const INSTALLMENTS_FILE = path.join(__dirname, 'installments.json');
 
 function readInstallments() {
     if (!fs.existsSync(INSTALLMENTS_FILE)) return [];
-    return JSON.parse(fs.readFileSync(INSTALLMENTS_FILE, { encoding: 'utf8' }));
+    const rawData = fs.readFileSync(INSTALLMENTS_FILE, { encoding: 'utf8' });
+    const items = JSON.parse(rawData);
+    return items.map(item => ({
+        ...item,
+        loanComponents: item.loanComponents || [] // Ensure loanComponents is always an array
+    }));
 }
 
 function writeInstallments(data) {
@@ -31,7 +36,8 @@ router.post('/', (req, res) => {
         color: req.body.color || '#4f6ef7',
         notes: req.body.notes || '',
         manualPaidCount: Number(req.body.manualPaidCount) || 0,
-        lastManualPaymentDate: req.body.lastManualPaymentDate || undefined
+        lastManualPaymentDate: req.body.lastManualPaymentDate || undefined,
+        loanComponents: req.body.loanComponents || []
     };
     items.push(item);
     writeInstallments(items);
@@ -54,6 +60,7 @@ router.put('/:id', (req, res) => {
         notes: req.body.notes ?? items[idx].notes,
         manualPaidCount: req.body.manualPaidCount !== undefined ? Number(req.body.manualPaidCount) : items[idx].manualPaidCount,
         lastManualPaymentDate: req.body.lastManualPaymentDate ?? items[idx].lastManualPaymentDate,
+        loanComponents: req.body.loanComponents ?? items[idx].loanComponents,
         id: req.params.id
     };
     writeInstallments(items);

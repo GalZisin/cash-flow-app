@@ -15,6 +15,7 @@
     "ADDITIONAL_INCOMES": "Additional Incomes",
     "MORTGAGE": "Mortgage",
     "LOAN": "Monthly Loan",
+    "INSTALLMENTS_PAYMENT": "Installments Payment",
     "REGULAR_EXPENSES": "Regular Expenses",
     "EXPENSES": "Expenses",
     "SPECIAL_EXPENSES": "Special Expenses",
@@ -28,6 +29,7 @@
     "COLOR_RED": "Red",
     "COLOR_YELLOW": "Yellow",
     "COLOR_GREEN": "Green",
+    "CONFIRM_DELETE": "Are you sure you want to delete?",
     "DELETE_CONFIRM_TITLE": "Delete Expense",
     "DELETE_CONFIRM_MSG": "Are you sure you want to permanently delete this expense?",
     "DELETE_YES": "Yes, delete",
@@ -150,6 +152,11 @@
     "MARK_PAID_TITLE": "Mark Payment as Paid",
     "PAYMENT_DATE": "Payment Date",
     "CONFIRM_MARK_PAID": "Confirm Mark Paid",
-    "MARKED_PAID_SUCCESS": "Payment marked as paid successfully ✅"
+    "MARKED_PAID_SUCCESS": "Payment marked as paid successfully ✅",
+    "LOANS_DETAIL": "Loans Detail",
+    "LOANS_DETAIL_FORM": "Loan / Payment Details",
+    "ADD_LOAN_COMPONENT": "Add Loan",
+    "TOTAL_LOAN_AMOUNT": "Loan Amount",
+    "REMAINING_TO_INSTALL": "Remaining to spread"
   }
 }

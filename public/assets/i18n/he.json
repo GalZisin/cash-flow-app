@@ -15,6 +15,7 @@
     "ADDITIONAL_INCOMES": "הכנסות נוספות",
     "MORTGAGE": "משכנתא",
     "LOAN": "הלוואה חודשית",
+    "INSTALLMENTS_PAYMENT": "תשלומי פריסות",
     "REGULAR_EXPENSES": "הוצאות שוטפות",
     "EXPENSES": "הוצאות",
     "SPECIAL_EXPENSES": "הוצאות מיוחדות",
@@ -28,6 +29,7 @@
     "COLOR_RED": "אדום",
     "COLOR_YELLOW": "צהוב",
     "COLOR_GREEN": "ירוק",
+    "CONFIRM_DELETE": "האם אתה בטוח שברצונך למחוק?",
     "DELETE_CONFIRM_TITLE": "מחיקת הוצאה",
     "DELETE_CONFIRM_MSG": "האם למחוק הוצאה זו לצמיתות?",
     "DELETE_YES": "כן, מחק",
@@ -136,7 +138,7 @@
     "TOTAL_MONTHLY": "סה\"כ החזר חודשי פעיל",
     "ITEMS_COUNT": "מספר פריטים",
     "MONTHLY_TOTAL": "סה\"כ חודשי",
-    "TOTAL_REMAINING": "סה\"כ יתרה",
+    "TOTAL_REMAINING": "סה\"כ יתרה לתשלום",
     "ACTIVE_COUNT": "פריטים פעילים",
     "ADD_TITLE": "הוספת פריסה חדשה",
     "TOTAL": "סה\"כ",
@@ -158,6 +160,13 @@
     "MARK_PAID_TITLE": "סמן תשלום שבוצע",
     "PAYMENT_DATE": "תאריך תשלום",
     "CONFIRM_MARK_PAID": "אשר סימון",
-    "MARKED_PAID_SUCCESS": "התשלום סומן בהצלחה ✅"
+    "MARKED_PAID_SUCCESS": "התשלום סומן בהצלחה ✅",
+    "LOANS_DETAIL": "פירוט הלוואות",
+    "LOANS_DETAIL_FORM": "פירוט הלוואות / תשלומים",
+    "ADD_LOAN_COMPONENT": "הוסף הלוואה",
+    "TOTAL_LOAN_AMOUNT": "סכום הלוואה",
+    "REMAINING_TO_INSTALL": "יתרה לפריסה",
+    "UNDO_PAYMENT": "ביטול תשלום",
+    "PAYMENT_HISTORY": "היסטוריית תשלומים"
   }
 }

@@ -1,15 +1,38 @@
+export interface LoanComponent {
+    id: string;
+    description: string;      // למשל: "הלוואה מהבנק"
+    totalLoanAmount: number;  // סכום הקרן של ההלוואה
+    monthlyPayment: number;   // החזר חודשי
+    installmentsCount: number; // מספר תשלומים
+    startDate: string;        // תאריך תחילת ההלוואה
+    paidCount: number;        // כמה שולם ידנית
+    lastPaidDate?: string;    // תאריך תשלום אחרון
+    payments?: { date: string, amount: number }[]; // היסטוריית תשלומים הכוללת סכום ותאריך
+}
+
 export interface Installment {
     id: string;
     name: string;
     totalAmount: number;
     downPayment: number;
-    monthlyPayment: number;
-    installmentsCount: number; // מספר תשלומים כולל
-    startDate: string; // ISO date string YYYY-MM-DD
+    monthlyPayment: number;    // סכום חודשי כולל (מחושב)
+    installmentsCount: number; // משך זמן מקסימלי
+    startDate: string;         // תאריך הקנייה/התחלה
     color: string;
     notes: string;
     manualPaidCount: number;   // מספר תשלומים שסומנו כבוצעו ידנית
     lastManualPaymentDate?: string; // תאריך התשלום הידני האחרון
+    loanComponents: LoanComponent[]; // רשימת ההלוואות המשויכות
+}
+
+export interface LoanComponentStatus {
+    loan: LoanComponent;
+    paidAmount: number;
+    remainingAmount: number;
+    progressPct: number;
+    paidInstallments: number;
+    monthsLeft: number;
+    isCompleted: boolean;
 }
 
 export interface InstallmentStatus {
@@ -22,4 +45,5 @@ export interface InstallmentStatus {
     endDate: string;            // תאריך סיום צפוי
     isCompleted: boolean;       // האם הסתיים
     monthsLeft: number;         // חודשים שנותרו
+    loanStatuses: LoanComponentStatus[];
 }

@@ -50,10 +50,10 @@
       </div>
     }
 
-    <div class="row g-3">
+    <div class="row g-4">
       @for (item of items; track item.id) {
         @let st = statusOf(item.id);
-        <div class="col-12 col-md-6 col-lg-4">
+        <div class="col-12 col-lg-6">
           <div class="inst-card" [class.inst-card-done]="st.isCompleted">
 
             <!-- color bar -->
@@ -130,6 +130,51 @@
               </div>
             </div>
 
+            <!-- individual loans progress -->
+            @if (st.loanStatuses.length > 0) {
+              <div class="inst-loans-detail mt-3 border-top pt-2" style="font-size: 0.85rem;">
+                <div class="fw-bold mb-2 text-muted">{{ 'INSTALLMENTS.LOANS_DETAIL' | translate }}</div>
+                @for (ls of st.loanStatuses; track ls.loan.id) {
+                  <div class="mb-2">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                      <span class="fw-medium cursor-pointer" (click)="toggleLoanHistory(ls.loan.id)">
+                        {{ ls.progressPct }}% - {{ ls.loan.description || 'הלוואה' }}
+                        <small class="text-muted ms-1">({{ ls.monthsLeft }} חודשים נותרו)</small>
+                        <span class="ms-1" style="font-size: 0.6rem;">{{ expandedLoans[ls.loan.id] ? '▼' : '▶' }}</span>
+                      </span>
+                      <div class="d-flex align-items-center gap-2">
+                        <span class="text-muted">{{ ls.paidAmount | number:'1.0-0' }} / {{ ls.loan.totalLoanAmount | number:'1.0-0' }} ₪</span>
+                        <div class="d-flex gap-1">
+                          @if (ls.paidInstallments > 0) {
+                            <button class="btn btn-link p-0 text-muted" type="button" 
+                              matTooltip="ביטול תשלום אחרון" (click)="undoPayment(item, ls.loan.id)">↺</button>
+                          }
+                        @if (!ls.isCompleted) {
+                          <button class="btn btn-link p-0 text-success" type="button" (click)="markAsPaid(item, ls.loan)" style="line-height: 1;">✅</button>
+                        }
+                        </div>
+                      </div>
+                    </div>
+                    <div class="progress" style="height: 4px; background: rgba(0,0,0,0.05);">
+                      <div class="progress-bar" [style.width.%]="ls.progressPct" [style.background]="item.color"></div>
+                    </div>
+                    
+                    <!-- Loan Payment History -->
+                    @if (expandedLoans[ls.loan.id] && ls.loan.payments?.length) {
+                      <div class="bg-light p-1 mt-1 rounded shadow-sm" style="font-size: 0.75rem;">
+                        @for (p of ls.loan.payments; track $index) {
+                          <div class="text-muted border-bottom-dashed py-1 d-flex justify-content-between">
+                            <span>✓ {{ p.date | date:'shortDate' }} (תשלום {{ $index + 1 }})</span>
+                            <span class="fw-bold">{{ p.amount | number:'1.0-0' }} ₪</span>
+                          </div>
+                        }
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            }
+
             <!-- footer -->
             <div class="inst-card-footer">
               <span>{{ 'INSTALLMENTS.MONTHLY' | translate }}: <strong>{{ item.monthlyPayment | number:'1.0-0' }} ₪</strong></span>
@@ -187,7 +232,7 @@
         <div class="col-3">
           <label class="inst-label" for="inst-down">{{ 'INSTALLMENTS.DOWN_PAYMENT' | translate }}</label>
           <input id="inst-down" type="number" class="form-control form-control-sm"
-            placeholder="0" title="מקדמה" aria-label="מקדמה"
+            placeholder="0" title="מקדמה" aria-label="מקדמה" (ngModelChange)="updateTotalsFromLoans()"
             [(ngModel)]="form.downPayment" />
         </div>
         <div class="col-3">
@@ -204,6 +249,49 @@
         </div>
       </div>
 
+      <!-- רכיבי הלוואה / תשלומים -->
+      <div class="mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <label class="inst-label m-0">{{ 'INSTALLMENTS.LOANS_DETAIL_FORM' | translate }}</label>
+          <button type="button" class="btn btn-outline-primary btn-sm" (click)="addLoanComponent()">+ {{ 'INSTALLMENTS.ADD_LOAN_COMPONENT' | translate }}</button>
+        </div>
+
+        @if (form.loanComponents && form.loanComponents.length > 0) {
+          <!-- כותרות לשדות הלוואה -->
+          <div class="row g-1 mb-1 fw-medium text-muted px-2" style="font-size: 0.7rem;">
+            <div class="col-3">{{ 'CASH_FLOW.DESCRIPTION' | translate }}</div>
+            <div class="col-2">{{ 'INSTALLMENTS.TOTAL_LOAN_AMOUNT' | translate }}</div>
+            <div class="col-2">{{ 'INSTALLMENTS.MONTHLY_PAYMENT' | translate }}</div>
+            <div class="col-2">{{ 'INSTALLMENTS.INSTALLMENTS_COUNT' | translate }}</div>
+            <div class="col-2">{{ 'INSTALLMENTS.START_DATE' | translate }}</div>
+            <div class="col-1"></div>
+          </div>
+        }
+
+        @for (loan of form.loanComponents; track loan.id; let idx = $index) {
+          <div class="row g-1 mb-2 align-items-end border p-2 rounded">
+            <div class="col-3">
+              <input type="text" class="form-control form-control-sm" placeholder="{{ 'CASH_FLOW.DESCRIPTION' | translate }}" [(ngModel)]="loan.description">
+            </div>
+            <div class="col-2">
+              <input type="number" class="form-control form-control-sm" placeholder="{{ 'INSTALLMENTS.TOTAL_LOAN_AMOUNT' | translate }}" [(ngModel)]="loan.totalLoanAmount" (ngModelChange)="updateTotalsFromLoans()">
+            </div>
+            <div class="col-2">
+              <input type="number" class="form-control form-control-sm" placeholder="{{ 'INSTALLMENTS.MONTHLY_PAYMENT' | translate }}" [(ngModel)]="loan.monthlyPayment" (ngModelChange)="updateTotalsFromLoans()">
+            </div>
+            <div class="col-2">
+              <input type="number" class="form-control form-control-sm" placeholder="{{ 'INSTALLMENTS.INSTALLMENTS_COUNT' | translate }}" [(ngModel)]="loan.installmentsCount">
+            </div>
+            <div class="col-2">
+              <input type="date" class="form-control form-control-sm" [(ngModel)]="loan.startDate">
+            </div>
+            <div class="col-1">
+              <button type="button" class="btn btn-link text-danger p-0" (click)="removeLoanComponent(idx)">✕</button>
+            </div>
+          </div>
+        }
+      </div>
+
       @if (form.downPayment > form.totalAmount) {
         <div class="text-danger small mb-2 fw-medium">
           ⚠️ {{ 'INSTALLMENTS.INVALID_DOWN_PAYMENT' | translate }}
@@ -213,7 +301,7 @@
       <!-- חישוב אוטומטי -->
       @if (form.totalAmount > 0 && form.monthlyPayment > 0) {
         <div class="inst-calc-hint mb-3">
-          💡 יתרה לפריסה:
+          💡 {{ 'INSTALLMENTS.REMAINING_TO_INSTALL' | translate }}:
           <strong>{{ amountAfterDown(form) | number:'1.0-0' }} ₪</strong> —
           {{ Math.ceil(amountAfterDown(form) / form.monthlyPayment) }}
           {{ 'INSTALLMENTS.MONTHS' | translate }}

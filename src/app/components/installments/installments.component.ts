@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -8,7 +8,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { InstallmentService } from '../../services/installment.service';
-import { Installment, InstallmentStatus } from '../../models/installment.model';
+import { Installment, InstallmentStatus, LoanComponent } from '../../models/installment.model';
 
 const COLORS = [
     '#4f6ef7', '#1a7a52', '#a05c00', '#6d3fd6',
@@ -25,7 +25,8 @@ const EMPTY_FORM = (): Omit<Installment, 'id'> => ({
     color: '#4f6ef7',
     notes: '',
     manualPaidCount: 0,    // הוספת ערך ברירת מחדל לשדה החדש
-    lastManualPaymentDate: undefined // הוספת ערך ברירת מחדל
+    lastManualPaymentDate: undefined, // הוספת ערך ברירת מחדל
+    loanComponents: []
 });
 
 @Component({
@@ -45,9 +46,11 @@ export class InstallmentsComponent implements OnInit {
     editingId: string | null = null;
     form = EMPTY_FORM();
     pendingDeleteId: string | null = null;
+    expandedLoans: Record<string, boolean> = {}; // Track expand state for history
 
     showMarkAsPaidDialog: boolean = false;
     currentInstallmentToMarkPaid: Installment | null = null;
+    currentLoanToMarkPaid: LoanComponent | null = null;
     paymentDateInput: string = new Date().toISOString().slice(0, 10); // Default to today's date
     readonly COLORS = COLORS;
     readonly Math = Math;
@@ -55,11 +58,13 @@ export class InstallmentsComponent implements OnInit {
     constructor(
         private svc: InstallmentService,
         private snackBar: MatSnackBar,
-        private translate: TranslateService
+        private translate: TranslateService,
+        private cdr: ChangeDetectorRef // Inject ChangeDetectorRef
     ) {
         this.svc.items$.pipe(takeUntilDestroyed()).subscribe(items => {
             this.items = items;
             this.statuses = items.map(i => this.svc.getStatus(i));
+            setTimeout(() => this.cdr.detectChanges(), 0); // Defer change detection to avoid assertion error
         });
     }
 
@@ -103,17 +108,54 @@ export class InstallmentsComponent implements OnInit {
         }
     }
 
+    addLoanComponent() {
+        const newLoan: LoanComponent = {
+            id: Date.now().toString(),
+            description: '',
+            totalLoanAmount: 0,
+            monthlyPayment: 0, // Default to 0
+            installmentsCount: 12,
+            startDate: new Date().toISOString().slice(0, 10), // Default to today's date
+            paidCount: 0,
+            lastPaidDate: undefined
+        };
+        this.form.loanComponents = [...(this.form.loanComponents || []), newLoan];
+        this.cdr.detectChanges(); // Force change detection to update the view
+    }
+
+    removeLoanComponent(index: number) {
+        this.form.loanComponents.splice(index, 1);
+        this.updateTotalsFromLoans();
+    }
+
     onMonthlyPaymentChange() {
         const remaining = this.amountAfterDown(this.form);
-        if (this.form.monthlyPayment > 0) {
+        if (this.form.monthlyPayment > 0 && !(this.form.loanComponents && this.form.loanComponents.length > 0)) { // Only if no loan components
             // חישוב מספר תשלומים לפי סכום חודשי
             this.form.installmentsCount = Math.ceil(remaining / this.form.monthlyPayment);
         }
     }
 
+    updateTotalsFromLoans() {
+        // אם אין הלוואות, אנחנו לא דורסים את הערכים הידניים
+        if (!this.form.loanComponents || this.form.loanComponents.length === 0) return;
+
+        const loansSum = this.form.loanComponents.reduce((s, l) => s + (Number(l.totalLoanAmount) || 0), 0);
+        const monthlySum = this.form.loanComponents.reduce((s, l) => s + (Number(l.monthlyPayment) || 0), 0);
+
+        this.form.totalAmount = loansSum + Number(this.form.downPayment);
+        this.form.monthlyPayment = monthlySum;
+
+        // עדכון מספר התשלומים הכולל לפי ההלוואה הארוכה ביותר
+        if (this.form.loanComponents.length > 0) {
+            this.form.installmentsCount = Math.max(...this.form.loanComponents.map(l => Number(l.installmentsCount) || 0));
+        }
+    }
+
     // Opens the dialog to mark a payment as paid
-    markAsPaid(item: Installment) {
+    markAsPaid(item: Installment, loan?: LoanComponent) {
         this.currentInstallmentToMarkPaid = item;
+        this.currentLoanToMarkPaid = loan || null;
         this.paymentDateInput = new Date().toISOString().slice(0, 10); // Reset to today's date
         this.showMarkAsPaidDialog = true;
     }
@@ -122,17 +164,32 @@ export class InstallmentsComponent implements OnInit {
     confirmMarkAsPaid() {
         if (!this.currentInstallmentToMarkPaid || !this.paymentDateInput) return;
 
-        this.svc.markAsPaid(this.currentInstallmentToMarkPaid, this.paymentDateInput).subscribe(() => {
+        this.svc.markAsPaid(
+            this.currentInstallmentToMarkPaid,
+            this.paymentDateInput,
+            this.currentLoanToMarkPaid?.id
+        ).subscribe(() => {
             this.translate.get('INSTALLMENTS.MARKED_PAID_SUCCESS')
                 .subscribe(msg => this.snackBar.open(msg, '', { duration: 2500, panelClass: 'snack-success' }));
             this.cancelMarkAsPaidDialog();
         });
     }
 
+    undoPayment(item: Installment, loanId: string) {
+        this.svc.undoPayment(item, loanId).subscribe(() => {
+            this.snackBar.open('התשלום בוטל בהצלחה', '', { duration: 2000 });
+        });
+    }
+
+    toggleLoanHistory(loanId: string) {
+        this.expandedLoans[loanId] = !this.expandedLoans[loanId];
+    }
+
     // Closes the mark as paid dialog
     cancelMarkAsPaidDialog() {
         this.showMarkAsPaidDialog = false;
         this.currentInstallmentToMarkPaid = null;
+        this.currentLoanToMarkPaid = null;
         this.paymentDateInput = new Date().toISOString().slice(0, 10);
     }
 
@@ -174,10 +231,17 @@ export class InstallmentsComponent implements OnInit {
     submit() {
         // Ensure all relevant fields are numbers and handle potential NaN from empty inputs
         this.form.totalAmount = Number(this.form.totalAmount) || 0;
-        this.form.downPayment = Number(this.form.downPayment) || 0;
-        this.form.monthlyPayment = Number(this.form.monthlyPayment) || 0;
-        this.form.installmentsCount = Number(this.form.installmentsCount) || 0;
-        this.form.manualPaidCount = Number(this.form.manualPaidCount) || 0;
+        this.form.downPayment = Number(this.form.downPayment) || 0; // Ensure it's a number
+        this.form.manualPaidCount = Number(this.form.manualPaidCount) || 0; // Ensure it's a number
+
+        // Ensure loanComponents is always an array and its numeric fields are numbers
+        this.form.loanComponents = (this.form.loanComponents || []).map(loan => ({
+            ...loan,
+            totalLoanAmount: Number(loan.totalLoanAmount) || 0,
+            monthlyPayment: Number(loan.monthlyPayment) || 0,
+            installmentsCount: Number(loan.installmentsCount) || 0,
+            paidCount: Number(loan.paidCount) || 0
+        }));
 
         // The lastManualPaymentDate is updated by markAsPaid, or can be set manually if needed in the form.
         // Basic validation
@@ -187,12 +251,18 @@ export class InstallmentsComponent implements OnInit {
             return;
         }
 
-        // Re-evaluate consistency before sending to server if one of the fields was 0
-        const remaining = this.amountAfterDown(this.form);
-        if (this.form.installmentsCount === 0 && this.form.monthlyPayment > 0) {
-            this.form.installmentsCount = Math.ceil(remaining / this.form.monthlyPayment);
-        } else if (this.form.monthlyPayment === 0 && this.form.installmentsCount > 0) {
-            this.form.monthlyPayment = Number((remaining / this.form.installmentsCount).toFixed(2));
+        // If loan components exist, derive main monthlyPayment and installmentsCount from them
+        if (this.form.loanComponents && this.form.loanComponents.length > 0) {
+            this.form.monthlyPayment = this.form.loanComponents.reduce((sum, l) => sum + Number(l.monthlyPayment || 0), 0);
+            this.form.installmentsCount = Math.max(1, ...this.form.loanComponents.map(l => Number(l.installmentsCount || 0))); // Ensure at least 1
+        } else {
+            // Fallback for legacy/simple installments without loan components
+            const remaining = this.amountAfterDown(this.form);
+            if (this.form.installmentsCount === 0 && this.form.monthlyPayment > 0) {
+                this.form.installmentsCount = Math.ceil(remaining / this.form.monthlyPayment);
+            } else if (this.form.monthlyPayment === 0 && this.form.installmentsCount > 0) {
+                this.form.monthlyPayment = Number((remaining / this.form.installmentsCount).toFixed(2));
+            }
         }
 
         const obs = this.editingId

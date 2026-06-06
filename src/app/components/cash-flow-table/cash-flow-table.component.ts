@@ -12,8 +12,9 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { registerLocaleData } from '@angular/common';
 import localeHe from '@angular/common/locales/he';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { TranslateModule, TranslateService, LangChangeEvent } from '@ngx-translate/core';
 import { CashFlowService, CashFlowDefaults } from '../../services/cash-flow.service';
+import { InstallmentService } from '../../services/installment.service';
 
 registerLocaleData(localeHe);
 
@@ -43,6 +44,7 @@ export class CashFlowTableComponent implements OnInit {
     'additionalIncomes',
     'mortgagePayment',
     'loanPayment',
+    'installmentsPayment', // New column for installment payments
     'regularExpenses',
     'specialExpenses',
     'visualSummary',
@@ -55,7 +57,14 @@ export class CashFlowTableComponent implements OnInit {
     { labelKey: 'CASH_FLOW.COLOR_GREEN', value: '#dcfce7' },
   ];
 
-  constructor(private fb: FormBuilder, private cashFlowService: CashFlowService, private snackBar: MatSnackBar, private cdr: ChangeDetectorRef, private translate: TranslateService) { }
+  constructor(
+    private fb: FormBuilder,
+    private cashFlowService: CashFlowService,
+    private snackBar: MatSnackBar,
+    private cdr: ChangeDetectorRef,
+    private translate: TranslateService,
+    private installmentService: InstallmentService // Inject InstallmentService
+  ) { }
 
   getExpenseAmount(monthIndex: number, expenseIndex: number): FormControl<number> {
     const control = this.getRegularExpenses(monthIndex)
@@ -80,6 +89,11 @@ export class CashFlowTableComponent implements OnInit {
       months: this.fb.array([]),
     });
 
+    // Recalculate balances when installments change
+    this.installmentService.items$.subscribe(() => {
+      this.calculateEndingBalances();
+    });
+
     this.cashFlowService.load().subscribe(data => {
       if (data && data.months?.length) {
         data.months.forEach((m: any) => {
@@ -91,6 +105,7 @@ export class CashFlowTableComponent implements OnInit {
           monthGroup.get('income')?.setValue(m.income ?? 0, { emitEvent: false });
           monthGroup.get('mortgagePayment')?.setValue(m.mortgagePayment ?? 0, { emitEvent: false });
           monthGroup.get('loanPayment')?.setValue(m.loanPayment ?? 0, { emitEvent: false });
+          monthGroup.get('installmentsPayment')?.setValue(this.installmentService.getMonthlyInstallmentsForMonth(monthDate), { emitEvent: false });
           monthGroup.get('expanded')?.setValue(!isGreen && m.regularExpenses?.length > 0, { emitEvent: false });
           monthGroup.get('expandedSpecial')?.setValue(!isGreen && m.specialExpenses?.length > 0, { emitEvent: false });
           monthGroup.get('expandedAdditionalIncomes')?.setValue(!isGreen && m.additionalIncomes?.length > 0, { emitEvent: false });
@@ -117,7 +132,9 @@ export class CashFlowTableComponent implements OnInit {
           this.months.push(monthGroup, { emitEvent: false });
         });
       } else {
-        this.months.push(this.createMonth(new Date(2026, 2, 1)), { emitEvent: false });
+        const today = new Date();
+        const startMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+        this.months.push(this.createMonth(startMonth), { emitEvent: false });
       }
       this.calculateEndingBalances(false);
       this.refreshDataSource();
@@ -138,6 +155,7 @@ export class CashFlowTableComponent implements OnInit {
       income: [0],
       mortgagePayment: [0],
       loanPayment: [0],
+      installmentsPayment: [0], // Initialize new field
       additionalIncomes: this.fb.array([]),
       regularExpenses: this.fb.array([]),
       specialExpenses: this.fb.array([]),
@@ -373,10 +391,19 @@ export class CashFlowTableComponent implements OnInit {
   calculateEndingBalances(updateStartingBalances = true) {
     let prevEndingBalance = 0;
     this.months.controls.forEach((monthCtrl, i) => {
+      // עדכון תשלומי הפריסות עבור החודש הספציפי מהשירות
+      const monthDateValue = monthCtrl.get('month')?.value;
+      if (monthDateValue) {
+        const targetDate = new Date(monthDateValue);
+        const installmentsPayment = this.installmentService.getMonthlyInstallmentsForMonth(targetDate);
+        monthCtrl.get('installmentsPayment')?.setValue(installmentsPayment, { emitEvent: false });
+      }
+
       const startingBalance = Number(monthCtrl.get('startingBalance')?.value) || 0;
       const income = Number(monthCtrl.get('income')?.value) || 0;
       const mortgage = Number(monthCtrl.get('mortgagePayment')?.value) || 0;
       const loanPayment = Number(monthCtrl.get('loanPayment')?.value) || 0;
+      const currentInstallments = Number(monthCtrl.get('installmentsPayment')?.value) || 0;
       const additionalIncomes = (monthCtrl.get('additionalIncomes')?.value || []).reduce(
         (sum: number, r: any) => sum + (Number(r.amount) || 0), 0
       );
@@ -388,7 +415,7 @@ export class CashFlowTableComponent implements OnInit {
       );
 
       const totalStarting = i === 0 ? startingBalance : prevEndingBalance;
-      const endingBalance = totalStarting + income + additionalIncomes - mortgage - loanPayment - specialExpenses - regularExpenses;
+      const endingBalance = totalStarting + income + additionalIncomes - mortgage - loanPayment - currentInstallments - specialExpenses - regularExpenses;
 
       if (updateStartingBalances && i > 0) {
         monthCtrl.get('startingBalance')?.setValue(prevEndingBalance, { emitEvent: false });
@@ -415,6 +442,7 @@ export class CashFlowTableComponent implements OnInit {
       newMonth.get('income')?.setValue(defaults.income, { emitEvent: false });
       newMonth.get('mortgagePayment')?.setValue(defaults.mortgagePayment, { emitEvent: false });
       newMonth.get('loanPayment')?.setValue(defaults.loanPayment, { emitEvent: false });
+      newMonth.get('installmentsPayment')?.setValue(this.installmentService.getMonthlyInstallmentsForMonth(nextMonth), { emitEvent: false }); // Set for new month
 
       (defaults as any).additionalIncomes?.forEach((e: any) =>
         (newMonth.get('additionalIncomes') as FormArray).push(
@@ -457,6 +485,7 @@ export class CashFlowTableComponent implements OnInit {
         income: ctrl.get('income')?.value,
         mortgagePayment: ctrl.get('mortgagePayment')?.value,
         loanPayment: ctrl.get('loanPayment')?.value,
+        installmentsPayment: ctrl.get('installmentsPayment')?.value,
         additionalIncomes: ctrl.get('additionalIncomes')?.value,
         regularExpenses: ctrl.get('regularExpenses')?.value,
         specialExpenses: ctrl.get('specialExpenses')?.value,
