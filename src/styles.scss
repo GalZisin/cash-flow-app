@@ -421,6 +421,16 @@ app-cash-flow-table .actions {
     }
 }
 
+/* מיכל קבוע לאייקונים להבטחת סימטריה בטבלאות */
+.inst-icon-slot {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0;
+}
+
 /* ---------- Installments Table View Base (Universal) ---------- */
 .inst-table-container {
     background-color: #ffffff;
