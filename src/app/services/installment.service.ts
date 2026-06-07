@@ -194,40 +194,41 @@ export class InstallmentService {
      * @param allInstallments The list of installments to consider for the calculation.
      * @returns The sum of monthly payments for all active installments in that month.
      */
+    private toMonthStart(dateStr: string): Date {
+        const d = new Date(dateStr);
+        return new Date(d.getUTCFullYear(), d.getUTCMonth(), 1);
+    }
+
     getMonthlyInstallmentsForMonth(targetMonthDate: Date, allInstallments: Installment[]): { installments: number, loans: number } {
         let installments = 0;
         let loans = 0;
+        const target = new Date(targetMonthDate.getFullYear(), targetMonthDate.getMonth(), 1);
 
         for (const item of allInstallments) {
             if (item.loanComponents && item.loanComponents.length > 0) {
-                // זו רכישה עם רכיבי הלוואה מפורטים - נסכום לעמודת ההלוואות
                 for (const loan of item.loanComponents) {
-                    const start = new Date(loan.startDate);
+                    const start = this.toMonthStart(loan.startDate);
                     const end = new Date(start.getFullYear(), start.getMonth() + loan.installmentsCount, 1);
 
                     let currentPayment = 0;
                     if (loan.payoffDate) {
-                        const payoff = new Date(loan.payoffDate + "-01");
-                        if (targetMonthDate.getFullYear() === payoff.getFullYear() && targetMonthDate.getMonth() === payoff.getMonth()) {
-                            // חודש הפירעון - מציגים את סכום הפירעון
+                        const payoff = new Date(loan.payoffDate + '-01');
+                        if (target.getFullYear() === payoff.getFullYear() && target.getMonth() === payoff.getMonth()) {
                             currentPayment = loan.payoffAmount || 0;
-                        } else if (targetMonthDate > payoff) {
-                            // אחרי הפירעון - אין יותר תשלומים
+                        } else if (target > payoff) {
                             currentPayment = 0;
-                        } else if (targetMonthDate >= start && targetMonthDate < end) {
+                        } else if (target >= start && target < end) {
                             currentPayment = loan.monthlyPayment;
                         }
-                    } else if (targetMonthDate >= start && targetMonthDate < end) {
+                    } else if (target >= start && target < end) {
                         currentPayment = loan.monthlyPayment;
                     }
-
                     loans += currentPayment;
                 }
             } else {
-                // זו פריסת תשלומים רגילה (ללא רכיבי הלוואה) - נסכום לעמודת הפריסות
-                const start = new Date(item.startDate);
+                const start = this.toMonthStart(item.startDate);
                 const end = new Date(start.getFullYear(), start.getMonth() + item.installmentsCount, 1);
-                if (targetMonthDate >= start && targetMonthDate < end) {
+                if (target >= start && target < end) {
                     installments += item.monthlyPayment;
                 }
             }
@@ -241,37 +242,32 @@ export class InstallmentService {
      */
     getMonthlyBreakdownForMonth(targetMonthDate: Date, allInstallments: Installment[]): { name: string, amount: number, isLoan: boolean }[] {
         const breakdown: { name: string, amount: number, isLoan: boolean }[] = [];
+        const target = new Date(targetMonthDate.getFullYear(), targetMonthDate.getMonth(), 1);
 
         for (const item of allInstallments) {
             if (item.loanComponents && item.loanComponents.length > 0) {
                 let itemLoanTotal = 0;
                 for (const loan of item.loanComponents) {
-                    const start = new Date(loan.startDate);
+                    const start = this.toMonthStart(loan.startDate);
                     const end = new Date(start.getFullYear(), start.getMonth() + loan.installmentsCount, 1);
 
                     if (loan.payoffDate) {
-                        const payoff = new Date(loan.payoffDate + "-01");
-                        if (targetMonthDate.getFullYear() === payoff.getFullYear() && targetMonthDate.getMonth() === payoff.getMonth()) {
+                        const payoff = new Date(loan.payoffDate + '-01');
+                        if (target.getFullYear() === payoff.getFullYear() && target.getMonth() === payoff.getMonth()) {
                             itemLoanTotal += loan.payoffAmount || 0;
-                        } else if (targetMonthDate < payoff && targetMonthDate >= start) {
+                        } else if (target < payoff && target >= start) {
                             itemLoanTotal += loan.monthlyPayment;
                         }
-                    } else if (targetMonthDate >= start && targetMonthDate < end) {
+                    } else if (target >= start && target < end) {
                         itemLoanTotal += loan.monthlyPayment;
                     }
                 }
-                if (itemLoanTotal > 0) {
-                    breakdown.push({ name: item.name, amount: itemLoanTotal, isLoan: true });
-                }
+                if (itemLoanTotal > 0) breakdown.push({ name: item.name, amount: itemLoanTotal, isLoan: true });
             } else {
-                const start = new Date(item.startDate);
+                const start = this.toMonthStart(item.startDate);
                 const end = new Date(start.getFullYear(), start.getMonth() + item.installmentsCount, 1);
-                if (targetMonthDate >= start && targetMonthDate < end) {
-                    breakdown.push({
-                        name: item.name,
-                        amount: item.monthlyPayment,
-                        isLoan: false
-                    });
+                if (target >= start && target < end) {
+                    breakdown.push({ name: item.name, amount: item.monthlyPayment, isLoan: false });
                 }
             }
         }
