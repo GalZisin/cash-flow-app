@@ -239,9 +239,13 @@
       <td mat-cell *matCellDef="let monthCtrl; let i = index">
         <div class="mini-chart-container" 
              [matTooltip]="('CASH_FLOW.INCOME' | translate) + ': ' + (getTotalIncome(i) | number:'1.0-0') + ' ₪\n' + 
-                           ('CASH_FLOW.EXPENSES' | translate) + ': ' + (getTotalExpenses(i) | number:'1.0-0') + ' ₪'">
+                           ('CASH_FLOW.EXPENSES' | translate) + ': ' + (getTotalExpenses(i) | number:'1.0-0') + ' ₪\n' +
+                           ('CASH_FLOW.SAVINGS' | translate) + ': ' + (getSavings(i) | number:'1.0-0') + ' ₪'">
           <div class="mini-bar income-bar" [style.width.%]="getBarWidth(getTotalIncome(i), i)"></div>
           <div class="mini-bar expense-bar" [style.width.%]="getBarWidth(getTotalExpenses(i), i)"></div>
+          <div class="mini-bar savings-bar" *ngIf="getSavings(i) > 0" 
+               [style.width.%]="getBarWidth(getSavings(i), i)" 
+               style="background-color: #60a5fa; height: 3px; margin-top: 1px; border-radius: 1px; opacity: 0.8;"></div>
         </div>
       </td>
     </ng-container>

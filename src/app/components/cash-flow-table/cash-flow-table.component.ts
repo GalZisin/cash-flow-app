@@ -228,6 +228,10 @@ export class CashFlowTableComponent implements OnInit {
       this.getSpecialExpensesSum(index);
   }
 
+  getSavings(index: number): number {
+    return this.getTotalIncome(index) - this.getTotalExpenses(index);
+  }
+
   getBarWidth(value: number, index: number): number {
     const max = Math.max(this.getTotalIncome(index), this.getTotalExpenses(index), 1);
     return (value / max) * 100;

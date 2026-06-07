@@ -18,6 +18,7 @@ server/investments.json
 server/cash-flow-defaults.json
 server/installments.json
 server/cash-flow-data-miluim.json
+server/conversations.json
 dist/
 .angular/
 .env
