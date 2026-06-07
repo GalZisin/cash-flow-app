@@ -15,6 +15,11 @@
         🛒 {{ 'TABS.INSTALLMENTS' | translate }}
       </a>
     </li>
+    <li class="nav-item">
+      <a class="nav-link" [class.active]="activeTab === 'ai'" (click)="activeTab = 'ai'" style="cursor:pointer">
+        🤖 AI Advisor
+      </a>
+    </li>
   </ul>
 
   <button class="btn btn-outline-secondary btn-sm" (click)="lang.toggle()">
@@ -23,7 +28,7 @@
 </nav>
 
 <div class="tab-content app-content"
-  [class.no-scroll]="activeTab === 'cashflow' || activeTab === 'installments'">
+  [class.no-scroll]="activeTab === 'cashflow' || activeTab === 'installments' || activeTab === 'ai'">
   @if (activeTab === 'cashflow') {
     <div class="mt-4 mx-4">
       <app-cash-flow-table />
@@ -34,5 +39,8 @@
   }
   @if (activeTab === 'installments') {
     <app-installments />
+  }
+  @if (activeTab === 'ai') {
+    <app-ai-assistant />
   }
 </div>

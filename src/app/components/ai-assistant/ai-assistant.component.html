@@ -1,0 +1,237 @@
+<div class="ai-assistant">
+
+  <!-- Tab Bar -->
+  <ul class="nav nav-tabs mb-3">
+    <li class="nav-item">
+      <a class="nav-link" [class.active]="activeTab === 'chat'" (click)="activeTab = 'chat'" style="cursor:pointer">
+        💬 AI Chat
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" [class.active]="activeTab === 'analysis'" (click)="activeTab = 'analysis'" style="cursor:pointer">
+        📊 Analysis
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" [class.active]="activeTab === 'scenario'" (click)="activeTab = 'scenario'" style="cursor:pointer">
+        🔮 Simulator
+      </a>
+    </li>
+  </ul>
+
+  <!-- ===================== CHAT TAB ===================== -->
+  @if (activeTab === 'chat') {
+    <div class="chat-layout">
+
+      <!-- Summary Sidebar -->
+      <div class="summary-sidebar">
+        <div class="card h-100">
+          <div class="card-header d-flex justify-content-between align-items-center py-2">
+            <small class="fw-bold">📋 Snapshot</small>
+            <button class="btn btn-link btn-sm p-0" (click)="loadSummary()" title="Refresh">🔄</button>
+          </div>
+          <div class="card-body p-2 overflow-auto">
+            @if (summaryLoading) {
+              <div class="text-center py-3"><div class="spinner-border spinner-border-sm"></div></div>
+            }
+            @if (summary && !summaryLoading) {
+              <div class="summary-item">
+                <span class="label">Balance</span>
+                <span class="value text-success">₪{{ summary.currentBalance | number:'1.0-0' }}</span>
+              </div>
+              <div class="summary-item">
+                <span class="label">Avg Income</span>
+                <span class="value">₪{{ summary.income.average | number:'1.0-0' }}</span>
+              </div>
+              <div class="summary-item">
+                <span class="label">Avg Expenses</span>
+                <span class="value text-danger">₪{{ summary.expenses.averageTotal | number:'1.0-0' }}</span>
+              </div>
+              <div class="summary-item">
+                <span class="label">Avg Savings</span>
+                <span class="value" [class.text-success]="summary.monthlySavingsAvg >= 0" [class.text-danger]="summary.monthlySavingsAvg < 0">
+                  ₪{{ summary.monthlySavingsAvg | number:'1.0-0' }}
+                </span>
+              </div>
+              <hr class="my-2">
+              <small class="text-muted d-block mb-1 fw-bold">6-Month Forecast</small>
+              @for (f of summary.forecast; track f.month) {
+                <div class="summary-item">
+                  <span class="label">{{ f.month }}</span>
+                  <span class="value">₪{{ f.projectedBalance | number:'1.0-0' }}</span>
+                </div>
+              }
+              @if (summary.loans.length) {
+                <hr class="my-2">
+                <small class="text-muted d-block mb-1 fw-bold">Loans</small>
+                @for (l of summary.loans; track l.name) {
+                  <div class="summary-item">
+                    <span class="label">{{ l.name }}</span>
+                    <span class="value text-warning">₪{{ l.monthlyPayment | number:'1.0-0' }}/mo</span>
+                  </div>
+                }
+              }
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Chat Panel -->
+      <div class="chat-panel d-flex flex-column">
+        <div class="chat-messages flex-grow-1" #chatContainer>
+          @if (!messages.length) {
+            <div class="empty-chat text-center text-muted py-5">
+              <div style="font-size: 2.5rem">🤖</div>
+              <p class="mt-2 mb-1 fw-bold">AI Financial Advisor</p>
+              <small>Ask anything about your finances</small>
+              <div class="mt-3">
+                <button class="btn btn-outline-secondary btn-sm me-1 mb-1" (click)="userInput = 'What is my current financial health?'">Financial health?</button>
+                <button class="btn btn-outline-secondary btn-sm me-1 mb-1" (click)="userInput = 'How long until I reach ₪700,000?'">Time to ₪700K?</button>
+                <button class="btn btn-outline-secondary btn-sm mb-1" (click)="userInput = 'What are my biggest expenses?'">Top expenses?</button>
+              </div>
+            </div>
+          }
+          @for (msg of messages; track $index) {
+            <div class="message" [class.user-message]="msg.role === 'user'" [class.assistant-message]="msg.role === 'assistant'">
+              <div class="bubble">
+                @if (msg.role === 'assistant') {
+                  <span class="bot-icon me-1">🤖</span>
+                }
+                <span [innerHTML]="formatText(msg.content)"></span>
+              </div>
+              <small class="msg-time text-muted">{{ msg.timestamp | date:'HH:mm' }}</small>
+            </div>
+          }
+          @if (chatLoading) {
+            <div class="message assistant-message">
+              <div class="bubble">
+                <span class="bot-icon me-1">🤖</span>
+                <span class="typing-indicator"><span></span><span></span><span></span></span>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Input -->
+        <div class="chat-input-bar">
+          <textarea
+            class="form-control"
+            rows="2"
+            placeholder="Ask a financial question... (Enter to send)"
+            [(ngModel)]="userInput"
+            (keydown)="onEnter($event)"
+            [disabled]="chatLoading">
+          </textarea>
+          <button class="btn btn-primary ms-2" (click)="sendMessage()" [disabled]="chatLoading || !userInput.trim()">
+            @if (chatLoading) { <span class="spinner-border spinner-border-sm"></span> }
+            @else { ➤ }
+          </button>
+        </div>
+      </div>
+
+    </div>
+  }
+
+  <!-- ===================== ANALYSIS TAB ===================== -->
+  @if (activeTab === 'analysis') {
+    <div class="analysis-panel">
+      <button class="btn btn-primary mb-3" (click)="runAnalysis()" [disabled]="analysisLoading">
+        @if (analysisLoading) {
+          <span class="spinner-border spinner-border-sm me-2"></span> Analyzing...
+        } @else {
+          🔍 Run Full AI Analysis
+        }
+      </button>
+
+      @if (analysisLoading) {
+        <div class="text-center py-5">
+          <div class="spinner-border text-primary mb-3"></div>
+          <p class="text-muted">AI is analyzing your financial data...<br><small>This may take up to 60 seconds</small></p>
+        </div>
+      }
+
+      @if (analysisText && !analysisLoading) {
+        <div class="card">
+          <div class="card-body analysis-text" [innerHTML]="formatText(analysisText)"></div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- ===================== SCENARIO TAB ===================== -->
+  @if (activeTab === 'scenario') {
+    <div class="scenario-panel">
+      <div class="card mb-3">
+        <div class="card-header"><strong>🔮 What-If Simulator</strong></div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label">Purchase Description</label>
+              <input type="text" class="form-control" [(ngModel)]="scenario.description" placeholder="e.g. New Car" />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Amount (₪)</label>
+              <input type="number" class="form-control" [(ngModel)]="scenario.amount" placeholder="e.g. 80000" />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Purchase Date</label>
+              <input type="date" class="form-control" [(ngModel)]="scenario.date" />
+            </div>
+          </div>
+          <button
+            class="btn btn-primary mt-3"
+            (click)="runScenario()"
+            [disabled]="scenarioLoading || !scenario.description || !scenario.amount || !scenario.date">
+            @if (scenarioLoading) {
+              <span class="spinner-border spinner-border-sm me-2"></span> Simulating...
+            } @else {
+              ▶ Run Simulation
+            }
+          </button>
+        </div>
+      </div>
+
+      @if (scenarioLoading) {
+        <div class="text-center py-5">
+          <div class="spinner-border text-primary mb-3"></div>
+          <p class="text-muted">Simulating scenario and getting AI advice...</p>
+        </div>
+      }
+
+      @if (scenarioResult && !scenarioLoading) {
+        <div class="row g-3">
+          <!-- Forecast Table -->
+          <div class="col-md-5">
+            <div class="card h-100">
+              <div class="card-header"><strong>📉 Projected Balance</strong></div>
+              <div class="card-body p-0">
+                <table class="table table-sm mb-0">
+                  <thead>
+                    <tr><th>Month</th><th>Balance</th><th></th></tr>
+                  </thead>
+                  <tbody>
+                    @for (f of scenarioResult.simulation.forecast; track f.month) {
+                      <tr [class.table-danger]="!!f.note">
+                        <td>{{ f.month }}</td>
+                        <td>₪{{ f.projectedBalance | number:'1.0-0' }}</td>
+                        <td><small class="text-danger">{{ f.note }}</small></td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <!-- AI Analysis -->
+          <div class="col-md-7">
+            <div class="card h-100">
+              <div class="card-header"><strong>🤖 AI Scenario Analysis</strong></div>
+              <div class="card-body analysis-text" [innerHTML]="formatText(scenarioResult.scenarioAnalysis)"></div>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+</div>
