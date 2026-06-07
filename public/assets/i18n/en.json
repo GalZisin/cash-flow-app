@@ -2,7 +2,8 @@
   "TABS": {
     "CASH_FLOW": "Cash Flow",
     "INVESTMENTS": "Investments",
-    "INSTALLMENTS": "Installments"
+    "INSTALLMENTS": "Installments",
+    "AI": "AI Advisor"
   },
   "LANG_BUTTON": "עברית",
   "CASH_FLOW": {
@@ -102,6 +103,41 @@
     "CURRENT_VALUE": "Current Value",
     "TOTAL_DEPOSITS": "Total Deposits",
     "PROFIT_YEAR": "Yearly Profit"
+  },
+  "AI": {
+    "TAB_CHAT": "💬 Chat",
+    "TAB_ANALYSIS": "📊 Analysis",
+    "TAB_SCENARIO": "🔮 Simulator",
+    "SNAPSHOT_TITLE": "📋 Snapshot",
+    "HISTORY_TITLE": "📜 History",
+    "NEW_CHAT": "New Chat",
+    "NO_CONVERSATIONS": "No saved conversations",
+    "BALANCE": "Balance",
+    "AVG_INCOME": "Avg Income",
+    "AVG_EXPENSES": "Avg Expenses",
+    "AVG_SAVINGS": "Avg Savings",
+    "FORECAST": "6-Month Forecast",
+    "LOANS": "Loans",
+    "EMPTY_CHAT_TITLE": "AI Financial Advisor",
+    "EMPTY_CHAT_SUB": "Ask anything about your finances",
+    "SUGGESTION_1": "What is my financial health?",
+    "SUGGESTION_2": "When will I reach ₪700,000?",
+    "SUGGESTION_3": "What are my biggest expenses?",
+    "INPUT_PLACEHOLDER": "Ask a financial question... (Enter to send)",
+    "RUN_ANALYSIS": "🔍 Run Full AI Analysis",
+    "ANALYZING": "Analyzing...",
+    "SCENARIO_TITLE": "🔮 What-If Simulator",
+    "SCENARIO_DESC": "Purchase Description",
+    "SCENARIO_DESC_PH": "e.g. New Car",
+    "SCENARIO_AMOUNT": "Amount (₪)",
+    "SCENARIO_DATE": "Purchase Date",
+    "SCENARIO_RUN": "▶ Run Simulation",
+    "SCENARIO_RUNNING": "Simulating...",
+    "PROJECTED_BALANCE": "📉 Projected Balance",
+    "AI_SCENARIO_ANALYSIS": "🤖 AI Scenario Analysis",
+    "MONTH_COL": "Month",
+    "BALANCE_COL": "Balance",
+    "REFRESH": "Refresh"
   },
   "INSTALLMENTS": {
     "TITLE": "Installment Management",

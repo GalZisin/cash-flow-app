@@ -1,76 +1,47 @@
-<div class="ai-assistant">
+<div class="ai-assistant" [dir]="lang.isRtl ? 'rtl' : 'ltr'">
 
   <!-- Tab Bar -->
   <ul class="nav nav-tabs mb-3">
     <li class="nav-item">
       <a class="nav-link" [class.active]="activeTab === 'chat'" (click)="activeTab = 'chat'" style="cursor:pointer">
-        💬 AI Chat
+        {{ 'AI.TAB_CHAT' | translate }}
       </a>
     </li>
     <li class="nav-item">
       <a class="nav-link" [class.active]="activeTab === 'analysis'" (click)="activeTab = 'analysis'" style="cursor:pointer">
-        📊 Analysis
+        {{ 'AI.TAB_ANALYSIS' | translate }}
       </a>
     </li>
     <li class="nav-item">
       <a class="nav-link" [class.active]="activeTab === 'scenario'" (click)="activeTab = 'scenario'" style="cursor:pointer">
-        🔮 Simulator
+        {{ 'AI.TAB_SCENARIO' | translate }}
       </a>
     </li>
   </ul>
 
   <!-- ===================== CHAT TAB ===================== -->
   @if (activeTab === 'chat') {
-    <div class="chat-layout">
+    <div class="chat-layout" [class.rtl]="lang.isRtl">
 
-      <!-- Summary Sidebar -->
-      <div class="summary-sidebar">
-        <div class="card h-100">
+      <!-- History Sidebar -->
+      <div class="history-sidebar">
+        <div class="card h-100 d-flex flex-column">
           <div class="card-header d-flex justify-content-between align-items-center py-2">
-            <small class="fw-bold">📋 Snapshot</small>
-            <button class="btn btn-link btn-sm p-0" (click)="loadSummary()" title="Refresh">🔄</button>
+            <small class="fw-bold">{{ 'AI.HISTORY_TITLE' | translate }}</small>
+            <button class="btn btn-primary btn-sm" (click)="newConversation()" [title]="'AI.NEW_CHAT' | translate">＋</button>
           </div>
-          <div class="card-body p-2 overflow-auto">
-            @if (summaryLoading) {
-              <div class="text-center py-3"><div class="spinner-border spinner-border-sm"></div></div>
+          <div class="card-body p-1 overflow-auto flex-grow-1">
+            @if (!conversations.length) {
+              <small class="text-muted d-block text-center mt-3">{{ 'AI.NO_CONVERSATIONS' | translate }}</small>
             }
-            @if (summary && !summaryLoading) {
-              <div class="summary-item">
-                <span class="label">Balance</span>
-                <span class="value text-success">₪{{ summary.currentBalance | number:'1.0-0' }}</span>
-              </div>
-              <div class="summary-item">
-                <span class="label">Avg Income</span>
-                <span class="value">₪{{ summary.income.average | number:'1.0-0' }}</span>
-              </div>
-              <div class="summary-item">
-                <span class="label">Avg Expenses</span>
-                <span class="value text-danger">₪{{ summary.expenses.averageTotal | number:'1.0-0' }}</span>
-              </div>
-              <div class="summary-item">
-                <span class="label">Avg Savings</span>
-                <span class="value" [class.text-success]="summary.monthlySavingsAvg >= 0" [class.text-danger]="summary.monthlySavingsAvg < 0">
-                  ₪{{ summary.monthlySavingsAvg | number:'1.0-0' }}
-                </span>
-              </div>
-              <hr class="my-2">
-              <small class="text-muted d-block mb-1 fw-bold">6-Month Forecast</small>
-              @for (f of summary.forecast; track f.month) {
-                <div class="summary-item">
-                  <span class="label">{{ f.month }}</span>
-                  <span class="value">₪{{ f.projectedBalance | number:'1.0-0' }}</span>
+            @for (conv of conversations; track conv.id) {
+              <div class="conv-item" [class.active]="conv.id === activeConversationId" (click)="loadConversation(conv)">
+                <div class="conv-title">{{ conv.title }}</div>
+                <div class="d-flex justify-content-between align-items-center">
+                  <small class="text-muted">{{ conv.updatedAt | date:'dd/MM HH:mm' }}</small>
+                  <button class="btn btn-link btn-sm p-0 text-danger" (click)="deleteConversation(conv.id, $event)" title="מחק">🗑</button>
                 </div>
-              }
-              @if (summary.loans.length) {
-                <hr class="my-2">
-                <small class="text-muted d-block mb-1 fw-bold">Loans</small>
-                @for (l of summary.loans; track l.name) {
-                  <div class="summary-item">
-                    <span class="label">{{ l.name }}</span>
-                    <span class="value text-warning">₪{{ l.monthlyPayment | number:'1.0-0' }}/mo</span>
-                  </div>
-                }
-              }
+              </div>
             }
           </div>
         </div>
@@ -82,12 +53,12 @@
           @if (!messages.length) {
             <div class="empty-chat text-center text-muted py-5">
               <div style="font-size: 2.5rem">🤖</div>
-              <p class="mt-2 mb-1 fw-bold">AI Financial Advisor</p>
-              <small>Ask anything about your finances</small>
+              <p class="mt-2 mb-1 fw-bold">{{ 'AI.EMPTY_CHAT_TITLE' | translate }}</p>
+              <small>{{ 'AI.EMPTY_CHAT_SUB' | translate }}</small>
               <div class="mt-3">
-                <button class="btn btn-outline-secondary btn-sm me-1 mb-1" (click)="userInput = 'What is my current financial health?'">Financial health?</button>
-                <button class="btn btn-outline-secondary btn-sm me-1 mb-1" (click)="userInput = 'How long until I reach ₪700,000?'">Time to ₪700K?</button>
-                <button class="btn btn-outline-secondary btn-sm mb-1" (click)="userInput = 'What are my biggest expenses?'">Top expenses?</button>
+                <button class="btn btn-outline-secondary btn-sm me-1 mb-1" (click)="handleSuggestion('AI.SUGGESTION_1')">{{ 'AI.SUGGESTION_1' | translate }}</button>
+                <button class="btn btn-outline-secondary btn-sm me-1 mb-1" (click)="handleSuggestion('AI.SUGGESTION_2')">{{ 'AI.SUGGESTION_2' | translate }}</button>
+                <button class="btn btn-outline-secondary btn-sm mb-1" (click)="handleSuggestion('AI.SUGGESTION_3')">{{ 'AI.SUGGESTION_3' | translate }}</button>
               </div>
             </div>
           }
@@ -117,7 +88,7 @@
           <textarea
             class="form-control"
             rows="2"
-            placeholder="Ask a financial question... (Enter to send)"
+            [placeholder]="'AI.INPUT_PLACEHOLDER' | translate"
             [(ngModel)]="userInput"
             (keydown)="onEnter($event)"
             [disabled]="chatLoading">
@@ -129,6 +100,59 @@
         </div>
       </div>
 
+      <!-- Summary Sidebar -->
+      <div class="summary-sidebar">
+        <div class="card h-100">
+          <div class="card-header d-flex justify-content-between align-items-center py-2">
+            <small class="fw-bold">{{ 'AI.SNAPSHOT_TITLE' | translate }}</small>
+            <button class="btn btn-link btn-sm p-0" (click)="loadSummary()" [title]="'AI.REFRESH' | translate">🔄</button>
+          </div>
+          <div class="card-body p-2 overflow-auto">
+            @if (summaryLoading) {
+              <div class="text-center py-3"><div class="spinner-border spinner-border-sm"></div></div>
+            }
+            @if (summary && !summaryLoading) {
+              <div class="summary-item">
+                <span class="label">{{ 'AI.BALANCE' | translate }}</span>
+                <span class="value text-success">₪{{ summary.currentBalance | number:'1.0-0' }}</span>
+              </div>
+              <div class="summary-item">
+                <span class="label">{{ 'AI.AVG_INCOME' | translate }}</span>
+                <span class="value">₪{{ summary.income.average | number:'1.0-0' }}</span>
+              </div>
+              <div class="summary-item">
+                <span class="label">{{ 'AI.AVG_EXPENSES' | translate }}</span>
+                <span class="value text-danger">₪{{ summary.expenses.averageTotal | number:'1.0-0' }}</span>
+              </div>
+              <div class="summary-item">
+                <span class="label">{{ 'AI.AVG_SAVINGS' | translate }}</span>
+                <span class="value" [class.text-success]="summary.monthlySavingsAvg >= 0" [class.text-danger]="summary.monthlySavingsAvg < 0">
+                  ₪{{ summary.monthlySavingsAvg | number:'1.0-0' }}
+                </span>
+              </div>
+              <hr class="my-2">
+              <small class="text-muted d-block mb-1 fw-bold">{{ 'AI.FORECAST' | translate }}</small>
+              @for (f of summary.forecast; track f.month) {
+                <div class="summary-item">
+                  <span class="label">{{ f.month }}</span>
+                  <span class="value">₪{{ f.projectedBalance | number:'1.0-0' }}</span>
+                </div>
+              }
+              @if (summary.loans.length) {
+                <hr class="my-2">
+                <small class="text-muted d-block mb-1 fw-bold">{{ 'AI.LOANS' | translate }}</small>
+                @for (l of summary.loans; track l.name) {
+                  <div class="summary-item">
+                    <span class="label">{{ l.name }}</span>
+                    <span class="value text-warning">₪{{ l.monthlyPayment | number:'1.0-0' }}/mo</span>
+                  </div>
+                }
+              }
+            }
+          </div>
+        </div>
+      </div>
+
     </div>
   }
 
@@ -137,16 +161,16 @@
     <div class="analysis-panel">
       <button class="btn btn-primary mb-3" (click)="runAnalysis()" [disabled]="analysisLoading">
         @if (analysisLoading) {
-          <span class="spinner-border spinner-border-sm me-2"></span> Analyzing...
+          <span class="spinner-border spinner-border-sm me-2"></span>{{ 'AI.ANALYZING' | translate }}
         } @else {
-          🔍 Run Full AI Analysis
+          {{ 'AI.RUN_ANALYSIS' | translate }}
         }
       </button>
 
       @if (analysisLoading) {
         <div class="text-center py-5">
           <div class="spinner-border text-primary mb-3"></div>
-          <p class="text-muted">AI is analyzing your financial data...<br><small>This may take up to 60 seconds</small></p>
+          <p class="text-muted">{{ 'AI.ANALYZING' | translate }}</p>
         </div>
       }
 
@@ -162,19 +186,19 @@
   @if (activeTab === 'scenario') {
     <div class="scenario-panel">
       <div class="card mb-3">
-        <div class="card-header"><strong>🔮 What-If Simulator</strong></div>
+        <div class="card-header"><strong>{{ 'AI.SCENARIO_TITLE' | translate }}</strong></div>
         <div class="card-body">
           <div class="row g-3">
             <div class="col-md-4">
-              <label class="form-label">Purchase Description</label>
-              <input type="text" class="form-control" [(ngModel)]="scenario.description" placeholder="e.g. New Car" />
+              <label class="form-label">{{ 'AI.SCENARIO_DESC' | translate }}</label>
+              <input type="text" class="form-control" [(ngModel)]="scenario.description" [placeholder]="'AI.SCENARIO_DESC_PH' | translate" />
             </div>
             <div class="col-md-4">
-              <label class="form-label">Amount (₪)</label>
-              <input type="number" class="form-control" [(ngModel)]="scenario.amount" placeholder="e.g. 80000" />
+              <label class="form-label">{{ 'AI.SCENARIO_AMOUNT' | translate }}</label>
+              <input type="number" class="form-control" [(ngModel)]="scenario.amount" placeholder="80000" />
             </div>
             <div class="col-md-4">
-              <label class="form-label">Purchase Date</label>
+              <label class="form-label">{{ 'AI.SCENARIO_DATE' | translate }}</label>
               <input type="date" class="form-control" [(ngModel)]="scenario.date" />
             </div>
           </div>
@@ -183,9 +207,9 @@
             (click)="runScenario()"
             [disabled]="scenarioLoading || !scenario.description || !scenario.amount || !scenario.date">
             @if (scenarioLoading) {
-              <span class="spinner-border spinner-border-sm me-2"></span> Simulating...
+              <span class="spinner-border spinner-border-sm me-2"></span>{{ 'AI.SCENARIO_RUNNING' | translate }}
             } @else {
-              ▶ Run Simulation
+              {{ 'AI.SCENARIO_RUN' | translate }}
             }
           </button>
         </div>
@@ -194,20 +218,23 @@
       @if (scenarioLoading) {
         <div class="text-center py-5">
           <div class="spinner-border text-primary mb-3"></div>
-          <p class="text-muted">Simulating scenario and getting AI advice...</p>
+          <p class="text-muted">{{ 'AI.SCENARIO_RUNNING' | translate }}</p>
         </div>
       }
 
       @if (scenarioResult && !scenarioLoading) {
         <div class="row g-3">
-          <!-- Forecast Table -->
           <div class="col-md-5">
             <div class="card h-100">
-              <div class="card-header"><strong>📉 Projected Balance</strong></div>
+              <div class="card-header"><strong>{{ 'AI.PROJECTED_BALANCE' | translate }}</strong></div>
               <div class="card-body p-0">
                 <table class="table table-sm mb-0">
                   <thead>
-                    <tr><th>Month</th><th>Balance</th><th></th></tr>
+                    <tr>
+                      <th>{{ 'AI.MONTH_COL' | translate }}</th>
+                      <th>{{ 'AI.BALANCE_COL' | translate }}</th>
+                      <th></th>
+                    </tr>
                   </thead>
                   <tbody>
                     @for (f of scenarioResult.simulation.forecast; track f.month) {
@@ -222,10 +249,9 @@
               </div>
             </div>
           </div>
-          <!-- AI Analysis -->
           <div class="col-md-7">
             <div class="card h-100">
-              <div class="card-header"><strong>🤖 AI Scenario Analysis</strong></div>
+              <div class="card-header"><strong>{{ 'AI.AI_SCENARIO_ANALYSIS' | translate }}</strong></div>
               <div class="card-body analysis-text" [innerHTML]="formatText(scenarioResult.scenarioAnalysis)"></div>
             </div>
           </div>

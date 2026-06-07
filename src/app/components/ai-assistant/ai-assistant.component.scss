@@ -10,10 +10,36 @@
 // ---- Chat Layout ----
 .chat-layout {
   display: grid;
-  grid-template-columns: 220px 1fr;
+  grid-template-columns: 180px 1fr 200px;
   gap: 1rem;
   flex: 1;
   min-height: 0;
+}
+
+// History Sidebar
+.history-sidebar {
+  min-height: 0;
+  overflow: hidden;
+  .card { border-radius: 10px; font-size: 0.82rem; }
+
+  .conv-item {
+    padding: 0.5rem 0.6rem;
+    border-radius: 6px;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background 0.15s;
+
+    &:hover { background: #f0f4ff; }
+    &.active { background: #e8f0fe; border-left: 3px solid #0d6efd; }
+
+    .conv-title {
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 140px;
+    }
+  }
 }
 
 .summary-sidebar {

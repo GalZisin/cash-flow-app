@@ -12,7 +12,7 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(withInterceptors([httpInterceptor])),
     provideAnimations(),
     importProvidersFrom(TranslateModule.forRoot()),
-    provideTranslateHttpLoader(),
+    provideTranslateHttpLoader({ prefix: '/assets/i18n/', suffix: '.json' }),
     { provide: MAT_TOOLTIP_DEFAULT_OPTIONS, useValue: { showDelay: 300, hideDelay: 100, touchendHideDelay: 100 } }
   ]
 };

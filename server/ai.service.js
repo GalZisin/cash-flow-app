@@ -15,7 +15,7 @@ const MODEL = process.env.AI_MODEL || 'qwen3:8b';
  */
 function callOllama(prompt) {
   return new Promise((resolve, reject) => {
-    const body = JSON.stringify({ model: MODEL, prompt, stream: false, options: { temperature: 0.3 } });
+    const body = JSON.stringify({ model: MODEL, prompt, stream: false, options: { temperature: 0.3, num_ctx: 2048, num_predict: 1024 }, think: false });
 
     const req = http.request(
       { hostname: OLLAMA_HOST, port: OLLAMA_PORT, path: '/api/generate', method: 'POST',
@@ -39,7 +39,7 @@ function callOllama(prompt) {
       }
     );
     req.on('error', reject);
-    req.setTimeout(120000, () => { req.destroy(); reject(new Error('Ollama request timed out')); });
+    req.setTimeout(300000, () => { req.destroy(); reject(new Error('Ollama request timed out')); });
     req.write(body);
     req.end();
   });
