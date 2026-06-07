@@ -474,6 +474,12 @@ app-cash-flow-table .actions {
     background-color: var(--bs-body-bg) !important;
     color: var(--bs-body-color) !important;
 
+    /* תיקון עבור סרגל הניווט והכותרות הראשיות */
+    .navbar, .app-navbar, header {
+        background-color: var(--bs-secondary-bg) !important;
+        border-bottom: 1px solid var(--bs-border-color);
+    }
+
     .card {
         background-color: var(--bs-tertiary-bg);
         border-color: var(--bs-border-color);
