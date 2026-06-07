@@ -648,3 +648,25 @@ app-cash-flow-table .actions {
         }
     }
 }
+
+.insight-card {
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-right: 4px solid var(--bs-primary);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    color: #475569;
+    transition: transform 0.2s;
+
+    &:hover {
+        transform: scale(1.01);
+    }
+}
+
+[data-bs-theme="dark"], .dark-mode {
+    .insight-card {
+        background-color: rgba(255, 255, 255, 0.03);
+        border-color: var(--bs-border-color);
+        color: var(--bs-body-color);
+    }
+}

@@ -139,11 +139,19 @@
     "BALANCE_COL": "Balance",
     "REFRESH": "Refresh",
     "DARK_MODE": "Dark Mode",
+    "DARK_MODE_TOOLTIP": "Switch between light and dark themes",
+    "LANG_TOOLTIP": "Select whether the AI responds in Hebrew or English",
     "TAB_DASHBOARD": "📊 Dashboard",
     "DASHBOARD_TITLE": "Financial Dashboard",
     "LOADING_DATA": "Loading data...",
+    "INSIGHTS_TITLE": "Smart AI Insights",
+    "GENERATE_INSIGHTS": "Generate Insights",
+    "INSIGHTS_LOADING": "Analyzing data and generating insights...",
+    "NO_INSIGHTS": "No urgent insights found at the moment.",
     "TOTAL_INVESTMENTS": "Total Investments",
-    "ACTIVE_INSTALLMENTS": "Active Installments"
+    "ACTIVE_INSTALLMENTS": "Active Installments",
+    "LANG_HE": "Hebrew",
+    "LANG_EN": "English"
   },
   "INSTALLMENTS": {
     "TITLE": "Installment Management",

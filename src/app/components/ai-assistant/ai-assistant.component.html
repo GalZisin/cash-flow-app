@@ -22,9 +22,20 @@
         {{ 'AI.TAB_DASHBOARD' | translate }}
       </a>
     </li>
-    <!-- Theme Toggle -->
-    <li class="nav-item ms-auto d-flex align-items-center px-3">
-      <div class="form-check form-switch mb-0">
+
+    <!-- אזור הגדרות (מתגים מקובצים) -->
+    <li class="nav-item ms-auto d-flex align-items-center gap-3 px-3 border-start">
+      <!-- שפת ה-AI -->
+      <div class="form-check form-switch mb-0" [matTooltip]="'AI.LANG_TOOLTIP' | translate" matTooltipPosition="below">
+        <input class="form-check-input" type="checkbox" role="switch" id="aiLangToggle" 
+               [checked]="aiResponseLang === 'en'" 
+               (change)="toggleAiLang()">
+        <label class="form-check-label small text-muted ms-1" for="aiLangToggle">
+          AI: {{ (aiResponseLang === 'he' ? 'AI.LANG_HE' : 'AI.LANG_EN') | translate }}
+        </label>
+      </div>
+      <!-- מצב כהה -->
+      <div class="form-check form-switch mb-0" [matTooltip]="'AI.DARK_MODE_TOOLTIP' | translate" matTooltipPosition="below">
         <input class="form-check-input" type="checkbox" role="switch" id="themeToggle" 
                [checked]="themeService.isDarkMode()" 
                (change)="themeService.toggleTheme()">
@@ -358,6 +369,46 @@
                 <div class="card-label">{{ 'AI.ACTIVE_INSTALLMENTS' | translate }}</div>
                 <div class="card-value">{{ totalActiveInstallments }} (₪{{ totalMonthlyInstallmentsPayment | number:'1.0-0' }}/{{ 'INSTALLMENTS.MONTHLY' | translate }})</div>
               </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI Insights Section (Section 5) -->
+        <div class="row mt-4">
+          <div class="col-12">
+            <div class="insights-container">
+              <h5 class="mb-3 d-flex align-items-center justify-content-between">
+                <div>
+                  <i class="bi bi-lightbulb text-warning me-2"></i>
+                  {{ 'AI.INSIGHTS_TITLE' | translate }}
+                </div>
+                <button class="btn btn-outline-warning btn-sm" (click)="loadInsights()" [disabled]="insightsLoading">
+                  <i class="bi bi-magic me-1"></i> {{ 'AI.GENERATE_INSIGHTS' | translate }}
+                </button>
+              </h5>
+              
+              @if (insightsLoading) {
+                <div class="d-flex align-items-center p-3 border rounded bg-opacity-10 bg-info">
+                  <span class="spinner-border spinner-border-sm me-2 text-info"></span>
+                  <span class="text-muted">{{ 'AI.INSIGHTS_LOADING' | translate }}</span>
+                </div>
+              } @else {
+                <div class="row g-3">
+                  @for (insight of insights; track $index) {
+                    <div class="col-md-6">
+                      <div class="insight-card p-3 h-100">
+                        <div class="d-flex align-items-start">
+                          <span class="me-2">✨</span>
+                          <div [innerHTML]="formatText(insight)"></div>
+                        </div>
+                      </div>
+                    </div>
+                  }
+                  @if (!insights.length && !insightsLoading && insightsLoaded) {
+                    <div class="col-12 text-muted small italic">{{ 'AI.NO_INSIGHTS' | translate }}</div>
+                  }
+                </div>
+              }
             </div>
           </div>
         </div>

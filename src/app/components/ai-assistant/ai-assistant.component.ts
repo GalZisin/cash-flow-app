@@ -2,6 +2,7 @@ import { Component, OnInit, ViewChild, ElementRef, AfterViewChecked, inject } fr
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { AiService, ChatMessage, FinancialSummary, ScenarioRequest, ScenarioResult } from '../../services/ai.service';
 import { ConversationService, Conversation } from '../../services/conversation.service';
 import { LanguageService } from '../../services/language.service';
@@ -15,7 +16,7 @@ type ActiveTab = 'chat' | 'analysis' | 'scenario' | 'dashboard';
 @Component({
   selector: 'app-ai-assistant',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule],
+  imports: [CommonModule, FormsModule, TranslateModule, MatTooltipModule],
   templateUrl: './ai-assistant.component.html',
   styleUrl: './ai-assistant.component.scss'
 })
@@ -51,6 +52,10 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
   totalActiveInstallments = 0;
   totalMonthlyInstallmentsPayment = 0;
   totalInvestmentsValue = 0;
+  insights: string[] = [];
+  insightsLoading = false;
+  insightsLoaded = false;
+  aiResponseLang: 'he' | 'en' = 'he'; // עברית כברירת מחדל
 
   private shouldScroll = false;
 
@@ -119,6 +124,27 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
         }, 0);
       },
       error: (err) => console.error('Failed to load investments for dashboard:', err)
+    });
+  }
+
+  toggleAiLang() {
+    this.aiResponseLang = this.aiResponseLang === 'he' ? 'en' : 'he';
+  }
+
+  loadInsights() {
+    this.insights = []; // Clear previous insights
+    this.insightsLoading = true;
+    this.insightsLoaded = true;
+    // פנייה ל-AI לקבלת תובנות פרו-אקטיביות
+    const langText = this.aiResponseLang === 'he' ? 'Hebrew' : 'English';
+    const prompt = `Please provide 3-4 short, proactive financial insights or warnings based on my data. Focus on trends and future risks. Be concise and practical. Respond strictly in ${langText}.`;
+    this.ai.chat(prompt).subscribe({
+      next: res => {
+        // פיצול התשובה לרשימה (בהנחה שה-AI מחזיר בולטים)
+        this.insights = res.answer.split('\n').filter(l => l.trim().length > 5);
+        this.insightsLoading = false;
+      },
+      error: () => { this.insightsLoading = false; }
     });
   }
 
@@ -232,7 +258,8 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
     this.shouldScroll = true;
 
     // Combine question and context into a single enriched prompt
-    const enrichedPrompt = context ? `Context: ${JSON.stringify(context)}\n\nUser Question: ${q}` : q;
+    const langText = this.aiResponseLang === 'he' ? 'Hebrew' : 'English';
+    const enrichedPrompt = context ? `Context: ${JSON.stringify(context)}\n\nUser Question: ${q}\n\nRespond strictly in ${langText}.` : `${q}\n\nRespond strictly in ${langText}.`;
 
     this.ai.chat(enrichedPrompt).subscribe({
       next: res => {

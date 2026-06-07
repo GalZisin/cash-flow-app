@@ -79,11 +79,19 @@
     "BALANCE_COL": "יתרה",
     "REFRESH": "רענן",
     "DARK_MODE": "מצב כהה",
+    "DARK_MODE_TOOLTIP": "החלף בין ערכת נושא בהירה לכהה",
+    "LANG_TOOLTIP": "קבע האם ה-AI ישיב לך בעברית או באנגלית",
     "TAB_DASHBOARD": "📊 דאשבורד",
     "DASHBOARD_TITLE": "דאשבורד פיננסי",
     "LOADING_DATA": "טוען נתונים...",
+    "INSIGHTS_TITLE": "תובנות AI חכמות",
+    "GENERATE_INSIGHTS": "הפק תובנות",
+    "INSIGHTS_LOADING": "מנתח נתונים ומייצר תובנות...",
+    "NO_INSIGHTS": "לא נמצאו תובנות דחופות כרגע.",
     "TOTAL_INVESTMENTS": "סה\"כ השקעות",
-    "ACTIVE_INSTALLMENTS": "פריסות פעילות"
+    "ACTIVE_INSTALLMENTS": "פריסות פעילות",
+    "LANG_HE": "עברית",
+    "LANG_EN": "English"
   },
   "INVESTMENTS": {
     "TITLE": "מעקב השקעות",
