@@ -137,6 +137,11 @@ export class InstallmentService {
         // 2. חישוב לוגיקה כללית של הפריט
         const totalLoansPaid = loanStatuses.reduce((sum, s) => sum + s.paidAmount, 0);
 
+        // חישוב פעימות ששולמו (לפי תאריך שעבר)
+        const milestonePayments = (item.milestones || []).filter(m => new Date(m.date + '-01') <= today);
+        const totalMilestonesPaid = milestonePayments.reduce((sum, m) => sum + m.amount, 0);
+        const paidMilestonesCount = milestonePayments.length;
+
         // תמיכה בפריסות ישנות ללא הלוואות מפורטות
         const itemStart = new Date(item.startDate);
         const monthsSinceItemStart = Math.max(0,
@@ -154,7 +159,7 @@ export class InstallmentService {
             ? item.payments.reduce((sum, p) => sum + p.amount, 0)
             : (item.loanComponents?.length > 0 ? 0 : legacyPaidCount * item.monthlyPayment);
 
-        const paidAmount = item.downPayment + totalLoansPaid + legacyPaidAmount;
+        const paidAmount = item.downPayment + totalLoansPaid + legacyPaidAmount + totalMilestonesPaid;
         const remainingAmount = Math.max(0, item.totalAmount - paidAmount);
         const progressPct = item.totalAmount > 0
             ? Math.min(100, Math.round((paidAmount / item.totalAmount) * 100))
@@ -163,11 +168,18 @@ export class InstallmentService {
         let totalInstallments = item.installmentsCount;
         if (item.loanComponents?.length > 0) {
             totalInstallments = Math.max(...item.loanComponents.map(l => l.installmentsCount));
+        } else if (item.milestones && item.milestones.length > 0) {
+            // אם יש פעימות, משך הזמן הוא עד הפעימה האחרונה
+            const dates = item.milestones.map(m => new Date(m.date + '-01'));
+            const maxDate = new Date(Math.max(...dates.map(d => d.getTime())));
+            totalInstallments = Math.max(0, (maxDate.getFullYear() - itemStart.getFullYear()) * 12 + (maxDate.getMonth() - itemStart.getMonth()));
         }
 
         // חישוב חודשים שנותרו לפי ההלוואה שנשאר לה הכי הרבה זמן
         const maxMonthsLeftInLoans = loanStatuses.length > 0 ? Math.max(...loanStatuses.map(s => s.monthsLeft)) : 0;
-        const monthsLeft = loanStatuses.length > 0 ? maxMonthsLeftInLoans : Math.max(0, totalInstallments - monthsSinceItemStart);
+        const upcomingMilestones = (item.milestones || []).filter(m => new Date(m.date + '-01') > today);
+        const monthsLeft = loanStatuses.length > 0 ? maxMonthsLeftInLoans :
+            (upcomingMilestones.length > 0 ? upcomingMilestones.length : Math.max(0, totalInstallments - monthsSinceItemStart));
         const isCompleted = remainingAmount === 0;
 
         // תאריך סיום צפוי
@@ -178,7 +190,7 @@ export class InstallmentService {
             installment: item,
             paidAmount,
             remainingAmount,
-            paidInstallments: loanStatuses.length > 0 ? loanStatuses.reduce((sum, s) => sum + s.paidInstallments, 0) : legacyPaidCount,
+            paidInstallments: loanStatuses.length > 0 ? loanStatuses.reduce((sum, s) => sum + s.paidInstallments, 0) : (legacyPaidCount + paidMilestonesCount),
             totalInstallments,
             progressPct,
             endDate: endDate.toISOString().slice(0, 7), // YYYY-MM
@@ -205,6 +217,17 @@ export class InstallmentService {
         const target = new Date(targetMonthDate.getFullYear(), targetMonthDate.getMonth(), 1);
 
         for (const item of allInstallments) {
+            // בדיקת פעימות (Milestones)
+            if (item.milestones && item.milestones.length > 0) {
+                const milestoneForMonth = item.milestones.find(m => {
+                    const mDate = new Date(m.date + '-01');
+                    return mDate.getFullYear() === target.getFullYear() && mDate.getMonth() === target.getMonth();
+                });
+                if (milestoneForMonth) {
+                    installments += milestoneForMonth.amount;
+                }
+            }
+
             if (item.loanComponents && item.loanComponents.length > 0) {
                 for (const loan of item.loanComponents) {
                     const start = this.toMonthStart(loan.startDate);

@@ -466,6 +466,47 @@
         }
       </div>
 
+      <!-- פעימות תשלום (Milestones) -->
+      <div class="mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <label class="inst-label m-0">{{ 'INSTALLMENTS.MILESTONES_TITLE' | translate }}</label>
+          <button type="button" class="btn btn-outline-primary btn-sm" (click)="addMilestone()">+ {{ 'INSTALLMENTS.ADD_MILESTONE' | translate }}</button>
+        </div>
+
+        @if (form.milestones && form.milestones.length > 0) {
+          <div class="row g-1 mb-1 fw-medium text-muted px-2 inst-loan-header-row">
+            <div class="col-4">{{ 'CASH_FLOW.DESCRIPTION' | translate }}</div>
+            <div class="col-2">{{ 'INSTALLMENTS.PERCENTAGE' | translate }}</div>
+            <div class="col-3">{{ 'CASH_FLOW.AMOUNT' | translate }}</div>
+            <div class="col-2">{{ 'INSTALLMENTS.MILESTONE_DATE' | translate }}</div>
+            <div class="col-1 text-center">הסרה</div>
+          </div>
+        }
+
+        @for (m of form.milestones; track m.id; let idx = $index) {
+          <div class="row g-1 mb-2 align-items-center border p-2 rounded bg-light bg-opacity-50">
+            <div class="col-4">
+              <input type="text" class="form-control form-control-sm" [(ngModel)]="m.description" placeholder="תיאור (למשל: גמר שלד)">
+            </div>
+            <div class="col-2">
+              <div class="input-group input-group-sm">
+                <input type="number" class="form-control" [(ngModel)]="m.percentage" (ngModelChange)="onMilestonePctChange(m)">
+                <span class="input-group-text">%</span>
+              </div>
+            </div>
+            <div class="col-3">
+              <input type="number" class="form-control form-control-sm" [(ngModel)]="m.amount" (ngModelChange)="onMilestoneAmountChange(m)">
+            </div>
+            <div class="col-2">
+              <input type="month" class="form-control form-control-sm" [(ngModel)]="m.date">
+            </div>
+            <div class="col-1 text-center">
+              <button type="button" class="btn btn-link text-danger p-0" (click)="removeMilestone(idx)">✕</button>
+            </div>
+          </div>
+        }
+      </div>
+
       @if (form.downPayment > form.totalAmount) {
         <div class="text-danger small mb-2 fw-medium">
           ⚠️ {{ 'INSTALLMENTS.INVALID_DOWN_PAYMENT' | translate }}

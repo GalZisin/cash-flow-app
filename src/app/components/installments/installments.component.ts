@@ -29,6 +29,7 @@ const EMPTY_FORM = (): Omit<Installment, 'id'> => ({
     manualPaidCount: 0,    // הוספת ערך ברירת מחדל לשדה החדש
     lastManualPaymentDate: undefined, // הוספת ערך ברירת מחדל
     loanComponents: [],
+    milestones: [],
     payments: []
 });
 
@@ -160,6 +161,33 @@ export class InstallmentsComponent implements OnInit {
         };
         this.form.loanComponents = [...(this.form.loanComponents || []), newLoan];
         this.cdr.detectChanges(); // Force change detection to update the view
+    }
+
+    addMilestone() {
+        const newMilestone = {
+            id: Date.now().toString(),
+            description: '',
+            percentage: 0,
+            amount: 0,
+            date: new Date().toISOString().slice(0, 7) // YYYY-MM
+        };
+        this.form.milestones = [...(this.form.milestones || []), newMilestone];
+    }
+
+    removeMilestone(index: number) {
+        this.form.milestones?.splice(index, 1);
+    }
+
+    onMilestonePctChange(m: any) {
+        const total = Number(this.form.totalAmount) || 0;
+        m.amount = Math.round(total * (Number(m.percentage) / 100));
+    }
+
+    onMilestoneAmountChange(m: any) {
+        const total = Number(this.form.totalAmount) || 0;
+        if (total > 0) {
+            m.percentage = Number(((m.amount / total) * 100).toFixed(1));
+        }
     }
 
     calculateLoanPMT(loan: LoanComponent) {
@@ -360,6 +388,12 @@ export class InstallmentsComponent implements OnInit {
             paidCount: Number(loan.paidCount) || 0,
             interestRate: loan.interestRate !== undefined ? Number(loan.interestRate) : 0,
             payoffAmount: Number(loan.payoffAmount) || 0
+        }));
+
+        this.form.milestones = (this.form.milestones || []).map(m => ({
+            ...m,
+            percentage: Number(m.percentage) || 0,
+            amount: Number(m.amount) || 0
         }));
 
         if (!this.formValid) {

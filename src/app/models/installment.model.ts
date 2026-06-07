@@ -13,6 +13,14 @@ export interface LoanComponent {
     payments?: { date: string, amount: number }[]; // היסטוריית תשלומים הכוללת סכום ותאריך
 }
 
+export interface Milestone {
+    id: string;
+    description: string;
+    percentage: number; // האחוז מהסכום הכולל
+    amount: number;     // הסכום המחושב
+    date: string;       // תאריך התשלום (YYYY-MM)
+}
+
 export interface Installment {
     id: string;
     name: string;
@@ -27,6 +35,7 @@ export interface Installment {
     lastManualPaymentDate?: string; // תאריך התשלום הידני האחרון
     payments?: { date: string, amount: number }[]; // היסטוריית תשלומים ברמה הראשית
     loanComponents: LoanComponent[]; // רשימת ההלוואות המשויכות
+    milestones?: Milestone[];        // פעימות תשלום לפי אחוזים
 }
 
 export interface LoanComponentStatus {
