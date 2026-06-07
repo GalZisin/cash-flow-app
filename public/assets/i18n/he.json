@@ -78,7 +78,12 @@
     "MONTH_COL": "חודש",
     "BALANCE_COL": "יתרה",
     "REFRESH": "רענן",
-    "DARK_MODE": "מצב כהה"
+    "DARK_MODE": "מצב כהה",
+    "TAB_DASHBOARD": "📊 דאשבורד",
+    "DASHBOARD_TITLE": "דאשבורד פיננסי",
+    "LOADING_DATA": "טוען נתונים...",
+    "TOTAL_INVESTMENTS": "סה\"כ השקעות",
+    "ACTIVE_INSTALLMENTS": "פריסות פעילות"
   },
   "INVESTMENTS": {
     "TITLE": "מעקב השקעות",

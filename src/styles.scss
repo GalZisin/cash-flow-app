@@ -583,3 +583,62 @@ app-cash-flow-table .actions {
         }
     }
 }
+
+/* ---------- Dashboard Styles ---------- */
+.dashboard-panel {
+    padding: 1rem;
+    height: calc(100vh - 57px - 50px); /* Full height minus navbar and tab bar */
+    overflow-y: auto;
+}
+
+.dashboard-card {
+    display: flex;
+    align-items: center;
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1.25rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease-in-out;
+    height: 100%;
+
+    &:hover {
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+        transform: translateY(-2px);
+    }
+
+    .card-icon {
+        font-size: 2.5rem;
+        margin-inline-end: 1rem;
+        line-height: 1;
+    }
+
+    .card-content {
+        flex-grow: 1;
+    }
+
+    .card-label {
+        font-size: 0.85rem;
+        color: #64748b;
+        margin-bottom: 0.25rem;
+    }
+
+    .card-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #212529;
+    }
+}
+
+[data-bs-theme="dark"], .dark-mode {
+    .dashboard-card {
+        background-color: var(--bs-tertiary-bg);
+        border-color: var(--bs-border-color);
+        .card-label {
+            color: #a0a0a0;
+        }
+        .card-value {
+            color: var(--bs-body-color);
+        }
+    }
+}

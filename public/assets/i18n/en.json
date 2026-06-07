@@ -138,7 +138,12 @@
     "MONTH_COL": "Month",
     "BALANCE_COL": "Balance",
     "REFRESH": "Refresh",
-    "DARK_MODE": "Dark Mode"
+    "DARK_MODE": "Dark Mode",
+    "TAB_DASHBOARD": "📊 Dashboard",
+    "DASHBOARD_TITLE": "Financial Dashboard",
+    "LOADING_DATA": "Loading data...",
+    "TOTAL_INVESTMENTS": "Total Investments",
+    "ACTIVE_INSTALLMENTS": "Active Installments"
   },
   "INSTALLMENTS": {
     "TITLE": "Installment Management",

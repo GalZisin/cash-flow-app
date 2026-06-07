@@ -6,9 +6,11 @@ import { AiService, ChatMessage, FinancialSummary, ScenarioRequest, ScenarioResu
 import { ConversationService, Conversation } from '../../services/conversation.service';
 import { LanguageService } from '../../services/language.service';
 import { CashFlowService } from '../../services/cash-flow.service';
+import { InstallmentService } from '../../services/installment.service';
 import { ThemeService } from '../../services/theme.service';
+import { InvestmentService } from '../../services/investment.service';
 
-type ActiveTab = 'chat' | 'analysis' | 'scenario';
+type ActiveTab = 'chat' | 'analysis' | 'scenario' | 'dashboard';
 
 @Component({
   selector: 'app-ai-assistant',
@@ -44,7 +46,11 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
   scenarioResult: ScenarioResult | null = null;
   scenarioLoading = false;
 
+  // Dashboard
   realCurrentBalance = 0;
+  totalActiveInstallments = 0;
+  totalMonthlyInstallmentsPayment = 0;
+  totalInvestmentsValue = 0;
 
   private shouldScroll = false;
 
@@ -54,7 +60,9 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
   public lang = inject(LanguageService);
   private translate = inject(TranslateService);
   private cashFlowService = inject(CashFlowService);
-  public themeService = inject(ThemeService);
+  private installmentService = inject(InstallmentService); // Inject InstallmentService
+  private investmentService = inject(InvestmentService); // Inject InvestmentService
+  public themeService = inject(ThemeService); // Keep public for template access
 
   constructor() { }
 
@@ -72,6 +80,19 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
         this.realCurrentBalance = currentMonth.endingBalance;
       }
     });
+
+    // Load Installment and Investment data for dashboard
+    this.installmentService.items$.subscribe(items => {
+      this.totalActiveInstallments = items.filter(i => !this.installmentService.getStatus(i).isCompleted).length;
+      this.totalMonthlyInstallmentsPayment = this.installmentService.totalMonthlyActive(items);
+    });
+    this.investmentService.load().subscribe((items: any[]) => {
+      this.totalInvestmentsValue = (items || []).reduce((sum, inv) => {
+        const snaps = inv.snapshots || [];
+        return sum + (snaps[snaps.length - 1]?.value ?? 0);
+      }, 0);
+    });
+    this.loadDashboardData(); // Initial load for dashboard data
   }
 
   ngAfterViewChecked() {
@@ -83,6 +104,21 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
     this.ai.getSummary().subscribe({
       next: s => { this.summary = s; this.summaryLoading = false; },
       error: () => { this.summaryLoading = false; }
+    });
+  }
+
+  loadDashboardData() {
+    // Ensure all necessary data is loaded for the dashboard
+    this.loadSummary(); // Summary is already loaded, but good to ensure it's fresh
+    this.installmentService.load().subscribe();
+    this.investmentService.load().subscribe({
+      next: (items: any[]) => {
+        this.totalInvestmentsValue = (items || []).reduce((sum, inv) => {
+          const snaps = inv.snapshots || [];
+          return sum + (snaps[snaps.length - 1]?.value ?? 0);
+        }, 0);
+      },
+      error: (err) => console.error('Failed to load investments for dashboard:', err)
     });
   }
 
