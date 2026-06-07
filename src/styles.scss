@@ -421,6 +421,36 @@ app-cash-flow-table .actions {
     }
 }
 
+/* ---------- Installments Table View Base (Universal) ---------- */
+.inst-table-container {
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    margin-top: 1rem;
+}
+
+.inst-table {
+    width: 100%;
+    border-collapse: collapse;
+    th {
+        background-color: #f8fafc;
+        color: #64748b;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        padding: 14px 20px;
+        text-align: right;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    td {
+        padding: 12px 20px;
+        border-bottom: 1px solid #f1f5f9;
+        font-size: 0.95rem;
+    }
+}
+
 /* ---------- VS Code Dark Modern Theme Overrides ---------- */
 [data-bs-theme="dark"], .dark-mode {
     --bs-body-bg: #1f1f1f;           /* Editor Background */
@@ -501,5 +531,45 @@ app-cash-flow-table .actions {
     .mat-mdc-row {
         background-color: #252526 !important;
         &:hover { background-color: #2a2d2e !important; }
+    }
+
+    .inst-table-container {
+        background-color: var(--bs-tertiary-bg);
+        border: 1px solid var(--bs-border-color);
+    }
+
+    .inst-table {
+        th {
+            background-color: rgba(255, 255, 255, 0.03);
+            color: #858585;
+            border-bottom: 1px solid var(--bs-border-color);
+        }
+        td {
+            border-bottom: 1px solid var(--bs-border-color);
+        }
+        tr:hover {
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+
+        /* Style for expanded rows in Table View */
+        .inst-row-expanded {
+            background-color: rgba(0, 122, 204, 0.05) !important;
+            border-bottom: none;
+        }
+
+        .inst-detail-row {
+            background-color: #1a1a1a;
+            td {
+                padding: 0 !important;
+                border-bottom: 1px solid var(--bs-border-color);
+            }
+        }
+
+        .inst-detail-content {
+            border-right: 2px solid var(--bs-primary);
+            margin: 10px 40px;
+            background: #252526;
+            border-radius: 4px;
+        }
     }
 }

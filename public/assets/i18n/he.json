@@ -150,6 +150,8 @@
   },
   "INSTALLMENTS": {
     "TITLE": "ניהול פריסות תשלומים",
+    "VIEW_TABLE": "תצוגת טבלה",
+    "VIEW_GRID": "תצוגת כרטיסיות",
     "ADD": "הוסף פריסה חדשה",
     "NAME": "שם הפריסה / מוצר",
     "TOTAL_AMOUNT": "סכום כולל",
@@ -199,6 +201,7 @@
     "CONFIRM_MARK_PAID": "אישור סימון כבוצע",
     "MARKED_PAID_SUCCESS": "התשלום סומן כבוצע בהצלחה ✅",
     "LOANS_DETAIL": "פירוט הלוואות",
+    "PAYMENT_HISTORY": "היסטוריית תשלומים",
     "LOANS_DETAIL_FORM": "פרטי הלוואה / תשלום",
     "ADD_LOAN_COMPONENT": "הוסף הלוואה",
     "TOTAL_LOAN_AMOUNT": "סכום הלוואה",

@@ -4,9 +4,15 @@
   <div class="inst-sticky-header">
     <div class="d-flex justify-content-between align-items-center mb-3">
       <span class="inst-page-title">{{ 'INSTALLMENTS.TITLE' | translate }}</span>
-      <button class="inst-add-btn" type="button" (click)="openAdd()">
-        <span>+</span> {{ 'INSTALLMENTS.ADD' | translate }}
-      </button>
+      <div class="d-flex gap-2">
+        <button class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-2" (click)="toggleView()">
+          <i class="bi" [class.bi-table]="viewMode === 'grid'" [class.bi-grid-3x3-gap]="viewMode === 'table'"></i>
+          {{ (viewMode === 'grid' ? 'INSTALLMENTS.VIEW_TABLE' : 'INSTALLMENTS.VIEW_GRID') | translate }}
+        </button>
+        <button class="inst-add-btn" type="button" (click)="openAdd()">
+          <span>+</span> {{ 'INSTALLMENTS.ADD' | translate }}
+        </button>
+      </div>
     </div>
 
     <!-- KPI cards -->
@@ -38,9 +44,10 @@
     </div>
   </div>
 
-  <!-- ════ CARDS LIST ════ -->
+  <!-- ════ CONTENT BODY ════ -->
   <div class="inst-body">
     @if (items.length === 0) {
+      <!-- Empty State -->
       <div class="inst-empty">
         <div class="inst-empty-icon">🛒</div>
         <div class="inst-empty-text">{{ 'INSTALLMENTS.EMPTY' | translate }}</div>
@@ -48,175 +55,279 @@
           {{ 'INSTALLMENTS.ADD_FIRST' | translate }}
         </button>
       </div>
-    }
-
-    <div class="row g-4">
-      @for (item of items; track item.id) {
-        @let st = statusOf(item.id);
-        <div class="col-12 col-lg-6">
-          <div class="inst-card" [class.inst-card-done]="st.isCompleted">
-
-            <!-- color bar -->
-            <div class="inst-color-bar" [style.background]="item.color"></div>
-
-            <!-- card header -->
-            <div class="inst-card-header">
-              <span class="inst-card-name">{{ item.name }}</span>
-              <div class="d-flex gap-1">
-                <!-- Undo main payment (only for simple installments) -->
-                @if (st.paidInstallments > 0 && st.loanStatuses.length === 0) {
-                  <button class="inst-icon-btn" type="button" matTooltip="ביטול תשלום אחרון" (click)="undoPayment(item)">
-                    ↺
-                  </button>
-                }
-                @if (!st.isCompleted && st.loanStatuses.length === 0) {
-                  <button class="inst-icon-btn" type="button"
-                    [matTooltip]="'INSTALLMENTS.MARK_PAID' | translate"
-                    [attr.aria-label]="'INSTALLMENTS.MARK_PAID' | translate"
-                    (click)="markAsPaid(item)">
-                    ✅
-                  </button>
-                }
-                <button class="inst-icon-btn" type="button"
-                  [matTooltip]="'INSTALLMENTS.EDIT' | translate"
-                  [attr.aria-label]="'INSTALLMENTS.EDIT' | translate"
-                  (click)="openEdit(item)">✏️</button>
-                <button class="inst-icon-btn inst-icon-btn-del" type="button" title="עריכה"
-                  [matTooltip]="'INSTALLMENTS.DELETE' | translate"
-                  [attr.aria-label]="'INSTALLMENTS.DELETE' | translate"
-                  (click)="confirmDelete(item.id)">
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"
-                    stroke-width="2.5" stroke-linecap="round">
-                    <line x1="18" y1="6" x2="6" y2="18"/>
-                    <line x1="6" y1="6" x2="18" y2="18"/>
-                  </svg>
-                </button>
-              </div>
-            </div>
-
-            <!-- progress bar -->
-            <div class="inst-progress-wrap">
-              <div class="inst-progress-track">
-                <div class="inst-progress-fill"
-                  [style.width.%]="st.progressPct"
-                  [style.background]="item.color">
+    } @else {
+      @if (viewMode === 'grid') {
+        <!-- Grid View (Cards) -->
+        <div class="row g-4">
+          @for (item of items; track item.id) {
+            @let st = statusOf(item.id);
+            <div class="col-12 col-lg-6">
+              <div class="inst-card" [class.inst-card-done]="st.isCompleted">
+                <div class="inst-color-bar" [style.background]="item.color"></div>
+                <div class="inst-card-header">
+                  <span class="inst-card-name">{{ item.name }}</span>
+                  <div class="d-flex gap-1">
+                    @if (st.paidInstallments > 0 && st.loanStatuses.length === 0) {
+                      <button class="inst-icon-btn" type="button" matTooltip="ביטול תשלום" (click)="undoPayment(item)">↺</button>
+                    }
+                    @if (!st.isCompleted && st.loanStatuses.length === 0) {
+                      <button class="inst-icon-btn" type="button" [matTooltip]="'INSTALLMENTS.MARK_PAID' | translate" (click)="markAsPaid(item)">✅</button>
+                    }
+                    <button class="inst-icon-btn" type="button" [matTooltip]="'INSTALLMENTS.EDIT' | translate" (click)="openEdit(item)">✏️</button>
+                    <button class="inst-icon-btn inst-icon-btn-del" type="button" [matTooltip]="'INSTALLMENTS.DELETE' | translate" (click)="confirmDelete(item.id)">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                  </div>
                 </div>
-              </div>
-              <div class="d-flex justify-content-between mt-1">
-                <span class="inst-pct-label cursor-pointer" (click)="toggleTopHistory(item.id)">
-                  {{ st.progressPct }}%
-                  <span class="ms-1 inst-toggle-arrow">{{ expandedLoans['top_' + item.id] ? '▼' : '▶' }}</span>
-                </span>
-                @if (st.isCompleted) {
-                  <span class="inst-done-badge">✅ {{ 'INSTALLMENTS.COMPLETED' | translate }}</span>
-                } @else {
-                  <span class="inst-months-left">
-                    {{ st.monthsLeft }} {{ 'INSTALLMENTS.MONTHS_LEFT' | translate }}
-                  </span>
-                }
-              </div>
-            </div>
 
-            <!-- Main installment payment history -->
-            @if (expandedLoans['top_' + item.id] && item.payments?.length) {
-              <div class="inst-history-popup inst-history-text bg-light p-2 mb-2 rounded shadow-sm border">
-                <div class="fw-bold mb-1 border-bottom pb-1">{{ 'INSTALLMENTS.PAYMENT_HISTORY' | translate }}</div>
-                @for (p of item.payments; track $index) {
-                  <div class="text-muted border-bottom-dashed py-1 d-flex justify-content-between">
-                    <span>✓ {{ p.date | date:'shortDate' }} (תשלום {{ $index + 1 }})</span>
-                    <span class="fw-bold">{{ p.amount | number:'1.0-0' }} ₪</span>
+                <div class="inst-progress-wrap">
+                  <div class="inst-progress-track">
+                    <div class="inst-progress-fill" [style.width.%]="st.progressPct" [style.background]="item.color"></div>
+                  </div>
+                  <div class="d-flex justify-content-between mt-1">
+                    <span class="inst-pct-label cursor-pointer" (click)="toggleTopHistory(item.id)">
+                      {{ st.progressPct }}%
+                      <span class="ms-1 inst-toggle-arrow">{{ expandedLoans['top_' + item.id] ? '▼' : '▶' }}</span>
+                    </span>
+                    @if (st.isCompleted) {
+                      <span class="inst-done-badge">✅ {{ 'INSTALLMENTS.COMPLETED' | translate }}</span>
+                    } @else {
+                      <span class="inst-months-left">{{ st.monthsLeft }} {{ 'INSTALLMENTS.MONTHS_LEFT' | translate }}</span>
+                    }
+                  </div>
+                </div>
+
+                <!-- היסטוריית תשלומים ראשית (מוצגת בלחיצה על האחוזים) -->
+                @if (expandedLoans['top_' + item.id] && item.payments?.length) {
+                  <div class="inst-history-popup inst-history-text bg-light p-2 mb-2 rounded shadow-sm border">
+                    <div class="fw-bold mb-1 border-bottom pb-1">{{ 'INSTALLMENTS.PAYMENT_HISTORY' | translate }}</div>
+                    @for (p of item.payments; track $index) {
+                      <div class="text-muted border-bottom-dashed py-1 d-flex justify-content-between">
+                        <span>✓ {{ p.date | date:'shortDate' }} (תשלום {{ $index + 1 }})</span>
+                        <span class="fw-bold">{{ p.amount | number:'1.0-0' }} ₪</span>
+                      </div>
+                    }
                   </div>
                 }
-              </div>
-            }
 
-            <!-- amounts grid -->
-            <div class="inst-amounts">
-              <div class="inst-amount-cell">
-                <span class="inst-amount-label">{{ 'INSTALLMENTS.TOTAL' | translate }}</span>
-                <span class="inst-amount-val">{{ item.totalAmount | number:'1.0-0' }} ₪</span>
-              </div>
-              <div class="inst-amount-cell">
-                <span class="inst-amount-label">{{ 'INSTALLMENTS.DOWN_PAYMENT' | translate }}</span>
-                <span class="inst-amount-val">{{ item.downPayment | number:'1.0-0' }} ₪</span>
-              </div>
-              <div class="inst-amount-cell">
-                <span class="inst-amount-label">{{ 'INSTALLMENTS.PAID' | translate }}</span>
-                <span class="inst-amount-val inst-paid">{{ st.paidAmount | number:'1.0-0' }} ₪</span>
-              </div>
-              <div class="inst-amount-cell">
-                <span class="inst-amount-label">{{ 'INSTALLMENTS.REMAINING' | translate }}</span>
-                <span class="inst-amount-val" [class.inst-remaining]="!st.isCompleted">
-                  {{ st.remainingAmount | number:'1.0-0' }} ₪
-                </span>
-              </div>
-            </div>
+                <div class="inst-amounts">
+                  <div class="inst-amount-cell">
+                    <span class="inst-amount-label">{{ 'INSTALLMENTS.TOTAL' | translate }}</span>
+                    <span class="inst-amount-val">{{ item.totalAmount | number:'1.0-0' }} ₪</span>
+                  </div>
+                  <div class="inst-amount-cell">
+                    <span class="inst-amount-label">{{ 'INSTALLMENTS.MONTHLY' | translate }}</span>
+                    <span class="inst-amount-val text-primary">{{ item.monthlyPayment | number:'1.0-0' }} ₪</span>
+                  </div>
+                  <div class="inst-amount-cell">
+                    <span class="inst-amount-label">{{ 'INSTALLMENTS.PAID' | translate }}</span>
+                    <span class="inst-amount-val inst-paid">{{ st.paidAmount | number:'1.0-0' }} ₪</span>
+                  </div>
+                  <div class="inst-amount-cell">
+                    <span class="inst-amount-label">{{ 'INSTALLMENTS.REMAINING' | translate }}</span>
+                    <span class="inst-amount-val inst-remaining">{{ st.remainingAmount | number:'1.0-0' }} ₪</span>
+                  </div>
+                </div>
 
-            <!-- individual loans progress -->
-            @if (st.loanStatuses.length > 0) {
-              <div class="inst-loans-detail mt-3 border-top pt-2">
-                <div class="fw-bold mb-2 text-muted">{{ 'INSTALLMENTS.LOANS_DETAIL' | translate }}</div>
-                @for (ls of st.loanStatuses; track ls.loan.id) {
-                  <div class="mb-2">
-                    <div class="d-flex justify-content-between align-items-center mb-1">
-                      <span class="fw-medium cursor-pointer" (click)="toggleLoanHistory(ls.loan.id)">
-                        {{ ls.progressPct }}% - {{ ls.loan.description || 'הלוואה' }}
-                        <small class="text-muted ms-1">({{ ls.monthsLeft }} חודשים נותרו)</small>
-                        <span class="ms-1 inst-toggle-arrow">{{ expandedLoans[ls.loan.id] ? '▼' : '▶' }}</span>
-                      </span>
-                      <div class="d-flex align-items-center gap-2">
-                        <span class="text-muted">{{ ls.paidAmount | number:'1.0-0' }} / {{ ls.loan.totalLoanAmount | number:'1.0-0' }} ₪</span>
-                        <div class="d-flex gap-1">
-                          @if (ls.paidInstallments > 0) {
-                            <button class="btn btn-link p-0 text-muted" type="button" 
-                              matTooltip="ביטול תשלום אחרון" (click)="undoPayment(item, ls.loan.id)">↺</button>
-                          }
-                        @if (!ls.isCompleted) {
-                          <button class="btn btn-link p-0 text-success inst-line-height-reset" type="button" (click)="markAsPaid(item, ls.loan)">✅</button>
-                        }
+                <!-- פירוט הלוואות בתוך הכרטיס -->
+                @if (st.loanStatuses.length > 0) {
+                  <div class="inst-loans-detail mt-3 border-top pt-2">
+                    <div class="fw-bold mb-2 text-muted">{{ 'INSTALLMENTS.LOANS_DETAIL' | translate }}</div>
+                    @for (ls of st.loanStatuses; track ls.loan.id) {
+                      <div class="mb-2">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                          <span class="fw-medium cursor-pointer" (click)="toggleLoanHistory(ls.loan.id)">
+                            {{ ls.progressPct }}% - {{ ls.loan.description || 'הלוואה' }}
+                            <small class="text-muted ms-1">({{ ls.monthsLeft }} חודשים נותרו)</small>
+                            <span class="ms-1 inst-toggle-arrow">{{ expandedLoans[ls.loan.id] ? '▼' : '▶' }}</span>
+                          </span>
+                          <div class="d-flex align-items-center gap-2">
+                            <span class="text-muted small">{{ ls.paidAmount | number:'1.0-0' }} / {{ ls.loan.totalLoanAmount | number:'1.0-0' }} ₪</span>
+                            <div class="d-flex gap-1">
+                              @if (ls.paidInstallments > 0) {
+                                <button class="btn btn-link p-0 text-muted inst-line-height-reset" type="button" 
+                                  matTooltip="ביטול תשלום" (click)="undoPayment(item, ls.loan.id)">↺</button>
+                              }
+                              @if (!ls.isCompleted) {
+                                <button class="btn btn-link p-0 text-success inst-line-height-reset" type="button" (click)="markAsPaid(item, ls.loan)">✅</button>
+                              }
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </div>
-                    <div class="progress inst-mini-progress-track">
-                      <div class="progress-bar" [style.width.%]="ls.progressPct" [style.background]="item.color"></div>
-                    </div>
-                    
-                    <!-- Loan Payment History -->
-                    @if (expandedLoans[ls.loan.id] && ls.loan.payments?.length) {
-                      <div class="bg-light inst-history-text p-1 mt-1 rounded shadow-sm">
-                        @for (p of ls.loan.payments; track $index) {
-                          <div class="text-muted border-bottom-dashed py-1 d-flex justify-content-between">
-                            <span>✓ {{ p.date | date:'shortDate' }} (תשלום {{ $index + 1 }})</span>
-                            <span class="fw-bold">{{ p.amount | number:'1.0-0' }} ₪</span>
+                        <div class="progress inst-mini-progress-track">
+                          <div class="progress-bar" [style.width.%]="ls.progressPct" [style.background]="item.color"></div>
+                        </div>
+                        
+                        <!-- היסטוריית תשלומים עבור הלוואה ספציפית -->
+                        @if (expandedLoans[ls.loan.id] && ls.loan.payments?.length) {
+                          <div class="bg-light inst-history-text p-2 mt-2 rounded shadow-sm border">
+                            <div class="fw-bold mb-1 border-bottom pb-1">{{ 'INSTALLMENTS.PAYMENT_HISTORY' | translate }}</div>
+                            @for (p of ls.loan.payments; track $index) {
+                              <div class="text-muted border-bottom-dashed py-1 d-flex justify-content-between">
+                                <span>✓ {{ p.date | date:'shortDate' }} (תשלום {{ $index + 1 }})</span>
+                                <span class="fw-bold">{{ p.amount | number:'1.0-0' }} ₪</span>
+                              </div>
+                            }
                           </div>
                         }
                       </div>
                     }
                   </div>
                 }
+
+                <div class="inst-card-footer mt-auto pt-3 border-top d-flex justify-content-between">
+                  <small class="text-muted">{{ 'INSTALLMENTS.END_DATE' | translate }}: <strong>{{ st.endDate }}</strong></small>
+                  <small class="text-muted">{{ 'INSTALLMENTS.INSTALLMENTS' | translate }}: <strong>{{ st.paidInstallments }}/{{ st.totalInstallments }}</strong></small>
+                </div>
               </div>
-            }
-
-            <!-- footer -->
-            <div class="inst-card-footer">
-              <span>{{ 'INSTALLMENTS.MONTHLY' | translate }}: <strong>{{ item.monthlyPayment | number:'1.0-0' }} ₪</strong></span>
-              <span>{{ 'INSTALLMENTS.INSTALLMENTS' | translate }}: <strong>{{ st.paidInstallments }}/{{ st.totalInstallments }}</strong></span>
-              <span>{{ 'INSTALLMENTS.END_DATE' | translate }}: <strong>{{ st.endDate }}</strong></span>
             </div>
-            @if (item.manualPaidCount > 0 && item.lastManualPaymentDate) {
-              <div class="inst-last-paid">🗓️ {{ 'INSTALLMENTS.LAST_MANUAL_PAYMENT' | translate }}: <strong>{{ item.lastManualPaymentDate | date:'shortDate' }}</strong></div>
-            }
+          }
+        </div>
+      } @else {
+        <!-- Table View -->
+        <div class="inst-table-container">
+          <table class="inst-table">
+            <thead>
+              <tr>
+                <th style="width: 40px"></th>
+                <th (click)="setSort('name')" class="cursor-pointer">
+                  {{ 'INSTALLMENTS.NAME' | translate }} @if(sortKey==='name'){ {{sortDir==='asc'?'↑':'↓'}} }
+                </th>
+                <th (click)="setSort('total')" class="cursor-pointer text-center">
+                  {{ 'INSTALLMENTS.TOTAL_AMOUNT' | translate }} @if(sortKey==='total'){ {{sortDir==='asc'?'↑':'↓'}} }
+                </th>
+                <th (click)="setSort('monthly')" class="cursor-pointer text-center">
+                  {{ 'INSTALLMENTS.MONTHLY' | translate }} @if(sortKey==='monthly'){ {{sortDir==='asc'?'↑':'↓'}} }
+                </th>
+                <th class="text-center">{{ 'INSTALLMENTS.PAID' | translate }}</th>
+                <th class="text-center">{{ 'INSTALLMENTS.REMAINING' | translate }}</th>
+                <th (click)="setSort('progress')" class="cursor-pointer text-center">
+                  {{ 'INSTALLMENTS.PROGRESS' | translate }} @if(sortKey==='progress'){ {{sortDir==='asc'?'↑':'↓'}} }
+                </th>
+                <th (click)="setSort('endDate')" class="cursor-pointer text-center">
+                  {{ 'INSTALLMENTS.END_DATE' | translate }} @if(sortKey==='endDate'){ {{sortDir==='asc'?'↑':'↓'}} }
+                </th>
+                <th class="text-center" style="min-width: 120px">{{ 'CASH_FLOW.SAVE' | translate }} / {{ 'INSTALLMENTS.EDIT' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (st of sortedStatuses; track st.installment.id) {
+                <tr [class.opacity-50]="st.isCompleted" [class.inst-row-expanded]="expandedLoans['top_' + st.installment.id]">
+                  <td class="text-center p-0">
+                    <button class="btn btn-link btn-sm text-muted p-0" (click)="toggleTopHistory(st.installment.id)">
+                      <i class="bi" [class.bi-chevron-down]="expandedLoans['top_' + st.installment.id]" [class.bi-chevron-left]="!expandedLoans['top_' + st.installment.id]"></i>
+                    </button>
+                  </td>
+                  <td class="fw-bold cursor-pointer" (click)="toggleTopHistory(st.installment.id)">
+                    <div class="d-flex align-items-center">
+                      <div class="me-2" [style.width.px]="4" [style.height.px]="20" [style.background-color]="st.installment.color"></div>
+                      {{ st.installment.name }}
+                    </div>
+                  </td>
+                  <td class="text-center">{{ st.installment.totalAmount | number:'1.0-0' }} ₪</td>
+                  <td class="text-center text-primary fw-medium">{{ st.installment.monthlyPayment | number:'1.0-0' }} ₪</td>
+                  <td class="text-center text-success">{{ st.paidAmount | number:'1.0-0' }} ₪</td>
+                  <td class="text-center text-danger">{{ st.remainingAmount | number:'1.0-0' }} ₪</td>
+                  <td class="cursor-pointer" (click)="toggleTopHistory(st.installment.id)">
+                    <div class="d-flex align-items-center justify-content-center" style="min-width: 120px">
+                      <div class="progress flex-grow-1 me-2" style="height: 6px;">
+                        <div class="progress-bar" [style.width.%]="st.progressPct" [style.background-color]="st.installment.color"></div>
+                      </div>
+                      <small>{{ st.progressPct }}%</small>
+                    </div>
+                  </td>
+                  <td class="text-center cursor-pointer" (click)="toggleTopHistory(st.installment.id)">{{ st.endDate }}</td>
+                  <td class="text-center">
+                    <div class="d-flex justify-content-center gap-2">
+                      <!-- Quick Actions for simple installments -->
+                      @if (st.loanStatuses.length === 0) {
+                        @if (st.paidInstallments > 0) {
+                          <button class="btn btn-link btn-sm p-0 text-muted" (click)="undoPayment(st.installment)" matTooltip="ביטול תשלום">↺</button>
+                        }
+                        @if (!st.isCompleted) {
+                          <button class="btn btn-link btn-sm p-0 text-success" (click)="markAsPaid(st.installment)" [matTooltip]="'INSTALLMENTS.MARK_PAID' | translate">✅</button>
+                        }
+                      }
+                      <button class="btn btn-link btn-sm p-0" (click)="openEdit(st.installment)" [matTooltip]="'INSTALLMENTS.EDIT' | translate">✏️</button>
+                      <button class="btn btn-link btn-sm p-0 text-danger" (click)="confirmDelete(st.installment.id)" [matTooltip]="'INSTALLMENTS.DELETE' | translate">✕</button>
+                    </div>
+                  </td>
+                </tr>
 
-            @if (item.notes) {
-              <div class="inst-notes">📝 {{ item.notes }}</div>
-            }
+                <!-- Expanded Detail Row -->
+                @if (expandedLoans['top_' + st.installment.id]) {
+                  <tr class="inst-detail-row">
+                    <td colspan="9">
+                      <div class="p-3 inst-detail-content">
+                        <div class="row">
+                          <!-- Payment History -->
+                          <div class="col-md-6 border-start">
+                            <h6 class="small fw-bold mb-2 text-muted uppercase">{{ 'INSTALLMENTS.PAYMENT_HISTORY' | translate }}</h6>
+                            @if (st.installment.payments?.length) {
+                              <div class="inst-history-list bg-light p-2 rounded">
+                                @for (p of st.installment.payments; track $index) {
+                                  <div class="d-flex justify-content-between py-1 border-bottom-dashed small">
+                                    <span>✓ {{ p.date | date:'shortDate' }} (תשלום {{ $index + 1 }})</span>
+                                    <span class="fw-bold">{{ p.amount | number:'1.0-0' }} ₪</span>
+                                  </div>
+                                }
+                              </div>
+                            } @else {
+                              <span class="text-muted small">אין היסטוריית תשלומים ידנית</span>
+                            }
+                          </div>
 
-          </div>
+                          <!-- Loans Detail (if any) -->
+                          <div class="col-md-6">
+                            @if (st.loanStatuses.length > 0) {
+                              <h6 class="small fw-bold mb-2 text-muted uppercase">{{ 'INSTALLMENTS.LOANS_DETAIL' | translate }}</h6>
+                              @for (ls of st.loanStatuses; track ls.loan.id) {
+                                <div class="mb-3 p-2 rounded bg-opacity-10 bg-secondary">
+                                  <div class="d-flex justify-content-between align-items-center mb-2 small">
+                                    <span class="fw-bold cursor-pointer" (click)="toggleLoanHistory(ls.loan.id)">
+                                      {{ ls.loan.description || 'הלוואה' }} ({{ ls.progressPct }}%)
+                                      <span class="ms-1 inst-toggle-arrow">{{ expandedLoans[ls.loan.id] ? '▼' : '▶' }}</span>
+                                    </span>
+                                    <div class="d-flex gap-2">
+                                      @if (ls.paidInstallments > 0) {
+                                        <button class="btn btn-link p-0 text-muted" (click)="undoPayment(st.installment, ls.loan.id)">↺</button>
+                                      }
+                                      @if (!ls.isCompleted) {
+                                        <button class="btn btn-link p-0 text-success" (click)="markAsPaid(st.installment, ls.loan)">✅</button>
+                                      }
+                                    </div>
+                                  </div>
+                                  <div class="progress" style="height: 4px;">
+                                    <div class="progress-bar" [style.width.%]="ls.progressPct" [style.background-color]="st.installment.color"></div>
+                                  </div>
+
+                                  <!-- Loan Payment History inside Table Expanded Row -->
+                                  @if (expandedLoans[ls.loan.id] && ls.loan.payments?.length) {
+                                    <div class="bg-white inst-history-text p-2 mt-2 rounded shadow-sm border">
+                                      @for (p of ls.loan.payments; track $index) {
+                                        <div class="text-muted border-bottom-dashed py-1 d-flex justify-content-between">
+                                          <span>✓ {{ p.date | date:'shortDate' }} (תשלום {{ $index + 1 }})</span>
+                                          <span class="fw-bold">{{ p.amount | number:'1.0-0' }} ₪</span>
+                                        </div>
+                                      }
+                                    </div>
+                                  }
+                                </div>
+                              }
+                            }
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              }
+            </tbody>
+          </table>
         </div>
       }
-    </div>
+    }
   </div>
-
 </div>
 
 <!-- ════ FORM DIALOG ════ -->

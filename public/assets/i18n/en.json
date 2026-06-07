@@ -142,6 +142,8 @@
   },
   "INSTALLMENTS": {
     "TITLE": "Installment Management",
+    "VIEW_TABLE": "Table View",
+    "VIEW_GRID": "Grid View",
     "ADD": "Add New Installment",
     "NAME": "Name / Product",
     "TOTAL_AMOUNT": "Total Amount",

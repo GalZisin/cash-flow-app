@@ -28,7 +28,8 @@ const EMPTY_FORM = (): Omit<Installment, 'id'> => ({
     notes: '',
     manualPaidCount: 0,    // הוספת ערך ברירת מחדל לשדה החדש
     lastManualPaymentDate: undefined, // הוספת ערך ברירת מחדל
-    loanComponents: []
+    loanComponents: [],
+    payments: []
 });
 
 @Component({
@@ -45,6 +46,9 @@ export class InstallmentsComponent implements OnInit {
     items: Installment[] = [];
     statuses: InstallmentStatus[] = [];
     showForm = false;
+    viewMode: 'grid' | 'table' = 'grid';
+    sortKey: string = 'endDate';
+    sortDir: 'asc' | 'desc' = 'asc';
     editingId: string | null = null;
     form = EMPTY_FORM();
     pendingDeleteId: string | null = null;
@@ -87,6 +91,35 @@ export class InstallmentsComponent implements OnInit {
 
     get activeCount(): number {
         return this.statuses.filter(s => !s.isCompleted).length;
+    }
+
+    /** מחזירה את הסטטוסים ממוינים לפי הבחירה בטבלה */
+    get sortedStatuses(): InstallmentStatus[] {
+        return [...this.statuses].sort((a, b) => {
+            let v1: any, v2: any;
+            if (this.sortKey === 'name') { v1 = a.installment.name; v2 = b.installment.name; }
+            else if (this.sortKey === 'total') { v1 = a.installment.totalAmount; v2 = b.installment.totalAmount; }
+            else if (this.sortKey === 'monthly') { v1 = a.installment.monthlyPayment; v2 = b.installment.monthlyPayment; }
+            else if (this.sortKey === 'progress') { v1 = a.progressPct; v2 = b.progressPct; }
+            else { v1 = a.endDate; v2 = b.endDate; }
+
+            const res = (v1 < v2) ? -1 : (v1 > v2) ? 1 : 0;
+            return this.sortDir === 'asc' ? res : -res;
+        });
+    }
+
+    /** שינוי עמודת המיון */
+    setSort(key: string) {
+        if (this.sortKey === key) {
+            this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
+        } else {
+            this.sortKey = key;
+            this.sortDir = 'asc';
+        }
+    }
+
+    toggleView() {
+        this.viewMode = this.viewMode === 'grid' ? 'table' : 'grid';
     }
 
     statusOf(id: string): InstallmentStatus {
