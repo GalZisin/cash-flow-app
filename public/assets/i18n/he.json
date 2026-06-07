@@ -77,7 +77,8 @@
     "AI_SCENARIO_ANALYSIS": "🤖 ניתוח AI",
     "MONTH_COL": "חודש",
     "BALANCE_COL": "יתרה",
-    "REFRESH": "רענן"
+    "REFRESH": "רענן",
+    "DARK_MODE": "מצב כהה"
   },
   "INVESTMENTS": {
     "TITLE": "מעקב השקעות",
@@ -184,6 +185,30 @@
     "ADD_FIRST": "הוסף פריסה ראשונה",
     "EMPTY": "אין פריסות תשלומים להצגה",
     "MONTHS": "חודשים",
-    "INSTALLMENTS": "פריסות"
+    "INSTALLMENTS": "פריסות",
+    "INSTALLMENTS_COUNT": "מספר תשלומים",
+    "MARK_PAID": "סמן כבוצע",
+    "ADDED": "פריסה נוספה בהצלחה ✅",
+    "UPDATED": "פריסה עודכנה בהצלחה ✅",
+    "DELETED": "הפריסה נמחקה",
+    "INVALID_DOWN_PAYMENT": "המקדמה לא יכולה לעלות על הסכום הכולל",
+    "INVALID_FORM_FIELDS": "אנא מלא את כל שדות החובה בערכים חיוביים",
+    "LAST_MANUAL_PAYMENT": "תשלום ידני אחרון",
+    "MARK_PAID_TITLE": "סמן תשלום כבוצע",
+    "PAYMENT_DATE": "תאריך תשלום",
+    "CONFIRM_MARK_PAID": "אישור סימון כבוצע",
+    "MARKED_PAID_SUCCESS": "התשלום סומן כבוצע בהצלחה ✅",
+    "LOANS_DETAIL": "פירוט הלוואות",
+    "LOANS_DETAIL_FORM": "פרטי הלוואה / תשלום",
+    "ADD_LOAN_COMPONENT": "הוסף הלוואה",
+    "TOTAL_LOAN_AMOUNT": "סכום הלוואה",
+    "REMAINING_TO_INSTALL": "נותר לפריסה",
+    "UNDO_PAYMENT": "ביטול תשלום",
+    "UNDO_MSG": "האם אתה בטוח שברצונך לבטל את התשלום האחרון?",
+    "CONFIRM_UNDO": "כן, בטל",
+    "WARNING_TITLE": "אזהרת תזרים מזומנים",
+    "WARNING_MESSAGE": "הוספת/עדכון פריסה זו עלולה לגרום לחריגות בתזרים המזומנים בחודשים הבאים:",
+    "WARNING_PROCEED_QUESTION": "האם ברצונך להמשיך למרות האזהרות?",
+    "WARNING_PROCEED_BUTTON": "כן, המשך"
   }
 }

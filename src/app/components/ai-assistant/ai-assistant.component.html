@@ -17,6 +17,17 @@
         {{ 'AI.TAB_SCENARIO' | translate }}
       </a>
     </li>
+    <!-- Theme Toggle -->
+    <li class="nav-item ms-auto d-flex align-items-center px-3">
+      <div class="form-check form-switch mb-0">
+        <input class="form-check-input" type="checkbox" role="switch" id="themeToggle" 
+               [checked]="themeService.isDarkMode()" 
+               (change)="themeService.toggleTheme()">
+        <label class="form-check-label small text-muted ms-1" for="themeToggle">
+          {{ 'AI.DARK_MODE' | translate }}
+        </label>
+      </div>
+    </li>
   </ul>
 
   <!-- ===================== CHAT TAB ===================== -->
@@ -114,7 +125,7 @@
             @if (summary && !summaryLoading) {
               <div class="summary-item">
                 <span class="label">{{ 'AI.BALANCE' | translate }}</span>
-                <span class="value text-success">₪{{ summary.currentBalance | number:'1.0-0' }}</span>
+                <span class="value text-success">₪{{ (realCurrentBalance || summary.currentBalance) | number:'1.0-0' }}</span>
               </div>
               <div class="summary-item">
                 <span class="label">{{ 'AI.AVG_INCOME' | translate }}</span>
@@ -132,7 +143,7 @@
               </div>
               <hr class="my-2">
               <small class="text-muted d-block mb-1 fw-bold">{{ 'AI.FORECAST' | translate }}</small>
-              @for (f of summary.forecast; track f.month) {
+              @for (f of displayForecast; track f.month) {
                 <div class="summary-item">
                   <span class="label">{{ f.month }}</span>
                   <span class="value">₪{{ f.projectedBalance | number:'1.0-0' }}</span>

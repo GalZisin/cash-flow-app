@@ -34,8 +34,13 @@ function buildSummary({ cashFlow, installments = [], investments = [], defaults 
   const avgMonthlySavings = avgMonthlyIncome - avgMonthlyExpenses;
 
   // --- Balance Trend ---
+  const now = new Date();
+  const nowStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const currentMonthEntry = months.find(m => m.month.startsWith(nowStr));
+
   const balanceStart = oldest.startingBalance;
   const balanceEnd = latest.endingBalance;
+  const currentBalance = currentMonthEntry ? currentMonthEntry.endingBalance : balanceEnd;
   const balanceDelta = balanceEnd - balanceStart;
   const monthCount = months.length;
 
@@ -73,8 +78,8 @@ function buildSummary({ cashFlow, installments = [], investments = [], defaults 
 
   // --- 6-month Forecast (simple linear projection) ---
   const forecast = [];
-  let projectedBalance = balanceEnd;
-  const forecastDate = new Date(latest.month);
+  let projectedBalance = currentBalance;
+  let forecastDate = new Date(now.getFullYear(), now.getMonth(), 1);
   for (let i = 1; i <= 6; i++) {
     forecastDate.setMonth(forecastDate.getMonth() + 1);
     projectedBalance += avgMonthlySavings;
@@ -90,7 +95,7 @@ function buildSummary({ cashFlow, installments = [], investments = [], defaults 
       to: latest.month?.substring(0, 7),
       months: monthCount
     },
-    currentBalance: balanceEnd,
+    currentBalance: currentBalance,
     balanceGrowth: Math.round(balanceDelta),
     income: {
       average: Math.round(avgMonthlyIncome),

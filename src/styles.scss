@@ -420,3 +420,86 @@ app-cash-flow-table .actions {
         background-color: rgba(0, 0, 0, 0.04);
     }
 }
+
+/* ---------- VS Code Dark Modern Theme Overrides ---------- */
+[data-bs-theme="dark"], .dark-mode {
+    --bs-body-bg: #1f1f1f;           /* Editor Background */
+    --bs-body-color: #cccccc;        /* Foreground text */
+    --bs-secondary-bg: #181818;      /* Sidebar / Activity Bar */
+    --bs-tertiary-bg: #252526;       /* Cards / Popups */
+    --bs-border-color: #2b2b2b;      /* Subtle borders */
+    --bs-primary: #007acc;           /* VS Code Blue */
+    --bs-primary-rgb: 0, 122, 204;
+
+    background-color: var(--bs-body-bg) !important;
+    color: var(--bs-body-color) !important;
+
+    .card {
+        background-color: var(--bs-tertiary-bg);
+        border-color: var(--bs-border-color);
+        color: var(--bs-body-color);
+        .card-header {
+            background-color: rgba(255, 255, 255, 0.03);
+            border-bottom-color: var(--bs-border-color);
+            color: #ffffff;
+        }
+    }
+
+    .nav-tabs {
+        border-bottom-color: var(--bs-border-color);
+        .nav-link {
+            color: #858585;
+            border: none;
+            &:hover:not(.active) {
+                background-color: rgba(255, 255, 255, 0.05);
+                color: #cccccc;
+            }
+            &.active {
+                background-color: transparent;
+                color: #ffffff;
+                border-bottom: 2px solid #007acc;
+            }
+        }
+    }
+
+    /* AI Assistant Specific Dark Styles */
+    .history-sidebar, .summary-sidebar {
+        background-color: #181818 !important;
+        border-color: var(--bs-border-color) !important;
+    }
+
+    .chat-panel {
+        background-color: #1f1f1f;
+    }
+
+    .bubble {
+        &.assistant-message {
+            background-color: #2d2d30;
+            color: #cccccc;
+            border: 1px solid #333;
+        }
+        &.user-message {
+            background-color: #0e639c;
+            color: #ffffff;
+            border: none;
+        }
+    }
+
+    .conv-item {
+        border-bottom-color: #2b2b2b;
+        &:hover { background-color: #2a2d2e; }
+        &.active { background-color: #37373d; border-right: 2px solid #007acc; }
+    }
+
+    /* Material Table Dark Overrides */
+    .mat-mdc-table {
+        background-color: transparent !important;
+    }
+    .mat-mdc-header-row {
+        background-color: #333333 !important;
+    }
+    .mat-mdc-row {
+        background-color: #252526 !important;
+        &:hover { background-color: #2a2d2e !important; }
+    }
+}

@@ -1,10 +1,12 @@
-import { Component, OnInit, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, AfterViewChecked, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AiService, ChatMessage, FinancialSummary, ScenarioRequest, ScenarioResult } from '../../services/ai.service';
 import { ConversationService, Conversation } from '../../services/conversation.service';
 import { LanguageService } from '../../services/language.service';
+import { CashFlowService } from '../../services/cash-flow.service';
+import { ThemeService } from '../../services/theme.service';
 
 type ActiveTab = 'chat' | 'analysis' | 'scenario';
 
@@ -42,19 +44,34 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
   scenarioResult: ScenarioResult | null = null;
   scenarioLoading = false;
 
+  realCurrentBalance = 0;
+
   private shouldScroll = false;
 
-  constructor(
-    private ai: AiService,
-    private convService: ConversationService,
-    public lang: LanguageService,
-    private translate: TranslateService
-  ) { }
+  // הגישה החדשה: שימוש ב-inject() במקום ב-Constructor
+  private ai = inject(AiService);
+  private convService = inject(ConversationService);
+  public lang = inject(LanguageService);
+  private translate = inject(TranslateService);
+  private cashFlowService = inject(CashFlowService);
+  public themeService = inject(ThemeService);
+
+  constructor() { }
 
   ngOnInit() {
     this.loadSummary();
     this.convService.load().subscribe();
     this.convService.items$.subscribe(items => this.conversations = items);
+
+    // האזנה לשינויים בתזרים כדי לעדכן את היתרה האמיתית להיום
+    this.cashFlowService.cashFlowMonths$.subscribe(months => {
+      const now = new Date();
+      const nowStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`; // פורמט YYYY-MM מקומי
+      const currentMonth = months.find((m: any) => m.month.startsWith(nowStr));
+      if (currentMonth) {
+        this.realCurrentBalance = currentMonth.endingBalance;
+      }
+    });
   }
 
   ngAfterViewChecked() {
@@ -98,6 +115,34 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
   }
 
   /**
+   * מחזירה את התחזית החל מהחודש הנוכחי בלבד (עד 6 חודשים קדימה)
+   */
+  get displayForecast() {
+    if (!this.summary?.forecast || this.summary.forecast.length === 0) return [];
+
+    const now = new Date();
+    const nowStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+    // 1. הסרת כפילויות לפי חודש (למשל אם מגיע פעמיים 2029-03) ונרמול הפורמט ל-YYYY-MM
+    const uniqueMap = new Map<string, any>();
+    this.summary.forecast.forEach(f => {
+      const monthKey = f.month.trim().substring(0, 7);
+      // אם יש כפילות, נשמור את הרשומה האחרונה שמופיעה
+      uniqueMap.set(monthKey, { ...f, month: monthKey });
+    });
+
+    // 2. המרה למערך ומיון כרונולוגי (מהקרוב לרחוק)
+    const sorted = Array.from(uniqueMap.values()).sort((a, b) => a.month.localeCompare(b.month));
+
+    // 3. סינון נתונים החל מהחודש הנוכחי והלאה
+    const filtered = sorted.filter(f => f.month >= nowStr);
+
+    // 4. החזרת 6 חודשים (אם אין נתונים עתידיים בכלל, נציג את 6 הראשונים הזמינים)
+    const result = filtered.length > 0 ? filtered : sorted;
+    return result.slice(0, 6);
+  }
+
+  /**
    * Reduces the financial summary to essential data based on the user's question.
    * This implements a RAG-like filtering to minimize token usage and improve response accuracy.
    */
@@ -106,7 +151,7 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
 
     const q = query.toLowerCase();
     const context: any = {
-      currentBalance: this.summary.currentBalance,
+      currentBalance: this.realCurrentBalance || this.summary.currentBalance,
       monthlySavings: this.summary.monthlySavingsAvg
     };
 
@@ -118,7 +163,7 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
 
     if (isExpenseQuery) context.expenses = this.summary.expenses;
     if (isIncomeQuery) context.income = this.summary.income;
-    if (isForecastQuery) context.forecast = this.summary.forecast.slice(0, 3); // Send only next 3 months
+    if (isForecastQuery) context.forecast = this.displayForecast; // שולח את כל 6 החודשים שהוגדרו ב-displayForecast
     if (isDebtQuery) context.loans = this.summary.loans.map(l => ({ name: l.name, payment: l.monthlyPayment }));
 
     // Provide a high-level summary if no specific intent is detected

@@ -137,7 +137,8 @@
     "AI_SCENARIO_ANALYSIS": "🤖 AI Scenario Analysis",
     "MONTH_COL": "Month",
     "BALANCE_COL": "Balance",
-    "REFRESH": "Refresh"
+    "REFRESH": "Refresh",
+    "DARK_MODE": "Dark Mode"
   },
   "INSTALLMENTS": {
     "TITLE": "Installment Management",
