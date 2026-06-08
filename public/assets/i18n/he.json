@@ -43,7 +43,8 @@
     "SPECIAL_EXPENSES_TOTAL": "סה\"כ הוצאות מיוחדות",
     "ADDITIONAL_INCOMES_TOTAL": "סה\"כ הכנסות נוספות",
     "VISUAL_SUMMARY": "גרף",
-    "SAVINGS": "חיסכון"
+    "SAVINGS": "חיסכון",
+    "ROW_ACTIONS": "פעולות שורה"
   },
   "AI": {
     "TAB_CHAT": "💬 צ'אט",

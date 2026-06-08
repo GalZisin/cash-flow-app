@@ -5,11 +5,13 @@
     <div class="d-flex justify-content-between align-items-center mb-3">
       <span class="inst-page-title">{{ 'INSTALLMENTS.TITLE' | translate }}</span>
       <div class="d-flex gap-2">
-        <button class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-2" (click)="toggleView()">
+        <button class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-2" (click)="toggleView()"
+          [title]="(viewMode === 'grid' ? 'INSTALLMENTS.VIEW_TABLE' : 'INSTALLMENTS.VIEW_GRID') | translate"
+          [attr.aria-label]="(viewMode === 'grid' ? 'INSTALLMENTS.VIEW_TABLE' : 'INSTALLMENTS.VIEW_GRID') | translate">
           <i class="bi" [class.bi-table]="viewMode === 'grid'" [class.bi-grid-3x3-gap]="viewMode === 'table'"></i>
           {{ (viewMode === 'grid' ? 'INSTALLMENTS.VIEW_TABLE' : 'INSTALLMENTS.VIEW_GRID') | translate }}
         </button>
-        <button class="inst-add-btn" type="button" (click)="openAdd()">
+        <button class="inst-add-btn" type="button" (click)="openAdd()" [title]="'INSTALLMENTS.ADD' | translate" [attr.aria-label]="'INSTALLMENTS.ADD' | translate">
           <span>+</span> {{ 'INSTALLMENTS.ADD' | translate }}
         </button>
       </div>
@@ -51,7 +53,7 @@
       <div class="inst-empty">
         <div class="inst-empty-icon">🛒</div>
         <div class="inst-empty-text">{{ 'INSTALLMENTS.EMPTY' | translate }}</div>
-        <button class="inst-add-btn" type="button" (click)="openAdd()">
+        <button class="inst-add-btn" type="button" (click)="openAdd()" [title]="'INSTALLMENTS.ADD_FIRST' | translate" [attr.aria-label]="'INSTALLMENTS.ADD_FIRST' | translate">
           {{ 'INSTALLMENTS.ADD_FIRST' | translate }}
         </button>
       </div>
@@ -68,13 +70,13 @@
                   <span class="inst-card-name">{{ item.name }}</span>
                   <div class="d-flex gap-1">
                     @if (st.paidInstallments > 0 && st.loanStatuses.length === 0) {
-                      <button class="inst-icon-btn" type="button" matTooltip="ביטול תשלום" (click)="undoPayment(item)">↺</button>
+                      <button class="inst-icon-btn" type="button" [attr.title]="'INSTALLMENTS.UNDO_PAYMENT' | translate" [matTooltip]="'INSTALLMENTS.UNDO_PAYMENT' | translate" [attr.aria-label]="'INSTALLMENTS.UNDO_PAYMENT' | translate" (click)="undoPayment(item)">↺</button>
                     }
                     @if (!st.isCompleted && st.loanStatuses.length === 0) {
-                      <button class="inst-icon-btn" type="button" [matTooltip]="'INSTALLMENTS.MARK_PAID' | translate" (click)="markAsPaid(item)">✅</button>
+                      <button class="inst-icon-btn" type="button" [attr.title]="'INSTALLMENTS.MARK_PAID' | translate" [matTooltip]="'INSTALLMENTS.MARK_PAID' | translate" [attr.aria-label]="'INSTALLMENTS.MARK_PAID' | translate" (click)="markAsPaid(item)">✅</button>
                     }
-                    <button class="inst-icon-btn" type="button" [matTooltip]="'INSTALLMENTS.EDIT' | translate" (click)="openEdit(item)">✏️</button>
-                    <button class="inst-icon-btn inst-icon-btn-del" type="button" [matTooltip]="'INSTALLMENTS.DELETE' | translate" (click)="confirmDelete(item.id)">
+                    <button class="inst-icon-btn" type="button" [title]="'INSTALLMENTS.EDIT' | translate" [matTooltip]="'INSTALLMENTS.EDIT' | translate" [attr.aria-label]="'INSTALLMENTS.EDIT' | translate" (click)="openEdit(item)">✏️</button>
+                    <button class="inst-icon-btn inst-icon-btn-del" type="button" title="'INSTALLMENTS.DELETE' | translate" [matTooltip]="'INSTALLMENTS.DELETE' | translate" [attr.aria-label]="'INSTALLMENTS.DELETE' | translate" (click)="confirmDelete(item.id)">
                       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                     </button>
                   </div>
@@ -146,10 +148,10 @@
                             <div class="d-flex gap-1">
                               @if (ls.paidInstallments > 0) {
                                 <button class="btn btn-link p-0 text-muted inst-line-height-reset" type="button" 
-                                  matTooltip="ביטול תשלום" (click)="undoPayment(item, ls.loan.id)">↺</button>
+                                [attr.title]="'INSTALLMENTS.UNDO_PAYMENT' | translate" [matTooltip]="'INSTALLMENTS.UNDO_PAYMENT' | translate" [attr.aria-label]="'INSTALLMENTS.UNDO_PAYMENT' | translate" (click)="undoPayment(item, ls.loan.id)">↺</button>
                               }
                               @if (!ls.isCompleted) {
-                                <button class="btn btn-link p-0 text-success inst-line-height-reset" type="button" (click)="markAsPaid(item, ls.loan)">✅</button>
+                              <button class="btn btn-link p-0 text-success inst-line-height-reset" type="button" [title]="'INSTALLMENTS.MARK_PAID' | translate" [matTooltip]="'INSTALLMENTS.MARK_PAID' | translate" [attr.aria-label]="'INSTALLMENTS.MARK_PAID' | translate" (click)="markAsPaid(item, ls.loan)">✅</button>
                               }
                             </div>
                           </div>
@@ -189,7 +191,7 @@
           <table class="inst-table">
             <thead>
               <tr>
-                <th style="width: 40px"></th>
+                <th class="inst-col-history"></th>
                 <th (click)="setSort('name')" class="cursor-pointer">
                   {{ 'INSTALLMENTS.NAME' | translate }} @if(sortKey==='name'){ {{sortDir==='asc'?'↑':'↓'}} }
                 </th>
@@ -207,20 +209,20 @@
                 <th (click)="setSort('endDate')" class="cursor-pointer text-center">
                   {{ 'INSTALLMENTS.END_DATE' | translate }} @if(sortKey==='endDate'){ {{sortDir==='asc'?'↑':'↓'}} }
                 </th>
-                <th class="text-center" style="min-width: 120px">{{ 'CASH_FLOW.SAVE' | translate }} / {{ 'INSTALLMENTS.EDIT' | translate }}</th>
+                <th class="text-center inst-col-actions">{{ 'CASH_FLOW.SAVE' | translate }} / {{ 'INSTALLMENTS.EDIT' | translate }}</th>
               </tr>
             </thead>
             <tbody>
               @for (st of sortedStatuses; track st.installment.id) {
                 <tr [class.opacity-50]="st.isCompleted" [class.inst-row-expanded]="expandedLoans['top_' + st.installment.id]">
                   <td class="text-center p-0">
-                    <button class="btn btn-link btn-sm text-muted p-0" (click)="toggleTopHistory(st.installment.id)">
+                    <button class="btn btn-link btn-sm text-muted p-0" (click)="toggleTopHistory(st.installment.id)" title="'INSTALLMENTS.PAYMENT_HISTORY' | translate" [matTooltip]="'INSTALLMENTS.PAYMENT_HISTORY' | translate" [attr.aria-label]="'INSTALLMENTS.PAYMENT_HISTORY' | translate">
                       <i class="bi" [class.bi-chevron-down]="expandedLoans['top_' + st.installment.id]" [class.bi-chevron-left]="!expandedLoans['top_' + st.installment.id]"></i>
                     </button>
                   </td>
                   <td class="fw-bold cursor-pointer" (click)="toggleTopHistory(st.installment.id)">
                     <div class="d-flex align-items-center">
-                      <div class="me-2" [style.width.px]="4" [style.height.px]="20" [style.background-color]="st.installment.color"></div>
+                      <div class="me-2 inst-name-indicator" [style.background-color]="st.installment.color"></div>
                       {{ st.installment.name }}
                     </div>
                   </td>
@@ -229,8 +231,8 @@
                   <td class="text-center text-success">{{ st.paidAmount | number:'1.0-0' }} ₪</td>
                   <td class="text-center text-danger">{{ st.remainingAmount | number:'1.0-0' }} ₪</td>
                   <td class="cursor-pointer" (click)="toggleTopHistory(st.installment.id)">
-                    <div class="d-flex align-items-center justify-content-center" style="min-width: 120px">
-                      <div class="progress flex-grow-1 me-2" style="height: 6px;">
+                    <div class="d-flex align-items-center justify-content-center inst-table-progress-cell">
+                      <div class="progress flex-grow-1 me-2 inst-table-progress-bar">
                         <div class="progress-bar" [style.width.%]="st.progressPct" [style.background-color]="st.installment.color"></div>
                       </div>
                       <small>{{ st.progressPct }}%</small>
@@ -241,19 +243,19 @@
                     <div class="d-flex justify-content-center gap-1">
                       <div class="inst-icon-slot">
                         @if (st.loanStatuses.length === 0 && st.paidInstallments > 0) {
-                          <button class="btn btn-link btn-sm p-0 text-muted" (click)="undoPayment(st.installment)" matTooltip="ביטול תשלום">↺</button>
+                          <button class="btn btn-link btn-sm p-0 text-muted" (click)="undoPayment(st.installment)" [attr.title]="'INSTALLMENTS.UNDO_PAYMENT' | translate" [matTooltip]="'INSTALLMENTS.UNDO_PAYMENT' | translate" [attr.aria-label]="'INSTALLMENTS.UNDO_PAYMENT' | translate">↺</button>
                         }
                       </div>
                       <div class="inst-icon-slot">
                         @if (st.loanStatuses.length === 0 && !st.isCompleted) {
-                          <button class="btn btn-link btn-sm p-0 text-success" (click)="markAsPaid(st.installment)" [matTooltip]="'INSTALLMENTS.MARK_PAID' | translate">✅</button>
+                          <button class="btn btn-link btn-sm p-0 text-success" (click)="markAsPaid(st.installment)" [attr.title]="'INSTALLMENTS.MARK_PAID' | translate" [matTooltip]="'INSTALLMENTS.MARK_PAID' | translate" [attr.aria-label]="'INSTALLMENTS.MARK_PAID' | translate">✅</button>
                         }
                       </div>
                       <div class="inst-icon-slot">
-                        <button class="btn btn-link btn-sm p-0" (click)="openEdit(st.installment)" [matTooltip]="'INSTALLMENTS.EDIT' | translate">✏️</button>
+                        <button class="btn btn-link btn-sm p-0" (click)="openEdit(st.installment)" [attr.title]="'INSTALLMENTS.EDIT' | translate" [matTooltip]="'INSTALLMENTS.EDIT' | translate" [attr.aria-label]="'INSTALLMENTS.EDIT' | translate">✏️</button>
                       </div>
                       <div class="inst-icon-slot">
-                        <button class="btn btn-link btn-sm p-0 text-danger" (click)="confirmDelete(st.installment.id)" [matTooltip]="'INSTALLMENTS.DELETE' | translate">✕</button>
+                        <button class="btn btn-link btn-sm p-0 text-danger" (click)="confirmDelete(st.installment.id)" [attr.title]="'INSTALLMENTS.DELETE' | translate" [matTooltip]="'INSTALLMENTS.DELETE' | translate" [attr.aria-label]="'INSTALLMENTS.DELETE' | translate">✕</button>
                       </div>
                     </div>
                   </td>
@@ -296,17 +298,17 @@
                                     <div class="d-flex gap-1">
                                       <div class="inst-icon-slot">
                                         @if (ls.paidInstallments > 0) {
-                                          <button class="btn btn-link p-0 text-muted" (click)="undoPayment(st.installment, ls.loan.id)">↺</button>
+                                          <button class="btn btn-link p-0 text-muted" (click)="undoPayment(st.installment, ls.loan.id)" [attr.title]="'INSTALLMENTS.UNDO_PAYMENT' | translate" [matTooltip]="'INSTALLMENTS.UNDO_PAYMENT' | translate" [attr.aria-label]="'INSTALLMENTS.UNDO_PAYMENT' | translate">↺</button>
                                         }
                                       </div>
                                       <div class="inst-icon-slot">
                                         @if (!ls.isCompleted) {
-                                          <button class="btn btn-link p-0 text-success" (click)="markAsPaid(st.installment, ls.loan)">✅</button>
+                                          <button class="btn btn-link p-0 text-success" (click)="markAsPaid(st.installment, ls.loan)" [title]="'INSTALLMENTS.MARK_PAID' | translate" [matTooltip]="'INSTALLMENTS.MARK_PAID' | translate" [attr.aria-label]="'INSTALLMENTS.MARK_PAID' | translate">✅</button>
                                         }
                                       </div>
                                     </div>
                                   </div>
-                                  <div class="progress" style="height: 4px;">
+                                  <div class="progress inst-loan-progress-bar">
                                     <div class="progress-bar" [style.width.%]="ls.progressPct" [style.background-color]="st.installment.color"></div>
                                   </div>
 
@@ -350,7 +352,8 @@
         {{ (editingId ? 'INSTALLMENTS.EDIT_TITLE' : 'INSTALLMENTS.ADD_TITLE') | translate }}
       </span>
       <button class="inst-close-btn" type="button" (click)="closeForm()"
-        [attr.aria-label]="'INSTALLMENTS.CANCEL' | translate">✕</button>
+        [attr.aria-label]="'INSTALLMENTS.CANCEL' | translate"
+        [attr.title]="'INSTALLMENTS.CANCEL' | translate">✕</button>
     </div>
 
     <div class="inst-dialog-body">
@@ -450,7 +453,7 @@
                 [(ngModel)]="loan.startDate">
             </div>
             <div class="col-2">
-              <input type="month" class="form-control form-control-sm" 
+              <input type="date" class="form-control form-control-sm" 
                 placeholder="חודש פירעון" title="חודש פירעון"
                 [(ngModel)]="loan.payoffDate" (ngModelChange)="calculatePayoffAmount(loan)">
             </div>
@@ -460,7 +463,7 @@
                 [(ngModel)]="loan.payoffAmount">
             </div>
             <div class="col-1 text-center">
-              <button type="button" class="btn btn-link text-danger p-0" (click)="removeLoanComponent(idx)">✕</button>
+              <button type="button" class="btn btn-link text-danger p-0" (click)="removeLoanComponent(idx)" [attr.title]="'INSTALLMENTS.DELETE' | translate" [attr.aria-label]="'INSTALLMENTS.DELETE' | translate">✕</button>
             </div>
           </div>
         }
@@ -490,18 +493,18 @@
             </div>
             <div class="col-2">
               <div class="input-group input-group-sm">
-                <input type="number" class="form-control" [(ngModel)]="m.percentage" (ngModelChange)="onMilestonePctChange(m)">
+                <input type="number" title="percentage" class="form-control" [(ngModel)]="m.percentage" (ngModelChange)="onMilestonePctChange(m)">
                 <span class="input-group-text">%</span>
               </div>
             </div>
             <div class="col-3">
-              <input type="number" class="form-control form-control-sm" [(ngModel)]="m.amount" (ngModelChange)="onMilestoneAmountChange(m)">
+              <input type="number" title="amount" class="form-control form-control-sm" [(ngModel)]="m.amount" (ngModelChange)="onMilestoneAmountChange(m)">
             </div>
             <div class="col-2">
-              <input type="month" class="form-control form-control-sm" [(ngModel)]="m.date">
+              <input type="date" title="date" class="form-control form-control-sm" [(ngModel)]="m.date">
             </div>
             <div class="col-1 text-center">
-              <button type="button" class="btn btn-link text-danger p-0" (click)="removeMilestone(idx)">✕</button>
+              <button type="button" class="btn btn-link text-danger p-0" (click)="removeMilestone(idx)" [attr.title]="'INSTALLMENTS.DELETE' | translate" [attr.aria-label]="'INSTALLMENTS.DELETE' | translate">✕</button>
             </div>
           </div>
         }
@@ -648,7 +651,8 @@
         {{ 'INSTALLMENTS.MARK_PAID_TITLE' | translate }}
       </span>
       <button class="inst-close-btn" type="button" (click)="cancelMarkAsPaidDialog()"
-        [attr.aria-label]="'INSTALLMENTS.CANCEL' | translate">✕</button>
+        [attr.aria-label]="'INSTALLMENTS.CANCEL' | translate"
+        [attr.title]="'INSTALLMENTS.CANCEL' | translate">✕</button>
     </div>
 
     <div class="inst-dialog-body">
