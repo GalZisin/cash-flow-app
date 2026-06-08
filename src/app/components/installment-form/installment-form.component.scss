@@ -1,3 +1,6 @@
+// Import shared dialog styles
+@use '../shared-dialog.scss';
+
 .inst-label {
     display: block;
     font-size: 0.75rem;
@@ -7,9 +10,6 @@
     letter-spacing: 0.4px;
     margin-bottom: 4px;
 }
-
-// Import shared dialog styles
-@import '../shared-dialog.scss';
 
 .inst-calc-hint {
     background: #f0f4ff;
