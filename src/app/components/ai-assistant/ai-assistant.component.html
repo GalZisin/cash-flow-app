@@ -3,23 +3,28 @@
   <!-- Tab Bar -->
   <ul class="nav nav-tabs mb-3">
     <li class="nav-item">
-      <a class="nav-link" [class.active]="activeTab === 'chat'" (click)="activeTab = 'chat'" style="cursor:pointer">
+      <a class="nav-link" [class.active]="activeTab === 'chat'" (click)="setTab('chat')" style="cursor:pointer">
         {{ 'AI.TAB_CHAT' | translate }}
       </a>
     </li>
     <li class="nav-item">
-      <a class="nav-link" [class.active]="activeTab === 'analysis'" (click)="activeTab = 'analysis'" style="cursor:pointer">
+      <a class="nav-link" [class.active]="activeTab === 'analysis'" (click)="setTab('analysis')" style="cursor:pointer">
         {{ 'AI.TAB_ANALYSIS' | translate }}
       </a>
     </li>
     <li class="nav-item">
-      <a class="nav-link" [class.active]="activeTab === 'scenario'" (click)="activeTab = 'scenario'" style="cursor:pointer">
+      <a class="nav-link" [class.active]="activeTab === 'scenario'" (click)="setTab('scenario')" style="cursor:pointer">
         {{ 'AI.TAB_SCENARIO' | translate }}
       </a>
     </li>
     <li class="nav-item">
-      <a class="nav-link" [class.active]="activeTab === 'dashboard'" (click)="activeTab = 'dashboard'" style="cursor:pointer">
+      <a class="nav-link" [class.active]="activeTab === 'dashboard'" (click)="setTab('dashboard')" style="cursor:pointer">
         {{ 'AI.TAB_DASHBOARD' | translate }}
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" [class.active]="activeTab === 'archive'" (click)="setTab('archive')" style="cursor:pointer">
+        {{ 'AI.TAB_ARCHIVE' | translate }}
       </a>
     </li>
 
@@ -414,6 +419,102 @@
           </div>
         </div>
       }
+    </div>
+  }
+
+  <!-- ===================== ARCHIVE TAB ===================== -->
+  @if (activeTab === 'archive') {
+    <div class="archive-panel p-3">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="mb-0">{{ 'AI.ARCHIVE_TITLE' | translate }}</h4>
+        <button class="btn btn-outline-primary btn-sm" (click)="loadArchive()" [disabled]="archiveLoading">
+          <i class="bi bi-arrow-clockwise me-1"></i> {{ 'AI.REFRESH' | translate }}
+        </button>
+      </div>
+
+      <!-- Archive Filters -->
+      <div class="row g-2 mb-4">
+        <div class="col-md-4">
+          <div class="input-group input-group-sm">
+            <span class="input-group-text bg-light"><i class="bi bi-funnel"></i></span>
+            <select class="form-select" [(ngModel)]="archiveFilterType">
+              <option value="all">{{ 'AI.FILTER_ALL' | translate }}</option>
+              <option value="analysis">{{ 'AI.TAB_ANALYSIS' | translate }}</option>
+              <option value="insights">{{ 'AI.INSIGHTS_TITLE' | translate }}</option>
+              <option value="scenario">{{ 'AI.TAB_SCENARIO' | translate }}</option>
+            </select>
+          </div>
+        </div>
+        <div class="col-md-8">
+          <input type="text" class="form-control form-control-sm" [placeholder]="'AI.SEARCH_REPORTS' | translate" [(ngModel)]="archiveSearchQuery" />
+        </div>
+      </div>
+
+      @if (archiveLoading) {
+        <div class="text-center py-5">
+          <div class="spinner-border text-primary"></div>
+        </div>
+      } @else if (!archivedReports.length) {
+        <div class="text-center py-5 text-muted italic">
+          {{ 'AI.NO_INSIGHTS' | translate }}
+        </div>
+      } @else {
+        <div class="report-list" style="max-height: 60vh; overflow-y: auto; padding-right: 5px;">
+          @for (report of filteredReports; track report.id) {
+            <div class="card mb-3 shadow-sm">
+              <div class="card-header d-flex justify-content-between align-items-center bg-light">
+                <span class="badge" 
+                      [class.bg-primary]="report.type === 'analysis'" 
+                      [class.bg-warning]="report.type === 'insights'"
+                      [class.bg-info]="report.type === 'scenario'">
+                  {{ (report.type === 'analysis' ? 'AI.TAB_ANALYSIS' : (report.type === 'scenario' ? 'AI.TAB_SCENARIO' : 'AI.INSIGHTS_TITLE')) | translate }}
+                </span>
+                <small class="text-muted fw-bold">{{ report.createdAt | date:'dd/MM/yyyy HH:mm' }}</small>
+                <button class="btn btn-link btn-sm p-0 text-danger ms-2" (click)="confirmDeleteReport(report.id!)" title="מחק דוח">🗑</button>
+              </div>
+              <div class="card-body">
+                @if (report.type === 'analysis' || report.type === 'scenario') {
+                  @if (report.type === 'scenario') {
+                    <div class="mb-3 p-2 bg-info bg-opacity-10 border-start border-4 border-info rounded">
+                      <div class="small fw-bold">{{ 'AI.SCENARIO_TITLE' | translate }}: {{ report.scenarioDetails.description }}</div>
+                      <div class="small text-muted">{{ report.scenarioDetails.amount | number:'1.0-0' }} ₪ | {{ report.scenarioDetails.date }}</div>
+                    </div>
+                  }
+                  <div class="analysis-text small" [innerHTML]="formatText(report.content)"></div>
+                } @else if (report.type === 'insights') {
+                  <ul class="mb-0 list-unstyled">
+                    @for (insight of report.content; track $index) {
+                      <li class="mb-2 d-flex align-items-start">
+                        <span class="me-2">✨</span>
+                        <div [innerHTML]="formatText(insight)"></div>
+                      </li>
+                    }
+                  </ul>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Overlay לאישור מחיקת דוח מהארכיון -->
+  @if (pendingDeleteReportId) {
+    <div class="cf-overlay position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style="background: rgba(15, 23, 42, 0.5); z-index: 1100;">
+      <div class="cf-confirm-card card p-4 text-center" dir="rtl" style="border-radius: 16px; min-width: 300px;">
+        <div class="cf-confirm-icon mb-2" style="font-size: 2rem;">🗑️</div>
+        <div class="cf-confirm-title mb-1" style="font-weight: 700;">{{ 'AI.REPORT_DELETE_CONFIRM_TITLE' | translate }}</div>
+        <div class="cf-confirm-msg mb-4" style="color: #64748b;">{{ 'AI.REPORT_DELETE_CONFIRM_MSG' | translate }}</div>
+        <div class="d-flex gap-2 justify-content-center">
+          <button class="btn btn-danger" type="button" (click)="doDeleteReport()">
+            {{ 'AI.DELETE_YES' | translate }}
+          </button>
+          <button class="btn btn-light" type="button" (click)="cancelDeleteReport()">
+            {{ 'AI.DELETE_NO' | translate }}
+          </button>
+        </div>
+      </div>
     </div>
   }
 

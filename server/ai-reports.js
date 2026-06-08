@@ -38,4 +38,13 @@ router.post('/', (req, res) => {
     res.status(201).json(newReport);
 });
 
+// מחיקת דו"ח
+router.delete('/:id', (req, res) => {
+    ensureFile();
+    const reports = JSON.parse(fs.readFileSync(DATA_PATH, 'utf8'));
+    const filtered = reports.filter(r => r.id !== req.params.id);
+    fs.writeFileSync(DATA_PATH, JSON.stringify(filtered, null, 2));
+    res.json({ success: true });
+});
+
 module.exports = router;

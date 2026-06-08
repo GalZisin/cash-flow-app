@@ -2,12 +2,14 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 
-export interface AiReport {
+export type AiReport = {
     id?: string;
-    type: 'analysis' | 'insights';
-    content: string | string[];
-    createdAt: string; // ISO String
-}
+    createdAt: string;
+} & (
+        | { type: 'analysis'; content: string }
+        | { type: 'insights'; content: string[] }
+        | { type: 'scenario'; content: string; scenarioDetails: { description: string, amount: number, date: string } }
+    );
 
 @Injectable({ providedIn: 'root' })
 export class AiReportService {
@@ -20,5 +22,9 @@ export class AiReportService {
 
     loadAll() {
         return this.http.get<AiReport[]>(this.url);
+    }
+
+    delete(id: string) {
+        return this.http.delete(`${this.url}/${id}`);
     }
 }

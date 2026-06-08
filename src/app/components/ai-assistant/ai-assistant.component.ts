@@ -10,9 +10,9 @@ import { CashFlowService } from '../../services/cash-flow.service';
 import { InstallmentService } from '../../services/installment.service';
 import { ThemeService } from '../../services/theme.service';
 import { InvestmentService } from '../../services/investment.service';
-import { AiReportService } from '../../services/ai-report.service';
+import { AiReportService, AiReport } from '../../services/ai-report.service';
 
-type ActiveTab = 'chat' | 'analysis' | 'scenario' | 'dashboard';
+type ActiveTab = 'chat' | 'analysis' | 'scenario' | 'dashboard' | 'archive';
 
 @Component({
   selector: 'app-ai-assistant',
@@ -47,6 +47,13 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
   scenario: ScenarioRequest = { description: '', amount: 0, date: '' };
   scenarioResult: ScenarioResult | null = null;
   scenarioLoading = false;
+
+  // Archive
+  archivedReports: AiReport[] = [];
+  archiveLoading = false;
+  archiveFilterType: 'all' | 'analysis' | 'insights' | 'scenario' = 'all';
+  archiveSearchQuery = '';
+  pendingDeleteReportId: string | null = null;
 
   // Dashboard
   realCurrentBalance = 0;
@@ -105,6 +112,13 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
     this.loadDashboardData(); // Initial load for dashboard data
   }
 
+  setTab(tab: ActiveTab) {
+    this.activeTab = tab;
+    if (tab === 'archive') {
+      this.loadArchive();
+    }
+  }
+
   ngAfterViewChecked() {
     if (this.shouldScroll) { this.scrollToBottom(); this.shouldScroll = false; }
   }
@@ -130,6 +144,47 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
       },
       error: (err) => console.error('Failed to load investments for dashboard:', err)
     });
+  }
+
+  loadArchive() {
+    this.archiveLoading = true;
+    this.reportService.loadAll().subscribe({
+      next: reports => { this.archivedReports = reports; this.archiveLoading = false; },
+      error: () => { this.archiveLoading = false; }
+    });
+  }
+
+  get filteredReports() {
+    return this.archivedReports.filter(report => {
+      const matchesType = this.archiveFilterType === 'all' || report.type === this.archiveFilterType;
+      const contentStr = (report.type === 'analysis' || report.type === 'scenario') ? report.content : report.content.join(' ');
+
+      let matchesSearch = !this.archiveSearchQuery ||
+        contentStr.toLowerCase().includes(this.archiveSearchQuery.toLowerCase()) ||
+        report.createdAt.includes(this.archiveSearchQuery);
+
+      if (!matchesSearch && report.type === 'scenario') {
+        matchesSearch = report.scenarioDetails.description.toLowerCase().includes(this.archiveSearchQuery.toLowerCase());
+      }
+      return matchesType && matchesSearch;
+    });
+  }
+
+  confirmDeleteReport(id: string) {
+    this.pendingDeleteReportId = id;
+  }
+
+  cancelDeleteReport() {
+    this.pendingDeleteReportId = null;
+  }
+
+  doDeleteReport() {
+    if (this.pendingDeleteReportId) {
+      this.reportService.delete(this.pendingDeleteReportId).subscribe(() => {
+        this.archivedReports = this.archivedReports.filter(r => r.id !== this.pendingDeleteReportId);
+        this.pendingDeleteReportId = null;
+      });
+    }
   }
 
   toggleAiLang() {
@@ -311,12 +366,14 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
       next: res => {
         this.analysisText = res.analysis;
         this.analysisLoading = false;
-        // שמירה לתיעוד ב-JSON
+
+        // ניסיון שמירה לתיעוד - אם נכשל, רק נדפיס ללוג ולא נפריע למשתמש
         this.reportService.save({
           type: 'analysis',
           content: res.analysis,
           createdAt: new Date().toISOString()
         }).subscribe({
+          next: () => console.log('Analysis archived successfully'),
           error: err => console.error('Failed to archive analysis:', err)
         });
       },
@@ -329,7 +386,19 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
     this.scenarioLoading = true;
     this.scenarioResult = null;
     this.ai.simulate(this.scenario).subscribe({
-      next: res => { this.scenarioResult = res; this.scenarioLoading = false; },
+      next: res => {
+        this.scenarioResult = res;
+        this.scenarioLoading = false;
+        // ארכוב אוטומטי של תוצאת הסימולטור
+        this.reportService.save({
+          type: 'scenario',
+          content: res.scenarioAnalysis,
+          scenarioDetails: { ...res.simulation.scenario },
+          createdAt: new Date().toISOString()
+        }).subscribe({
+          error: err => console.error('Failed to archive scenario analysis:', err)
+        });
+      },
       error: err => { this.scenarioLoading = false; console.error(err); }
     });
   }
