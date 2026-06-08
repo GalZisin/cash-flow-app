@@ -5,7 +5,7 @@ import { environment } from '../../environments/environment';
 
 export interface FinancialSummary {
   periodCovered: { from: string; to: string; months: number };
-  currentBalance: number;
+  currentBalance?: number;
   balanceGrowth: number;
   income: { average: number; defaults: number };
   expenses: { averageTotal: number; avgMortgage: number; avgLoan: number; avgInstallments: number; avgRegular: number };

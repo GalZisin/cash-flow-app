@@ -1,0 +1,40 @@
+// Import shared dialog styles
+@import '../shared-dialog.scss';
+
+// ── Confirm card ───────────────────────────────────
+.inst-confirm-card {
+    border-radius: 16px;
+    border: none;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+    min-width: 300px;
+}
+
+.inst-confirm-icon {
+    font-size: 2rem;
+}
+
+.inst-confirm-title {
+    font-weight: 700;
+    color: #1e293b;
+    font-size: 1rem;
+}
+
+.inst-confirm-msg {
+    color: #64748b;
+    font-size: 0.875rem;
+}
+
+.inst-btn-delete {
+    background: #dc2626;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 24px;
+    font-family: 'Heebo', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+
+    &:hover {
+        background: #b91c1c;
+    }
+}

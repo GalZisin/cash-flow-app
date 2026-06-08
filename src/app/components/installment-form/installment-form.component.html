@@ -1,0 +1,234 @@
+@if (showForm) {
+<div class="inst-overlay position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
+  (click)="closeForm.emit()">
+  <div class="inst-dialog" dir="rtl" (click)="$event.stopPropagation()">
+
+    <div class="inst-dialog-header">
+      <span class="inst-dialog-title">
+        {{ (editingId ? 'INSTALLMENTS.EDIT_TITLE' : 'INSTALLMENTS.ADD_TITLE') | translate }}
+      </span>
+      <button class="inst-close-btn" type="button" (click)="closeForm.emit()"
+        [attr.aria-label]="'INSTALLMENTS.CANCEL' | translate"
+        [attr.title]="'INSTALLMENTS.CANCEL' | translate">✕</button>
+    </div>
+
+    <div class="inst-dialog-body">
+
+      <!-- שם -->
+      <div class="inst-field mb-3">
+        <label class="inst-label" for="inst-name">{{ 'INSTALLMENTS.NAME' | translate }}</label>
+        <input id="inst-name" type="text" class="form-control form-control-sm"
+          placeholder="לדוגמה: מטבח" title="שם פריסה" aria-label="שם פריסה"
+          [(ngModel)]="form.name" />
+      </div>
+
+      <!-- סכומים -->
+      <div class="row g-1 mb-3">
+        <div class="col-3">
+          <label class="inst-label" for="inst-total">{{ 'INSTALLMENTS.TOTAL' | translate }}
+            @if ((form.loanComponents && form.loanComponents.length > 0) || (form.milestones && form.milestones.length > 0)) { (מחושב) }
+          </label>
+          <input id="inst-total" type="number" class="form-control form-control-sm"
+            placeholder="0" title="סכום כולל" aria-label="סכום כולל"
+            [readonly]="(form.loanComponents && form.loanComponents.length > 0) || (form.milestones && form.milestones.length > 0)" [(ngModel)]="form.totalAmount" />
+        </div>
+        <div class="col-3">
+          <label class="inst-label" for="inst-down">{{ 'INSTALLMENTS.DOWN_PAYMENT' | translate }}</label>
+          <input id="inst-down" type="number" class="form-control form-control-sm"
+            placeholder="0" title="מקדמה" aria-label="מקדמה"
+            [(ngModel)]="form.downPayment" (ngModelChange)="emitUpdateParentTotals()" />
+        </div>
+        <div class="col-3">
+          <label class="inst-label" for="inst-count">{{ 'INSTALLMENTS.INSTALLMENTS_COUNT' | translate }}
+            @if (form.loanComponents && form.loanComponents.length > 0) { (מחושב) }
+          </label>
+          <input id="inst-count" type="number" class="form-control form-control-sm"
+            placeholder="0" title="{{ 'INSTALLMENTS.INSTALLMENTS_COUNT' | translate }}"
+            [readonly]="(form.loanComponents && form.loanComponents.length > 0)" [(ngModel)]="form.installmentsCount" (ngModelChange)="emitOnInstallmentsCountChange()" />
+        </div>
+        <div class="col-3">
+          <label class="inst-label" for="inst-monthly">{{ 'INSTALLMENTS.MONTHLY' | translate }} @if (form.loanComponents && form.loanComponents.length > 0) { (מחושב) }</label>
+          <input id="inst-monthly" type="number" class="form-control form-control-sm"
+            placeholder="0" title="תשלום חודשי" aria-label="תשלום חודשי"
+            [readonly]="form.loanComponents && form.loanComponents.length > 0" [(ngModel)]="form.monthlyPayment" (ngModelChange)="emitOnMonthlyPaymentChange()" />
+        </div>
+      </div>
+
+      <!-- רכיבי הלוואה / תשלומים -->
+      <div class="mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <label class="inst-label m-0">{{ 'INSTALLMENTS.LOANS_DETAIL_FORM' | translate }}</label>
+          <button type="button" class="btn btn-outline-primary btn-sm" (click)="emitAddLoanComponent()">+ {{ 'INSTALLMENTS.ADD_LOAN_COMPONENT' | translate }}</button>
+        </div>
+
+        @if (form.loanComponents && form.loanComponents.length > 0) {
+          <!-- כותרות לשדות הלוואה -->
+          <div class="row g-1 mb-1 fw-medium text-muted px-2 inst-loan-header-row">
+            <div class="col-2">{{ 'CASH_FLOW.DESCRIPTION' | translate }}</div>
+            <div class="col-1">{{ 'INSTALLMENTS.TOTAL_LOAN_AMOUNT' | translate }}</div>
+            <div class="col-1">ריבית %</div>
+            <div class="col-1">{{ 'INSTALLMENTS.MONTHLY_PAYMENT' | translate }}</div>
+            <div class="col-1">חודשים</div>
+            <div class="col-1">תחילת הלוואה</div>
+            <div class="col-2">חודש פירעון</div>
+            <div class="col-2">סכום פירעון</div>
+            <div class="col-1 text-center">הסרה</div>
+          </div>
+        }
+
+        @for (loan of form.loanComponents; track loan.id; let idx = $index) {
+          <div class="row g-1 mb-2 align-items-center border p-2 rounded">
+            <div class="col-2">
+              <input type="text" class="form-control form-control-sm" 
+                placeholder="{{ 'CASH_FLOW.DESCRIPTION' | translate }}" 
+                title="{{ 'CASH_FLOW.DESCRIPTION' | translate }}"
+                [(ngModel)]="loan.description">
+            </div>
+            <div class="col-1">
+              <input type="number" class="form-control form-control-sm" 
+                placeholder="{{ 'INSTALLMENTS.TOTAL_LOAN_AMOUNT' | translate }}" 
+                title="{{ 'INSTALLMENTS.TOTAL_LOAN_AMOUNT' | translate }}"
+                [(ngModel)]="loan.totalLoanAmount" (ngModelChange)="emitCalculateLoanPMT(loan)">
+            </div>
+            <div class="col-1">
+              <input type="number" class="form-control form-control-sm" 
+                placeholder="%" title="ריבית שנתית"
+                [(ngModel)]="loan.interestRate" (ngModelChange)="emitCalculateLoanPMT(loan)">
+            </div>
+            <div class="col-1">
+              <input type="number" class="form-control form-control-sm" 
+                placeholder="{{ 'INSTALLMENTS.MONTHLY_PAYMENT' | translate }}"
+                title="{{ 'INSTALLMENTS.MONTHLY_PAYMENT' | translate }}"
+                [(ngModel)]="loan.monthlyPayment" (ngModelChange)="emitUpdateParentTotals()">
+            </div>
+            <div class="col-1">
+              <input type="number" class="form-control form-control-sm" 
+                placeholder="חודשים" title="{{ 'INSTALLMENTS.INSTALLMENTS_COUNT' | translate }}"
+                [(ngModel)]="loan.installmentsCount" (ngModelChange)="emitCalculateLoanPMT(loan)">
+            </div>
+            <div class="col-1">
+              <input type="date" class="form-control form-control-sm" 
+                placeholder="{{ 'INSTALLMENTS.START_DATE' | translate }}"
+                title="{{ 'INSTALLMENTS.START_DATE' | translate }}"
+                [(ngModel)]="loan.startDate">
+            </div>
+            <div class="col-2">
+              <input type="date" class="form-control form-control-sm" 
+                placeholder="חודש פירעון" title="חודש פירעון"
+                [(ngModel)]="loan.payoffDate" (ngModelChange)="emitCalculatePayoffAmount(loan)">
+            </div>
+            <div class="col-2">
+              <input type="number" class="form-control form-control-sm" 
+                placeholder="סכום" title="סכום פירעון"
+                [(ngModel)]="loan.payoffAmount">
+            </div>
+            <div class="col-1 text-center">
+              <button type="button" class="btn btn-link text-danger p-0" (click)="emitRemoveLoanComponent(idx)" [attr.title]="'INSTALLMENTS.DELETE' | translate" [attr.aria-label]="'INSTALLMENTS.DELETE' | translate">✕</button>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- פעימות תשלום (Milestones) -->
+      <div class="mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <label class="inst-label m-0">{{ 'INSTALLMENTS.MILESTONES_TITLE' | translate }}</label>
+          <button type="button" class="btn btn-outline-primary btn-sm" (click)="emitAddMilestone()">+ {{ 'INSTALLMENTS.ADD_MILESTONE' | translate }}</button>
+        </div>
+
+        @if (form.milestones && form.milestones.length > 0) {
+          <div class="row g-1 mb-1 fw-medium text-muted px-2 inst-loan-header-row">
+            <div class="col-4">{{ 'CASH_FLOW.DESCRIPTION' | translate }}</div>
+            <div class="col-2">{{ 'INSTALLMENTS.PERCENTAGE' | translate }}</div>
+            <div class="col-3">{{ 'CASH_FLOW.AMOUNT' | translate }}</div>
+            <div class="col-2">{{ 'INSTALLMENTS.MILESTONE_DATE' | translate }}</div>
+            <div class="col-1 text-center">הסרה</div>
+          </div>
+        }
+
+        @for (m of form.milestones; track m.id; let idx = $index) {
+          <div class="row g-1 mb-2 align-items-center border p-2 rounded bg-light bg-opacity-50">
+            <div class="col-4">
+              <input type="text" class="form-control form-control-sm" [(ngModel)]="m.description" placeholder="תיאור (למשל: גמר שלד)">
+            </div>
+            <div class="col-2">
+              <div class="input-group input-group-sm">
+                <input type="number" title="percentage" class="form-control" [(ngModel)]="m.percentage" (ngModelChange)="emitOnMilestonePctChange(m)">
+                <span class="input-group-text">%</span>
+              </div>
+            </div>
+            <div class="col-3">
+              <input type="number" title="amount" class="form-control form-control-sm" [(ngModel)]="m.amount" (ngModelChange)="emitOnMilestoneAmountChange(m)">
+            </div>
+            <div class="col-2">
+              <input type="date" title="date" class="form-control form-control-sm" [(ngModel)]="m.date">
+            </div>
+            <div class="col-1 text-center">
+              <button type="button" class="btn btn-link text-danger p-0" (click)="emitRemoveMilestone(idx)" [attr.title]="'INSTALLMENTS.DELETE' | translate" [attr.aria-label]="'INSTALLMENTS.DELETE' | translate">✕</button>
+            </div>
+          </div>
+        }
+      </div>
+
+      @if (form.downPayment > form.totalAmount) {
+        <div class="text-danger small mb-2 fw-medium">
+          ⚠️ {{ 'INSTALLMENTS.INVALID_DOWN_PAYMENT' | translate }}
+        </div>
+      }
+
+      <!-- חישוב אוטומטי -->
+      @if (form.totalAmount > 0 && form.monthlyPayment > 0) {
+        <div class="inst-calc-hint mb-3">
+          💡 {{ 'INSTALLMENTS.REMAINING_TO_INSTALL' | translate }}:
+          <strong>{{ amountAfterDown(form) | number:'1.0-0' }} ₪</strong> —
+          {{ form.installmentsCount }}
+          {{ 'INSTALLMENTS.MONTHS' | translate }}
+        </div>
+      }
+
+      <!-- תאריך התחלה -->
+      <div class="inst-field mb-3">
+        <label class="inst-label" for="inst-start">{{ 'INSTALLMENTS.START_DATE' | translate }}</label>
+        <input id="inst-start" type="date" class="form-control form-control-sm"
+          placeholder="{{ 'INSTALLMENTS.START_DATE' | translate }}"
+          title="תאריך תחילת תשלומים" aria-label="תאריך תחילת תשלומים"
+          [(ngModel)]="form.startDate" />
+      </div>
+
+      <!-- צבע -->
+      <div class="inst-field mb-3">
+        <label class="inst-label">{{ 'INSTALLMENTS.COLOR' | translate }}</label>
+        <div class="inst-colors">
+          @for (c of COLORS; track c) {
+            <button type="button" class="inst-color-dot" title="צבע"
+              [style.background]="c"
+              [class.inst-color-dot-active]="form.color === c"
+              (click)="form.color = c"
+              [title]="c" [attr.aria-label]="c"></button>
+          }
+        </div>
+      </div>
+
+      <!-- הערות -->
+      <div class="inst-field mb-1">
+        <label class="inst-label" for="inst-notes">{{ 'INSTALLMENTS.NOTES' | translate }}</label>
+        <input id="inst-notes" type="text" class="form-control form-control-sm"
+          placeholder="הערות אופציונליות" title="הערות" aria-label="הערות"
+          [(ngModel)]="form.notes" />
+      </div>
+
+    </div>
+
+    <div class="inst-dialog-footer">
+      <button class="inst-btn-cancel" type="button" (click)="closeForm.emit()">
+        {{ 'INSTALLMENTS.CANCEL' | translate }}
+      </button>
+      <button class="inst-btn-save" type="button"
+        [disabled]="!formValid" (click)="submit.emit()"> <!-- Call submit without ignoreWarnings -->
+        {{ 'INSTALLMENTS.SAVE' | translate }}
+      </button>
+    </div>
+
+  </div>
+</div>
+}

@@ -1,0 +1,124 @@
+<div class="inst-card" [class.inst-card-done]="st.isCompleted">
+  <div class="inst-color-bar" [style.background]="item.color"></div>
+  <div class="inst-card-header">
+    <span class="inst-card-name">{{ item.name }}</span>
+    <div class="d-flex gap-1">
+      @if (st.paidInstallments > 0 && st.loanStatuses.length === 0) {
+        <button class="inst-icon-btn" type="button" [attr.title]="'INSTALLMENTS.UNDO_PAYMENT' | translate" [matTooltip]="'INSTALLMENTS.UNDO_PAYMENT' | translate" [attr.aria-label]="'INSTALLMENTS.UNDO_PAYMENT' | translate" (click)="undoPayment.emit(item)">↺</button>
+      } @else if (st.paidMilestonesCount > 0 && st.loanStatuses.length === 0) { }
+      @if (!st.isCompleted && st.loanStatuses.length === 0) {        <button class="inst-icon-btn" type="button" [attr.title]="'INSTALLMENTS.MARK_PAID' | translate" [matTooltip]="'INSTALLMENTS.MARK_PAID' | translate" [attr.aria-label]="'INSTALLMENTS.MARK_PAID' | translate" (click)="markInstallmentAsPaid(item)">✅</button>
+      }
+      <button class="inst-icon-btn" type="button" [title]="'INSTALLMENTS.EDIT' | translate" [matTooltip]="'INSTALLMENTS.EDIT' | translate" [attr.aria-label]="'INSTALLMENTS.EDIT' | translate" (click)="openEdit.emit(item)">✏️</button>
+      <button class="inst-icon-btn inst-icon-btn-del" type="button" title="'INSTALLMENTS.DELETE' | translate" [matTooltip]="'INSTALLMENTS.DELETE' | translate" [attr.aria-label]="'INSTALLMENTS.DELETE' | translate" (click)="confirmDelete.emit(item.id)">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="inst-progress-wrap">
+    <div class="inst-progress-track">
+      <div class="inst-progress-fill" [style.width.%]="st.progressPct" [style.background]="item.color"></div>
+    </div>
+    <div class="d-flex justify-content-between mt-1">
+      <span class="inst-pct-label cursor-pointer" (click)="toggleTopHistory.emit(item.id)">
+        {{ st.progressPct }}%
+        <span class="ms-1 inst-toggle-arrow">{{ expandedLoans['top_' + item.id] ? '▼' : '▶' }}</span>
+      </span>
+      @if (st.isCompleted) {
+        <span class="inst-done-badge">✅ {{ 'INSTALLMENTS.COMPLETED' | translate }}</span>
+      } @else {
+        <span class="inst-months-left">{{ st.monthsLeft }} {{ 'INSTALLMENTS.MONTHS_LEFT' | translate }}</span>
+      }
+    </div>
+  </div>
+
+  <!-- היסטוריית תשלומים ראשית (מוצגת בלחיצה על האחוזים) -->
+  @if (expandedLoans['top_' + item.id] && st.combinedPaymentHistory?.length) {
+    <div class="inst-history-popup inst-history-text bg-light p-2 mb-2 rounded shadow-sm border">
+      <div class="fw-bold mb-1 border-bottom pb-1">{{ 'INSTALLMENTS.PAYMENT_HISTORY' | translate }}</div>
+      @for (p of st.combinedPaymentHistory; track $index) {
+        <div class="text-muted border-bottom-dashed py-1 d-flex justify-content-between">
+          <span>
+            ✓ {{ p.date | date:'shortDate' }}
+            @if (p.type === 'manual') { (תשלום {{ $index + 1 }}) }
+            @if (p.type === 'loan') { (הלוואה: {{ p.description }}) }
+            @if (p.type === 'milestone') { (פעימה: {{ p.description }})
+              @if (p.milestoneId) { <button class="btn btn-link p-0 text-muted" (click)="emitUndoMilestonePayment(st.installment, p.milestoneId!)" [attr.title]="'INSTALLMENTS.UNDO_PAYMENT' | translate" [matTooltip]="'INSTALLMENTS.UNDO_PAYMENT' | translate" [attr.aria-label]="'INSTALLMENTS.UNDO_PAYMENT' | translate">↺</button> }
+            }
+          </span>
+          <span class="fw-bold">{{ p.amount | number:'1.0-0' }} ₪</span>
+        </div>
+      }
+    </div>
+  }
+
+  <div class="inst-amounts">
+    <div class="inst-amount-cell">
+      <span class="inst-amount-label">{{ 'INSTALLMENTS.TOTAL' | translate }}</span>
+      <span class="inst-amount-val">{{ item.totalAmount | number:'1.0-0' }} ₪</span>
+    </div>
+    <div class="inst-amount-cell">
+      <span class="inst-amount-label">{{ 'INSTALLMENTS.MONTHLY' | translate }}</span>
+      <span class="inst-amount-val text-primary">{{ item.monthlyPayment | number:'1.0-0' }} ₪</span>
+    </div>
+    <div class="inst-amount-cell">
+      <span class="inst-amount-label">{{ 'INSTALLMENTS.PAID' | translate }}</span>
+      <span class="inst-amount-val inst-paid">{{ st.paidAmount | number:'1.0-0' }} ₪</span>
+    </div>
+    <div class="inst-amount-cell">
+      <span class="inst-amount-label">{{ 'INSTALLMENTS.REMAINING' | translate }}</span>
+      <span class="inst-amount-val inst-remaining">{{ st.remainingAmount | number:'1.0-0' }} ₪</span>
+    </div>
+  </div>
+
+  <!-- פירוט הלוואות בתוך הכרטיס -->
+  @if (st.loanStatuses.length > 0) {
+    <div class="inst-loans-detail mt-3 border-top pt-2">
+      <div class="fw-bold mb-2 text-muted">{{ 'INSTALLMENTS.LOANS_DETAIL' | translate }}</div>
+      @for (ls of st.loanStatuses; track ls.loan.id) {
+        <div class="mb-2">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="fw-medium cursor-pointer" (click)="toggleLoanHistory.emit(ls.loan.id)">
+              {{ ls.progressPct }}% - {{ ls.loan.description || 'הלוואה' }}
+              <small class="text-muted ms-1">({{ ls.monthsLeft }} חודשים נותרו)</small>
+              <span class="ms-1 inst-toggle-arrow">{{ expandedLoans[ls.loan.id] ? '▼' : '▶' }}</span>
+            </span>
+            <div class="d-flex align-items-center gap-2">
+              <span class="text-muted small">{{ ls.paidAmount | number:'1.0-0' }} / {{ ls.loan.totalLoanAmount | number:'1.0-0' }} ₪</span>
+              <div class="d-flex gap-1">
+                @if (ls.paidInstallments > 0) {
+                  <button class="btn btn-link p-0 text-muted inst-line-height-reset" type="button" 
+                  [attr.title]="'INSTALLMENTS.UNDO_PAYMENT' | translate" [matTooltip]="'INSTALLMENTS.UNDO_PAYMENT' | translate" [attr.aria-label]="'INSTALLMENTS.UNDO_PAYMENT' | translate" (click)="undoPayment.emit(item)">↺</button>
+                }
+                @if (!ls.isCompleted) {
+                <button class="btn btn-link p-0 text-success inst-line-height-reset" type="button" [title]="'INSTALLMENTS.MARK_PAID' | translate" [matTooltip]="'INSTALLMENTS.MARK_PAID' | translate" [attr.aria-label]="'INSTALLMENTS.MARK_PAID' | translate" (click)="markLoanAsPaid(item, ls.loan)">✅</button>
+                }
+              </div>
+            </div>
+          </div>
+          <div class="progress inst-mini-progress-track">
+            <div class="progress-bar" [style.width.%]="ls.progressPct" [style.background-color]="item.color"></div>
+          </div>
+          
+          <!-- היסטוריית תשלומים עבור הלוואה ספציפית -->
+          @if (expandedLoans[ls.loan.id] && ls.loan.payments?.length) {
+            <div class="bg-light inst-history-text p-2 mt-2 rounded shadow-sm border">
+              <div class="fw-bold mb-1 border-bottom pb-1">{{ 'INSTALLMENTS.PAYMENT_HISTORY' | translate }}</div>
+              @for (p of ls.loan.payments; track $index) {
+                <div class="text-muted border-bottom-dashed py-1 d-flex justify-content-between">
+                  <span>✓ {{ p.date | date:'shortDate' }} (תשלום {{ $index + 1 }})</span>
+                  <span class="fw-bold">{{ p.amount | number:'1.0-0' }} ₪</span>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+
+  <div class="inst-card-footer mt-auto pt-3 border-top d-flex justify-content-between">
+    <small class="text-muted">{{ 'INSTALLMENTS.END_DATE' | translate }}: <strong>{{ st.endDate }}</strong></small>
+    <small class="text-muted">{{ 'INSTALLMENTS.INSTALLMENTS' | translate }}: <strong>{{ st.paidInstallments }}/{{ st.totalInstallments }}</strong></small>
+  </div>
+</div>

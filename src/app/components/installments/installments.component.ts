@@ -9,8 +9,14 @@ import { MatButtonModule } from '@angular/material/button';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { take } from 'rxjs';
 import { InstallmentService } from '../../services/installment.service';
-import { Installment, InstallmentStatus, LoanComponent, CashFlowWarning } from '../../models/installment.model';
+import { Installment, InstallmentStatus, LoanComponent, CashFlowWarning, MilestonePayment } from '../../models/installment.model';
 import { CashFlowService } from '../../services/cash-flow.service'; // Import CashFlowService
+import { InstallmentsHeaderComponent } from '../installments-header/installments-header.component';
+import { InstallmentConfirmDialogsComponent } from '../installment-confirm-dialogs/installment-confirm-dialogs.component';
+import { InstallmentFormComponent } from '../installment-form/installment-form.component';
+import { InstallmentCardComponent } from '../installment-card/installment-card.component';
+import { InstallmentsEmptyStateComponent } from '../installments-empty-state/installments-empty-state.component';
+import { InstallmentsTableComponent } from '../installments-table/installments-table.component';
 
 const COLORS = [
     '#4f6ef7', '#1a7a52', '#a05c00', '#6d3fd6',
@@ -28,7 +34,8 @@ const EMPTY_FORM = (): Omit<Installment, 'id'> => ({
     notes: '',
     manualPaidCount: 0,    // הוספת ערך ברירת מחדל לשדה החדש
     lastManualPaymentDate: undefined, // הוספת ערך ברירת מחדל
-    loanComponents: [],
+    loanComponents: [], // Initialize as empty array
+    milestonePayments: [],
     milestones: [],
     payments: []
 });
@@ -37,8 +44,22 @@ const EMPTY_FORM = (): Omit<Installment, 'id'> => ({
     selector: 'app-installments',
     standalone: true,
     imports: [
-        CommonModule, FormsModule, TranslateModule,
-        MatSnackBarModule, MatTooltipModule, MatIconModule, MatButtonModule
+        CommonModule,
+        FormsModule,
+        TranslateModule,
+        MatTooltipModule,
+        MatIconModule,
+        MatButtonModule,
+        MatSnackBarModule,
+        MatTooltipModule,
+        MatIconModule,
+        MatButtonModule,
+        InstallmentsHeaderComponent,
+        InstallmentConfirmDialogsComponent,
+        InstallmentFormComponent,
+        InstallmentCardComponent,
+        InstallmentsEmptyStateComponent,
+        InstallmentsTableComponent
     ],
     templateUrl: './installments.component.html',
     styleUrl: './installments.component.scss'
@@ -51,14 +72,15 @@ export class InstallmentsComponent implements OnInit {
     sortKey: string = 'endDate';
     sortDir: 'asc' | 'desc' = 'asc';
     editingId: string | null = null;
-    form = EMPTY_FORM();
+    form: Installment | Omit<Installment, 'id'> = EMPTY_FORM();
     pendingDeleteId: string | null = null;
     pendingWarnings: CashFlowWarning[] | null = null; // New state for warnings
-    pendingUndoAction: { item: Installment, loanId?: string } | null = null;
+    pendingUndoAction: { item: Installment, loanId?: string, milestoneId?: string } | null = null;
     expandedLoans: Record<string, boolean> = {}; // Track expand state for history
 
     showMarkAsPaidDialog: boolean = false;
     currentInstallmentToMarkPaid: Installment | null = null;
+    currentMilestoneIdToMarkPaid: string | null = null; // New field to store milestoneId
     currentLoanToMarkPaid: LoanComponent | null = null;
     paymentDateInput: string = new Date().toISOString().slice(0, 10); // Default to today's date
     readonly COLORS = COLORS;
@@ -170,6 +192,7 @@ export class InstallmentsComponent implements OnInit {
             percentage: 0,
             amount: 0,
             date: new Date().toISOString().slice(0, 7) // YYYY-MM
+            // milestoneId is not needed here, it's for milestonePayments
         };
         this.form.milestones = [...(this.form.milestones || []), newMilestone];
     }
@@ -248,7 +271,9 @@ export class InstallmentsComponent implements OnInit {
     }
 
     removeLoanComponent(index: number) {
-        this.form.loanComponents.splice(index, 1);
+        if (this.form.loanComponents) {
+            this.form.loanComponents.splice(index, 1);
+        }
         this.updateTotalsFromLoans();
     }
 
@@ -278,39 +303,68 @@ export class InstallmentsComponent implements OnInit {
     }
 
     // Opens the dialog to mark a payment as paid
-    markAsPaid(item: Installment, loan?: LoanComponent) {
+    markAsPaid(item: Installment, loan?: LoanComponent, milestoneId?: string) {
         this.currentInstallmentToMarkPaid = item;
         this.currentLoanToMarkPaid = loan || null;
         this.paymentDateInput = new Date().toISOString().slice(0, 10); // Reset to today's date
         this.showMarkAsPaidDialog = true;
     }
 
-    // Confirms marking a payment as paid with the selected date
+    markMilestoneAsPaid(item: Installment, milestoneId: string) {
+        this.currentInstallmentToMarkPaid = item;
+        this.currentLoanToMarkPaid = null; // Not a loan payment for this specific action
+        this.paymentDateInput = new Date().toISOString().slice(0, 10); // Default to today's date
+        this.showMarkAsPaidDialog = true;
+        this.currentMilestoneIdToMarkPaid = milestoneId; // Store milestoneId
+    }
+
     confirmMarkAsPaid() {
         if (!this.currentInstallmentToMarkPaid || !this.paymentDateInput) return;
 
-        this.svc.markAsPaid(
-            this.currentInstallmentToMarkPaid,
-            this.paymentDateInput,
-            this.currentLoanToMarkPaid?.id
-        ).subscribe(() => {
-            this.translate.get('INSTALLMENTS.MARKED_PAID_SUCCESS')
-                .subscribe(msg => this.snackBar.open(msg, '', { duration: 2500, panelClass: 'snack-success' }));
-            this.cancelMarkAsPaidDialog();
-        });
+        const milestoneId = this.currentMilestoneIdToMarkPaid;
+
+        if (milestoneId) {
+            // Handle milestone payment
+            this.svc.markMilestoneAsPaid(this.currentInstallmentToMarkPaid, milestoneId, this.paymentDateInput).subscribe(() => {
+                this.translate.get('INSTALLMENTS.MARKED_PAID_SUCCESS')
+                    .subscribe(msg => this.snackBar.open(msg, '', { duration: 2500, panelClass: 'snack-success' }));
+                this.cancelMarkAsPaidDialog();
+            });
+        } else {
+        // Existing logic for regular/loan payments
+            this.svc.markAsPaid(
+                this.currentInstallmentToMarkPaid,
+                this.paymentDateInput,
+                this.currentLoanToMarkPaid?.id
+            ).subscribe(() => {
+                this.translate.get('INSTALLMENTS.MARKED_PAID_SUCCESS')
+                    .subscribe(msg => this.snackBar.open(msg, '', { duration: 2500, panelClass: 'snack-success' }));
+                this.cancelMarkAsPaidDialog();
+            });
+        }
     }
 
-    undoPayment(item: Installment, loanId?: string) {
+    undoPayment(item: Installment, loanId?: string, milestoneId?: string) { // Added milestoneId
         this.pendingUndoAction = { item, loanId };
     }
 
     doUndoPayment() {
         if (!this.pendingUndoAction) return;
-        const { item, loanId } = this.pendingUndoAction;
+        const { item, loanId, milestoneId } = this.pendingUndoAction;
         this.pendingUndoAction = null;
-        this.svc.undoPayment(item, loanId).subscribe(() => {
-            this.snackBar.open('התשלום בוטל בהצלחה', '', { duration: 2000 });
-        });
+        if (milestoneId) {
+            this.svc.undoMilestonePayment(item, milestoneId).subscribe(() => {
+                this.snackBar.open('תשלום הפעימה בוטל בהצלחה', '', { duration: 2000 });
+            });
+        } else {
+            this.svc.undoPayment(item, loanId).subscribe(() => {
+                this.snackBar.open('התשלום בוטל בהצלחה', '', { duration: 2000 });
+            });
+        }
+    }
+
+    undoMilestonePayment(item: Installment, milestoneId: string) {
+        this.pendingUndoAction = { item, milestoneId }; // Set pending action for confirmation dialog
     }
 
     cancelUndoPayment() {
@@ -329,6 +383,7 @@ export class InstallmentsComponent implements OnInit {
     cancelMarkAsPaidDialog() {
         this.showMarkAsPaidDialog = false;
         this.currentInstallmentToMarkPaid = null;
+        this.currentMilestoneIdToMarkPaid = null; // Clear milestoneId
         this.currentLoanToMarkPaid = null;
         this.paymentDateInput = new Date().toISOString().slice(0, 10);
     }
@@ -355,6 +410,11 @@ export class InstallmentsComponent implements OnInit {
     cancelDelete() { this.pendingDeleteId = null; }
 
     get formValid(): boolean {
+        // Ensure loanComponents and milestones are initialized as arrays
+        this.form.loanComponents = this.form.loanComponents || [];
+        this.form.milestones = this.form.milestones || [];
+        this.form.milestonePayments = this.form.milestonePayments || [];
+
         const nameValid = !!this.form.name.trim();
         // Allow either monthlyPayment > 0 OR installmentsCount > 0
         const amountsValid = this.form.totalAmount > 0 && (this.form.monthlyPayment > 0 || this.form.installmentsCount > 0);
@@ -394,6 +454,11 @@ export class InstallmentsComponent implements OnInit {
             ...m,
             percentage: Number(m.percentage) || 0,
             amount: Number(m.amount) || 0
+        }));
+
+        this.form.milestonePayments = (this.form.milestonePayments || []).map(mp => ({
+            ...mp,
+            amount: Number(mp.amount) || 0
         }));
 
         if (!this.formValid) {

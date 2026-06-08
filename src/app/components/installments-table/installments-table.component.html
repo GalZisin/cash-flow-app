@@ -1,0 +1,178 @@
+<div class="inst-table-container">
+  <table class="inst-table">
+    <thead>
+      <tr>
+        <th class="inst-col-history"></th>
+        <th (click)="setSort.emit('name')" class="cursor-pointer">
+          {{ 'INSTALLMENTS.NAME' | translate }} @if(sortKey==='name'){ {{sortDir==='asc'?'↑':'↓'}} }
+        </th>
+        <th (click)="setSort.emit('total')" class="cursor-pointer text-center">
+          {{ 'INSTALLMENTS.TOTAL_AMOUNT' | translate }} @if(sortKey==='total'){ {{sortDir==='asc'?'↑':'↓'}} }
+        </th>
+        <th (click)="setSort.emit('monthly')" class="cursor-pointer text-center">
+          {{ 'INSTALLMENTS.MONTHLY' | translate }} @if(sortKey==='monthly'){ {{sortDir==='asc'?'↑':'↓'}} }
+        </th>
+        <th class="text-center">{{ 'INSTALLMENTS.PAID' | translate }}</th>
+        <th class="text-center">{{ 'INSTALLMENTS.REMAINING' | translate }}</th>
+        <th (click)="setSort.emit('progress')" class="cursor-pointer text-center">
+          {{ 'INSTALLMENTS.PROGRESS' | translate }} @if(sortKey==='progress'){ {{sortDir==='asc'?'↑':'↓'}} }
+        </th>
+        <th (click)="setSort.emit('endDate')" class="cursor-pointer text-center">
+          {{ 'INSTALLMENTS.END_DATE' | translate }} @if(sortKey==='endDate'){ {{sortDir==='asc'?'↑':'↓'}} }
+        </th>
+        <th class="text-center inst-col-actions">{{ 'CASH_FLOW.SAVE' | translate }} / {{ 'INSTALLMENTS.EDIT' | translate }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (st of sortedStatuses; track st.installment.id) {
+        <tr [class.opacity-50]="st.isCompleted" [class.inst-row-expanded]="expandedLoans['top_' + st.installment.id]">
+          <td class="text-center p-0">
+            <button class="btn btn-link btn-sm text-muted p-0" (click)="toggleTopHistory.emit(st.installment.id)" title="'INSTALLMENTS.PAYMENT_HISTORY' | translate" [matTooltip]="'INSTALLMENTS.PAYMENT_HISTORY' | translate" [attr.aria-label]="'INSTALLMENTS.PAYMENT_HISTORY' | translate">
+              <i class="bi" [class.bi-chevron-down]="expandedLoans['top_' + st.installment.id]" [class.bi-chevron-left]="!expandedLoans['top_' + st.installment.id]"></i>
+            </button>
+          </td>
+          <td class="fw-bold cursor-pointer" (click)="toggleTopHistory.emit(st.installment.id)">
+            <div class="d-flex align-items-center">
+              <div class="me-2 inst-name-indicator" [style.background-color]="st.installment.color"></div>
+              {{ st.installment.name }}
+            </div>
+          </td>
+          <td class="text-center">{{ st.installment.totalAmount | number:'1.0-0' }} ₪</td>
+          <td class="text-center text-primary fw-medium">{{ st.installment.monthlyPayment | number:'1.0-0' }} ₪</td>
+          <td class="text-center text-success">{{ st.paidAmount | number:'1.0-0' }} ₪</td>
+          <td class="text-center text-danger">{{ st.remainingAmount | number:'1.0-0' }} ₪</td>
+          <td class="cursor-pointer" (click)="toggleTopHistory.emit(st.installment.id)">
+            <div class="d-flex align-items-center justify-content-center inst-table-progress-cell">
+              <div class="progress flex-grow-1 me-2 inst-table-progress-bar">
+                <div class="progress-bar" [style.width.%]="st.progressPct" [style.background-color]="st.installment.color"></div>
+              </div>
+              <small>{{ st.progressPct }}%</small>
+            </div>
+          </td>
+          <td class="text-center cursor-pointer" (click)="toggleTopHistory.emit(st.installment.id)">{{ st.endDate }}</td>
+          <td class="text-center">
+            <div class="d-flex justify-content-center gap-1">
+              <div class="inst-icon-slot">
+                @if (st.loanStatuses.length === 0 && st.paidInstallments > 0) {
+                  <button class="btn btn-link btn-sm p-0 text-muted" (click)="undoInstallmentPayment(st.installment)" [attr.title]="'INSTALLMENTS.UNDO_PAYMENT' | translate" [matTooltip]="'INSTALLMENTS.UNDO_PAYMENT' | translate" [attr.aria-label]="'INSTALLMENTS.UNDO_PAYMENT' | translate">↺</button>
+                }
+              </div>
+              <div class="inst-icon-slot">
+                @if (st.loanStatuses.length === 0 && !st.isCompleted) {
+                  <button class="btn btn-link btn-sm p-0 text-success" (click)="markInstallmentAsPaid(st.installment)" [attr.title]="'INSTALLMENTS.MARK_PAID' | translate" [matTooltip]="'INSTALLMENTS.MARK_PAID' | translate" [attr.aria-label]="'INSTALLMENTS.MARK_PAID' | translate">✅</button>
+                }
+              </div>
+              <div class="inst-icon-slot">
+                <button class="btn btn-link btn-sm p-0" (click)="openEdit.emit(st.installment)" [attr.title]="'INSTALLMENTS.EDIT' | translate" [matTooltip]="'INSTALLMENTS.EDIT' | translate" [attr.aria-label]="'INSTALLMENTS.EDIT' | translate">✏️</button>
+              </div>
+              <div class="inst-icon-slot">
+                <button class="btn btn-link btn-sm p-0 text-danger" (click)="confirmDelete.emit(st.installment.id)" [attr.title]="'INSTALLMENTS.DELETE' | translate" [matTooltip]="'INSTALLMENTS.DELETE' | translate" [attr.aria-label]="'INSTALLMENTS.DELETE' | translate">✕</button>
+              </div>
+            </div>
+          </td>
+        </tr>
+
+        <!-- Expanded Detail Row -->
+        @if (expandedLoans['top_' + st.installment.id]) {
+          <tr class="inst-detail-row">
+            <td colspan="9">
+              <div class="p-3 inst-detail-content">
+                <div class="row">
+                  <!-- Payment History -->
+                  <div class="col-md-6 border-start">
+                    <h6 class="small fw-bold mb-2 text-muted uppercase">{{ 'INSTALLMENTS.PAYMENT_HISTORY' | translate }}</h6>
+                    @if (st.combinedPaymentHistory?.length) {
+                      <div class="inst-history-list bg-light p-2 rounded">
+                        @for (p of st.combinedPaymentHistory; track $index) {
+                          <div class="text-muted border-bottom-dashed py-1 d-flex justify-content-between">
+                            <span>
+                              ✓ {{ p.date | date:'shortDate' }}
+                              @if (p.type === 'manual') { (תשלום {{ $index + 1 }}) }
+                              @if (p.type === 'loan') { (הלוואה: {{ p.description }}) }
+                              @if (p.type === 'milestone') { (פעימה: {{ p.description }})
+                                @if (p.milestoneId) { <button class="btn btn-link p-0 text-muted" (click)="emitUndoMilestonePayment(st.installment, p.milestoneId!)" [attr.title]="'INSTALLMENTS.UNDO_PAYMENT' | translate" [matTooltip]="'INSTALLMENTS.UNDO_PAYMENT' | translate" [attr.aria-label]="'INSTALLMENTS.UNDO_PAYMENT' | translate">↺</button> }
+                              }
+                            </span>
+                            <span class="fw-bold">{{ p.amount | number:'1.0-0' }} ₪</span>
+                          </div>
+                        }
+                      </div>
+                    } 
+                    @else {
+                      <span class="text-muted small">אין היסטוריית תשלומים ידנית</span>
+                    }
+                  </div>
+
+                  <!-- Loans Detail (if any) -->
+                  <div class="col-md-6">
+                    @if (st.loanStatuses.length > 0) {
+                      <h6 class="small fw-bold mb-2 text-muted uppercase">{{ 'INSTALLMENTS.LOANS_DETAIL' | translate }}</h6>
+                      @for (ls of st.loanStatuses; track ls.loan.id) {
+                        <div class="mb-3 p-2 rounded bg-opacity-10 bg-secondary">
+                          <div class="d-flex justify-content-between align-items-center mb-2 small">
+                            <span class="fw-bold cursor-pointer" (click)="toggleLoanHistory.emit(ls.loan.id)">
+                              {{ ls.loan.description || 'הלוואה' }} ({{ ls.progressPct }}%)
+                              <small class="text-muted ms-1">({{ ls.monthsLeft }} חודשים נותרו)</small>
+                              <span class="ms-1 inst-toggle-arrow">{{ expandedLoans[ls.loan.id] ? '▼' : '▶' }}</span> 
+                            </span>
+                            <div class="d-flex align-items-center gap-2">
+                              <span class="text-muted small">{{ ls.paidAmount | number:'1.0-0' }} / {{ ls.loan.totalLoanAmount | number:'1.0-0' }} ₪</span>
+                              <div class="d-flex gap-1">
+                                @if (ls.paidInstallments > 0) {
+                                  <button class="btn btn-link p-0 text-muted inst-line-height-reset" type="button" 
+                                  [attr.title]="'INSTALLMENTS.UNDO_PAYMENT' | translate" [matTooltip]="'INSTALLMENTS.UNDO_PAYMENT' | translate" [attr.aria-label]="'INSTALLMENTS.UNDO_PAYMENT' | translate" (click)="undoLoanPayment(st.installment, ls.loan.id)">↺</button>
+                                }
+                                @if (!ls.isCompleted) {
+                                <button class="btn btn-link p-0 text-success inst-line-height-reset" type="button" [title]="'INSTALLMENTS.MARK_PAID' | translate" [matTooltip]="'INSTALLMENTS.MARK_PAID' | translate" [attr.aria-label]="'INSTALLMENTS.MARK_PAID' | translate" (click)="markLoanAsPaid(st.installment, ls.loan)">✅</button>
+                                }
+                              </div>
+                            </div>
+                          </div>
+                          <div class="progress inst-loan-progress-bar">
+                            <div class="progress-bar" [style.width.%]="ls.progressPct" [style.background-color]="st.installment.color"></div>
+                          </div>
+
+                          <!-- Loan Payment History inside Table Expanded Row -->
+                          @if (expandedLoans[ls.loan.id] && ls.loan.payments?.length) {
+                            <div class="bg-white inst-history-text p-2 mt-2 rounded shadow-sm border">
+                              @for (p of ls.loan.payments; track $index) {
+                                <div class="text-muted border-bottom-dashed py-1 d-flex justify-content-between">
+                                  <span>✓ {{ p.date | date:'shortDate' }} (תשלום {{ $index + 1 }})</span>
+                                  <span class="fw-bold">{{ p.amount | number:'1.0-0' }} ₪</span>
+                                </div>
+                              }
+                            </div>
+                          }
+                        </div>
+                      }
+                    }
+
+                    @if (st.upcomingPayments?.length) {
+                      <h6 class="small fw-bold mt-3 mb-2 text-primary uppercase">{{ 'INSTALLMENTS.UPCOMING_PAYMENTS' | translate }}</h6>
+                      <div class="inst-history-list bg-light p-2 rounded">
+                        @for (p of st.upcomingPayments; track $index) {
+                          <div class="d-flex justify-content-between py-1 border-bottom-dashed small align-items-center">
+                            <span>
+                              📅 {{ p.date | date:'shortDate' }}
+                              @if (p.type === 'milestone') { (פעימה: {{ p.description }}) }
+                            </span>
+                            <div class="d-flex gap-1">
+                              @if (p.type === 'milestone' && p.milestoneId) {
+                                <button class="btn btn-link p-0 text-success" (click)="emitMarkMilestoneAsPaid(st.installment, p.milestoneId!)" [title]="'INSTALLMENTS.MARK_PAID' | translate" [matTooltip]="'INSTALLMENTS.MARK_PAID' | translate" [attr.aria-label]="'INSTALLMENTS.MARK_PAID' | translate">✅</button>
+                              }
+                            </div>
+                            <span class="fw-bold">{{ p.amount | number:'1.0-0' }} ₪</span>
+                          </div>
+                        }
+                      </div>
+                    }
+                  </div>
+                </div>
+              </div>
+            </td>
+          </tr>
+        }
+      }
+    </tbody>
+  </table>
+</div>

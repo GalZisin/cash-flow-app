@@ -21,6 +21,14 @@ export interface Milestone {
     date: string;       // תאריך התשלום (YYYY-MM)
 }
 
+// New interface for Milestone Payments
+export interface MilestonePayment {
+    date: string;
+    amount: number;
+    milestoneId: string;
+    description?: string;
+}
+
 export interface Installment {
     id: string;
     name: string;
@@ -36,6 +44,7 @@ export interface Installment {
     payments?: { date: string, amount: number }[]; // היסטוריית תשלומים ברמה הראשית
     loanComponents: LoanComponent[]; // רשימת ההלוואות המשויכות
     milestones?: Milestone[];        // פעימות תשלום לפי אחוזים
+    milestonePayments?: MilestonePayment[]; // תיעוד תשלומים שבוצעו עבור פעימות
 }
 
 export interface LoanComponentStatus {
@@ -53,12 +62,16 @@ export interface InstallmentStatus {
     remainingAmount: number;    // סכום שנותר לתשלום
     paidAmount: number;         // סכום ששולם (כולל מקדמה)
     paidInstallments: number;   // מספר תשלומים ששולמו
+    paidMilestonesCount: number; // כמה פעימות ששולמו
     totalInstallments: number;  // מספר תשלומים כולל
     progressPct: number;        // אחוז התקדמות 0-100
     endDate: string;            // תאריך סיום צפוי
     isCompleted: boolean;       // האם הסתיים
     monthsLeft: number;         // חודשים שנותרו
     loanStatuses: LoanComponentStatus[];
+    combinedPaymentHistory?: { date: string, amount: number, type: 'manual' | 'loan' | 'milestone', description?: string, milestoneId?: string }[];
+    upcomingPayments?: { date: string, amount: number, type: 'manual' | 'loan' | 'milestone', description?: string, milestoneId?: string }[];
+    milestonePayments?: MilestonePayment[]; // Include actual milestone payments in status
 }
 
 export interface CashFlowWarning {

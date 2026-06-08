@@ -1,0 +1,46 @@
+.inst-label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-bottom: 4px;
+}
+
+// Import shared dialog styles
+@import '../shared-dialog.scss';
+
+.inst-calc-hint {
+    background: #f0f4ff;
+    border: 1px solid #c7d2fe;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 0.82rem;
+    color: #2d4fd6;
+}
+
+// ── Color picker ───────────────────────────────────
+.inst-colors {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.inst-color-dot {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: transform 0.12s;
+
+    &:hover {
+        transform: scale(1.2);
+    }
+}
+
+.inst-color-dot-active {
+    border-color: #1e293b;
+    box-shadow: 0 0 0 2px #fff inset;
+}
