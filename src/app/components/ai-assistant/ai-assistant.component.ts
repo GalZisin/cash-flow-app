@@ -10,6 +10,7 @@ import { CashFlowService } from '../../services/cash-flow.service';
 import { InstallmentService } from '../../services/installment.service';
 import { ThemeService } from '../../services/theme.service';
 import { InvestmentService } from '../../services/investment.service';
+import { AiReportService } from '../../services/ai-report.service';
 
 type ActiveTab = 'chat' | 'analysis' | 'scenario' | 'dashboard';
 
@@ -57,11 +58,15 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
   insightsLoaded = false;
   aiResponseLang: 'he' | 'en' = 'he'; // עברית כברירת מחדל
 
+  // Confirmation for deleting chat
+  pendingDeleteChatId: string | null = null;
+
   private shouldScroll = false;
 
   // הגישה החדשה: שימוש ב-inject() במקום ב-Constructor
   private ai = inject(AiService);
   private convService = inject(ConversationService);
+  private reportService = inject(AiReportService);
   public lang = inject(LanguageService);
   private translate = inject(TranslateService);
   private cashFlowService = inject(CashFlowService);
@@ -140,9 +145,18 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
     const prompt = `Please provide 3-4 short, proactive financial insights or warnings based on my data. Focus on trends and future risks. Be concise and practical. Respond strictly in ${langText}.`;
     this.ai.chat(prompt).subscribe({
       next: res => {
-        // פיצול התשובה לרשימה (בהנחה שה-AI מחזיר בולטים)
-        this.insights = res.answer.split('\n').filter(l => l.trim().length > 5);
+        const lines = res.answer.split('\n').filter(l => l.trim().length > 5);
+        this.insights = lines;
         this.insightsLoading = false;
+
+        // שמירה לתיעוד ב-JSON
+        this.reportService.save({
+          type: 'insights',
+          content: lines,
+          createdAt: new Date().toISOString()
+        }).subscribe({
+          error: err => console.error('Failed to archive insights:', err)
+        });
       },
       error: () => { this.insightsLoading = false; }
     });
@@ -159,10 +173,23 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
     this.shouldScroll = true;
   }
 
-  deleteConversation(id: string, event: Event) {
+  confirmDeleteChat(id: string, event: Event) {
     event.stopPropagation();
-    this.convService.delete(id).subscribe();
-    if (this.activeConversationId === id) this.newConversation();
+    this.pendingDeleteChatId = id;
+  }
+
+  cancelDeleteChat() {
+    this.pendingDeleteChatId = null;
+  }
+
+  doDeleteChat() {
+    if (this.pendingDeleteChatId) {
+      const id = this.pendingDeleteChatId;
+      this.convService.delete(id).subscribe(() => {
+        if (this.activeConversationId === id) this.newConversation();
+        this.pendingDeleteChatId = null;
+      });
+    }
   }
 
   private saveConversation() {
@@ -281,7 +308,18 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
     this.analysisLoading = true;
     this.analysisText = '';
     this.ai.getAnalysis().subscribe({
-      next: res => { this.analysisText = res.analysis; this.analysisLoading = false; },
+      next: res => {
+        this.analysisText = res.analysis;
+        this.analysisLoading = false;
+        // שמירה לתיעוד ב-JSON
+        this.reportService.save({
+          type: 'analysis',
+          content: res.analysis,
+          createdAt: new Date().toISOString()
+        }).subscribe({
+          error: err => console.error('Failed to archive analysis:', err)
+        });
+      },
       error: err => { this.analysisText = `Error: ${err.error?.error || 'Failed'}`; this.analysisLoading = false; }
     });
   }
@@ -301,7 +339,7 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
   }
 
   private scrollToBottom() {
-    try { this.chatContainer.nativeElement.scrollTop = this.chatContainer.nativeElement.scrollHeight; } catch {}
+    try { this.chatContainer.nativeElement.scrollTop = this.chatContainer.nativeElement.scrollHeight; } catch { }
   }
 
   formatText(text: string): string {
