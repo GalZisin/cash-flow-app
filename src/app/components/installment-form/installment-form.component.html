@@ -22,15 +22,32 @@
           [(ngModel)]="form.name" />
       </div>
 
+      <!-- סוג תשלום -->
+      <div class="inst-field mb-3">
+        <label class="inst-label">{{ 'INSTALLMENTS.PAYMENT_TYPE' | translate }}</label>
+        <div class="d-flex gap-3">
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="paymentType" id="typeManual" value="manual" [(ngModel)]="form.paymentType" (ngModelChange)="onPaymentTypeChange.emit()">
+            <label class="form-check-label" for="typeManual">{{ 'INSTALLMENTS.TYPE_MANUAL' | translate }}</label>
+          </div>
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="paymentType" id="typeLoan" value="loan" [(ngModel)]="form.paymentType" (ngModelChange)="onPaymentTypeChange.emit()">
+            <label class="form-check-label" for="typeLoan">{{ 'INSTALLMENTS.TYPE_LOAN' | translate }}</label>
+          </div>
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="paymentType" id="typeMilestone" value="milestone" [(ngModel)]="form.paymentType" (ngModelChange)="onPaymentTypeChange.emit()">
+            <label class="form-check-label" for="typeMilestone">{{ 'INSTALLMENTS.TYPE_MILESTONE' | translate }}</label>
+          </div>
+        </div>
+      </div>
+
       <!-- סכומים -->
       <div class="row g-1 mb-3">
         <div class="col-3">
           <label class="inst-label" for="inst-total">{{ 'INSTALLMENTS.TOTAL' | translate }}
-            @if ((form.loanComponents && form.loanComponents.length > 0) || (form.milestones && form.milestones.length > 0)) { (מחושב) }
           </label>
           <input id="inst-total" type="number" class="form-control form-control-sm"
-            placeholder="0" title="סכום כולל" aria-label="סכום כולל"
-            [readonly]="(form.loanComponents && form.loanComponents.length > 0) || (form.milestones && form.milestones.length > 0)" [(ngModel)]="form.totalAmount" />
+            placeholder="0" title="סכום כולל" aria-label="סכום כולל" [(ngModel)]="form.totalAmount" />
         </div>
         <div class="col-3">
           <label class="inst-label" for="inst-down">{{ 'INSTALLMENTS.DOWN_PAYMENT' | translate }}</label>
@@ -38,137 +55,142 @@
             placeholder="0" title="מקדמה" aria-label="מקדמה"
             [(ngModel)]="form.downPayment" (ngModelChange)="emitUpdateParentTotals()" />
         </div>
+        @if (form.paymentType === 'manual') {
         <div class="col-3">
           <label class="inst-label" for="inst-count">{{ 'INSTALLMENTS.INSTALLMENTS_COUNT' | translate }}
-            @if (form.loanComponents && form.loanComponents.length > 0) { (מחושב) }
           </label>
           <input id="inst-count" type="number" class="form-control form-control-sm"
             placeholder="0" title="{{ 'INSTALLMENTS.INSTALLMENTS_COUNT' | translate }}"
-            [readonly]="(form.loanComponents && form.loanComponents.length > 0)" [(ngModel)]="form.installmentsCount" (ngModelChange)="emitOnInstallmentsCountChange()" />
+            [(ngModel)]="form.installmentsCount" (ngModelChange)="emitOnInstallmentsCountChange()" />
         </div>
         <div class="col-3">
-          <label class="inst-label" for="inst-monthly">{{ 'INSTALLMENTS.MONTHLY' | translate }} @if (form.loanComponents && form.loanComponents.length > 0) { (מחושב) }</label>
+          <label class="inst-label" for="inst-monthly">{{ 'INSTALLMENTS.MONTHLY' | translate }}</label>
           <input id="inst-monthly" type="number" class="form-control form-control-sm"
             placeholder="0" title="תשלום חודשי" aria-label="תשלום חודשי"
-            [readonly]="form.loanComponents && form.loanComponents.length > 0" [(ngModel)]="form.monthlyPayment" (ngModelChange)="emitOnMonthlyPaymentChange()" />
+            [(ngModel)]="form.monthlyPayment" (ngModelChange)="emitOnMonthlyPaymentChange()" />
         </div>
+        }
       </div>
 
       <!-- רכיבי הלוואה / תשלומים -->
       <div class="mb-3">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-          <label class="inst-label m-0">{{ 'INSTALLMENTS.LOANS_DETAIL_FORM' | translate }}</label>
-          <button type="button" class="btn btn-outline-primary btn-sm" (click)="emitAddLoanComponent()">+ {{ 'INSTALLMENTS.ADD_LOAN_COMPONENT' | translate }}</button>
-        </div>
-
-        @if (form.loanComponents && form.loanComponents.length > 0) {
-          <!-- כותרות לשדות הלוואה -->
-          <div class="row g-1 mb-1 fw-medium text-muted px-2 inst-loan-header-row">
-            <div class="col-2">{{ 'CASH_FLOW.DESCRIPTION' | translate }}</div>
-            <div class="col-1">{{ 'INSTALLMENTS.TOTAL_LOAN_AMOUNT' | translate }}</div>
-            <div class="col-1">ריבית %</div>
-            <div class="col-1">{{ 'INSTALLMENTS.MONTHLY_PAYMENT' | translate }}</div>
-            <div class="col-1">חודשים</div>
-            <div class="col-1">תחילת הלוואה</div>
-            <div class="col-2">חודש פירעון</div>
-            <div class="col-2">סכום פירעון</div>
-            <div class="col-1 text-center">הסרה</div>
+        @if (form.paymentType === 'loan') {
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <label class="inst-label m-0">{{ 'INSTALLMENTS.LOANS_DETAIL_FORM' | translate }}</label>
+            <button type="button" class="btn btn-outline-primary btn-sm" (click)="emitAddLoanComponent()">+ {{ 'INSTALLMENTS.ADD_LOAN_COMPONENT' | translate }}</button>
           </div>
-        }
 
-        @for (loan of form.loanComponents; track loan.id; let idx = $index) {
-          <div class="row g-1 mb-2 align-items-center border p-2 rounded">
-            <div class="col-2">
-              <input type="text" class="form-control form-control-sm" 
-                placeholder="{{ 'CASH_FLOW.DESCRIPTION' | translate }}" 
-                title="{{ 'CASH_FLOW.DESCRIPTION' | translate }}"
-                [(ngModel)]="loan.description">
+          @if (form.loanComponents && form.loanComponents.length > 0) {
+            <!-- כותרות לשדות הלוואה -->
+            <div class="row g-1 mb-1 fw-medium text-muted px-2 inst-loan-header-row">
+              <div class="col-2">{{ 'CASH_FLOW.DESCRIPTION' | translate }}</div>
+              <div class="col-1">{{ 'INSTALLMENTS.TOTAL_LOAN_AMOUNT' | translate }}</div>
+              <div class="col-1">ריבית %</div>
+              <div class="col-1">{{ 'INSTALLMENTS.MONTHLY_PAYMENT' | translate }}</div>
+              <div class="col-1">חודשים</div>
+              <div class="col-1">תחילת הלוואה</div>
+              <div class="col-2">חודש פירעון</div>
+              <div class="col-2">סכום פירעון</div>
+              <div class="col-1 text-center">הסרה</div>
             </div>
-            <div class="col-1">
-              <input type="number" class="form-control form-control-sm" 
-                placeholder="{{ 'INSTALLMENTS.TOTAL_LOAN_AMOUNT' | translate }}" 
-                title="{{ 'INSTALLMENTS.TOTAL_LOAN_AMOUNT' | translate }}"
-                [(ngModel)]="loan.totalLoanAmount" (ngModelChange)="emitCalculateLoanPMT(loan)">
+          }
+
+          @for (loan of form.loanComponents; track loan.id; let idx = $index) {
+            <div class="row g-1 mb-2 align-items-center border p-2 rounded">
+              <div class="col-2">
+                <input type="text" class="form-control form-control-sm" 
+                  placeholder="{{ 'CASH_FLOW.DESCRIPTION' | translate }}" 
+                  title="{{ 'CASH_FLOW.DESCRIPTION' | translate }}"
+                  [(ngModel)]="loan.description">
+              </div>
+              <div class="col-1">
+                <input type="number" class="form-control form-control-sm" 
+                  placeholder="{{ 'INSTALLMENTS.TOTAL_LOAN_AMOUNT' | translate }}" 
+                  title="{{ 'INSTALLMENTS.TOTAL_LOAN_AMOUNT' | translate }}"
+                  [(ngModel)]="loan.totalLoanAmount" (ngModelChange)="emitCalculateLoanPMT(loan)">
+              </div>
+              <div class="col-1">
+                <input type="number" class="form-control form-control-sm" 
+                  placeholder="%" title="ריבית שנתית"
+                  [(ngModel)]="loan.interestRate" (ngModelChange)="emitCalculateLoanPMT(loan)">
+              </div>
+              <div class="col-1">
+                <input type="number" class="form-control form-control-sm" 
+                  placeholder="{{ 'INSTALLMENTS.MONTHLY_PAYMENT' | translate }}"
+                  title="{{ 'INSTALLMENTS.MONTHLY_PAYMENT' | translate }}"
+                  [(ngModel)]="loan.monthlyPayment" (ngModelChange)="emitUpdateParentTotals()">
+              </div>
+              <div class="col-1">
+                <input type="number" class="form-control form-control-sm" 
+                  placeholder="חודשים" title="{{ 'INSTALLMENTS.INSTALLMENTS_COUNT' | translate }}"
+                  [(ngModel)]="loan.installmentsCount" (ngModelChange)="emitCalculateLoanPMT(loan)">
+              </div>
+              <div class="col-1">
+                <input type="date" class="form-control form-control-sm" 
+                  placeholder="{{ 'INSTALLMENTS.START_DATE' | translate }}"
+                  title="{{ 'INSTALLMENTS.START_DATE' | translate }}"
+                  [(ngModel)]="loan.startDate">
+              </div>
+              <div class="col-2">
+                <input type="date" class="form-control form-control-sm" 
+                  placeholder="חודש פירעון" title="חודש פירעון"
+                  [(ngModel)]="loan.payoffDate" (ngModelChange)="emitCalculatePayoffAmount(loan)">
+              </div>
+              <div class="col-2">
+                <input type="number" class="form-control form-control-sm" 
+                  placeholder="סכום" title="סכום פירעון"
+                  [(ngModel)]="loan.payoffAmount">
+              </div>
+              <div class="col-1 text-center">
+                <button type="button" class="btn btn-link text-danger p-0" (click)="emitRemoveLoanComponent(idx)" [attr.title]="'INSTALLMENTS.DELETE' | translate" [attr.aria-label]="'INSTALLMENTS.DELETE' | translate">✕</button>
+              </div>
             </div>
-            <div class="col-1">
-              <input type="number" class="form-control form-control-sm" 
-                placeholder="%" title="ריבית שנתית"
-                [(ngModel)]="loan.interestRate" (ngModelChange)="emitCalculateLoanPMT(loan)">
-            </div>
-            <div class="col-1">
-              <input type="number" class="form-control form-control-sm" 
-                placeholder="{{ 'INSTALLMENTS.MONTHLY_PAYMENT' | translate }}"
-                title="{{ 'INSTALLMENTS.MONTHLY_PAYMENT' | translate }}"
-                [(ngModel)]="loan.monthlyPayment" (ngModelChange)="emitUpdateParentTotals()">
-            </div>
-            <div class="col-1">
-              <input type="number" class="form-control form-control-sm" 
-                placeholder="חודשים" title="{{ 'INSTALLMENTS.INSTALLMENTS_COUNT' | translate }}"
-                [(ngModel)]="loan.installmentsCount" (ngModelChange)="emitCalculateLoanPMT(loan)">
-            </div>
-            <div class="col-1">
-              <input type="date" class="form-control form-control-sm" 
-                placeholder="{{ 'INSTALLMENTS.START_DATE' | translate }}"
-                title="{{ 'INSTALLMENTS.START_DATE' | translate }}"
-                [(ngModel)]="loan.startDate">
-            </div>
-            <div class="col-2">
-              <input type="date" class="form-control form-control-sm" 
-                placeholder="חודש פירעון" title="חודש פירעון"
-                [(ngModel)]="loan.payoffDate" (ngModelChange)="emitCalculatePayoffAmount(loan)">
-            </div>
-            <div class="col-2">
-              <input type="number" class="form-control form-control-sm" 
-                placeholder="סכום" title="סכום פירעון"
-                [(ngModel)]="loan.payoffAmount">
-            </div>
-            <div class="col-1 text-center">
-              <button type="button" class="btn btn-link text-danger p-0" (click)="emitRemoveLoanComponent(idx)" [attr.title]="'INSTALLMENTS.DELETE' | translate" [attr.aria-label]="'INSTALLMENTS.DELETE' | translate">✕</button>
-            </div>
-          </div>
+          }
         }
       </div>
 
       <!-- פעימות תשלום (Milestones) -->
-      <div class="mb-3">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-          <label class="inst-label m-0">{{ 'INSTALLMENTS.MILESTONES_TITLE' | translate }}</label>
-          <button type="button" class="btn btn-outline-primary btn-sm" (click)="emitAddMilestone()">+ {{ 'INSTALLMENTS.ADD_MILESTONE' | translate }}</button>
-        </div>
-
-        @if (form.milestones && form.milestones.length > 0) {
-          <div class="row g-1 mb-1 fw-medium text-muted px-2 inst-loan-header-row">
-            <div class="col-4">{{ 'CASH_FLOW.DESCRIPTION' | translate }}</div>
-            <div class="col-2">{{ 'INSTALLMENTS.PERCENTAGE' | translate }}</div>
-            <div class="col-3">{{ 'CASH_FLOW.AMOUNT' | translate }}</div>
-            <div class="col-2">{{ 'INSTALLMENTS.MILESTONE_DATE' | translate }}</div>
-            <div class="col-1 text-center">הסרה</div>
+      @if (form.paymentType === 'milestone') {
+        <div class="mb-3">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <label class="inst-label m-0">{{ 'INSTALLMENTS.MILESTONES_TITLE' | translate }}</label>
+            <button type="button" class="btn btn-outline-primary btn-sm" (click)="emitAddMilestone()">+ {{ 'INSTALLMENTS.ADD_MILESTONE' | translate }}</button>
           </div>
-        }
 
-        @for (m of form.milestones; track m.id; let idx = $index) {
-          <div class="row g-1 mb-2 align-items-center border p-2 rounded bg-light bg-opacity-50">
-            <div class="col-4">
-              <input type="text" class="form-control form-control-sm" [(ngModel)]="m.description" placeholder="תיאור (למשל: גמר שלד)">
+          @if (form.milestones && form.milestones.length > 0) {
+            <div class="row g-1 mb-1 fw-medium text-muted px-2 inst-loan-header-row">
+              <div class="col-4">{{ 'CASH_FLOW.DESCRIPTION' | translate }}</div>
+              <div class="col-2">{{ 'INSTALLMENTS.PERCENTAGE' | translate }}</div>
+              <div class="col-3">{{ 'CASH_FLOW.AMOUNT' | translate }}</div>
+              <div class="col-2">{{ 'INSTALLMENTS.MILESTONE_DATE' | translate }}</div>
+              <div class="col-1 text-center">הסרה</div>
             </div>
-            <div class="col-2">
-              <div class="input-group input-group-sm">
-                <input type="number" title="percentage" class="form-control" [(ngModel)]="m.percentage" (ngModelChange)="emitOnMilestonePctChange(m)">
-                <span class="input-group-text">%</span>
+          }
+
+          @for (m of form.milestones; track m.id; let idx = $index) {
+            <div class="row g-1 mb-2 align-items-center border p-2 rounded bg-light bg-opacity-50">
+              <div class="col-4">
+                <input type="text" class="form-control form-control-sm" [(ngModel)]="m.description" placeholder="תיאור (למשל: גמר שלד)">
+              </div>
+              <div class="col-2">
+                <div class="input-group input-group-sm">
+                  <input type="number" title="percentage" class="form-control" [(ngModel)]="m.percentage" (ngModelChange)="emitOnMilestonePctChange(m)">
+                  <span class="input-group-text">%</span>
+                </div>
+              </div>
+              <div class="col-3">
+                <input type="number" title="amount" class="form-control form-control-sm" [(ngModel)]="m.amount" (ngModelChange)="emitOnMilestoneAmountChange(m)">
+              </div>
+              <div class="col-2">
+                <input type="date" title="date" class="form-control form-control-sm" [(ngModel)]="m.date">
+              </div>
+              <div class="col-1 text-center">
+                <button type="button" class="btn btn-link text-danger p-0" (click)="emitRemoveMilestone(idx)" [attr.title]="'INSTALLMENTS.DELETE' | translate" [attr.aria-label]="'INSTALLMENTS.DELETE' | translate">✕</button>
               </div>
             </div>
-            <div class="col-3">
-              <input type="number" title="amount" class="form-control form-control-sm" [(ngModel)]="m.amount" (ngModelChange)="emitOnMilestoneAmountChange(m)">
-            </div>
-            <div class="col-2">
-              <input type="date" title="date" class="form-control form-control-sm" [(ngModel)]="m.date">
-            </div>
-            <div class="col-1 text-center">
-              <button type="button" class="btn btn-link text-danger p-0" (click)="emitRemoveMilestone(idx)" [attr.title]="'INSTALLMENTS.DELETE' | translate" [attr.aria-label]="'INSTALLMENTS.DELETE' | translate">✕</button>
-            </div>
-          </div>
-        }
-      </div>
+          }
+        </div>
+      }
 
       @if (form.downPayment > form.totalAmount) {
         <div class="text-danger small mb-2 fw-medium">

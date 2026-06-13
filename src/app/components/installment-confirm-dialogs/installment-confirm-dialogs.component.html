@@ -88,6 +88,31 @@
           title="{{ 'INSTALLMENTS.PAYMENT_DATE' | translate }}"
           [ngModel]="paymentDateInput" (ngModelChange)="onPaymentDateInputChange($event)" />
       </div>
+
+      <!-- Milestone specific fields -->
+      @if (milestoneDescriptionInput) {
+        <div class="inst-field mb-3">
+          <label class="inst-label">{{ 'CASH_FLOW.DESCRIPTION' | translate }}</label>
+          <input type="text" class="form-control form-control-sm"
+            [ngModel]="milestoneDescriptionInput" (ngModelChange)="onMilestoneDescriptionInputChange($event)" />
+        </div>
+        <div class="row g-2">
+          <div class="col-6">
+            <div class="inst-field">
+              <label class="inst-label">{{ 'INSTALLMENTS.PERCENTAGE' | translate }}</label>
+              <input type="number" class="form-control form-control-sm"
+                [ngModel]="milestonePercentageInput" (ngModelChange)="onMilestonePercentageInputChange($event)" />
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="inst-field">
+              <label class="inst-label">{{ 'CASH_FLOW.AMOUNT' | translate }}</label>
+              <input type="number" class="form-control form-control-sm"
+                [ngModel]="milestoneAmountInput" (ngModelChange)="onMilestoneAmountInputChange($event)" />
+            </div>
+          </div>
+        </div>
+      }
     </div>
 
     <div class="inst-dialog-footer">

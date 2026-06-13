@@ -28,6 +28,7 @@ export class InstallmentFormComponent {
   @Output() addLoanComponent = new EventEmitter<void>();
   @Output() removeLoanComponent = new EventEmitter<number>();
   @Output() calculateLoanPMT = new EventEmitter<LoanComponent>();
+  @Output() onPaymentTypeChange = new EventEmitter<void>();
   @Output() calculatePayoffAmount = new EventEmitter<LoanComponent>();
   @Output() onMonthlyPaymentChange = new EventEmitter<void>();
   @Output() addMilestone = new EventEmitter<void>();

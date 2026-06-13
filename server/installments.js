@@ -11,7 +11,9 @@ function readInstallments() {
     const items = JSON.parse(rawData);
     return items.map(item => ({
         ...item,
-        loanComponents: item.loanComponents || [] // Ensure loanComponents is always an array
+        loanComponents: item.loanComponents || [], // Ensure loanComponents is always an array
+        milestones: item.milestones || [],
+        milestonePayments: item.milestonePayments || []
     }));
 }
 
@@ -37,7 +39,10 @@ router.post('/', (req, res) => {
         notes: req.body.notes || '',
         manualPaidCount: Number(req.body.manualPaidCount) || 0,
         lastManualPaymentDate: req.body.lastManualPaymentDate || undefined,
+        paymentType: req.body.paymentType || 'manual',
         loanComponents: req.body.loanComponents || [],
+        milestones: req.body.milestones || [],
+        milestonePayments: req.body.milestonePayments || [],
         payments: req.body.payments || []
     };
     items.push(item);
@@ -62,6 +67,9 @@ router.put('/:id', (req, res) => {
         manualPaidCount: req.body.manualPaidCount !== undefined ? Number(req.body.manualPaidCount) : items[idx].manualPaidCount,
         lastManualPaymentDate: req.body.lastManualPaymentDate ?? items[idx].lastManualPaymentDate,
         loanComponents: req.body.loanComponents ?? items[idx].loanComponents,
+        paymentType: req.body.paymentType ?? items[idx].paymentType,
+        milestones: req.body.milestones ?? items[idx].milestones,
+        milestonePayments: req.body.milestonePayments ?? items[idx].milestonePayments,
         payments: req.body.payments ?? items[idx].payments,
         id: req.params.id
     };

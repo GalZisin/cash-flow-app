@@ -242,6 +242,12 @@
     "WARNING_TITLE": "אזהרת תזרים מזומנים",
     "WARNING_MESSAGE": "הוספת/עדכון פריסה זו עלולה לגרום לחריגות בתזרים המזומנים בחודשים הבאים:",
     "WARNING_PROCEED_QUESTION": "האם ברצונך להמשיך למרות האזהרות?",
-    "WARNING_PROCEED_BUTTON": "כן, המשך"
+    "WARNING_PROCEED_BUTTON": "כן, המשך",
+    "PAYMENT_TYPE": "סוג תשלום",
+    "TYPE_MANUAL": "תשלומים קבועים",
+    "TYPE_LOAN": "הלוואות",
+    "TYPE_MILESTONE": "פעימות",
+    "MARK_MILESTONE_PAID": "סמן פעימה כבוצעה",
+    "UNDO_MILESTONE_PAYMENT": "בטל תשלום פעימה"
   }
 }

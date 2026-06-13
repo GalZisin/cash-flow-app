@@ -9,7 +9,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { take } from 'rxjs';
 import { InstallmentService } from '../../services/installment.service';
-import { Installment, InstallmentStatus, LoanComponent, CashFlowWarning, MilestonePayment } from '../../models/installment.model';
+import { Installment, InstallmentStatus, LoanComponent, CashFlowWarning, MilestonePayment, Milestone } from '../../models/installment.model';
 import { CashFlowService } from '../../services/cash-flow.service'; // Import CashFlowService
 import { InstallmentsHeaderComponent } from '../installments-header/installments-header.component';
 import { InstallmentConfirmDialogsComponent } from '../installment-confirm-dialogs/installment-confirm-dialogs.component';
@@ -23,6 +23,11 @@ const COLORS = [
     '#c0392b', '#0891b2', '#374151', '#9d174d'
 ];
 
+export enum InstallmentViewMode {
+    GRID = 'grid',
+    TABLE = 'table'
+}
+
 const EMPTY_FORM = (): Omit<Installment, 'id'> => ({
     name: '',
     totalAmount: 0,
@@ -34,7 +39,8 @@ const EMPTY_FORM = (): Omit<Installment, 'id'> => ({
     notes: '',
     manualPaidCount: 0,    // הוספת ערך ברירת מחדל לשדה החדש
     lastManualPaymentDate: undefined, // הוספת ערך ברירת מחדל
-    loanComponents: [], // Initialize as empty array
+    paymentType: 'manual', // Default to manual payments
+    loanComponents: [],
     milestonePayments: [],
     milestones: [],
     payments: []
@@ -55,6 +61,7 @@ const EMPTY_FORM = (): Omit<Installment, 'id'> => ({
         MatIconModule,
         MatButtonModule,
         InstallmentsHeaderComponent,
+        // InstallmentConfirmDialogsComponent, // This component is not used directly in the template, but rather its methods are called.
         InstallmentConfirmDialogsComponent,
         InstallmentFormComponent,
         InstallmentCardComponent,
@@ -68,13 +75,15 @@ export class InstallmentsComponent implements OnInit {
     items: Installment[] = [];
     statuses: InstallmentStatus[] = [];
     showForm = false;
-    viewMode: 'grid' | 'table' = 'grid';
+    viewMode: InstallmentViewMode = InstallmentViewMode.GRID;
+    readonly ViewMode = InstallmentViewMode; // לאפשר גישה מה-Template
     sortKey: string = 'endDate';
     sortDir: 'asc' | 'desc' = 'asc';
     editingId: string | null = null;
     form: Installment | Omit<Installment, 'id'> = EMPTY_FORM();
     pendingDeleteId: string | null = null;
-    pendingWarnings: CashFlowWarning[] | null = null; // New state for warnings
+    pendingWarnings: CashFlowWarning[] | null = null;
+    // Added milestoneId to pendingUndoAction type
     pendingUndoAction: { item: Installment, loanId?: string, milestoneId?: string } | null = null;
     expandedLoans: Record<string, boolean> = {}; // Track expand state for history
 
@@ -82,6 +91,9 @@ export class InstallmentsComponent implements OnInit {
     currentInstallmentToMarkPaid: Installment | null = null;
     currentMilestoneIdToMarkPaid: string | null = null; // New field to store milestoneId
     currentLoanToMarkPaid: LoanComponent | null = null;
+    milestonePercentageInput: number = 0;
+    milestoneAmountInput: number = 0;
+    milestoneDescriptionInput: string = '';
     paymentDateInput: string = new Date().toISOString().slice(0, 10); // Default to today's date
     readonly COLORS = COLORS;
     readonly Math = Math;
@@ -96,7 +108,11 @@ export class InstallmentsComponent implements OnInit {
         this.svc.items$.pipe(takeUntilDestroyed()).subscribe(items => {
             this.items = items;
             this.statuses = items.map(i => this.svc.getStatus(i));
-            setTimeout(() => this.cdr.detectChanges(), 0); // Defer change detection to avoid assertion error
+            // שימוש ב-requestAnimationFrame נחשב לעיתים קרובות לנקי יותר מ-setTimeout(0)
+            // או פשוט לסמוך על ה-Cycle הבא אם ה-Subscription קורה מחוץ ל-Init
+            requestAnimationFrame(() => {
+                this.cdr.detectChanges();
+            });
         });
     }
 
@@ -142,7 +158,7 @@ export class InstallmentsComponent implements OnInit {
     }
 
     toggleView() {
-        this.viewMode = this.viewMode === 'grid' ? 'table' : 'grid';
+        this.viewMode = this.viewMode === InstallmentViewMode.GRID ? InstallmentViewMode.TABLE : InstallmentViewMode.GRID;
     }
 
     statusOf(id: string): InstallmentStatus {
@@ -156,16 +172,47 @@ export class InstallmentsComponent implements OnInit {
     }
 
     openEdit(item: Installment) {
-        this.form = { ...item };
+        // הבטחת קיום סוג תשלום גם עבור נתונים ישנים
+        const paymentType = item.paymentType ||
+            (item.loanComponents?.length ? 'loan' :
+                (item.milestones?.length ? 'milestone' : 'manual'));
+
+        this.form = { ...item, paymentType };
         this.editingId = item.id;
         this.showForm = true;
+
+        // סנכרון חישובים רלוונטיים לסוג שנבחר
+        if (this.form.paymentType === 'loan') {
+            this.updateTotalsFromLoans();
+        }
+    }
+
+    /**
+     * Resets form fields that are specific to other payment types when the payment type changes.
+     * This prevents data from one type (e.g., loan components) from persisting when switching to another (e.g., milestones).
+     */
+    onPaymentTypeChange() {
+        if (this.form.paymentType === 'manual') {
+            this.form.loanComponents = [];
+            this.form.milestones = [];
+            this.form.milestonePayments = [];
+        } else if (this.form.paymentType === 'loan') {
+            this.form.payments = [];
+            this.form.milestones = [];
+            this.form.milestonePayments = [];
+        } else if (this.form.paymentType === 'milestone') {
+            this.form.payments = [];
+            this.form.loanComponents = [];
+        }
+        // Re-evaluate calculations that might depend on the payment type
+        this.updateTotalsFromLoans(); // For loan type
     }
 
     onInstallmentsCountChange() {
-        const remaining = this.amountAfterDown(this.form);
-        if (this.form.installmentsCount > 0) {
+        if (this.form.paymentType === 'manual' && this.form.installmentsCount > 0) {
+            const remaining = this.amountAfterDown(this.form);
             // חישוב סכום חודשי לפי מספר תשלומים
-            this.form.monthlyPayment = Number((remaining / this.form.installmentsCount).toFixed(2));
+            this.form.monthlyPayment = Math.round((remaining / this.form.installmentsCount) * 100) / 100;
         }
     }
 
@@ -201,12 +248,12 @@ export class InstallmentsComponent implements OnInit {
         this.form.milestones?.splice(index, 1);
     }
 
-    onMilestonePctChange(m: any) {
+    onMilestonePctChange(m: Milestone) {
         const total = Number(this.form.totalAmount) || 0;
         m.amount = Math.round(total * (Number(m.percentage) / 100));
     }
 
-    onMilestoneAmountChange(m: any) {
+    onMilestoneAmountChange(m: Milestone) {
         const total = Number(this.form.totalAmount) || 0;
         if (total > 0) {
             m.percentage = Number(((m.amount / total) * 100).toFixed(1));
@@ -278,44 +325,74 @@ export class InstallmentsComponent implements OnInit {
     }
 
     onMonthlyPaymentChange() {
-        const remaining = this.amountAfterDown(this.form);
-        if (this.form.monthlyPayment > 0 && !(this.form.loanComponents && this.form.loanComponents.length > 0)) { // Only if no loan components
+        if (this.form.paymentType === 'manual' && this.form.monthlyPayment > 0) {
             // חישוב מספר תשלומים לפי סכום חודשי
+            const remaining = this.amountAfterDown(this.form);
             // נשתמש ב-epsilon קטן (0.001) כדי למנוע קפיצה למספר הבא בגלל עיגול של שקלים/אגורות (toFixed)
             this.form.installmentsCount = Math.ceil((remaining / this.form.monthlyPayment) - 0.001);
         }
     }
 
     updateTotalsFromLoans() {
-        // אם אין הלוואות, אנחנו לא דורסים את הערכים הידניים
-        if (!this.form.loanComponents || this.form.loanComponents.length === 0) return;
+        if (this.form.paymentType === 'loan' && this.form.loanComponents?.length) {
+            const loansSum = this.form.loanComponents.reduce((s, l) => s + (Number(l.totalLoanAmount) || 0), 0);
+            const monthlySum = this.form.loanComponents.reduce((s, l) => s + (Number(l.monthlyPayment) || 0), 0);
 
-        const loansSum = this.form.loanComponents.reduce((s, l) => s + (Number(l.totalLoanAmount) || 0), 0);
-        const monthlySum = this.form.loanComponents.reduce((s, l) => s + (Number(l.monthlyPayment) || 0), 0);
+            // עדכון אוטומטי רק אם השדה ריק, כדי לאפשר הזנה ידנית של מחיר מוצר מלא
+            if (this.form.totalAmount === 0) {
+                this.form.totalAmount = loansSum + Number(this.form.downPayment);
+            }
+            this.form.monthlyPayment = monthlySum;
 
-        this.form.totalAmount = loansSum + Number(this.form.downPayment);
-        this.form.monthlyPayment = monthlySum;
-
-        // עדכון מספר התשלומים הכולל לפי ההלוואה הארוכה ביותר
-        if (this.form.loanComponents.length > 0) {
-            this.form.installmentsCount = Math.max(...this.form.loanComponents.map(l => Number(l.installmentsCount) || 0));
+            // עדכון מספר התשלומים הכולל לפי ההלוואה הארוכה ביותר
+            if (this.form.loanComponents.length > 0) {
+                this.form.installmentsCount = Math.max(...this.form.loanComponents.map(l => Number(l.installmentsCount) || 0));
+            }
         }
     }
 
-    // Opens the dialog to mark a payment as paid
+    // Opens the dialog to mark a payment as paid (for manual, loans or milestones via generic events)
     markAsPaid(item: Installment, loan?: LoanComponent, milestoneId?: string) {
+        if (item.paymentType === 'milestone') {
+            // Redirect to milestone-specific dialog to ensure description/percentage are handled
+            this.openMarkMilestoneAsPaidDialog(item, milestoneId);
+            return;
+        }
+
         this.currentInstallmentToMarkPaid = item;
         this.currentLoanToMarkPaid = loan || null;
-        this.paymentDateInput = new Date().toISOString().slice(0, 10); // Reset to today's date
+        this.currentMilestoneIdToMarkPaid = milestoneId || null;
+        this.paymentDateInput = new Date().toISOString().slice(0, 10); // Default to today
         this.showMarkAsPaidDialog = true;
     }
 
-    markMilestoneAsPaid(item: Installment, milestoneId: string) {
+    openMarkMilestoneAsPaidDialog(item: Installment, milestoneId?: string) {
         this.currentInstallmentToMarkPaid = item;
         this.currentLoanToMarkPaid = null; // Not a loan payment for this specific action
         this.paymentDateInput = new Date().toISOString().slice(0, 10); // Default to today's date
+        this.currentMilestoneIdToMarkPaid = milestoneId || null; // Store milestoneId, or null for ad-hoc
+
+        // Initialize dialog fields with milestone data
+        const milestone = item.milestones?.find(m => m.id === milestoneId);
+        if (milestone) {
+            this.milestonePercentageInput = milestone.percentage;
+            this.milestoneAmountInput = milestone.amount;
+            this.milestoneDescriptionInput = milestone.description;
+        }
+        // For ad-hoc payments, ensure inputs are cleared/defaulted
+        if (!milestoneId) {
+            this.milestonePercentageInput = 0;
+            this.milestoneAmountInput = 0;
+            this.milestoneDescriptionInput = ''; // Or a default like 'תשלום פעימה נוסף'
+        }
+
         this.showMarkAsPaidDialog = true;
-        this.currentMilestoneIdToMarkPaid = milestoneId; // Store milestoneId
+    }
+
+    onMilestoneDialogPercentageChange() { // Renamed for clarity, was onMilestonePaymentPctChange
+        if (!this.currentInstallmentToMarkPaid) return;
+        const total = this.currentInstallmentToMarkPaid.totalAmount;
+        this.milestoneAmountInput = Math.round(total * (this.milestonePercentageInput / 100));
     }
 
     confirmMarkAsPaid() {
@@ -324,28 +401,50 @@ export class InstallmentsComponent implements OnInit {
         const milestoneId = this.currentMilestoneIdToMarkPaid;
 
         if (milestoneId) {
-            // Handle milestone payment
-            this.svc.markMilestoneAsPaid(this.currentInstallmentToMarkPaid, milestoneId, this.paymentDateInput).subscribe(() => {
-                this.translate.get('INSTALLMENTS.MARKED_PAID_SUCCESS')
-                    .subscribe(msg => this.snackBar.open(msg, '', { duration: 2500, panelClass: 'snack-success' }));
-                this.cancelMarkAsPaidDialog();
-            });
-        } else {
-        // Existing logic for regular/loan payments
-            this.svc.markAsPaid(
+            // Case 1: Marking an existing milestone as paid
+            this.svc.markMilestoneAsPaid(
                 this.currentInstallmentToMarkPaid,
+                milestoneId,
                 this.paymentDateInput,
-                this.currentLoanToMarkPaid?.id
+                this.milestoneAmountInput,
+                this.milestoneDescriptionInput
+            ).subscribe(() => {
+                this.onMarkAsPaidSuccess();
+            });
+        } else if (this.currentInstallmentToMarkPaid.paymentType === 'milestone') {
+            // Case 2: Adding an ad-hoc milestone payment (no specific milestoneId provided)
+            const newAdHocMilestoneId = Date.now().toString(); // Generate a unique ID for this payment
+            this.svc.addAdHocMilestonePayment(
+                this.currentInstallmentToMarkPaid,
+                newAdHocMilestoneId,
+                this.paymentDateInput,
+                this.milestoneAmountInput,
+                this.milestoneDescriptionInput || 'תשלום פעימה נוסף' // Default description for ad-hoc
             ).subscribe(() => {
                 this.translate.get('INSTALLMENTS.MARKED_PAID_SUCCESS')
                     .subscribe(msg => this.snackBar.open(msg, '', { duration: 2500, panelClass: 'snack-success' }));
                 this.cancelMarkAsPaidDialog();
             });
+        } else {
+            // Existing logic for regular/loan payments
+            this.svc.markAsPaid(
+                this.currentInstallmentToMarkPaid,
+                this.paymentDateInput,
+                this.currentLoanToMarkPaid?.id
+            ).subscribe(() => {
+                this.onMarkAsPaidSuccess();
+            });
         }
     }
 
-    undoPayment(item: Installment, loanId?: string, milestoneId?: string) { // Added milestoneId
-        this.pendingUndoAction = { item, loanId };
+    private onMarkAsPaidSuccess() {
+        this.translate.get('INSTALLMENTS.MARKED_PAID_SUCCESS')
+            .subscribe(msg => this.snackBar.open(msg, '', { duration: 2500, panelClass: 'snack-success' }));
+        this.cancelMarkAsPaidDialog();
+    }
+
+    undoPayment(item: Installment, loanId?: string, milestoneId?: string) {
+        this.pendingUndoAction = { item, loanId, milestoneId };
     }
 
     doUndoPayment() {
@@ -372,11 +471,20 @@ export class InstallmentsComponent implements OnInit {
     }
 
     toggleLoanHistory(loanId: string) {
-        this.expandedLoans[loanId] = !this.expandedLoans[loanId];
+        this.expandedLoans = {
+            ...this.expandedLoans,
+            [loanId]: !this.expandedLoans[loanId]
+        };
+        this.cdr.detectChanges();
     }
 
     toggleTopHistory(id: string) {
-        this.expandedLoans['top_' + id] = !this.expandedLoans['top_' + id];
+        const key = 'top_' + id;
+        this.expandedLoans = {
+            ...this.expandedLoans,
+            [key]: !this.expandedLoans[key]
+        };
+        this.cdr.detectChanges();
     }
 
     // Closes the mark as paid dialog
@@ -385,6 +493,9 @@ export class InstallmentsComponent implements OnInit {
         this.currentInstallmentToMarkPaid = null;
         this.currentMilestoneIdToMarkPaid = null; // Clear milestoneId
         this.currentLoanToMarkPaid = null;
+        this.milestonePercentageInput = 0;
+        this.milestoneAmountInput = 0;
+        this.milestoneDescriptionInput = '';
         this.paymentDateInput = new Date().toISOString().slice(0, 10);
     }
 
@@ -415,13 +526,24 @@ export class InstallmentsComponent implements OnInit {
         this.form.milestones = this.form.milestones || [];
         this.form.milestonePayments = this.form.milestonePayments || [];
 
+        // Basic validation for name and start date
         const nameValid = !!this.form.name.trim();
-        // Allow either monthlyPayment > 0 OR installmentsCount > 0
-        const amountsValid = this.form.totalAmount > 0 && (this.form.monthlyPayment > 0 || this.form.installmentsCount > 0);
         const dateValid = !!this.form.startDate;
-        const downPaymentValid = this.form.downPayment <= this.form.totalAmount;
 
-        return nameValid && amountsValid && dateValid && downPaymentValid;
+        let specificTypeValid = true;
+        if (this.form.paymentType === 'manual') {
+            const amountsValid = this.form.totalAmount > 0 && (this.form.monthlyPayment > 0 || this.form.installmentsCount > 0);
+            const downPaymentValid = this.form.downPayment <= this.form.totalAmount;
+            specificTypeValid = amountsValid && downPaymentValid;
+        } else if (this.form.paymentType === 'loan') {
+            const loansValid = this.form.loanComponents.every(l => l.totalLoanAmount > 0 && l.monthlyPayment > 0 && l.installmentsCount > 0 && !!l.startDate);
+            specificTypeValid = loansValid && this.form.loanComponents.length > 0;
+        } else if (this.form.paymentType === 'milestone') {
+            const milestonesValid = this.form.milestones.every(m => m.amount > 0 && !!m.date);
+            specificTypeValid = milestonesValid && this.form.milestones.length > 0;
+        }
+
+        return nameValid && dateValid && specificTypeValid;
     }
 
     amountAfterDown(item: Omit<Installment, 'id'> | Installment): number {
@@ -429,33 +551,65 @@ export class InstallmentsComponent implements OnInit {
     }
 
     submit(ignoreWarnings: boolean = false) {
-        console.log("submit ignoreWarnings: ", ignoreWarnings)
-        // 1. קיבוע ה-ID עבור הסימולטור והשרת
+        // 1. Ensure ID is set for update operations
         if (this.editingId) {
             (this.form as any).id = this.editingId;
         }
 
-        // 2. המרה למספרים
+        // 2. Type-specific data preparation and numeric conversion
         this.form.totalAmount = Number(this.form.totalAmount) || 0;
         this.form.downPayment = Number(this.form.downPayment) || 0;
         this.form.manualPaidCount = Number(this.form.manualPaidCount) || 0;
 
-        this.form.loanComponents = (this.form.loanComponents || []).map(loan => ({
-            ...loan,
-            totalLoanAmount: Number(loan.totalLoanAmount) || 0,
-            monthlyPayment: Number(loan.monthlyPayment) || 0,
-            installmentsCount: Number(loan.installmentsCount) || 0,
-            paidCount: Number(loan.paidCount) || 0,
-            interestRate: loan.interestRate !== undefined ? Number(loan.interestRate) : 0,
-            payoffAmount: Number(loan.payoffAmount) || 0
-        }));
+        // Clear data for other payment types based on the selected type
+        if (this.form.paymentType === 'manual') {
+            this.form.loanComponents = [];
+            this.form.milestones = [];
+            this.form.milestonePayments = [];
+            // Ensure monthlyPayment and installmentsCount are consistent for manual type
+            const remaining = this.amountAfterDown(this.form);
+            if (this.form.installmentsCount === 0 && this.form.monthlyPayment > 0) {
+                this.form.installmentsCount = Math.ceil(remaining / this.form.monthlyPayment);
+            } else if (this.form.monthlyPayment === 0 && this.form.installmentsCount > 0) {
+                this.form.monthlyPayment = Math.round((remaining / this.form.installmentsCount) * 100) / 100;
+            }
+        } else if (this.form.paymentType === 'loan') {
+            this.form.payments = [];
+            this.form.milestones = [];
+            this.form.milestonePayments = [];
+            // Map loan components and recalculate totals
+            this.form.loanComponents = (this.form.loanComponents || []).map(loan => ({
+                ...loan,
+                totalLoanAmount: Number(loan.totalLoanAmount) || 0,
+                monthlyPayment: Number(loan.monthlyPayment) || 0,
+                installmentsCount: Number(loan.installmentsCount) || 0,
+                paidCount: Number(loan.paidCount) || 0,
+                interestRate: loan.interestRate !== undefined ? Number(loan.interestRate) : 0,
+                payoffAmount: Number(loan.payoffAmount) || 0
+            }));
+            this.updateTotalsFromLoans();
+        } else if (this.form.paymentType === 'milestone') {
+            this.form.payments = [];
+            this.form.loanComponents = [];
+            // Map milestones
+            this.form.milestones = (this.form.milestones || []).map(m => ({
+                ...m,
+                percentage: Number(m.percentage) || 0,
+                amount: Number(m.amount) || 0
+            }));
+            // Calculate installmentsCount based on milestones (duration)
+            if (this.form.milestones.length > 0) {
+                const start = new Date(this.form.startDate);
+                const lastMilestoneDate = new Date(Math.max(...this.form.milestones.map(m => new Date(m.date + '-01').getTime())));
+                this.form.installmentsCount = (lastMilestoneDate.getFullYear() - start.getFullYear()) * 12 + (lastMilestoneDate.getMonth() - start.getMonth()) + 1;
+            } else {
+                this.form.installmentsCount = 0;
+            }
+            this.form.monthlyPayment = 0; // Milestones don't have a fixed monthly payment
+            // totalAmount is user-defined for milestones, so we don't recalculate it here.
+        }
 
-        this.form.milestones = (this.form.milestones || []).map(m => ({
-            ...m,
-            percentage: Number(m.percentage) || 0,
-            amount: Number(m.amount) || 0
-        }));
-
+        // Milestone payments are always mapped if they exist, regardless of current paymentType
         this.form.milestonePayments = (this.form.milestonePayments || []).map(mp => ({
             ...mp,
             amount: Number(mp.amount) || 0
@@ -464,19 +618,6 @@ export class InstallmentsComponent implements OnInit {
         if (!this.formValid) {
             this.translate.get('INSTALLMENTS.INVALID_FORM_FIELDS').subscribe(msg => this.snackBar.open(msg, '', { duration: 2500, panelClass: 'snack-error' }));
             return;
-        }
-
-        // 3. עדכון סופי של סכומי האב לפני הסימולציה
-        if (this.form.loanComponents && this.form.loanComponents.length > 0) {
-            this.form.monthlyPayment = Math.round(this.form.loanComponents.reduce((sum, l) => sum + Number(l.monthlyPayment || 0), 0) * 100) / 100;
-            this.form.installmentsCount = Math.max(1, ...this.form.loanComponents.map(l => Number(l.installmentsCount || 0))); // Ensure at least 1
-        } else {
-            const remaining = this.amountAfterDown(this.form);
-            if (this.form.installmentsCount === 0 && this.form.monthlyPayment > 0) {
-                this.form.installmentsCount = Math.ceil(remaining / this.form.monthlyPayment);
-            } else if (this.form.monthlyPayment === 0 && this.form.installmentsCount > 0) {
-                this.form.monthlyPayment = Number((remaining / this.form.installmentsCount).toFixed(2));
-            }
         }
 
         // --- Simulation for warnings ---
@@ -498,8 +639,8 @@ export class InstallmentsComponent implements OnInit {
 
     private executeSubmit() {
         const obs = this.editingId
-            ? this.svc.update(this.editingId, this.form)
-            : this.svc.add(this.form);
+            ? this.svc.update(this.editingId, this.form as Installment) // Cast to Installment for update
+            : this.svc.add(this.form as Omit<Installment, 'id'>); // Cast to Omit<Installment, 'id'> for add
 
         obs.subscribe(() => {
             this.translate.get(this.editingId ? 'INSTALLMENTS.UPDATED' : 'INSTALLMENTS.ADDED')

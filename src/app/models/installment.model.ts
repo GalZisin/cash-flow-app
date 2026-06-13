@@ -42,6 +42,7 @@ export interface Installment {
     manualPaidCount: number;   // מספר תשלומים שסומנו כבוצעו ידנית
     lastManualPaymentDate?: string; // תאריך התשלום הידני האחרון
     payments?: { date: string, amount: number }[]; // היסטוריית תשלומים ברמה הראשית
+    paymentType?: 'manual' | 'loan' | 'milestone'; // סוג הפריסה: תשלומים קבועים, הלוואה, או פעימות
     loanComponents: LoanComponent[]; // רשימת ההלוואות המשויכות
     milestones?: Milestone[];        // פעימות תשלום לפי אחוזים
     milestonePayments?: MilestonePayment[]; // תיעוד תשלומים שבוצעו עבור פעימות
@@ -69,8 +70,8 @@ export interface InstallmentStatus {
     isCompleted: boolean;       // האם הסתיים
     monthsLeft: number;         // חודשים שנותרו
     loanStatuses: LoanComponentStatus[];
-    combinedPaymentHistory?: { date: string, amount: number, type: 'manual' | 'loan' | 'milestone', description?: string, milestoneId?: string }[];
-    upcomingPayments?: { date: string, amount: number, type: 'manual' | 'loan' | 'milestone', description?: string, milestoneId?: string }[];
+    combinedPaymentHistory?: { date: string, amount: number, type: 'manual' | 'loan' | 'milestone', description?: string, milestoneId?: string, loanId?: string }[];
+    upcomingPayments?: { date: string, amount: number, type: 'manual' | 'loan' | 'milestone', description?: string, milestoneId?: string, loanId?: string }[];
     milestonePayments?: MilestonePayment[]; // Include actual milestone payments in status
 }
 

@@ -18,7 +18,13 @@ export class InstallmentService {
 
     load() {
         return this.http.get<Installment[]>(this.url).pipe(
-            tap(data => this._items.next(data))
+            tap(data => {
+                const processedData = data.map(item => ({
+                    ...item,
+                    paymentType: item.paymentType || (item.loanComponents?.length ? 'loan' : (item.milestones?.length ? 'milestone' : 'manual'))
+                }));
+                this._items.next(processedData);
+            })
         );
     }
 
@@ -28,8 +34,11 @@ export class InstallmentService {
         );
     }
 
-    update(id: string, changes: Partial<Installment>) {
-        return this.http.put<Installment>(`${this.url}/${id}`, changes).pipe(
+    // Changed 'changes: Partial<Installment>' to 'updatedInstallment: Installment'
+    // to ensure the full object is sent and merged, preventing data loss if backend doesn't merge.
+    // The backend should return the fully updated item.
+    update(id: string, updatedInstallment: Installment) {
+        return this.http.put<Installment>(`${this.url}/${id}`, updatedInstallment).pipe(
             tap(updated => this._items.next(
                 this._items.value.map(i => i.id === id ? updated : i)
             ))
@@ -56,32 +65,47 @@ export class InstallmentService {
                 }
                 return l;
             });
-            return this.update(item.id, { loanComponents: updatedLoans });
+            return this.update(item.id, { ...item, loanComponents: updatedLoans });
         }
 
         const payments = item.payments || [];
         const newCount = payments.length + 1;
         return this.update(item.id, {
+            ...item,
             manualPaidCount: newCount,
             lastManualPaymentDate: paymentDate,
             payments: [...payments, { date: paymentDate, amount: item.monthlyPayment }]
         });
     }
 
-    markMilestoneAsPaid(item: Installment, milestoneId: string, paymentDate: string): Observable<any> {
+    // For marking a pre-defined milestone as paid, potentially overriding amount/description
+    markMilestoneAsPaid(item: Installment, milestoneId: string, paymentDate: string, amount?: number, description?: string): Observable<any> {
         const milestones = item.milestones || [];
         const milestone = milestones.find(m => m.id === milestoneId);
         if (!milestone) return of(null); // Milestone not found
 
         const newMilestonePayment: MilestonePayment = {
             date: paymentDate,
-            amount: milestone.amount,
+            amount: amount !== undefined ? amount : milestone.amount,
             milestoneId: milestone.id,
-            description: milestone.description
+            description: description || milestone.description
         };
 
         const updatedMilestonePayments = [...(item.milestonePayments || []), newMilestonePayment];
-        return this.update(item.id, { milestonePayments: updatedMilestonePayments });
+        return this.update(item.id, { ...item, milestonePayments: updatedMilestonePayments });
+    }
+
+    // For adding an ad-hoc milestone payment (not necessarily linked to a pre-defined milestone)
+    addAdHocMilestonePayment(item: Installment, paymentId: string, paymentDate: string, amount: number, description: string): Observable<any> {
+        const newMilestonePayment: MilestonePayment = {
+            date: paymentDate,
+            amount: amount,
+            milestoneId: paymentId, // Use the generated paymentId as the milestoneId for ad-hoc payments
+            description: description
+        };
+
+        const updatedMilestonePayments = [...(item.milestonePayments || []), newMilestonePayment];
+        return this.update(item.id, { ...item, milestonePayments: updatedMilestonePayments });
     }
 
     undoMilestonePayment(item: Installment, milestoneId: string): Observable<any> {
@@ -90,7 +114,7 @@ export class InstallmentService {
         if (indexToRemove > -1) {
             updatedMilestonePayments.splice(indexToRemove, 1);
         }
-        return this.update(item.id, { milestonePayments: updatedMilestonePayments });
+        return this.update(item.id, { ...item, milestonePayments: updatedMilestonePayments });
     }
 
     undoPayment(item: Installment, loanId?: string): Observable<any> {
@@ -109,7 +133,7 @@ export class InstallmentService {
                 }
                 return l;
             });
-            return this.update(item.id, { loanComponents: updatedLoans });
+            return this.update(item.id, { ...item, loanComponents: updatedLoans });
         }
 
         // ביטול תשלום ברמה הראשית
@@ -118,19 +142,26 @@ export class InstallmentService {
 
         payments.pop();
         return this.update(item.id, {
+            ...item,
             manualPaidCount: payments.length,
             lastManualPaymentDate: payments.length > 0 ? payments[payments.length - 1].date : undefined,
             payments: payments
         });
     }
 
+    private isValidDate(d: any): boolean {
+        return d instanceof Date && !isNaN(d.getTime());
+    }
+
     private parseDate(dateStr: string): Date {
         if (!dateStr) return new Date(0);
+        // ניקוי רווחים מיותרים
+        const trimmed = dateStr.trim();
         // אם התאריך הוא בפורמט YYYY-MM, נוסיף יום כדי שיהיה תקין לחישובים
-        if (dateStr.length === 7) {
-            return new Date(`${dateStr}-01`);
+        if (trimmed.length === 7 && trimmed.includes('-')) {
+            return new Date(`${trimmed}-01`);
         }
-        return new Date(dateStr);
+        return new Date(trimmed);
     }
 
     /** מחשב את סטטוס הפריסה נכון להיום */
@@ -186,11 +217,11 @@ export class InstallmentService {
         const manualCount = item.payments ? item.payments.length : (item.manualPaidCount || 0);
         const legacyPaidCount = item.payments
             ? item.payments.length
-            : (item.loanComponents?.length > 0 ? 0 : Math.min(item.installmentsCount, Math.max(monthsSinceItemStart, manualCount)));
+            : (item.paymentType !== 'manual' ? 0 : Math.min(item.installmentsCount, Math.max(monthsSinceItemStart, manualCount)));
 
         const legacyPaidAmount = item.payments
             ? item.payments.reduce((sum, p) => sum + p.amount, 0)
-            : (item.loanComponents?.length > 0 ? 0 : legacyPaidCount * item.monthlyPayment);
+            : (item.paymentType !== 'manual' ? 0 : legacyPaidCount * item.monthlyPayment);
 
         const paidAmount = item.downPayment + totalLoansPaid + legacyPaidAmount + totalMilestonesPaid;
         const remainingAmount = Math.max(0, item.totalAmount - paidAmount);
@@ -203,8 +234,9 @@ export class InstallmentService {
             totalInstallments = Math.max(...item.loanComponents.map(l => l.installmentsCount));
         } else if (item.milestones && item.milestones.length > 0) {
             // אם יש פעימות, משך הזמן הוא עד הפעימה האחרונה
-            const dates = item.milestones.map(m => new Date(m.date + '-01'));
-            const maxDate = new Date(Math.max(...dates.map(d => d.getTime())));
+            const milestoneTimes = item.milestones.map(m => this.parseDate(m.date).getTime());
+            const validTimes = milestoneTimes.filter(t => !isNaN(t));
+            const maxDate = validTimes.length > 0 ? new Date(Math.max(...validTimes)) : today;
             totalInstallments = Math.max(0, (maxDate.getFullYear() - itemStart.getFullYear()) * 12 + (maxDate.getMonth() - itemStart.getMonth()));
         }
 
@@ -212,28 +244,29 @@ export class InstallmentService {
         const maxMonthsLeftInLoans = loanStatuses.length > 0 ? Math.max(...loanStatuses.map(s => s.monthsLeft)) : 0;
         const paidMilestoneIds = new Set((item.milestonePayments || []).map(mp => mp.milestoneId));
         const upcomingMilestones = (item.milestones || []).filter(m => !paidMilestoneIds.has(m.id) && new Date(m.date + '-01') > today);
-        const monthsLeft = loanStatuses.length > 0 ? maxMonthsLeftInLoans :
-            (upcomingMilestones.length > 0 ? upcomingMilestones.length : Math.max(0, totalInstallments - monthsSinceItemStart));
+
+        let monthsLeft = 0;
+        if (item.paymentType === 'loan' && loanStatuses.length > 0) {
+            monthsLeft = maxMonthsLeftInLoans;
+        } else if (item.paymentType === 'milestone' && upcomingMilestones.length > 0) {
+            // For milestones, monthsLeft could be the count of remaining milestones, or the duration to the last one
+            monthsLeft = upcomingMilestones.length; // Simple count for now
+        } else { // manual or fallback
+            monthsLeft = Math.max(0, totalInstallments - monthsSinceItemStart);
+        }
         const isCompleted = remainingAmount === 0;
 
-        // תאריך סיום צפוי
-        const endDate = new Date(itemStart);
-        endDate.setMonth(endDate.getMonth() + totalInstallments);
-
         // Combine all payment types into a single history for display
-        const combinedPaymentHistory: { date: string, amount: number, type: 'manual' | 'loan' | 'milestone', description?: string, milestoneId?: string }[] = [];
-        const upcomingPayments: { date: string, amount: number, type: 'manual' | 'loan' | 'milestone', description?: string, milestoneId?: string }[] = [];
+        const combinedPaymentHistory: { date: string, amount: number, type: 'manual' | 'loan' | 'milestone', description?: string, milestoneId?: string, loanId?: string }[] = [];
+        const upcomingPayments: { date: string, amount: number, type: 'manual' | 'loan' | 'milestone', description?: string, milestoneId?: string, loanId?: string }[] = [];
 
         // Add manual payments (main installment)
         (item.payments || []).forEach(p => combinedPaymentHistory.push({ ...p, type: 'manual', description: `תשלום חודשי` }));
 
-        // Add loan payments to combined history ONLY if there are no specific loan components defined for this installment.
-        // If loan components exist, their payments are displayed in their dedicated section.
-        if (!item.loanComponents || item.loanComponents.length === 0) {
-            loanStatuses.forEach(ls => {
-                (ls.loan.payments || []).forEach(p => combinedPaymentHistory.push({ ...p, type: 'loan', description: ls.loan.description }));
-            });
-        }
+        // Add loan payments from each loan component to combined history
+        loanStatuses.forEach(ls => {
+            (ls.loan.payments || []).forEach(p => combinedPaymentHistory.push({ ...p, type: 'loan', description: ls.loan.description, loanId: ls.loan.id }));
+        });
 
         // Add recorded milestone payments to combined history
         (item.milestonePayments || []).forEach(mp => {
@@ -247,6 +280,18 @@ export class InstallmentService {
             upcomingPayments.push(entry);
         });
 
+        // Calculate expected end date based on payment type
+        let expectedEndDate: string;
+        if (item.paymentType === 'milestone' && item.milestones && item.milestones.length > 0) {
+            const milestoneTimes = item.milestones.map(m => this.parseDate(m.date).getTime()).filter(t => !isNaN(t));
+            const lastMilestoneDate = milestoneTimes.length > 0 ? new Date(Math.max(...milestoneTimes)) : today;
+            expectedEndDate = this.isValidDate(lastMilestoneDate) ? lastMilestoneDate.toISOString().slice(0, 7) : item.startDate.slice(0, 7);
+        } else {
+            const endDateCalc = new Date(itemStart);
+            endDateCalc.setMonth(endDateCalc.getMonth() + (Number(totalInstallments) || 0));
+            expectedEndDate = this.isValidDate(endDateCalc) ? endDateCalc.toISOString().slice(0, 7) : item.startDate.slice(0, 7);
+        }
+
         // Sort the combined history by date
         combinedPaymentHistory.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
         upcomingPayments.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -258,8 +303,8 @@ export class InstallmentService {
             paidInstallments: (loanStatuses.length > 0 ? loanStatuses.reduce((sum, s) => sum + s.paidInstallments, 0) : legacyPaidCount) + paidMilestonesCount,
             paidMilestonesCount,
             totalInstallments,
-            progressPct,
-            endDate: endDate.toISOString().slice(0, 7), // YYYY-MM
+            progressPct: progressPct,
+            endDate: expectedEndDate, // YYYY-MM
             isCompleted,
             monthsLeft,
             loanStatuses,
@@ -276,8 +321,8 @@ export class InstallmentService {
      * @returns The sum of monthly payments for all active installments in that month.
      */
     private toMonthStart(dateStr: string): Date {
-        const d = new Date(dateStr);
-        return new Date(d.getUTCFullYear(), d.getUTCMonth(), 1);
+        const [y, m] = dateStr.split('-').map(Number);
+        return new Date(y, m - 1, 1);
     }
 
     getMonthlyInstallmentsForMonth(targetMonthDate: Date, allInstallments: Installment[]): { installments: number, loans: number } {
@@ -287,14 +332,19 @@ export class InstallmentService {
 
         for (const item of allInstallments) {
             // בדיקת פעימות (Milestones)
-            if (item.milestones && item.milestones.length > 0) {
+            if (item.paymentType === 'milestone' && item.milestones && item.milestones.length > 0) {
                 const milestoneForMonth = item.milestones.find(m => {
-                    const mDate = new Date(m.date + '-01');
-                    return mDate.getFullYear() === target.getFullYear() && mDate.getMonth() === target.getMonth();
+                    const [y, mStr] = m.date.split('-').map(Number);
+                    return y === target.getFullYear() && (mStr - 1) === target.getMonth();
                 });
                 if (milestoneForMonth) {
                     // Check if this milestone has already been paid
-                    const isPaid = (item.milestonePayments || []).some(mp => mp.milestoneId === milestoneForMonth.id && this.parseDate(mp.date).getMonth() === target.getMonth() && this.parseDate(mp.date).getFullYear() === target.getFullYear());
+                    const isPaid = (item.milestonePayments || []).some(mp => {
+                        // Check if the milestone payment exists for this specific milestone ID
+                        // and if its payment date is before or in the target month.
+                        const paymentDate = this.parseDate(mp.date);
+                        return mp.milestoneId === milestoneForMonth.id && paymentDate <= targetMonthDate;
+                    });
                     if (!isPaid) {
                         installments += milestoneForMonth.amount;
                     }
@@ -302,24 +352,26 @@ export class InstallmentService {
             }
 
             if (item.loanComponents && item.loanComponents.length > 0) {
-                for (const loan of item.loanComponents) {
-                    const start = this.toMonthStart(loan.startDate);
-                    const end = new Date(start.getFullYear(), start.getMonth() + loan.installmentsCount, 1);
+                if (item.paymentType === 'loan') {
+                    for (const loan of item.loanComponents) {
+                        const start = this.toMonthStart(loan.startDate);
+                        const end = new Date(start.getFullYear(), start.getMonth() + loan.installmentsCount, 1);
 
-                    let currentPayment = 0;
-                    if (loan.payoffDate) {
-                        const payoff = this.parseDate(loan.payoffDate);
-                        if (target.getFullYear() === payoff.getFullYear() && target.getMonth() === payoff.getMonth()) {
-                            currentPayment = loan.payoffAmount || 0;
-                        } else if (target > payoff) {
-                            currentPayment = 0;
+                        let currentPayment = 0;
+                        if (loan.payoffDate) {
+                            const payoff = this.parseDate(loan.payoffDate);
+                            if (target.getFullYear() === payoff.getFullYear() && target.getMonth() === payoff.getMonth()) {
+                                currentPayment = loan.payoffAmount || 0;
+                            } else if (target > payoff) {
+                                currentPayment = 0;
+                            } else if (target >= start && target < end) {
+                                currentPayment = loan.monthlyPayment;
+                            }
                         } else if (target >= start && target < end) {
                             currentPayment = loan.monthlyPayment;
                         }
-                    } else if (target >= start && target < end) {
-                        currentPayment = loan.monthlyPayment;
+                        loans += currentPayment;
                     }
-                    loans += currentPayment;
                 }
             } else {
                 const start = this.toMonthStart(item.startDate);
@@ -341,35 +393,59 @@ export class InstallmentService {
         const target = new Date(targetMonthDate.getFullYear(), targetMonthDate.getMonth(), 1);
 
         for (const item of allInstallments) {
-            if (item.loanComponents && item.loanComponents.length > 0) {
-                let itemLoanTotal = 0;
-                for (const loan of item.loanComponents) {
-                    const start = this.toMonthStart(loan.startDate);
-                    const end = new Date(start.getFullYear(), start.getMonth() + loan.installmentsCount, 1);
+            if (item.paymentType === 'loan') {
+                if (item.loanComponents && item.loanComponents.length > 0) {
+                    for (const loan of item.loanComponents) {
+                        const start = this.toMonthStart(loan.startDate);
+                        const end = new Date(start.getFullYear(), start.getMonth() + loan.installmentsCount, 1);
 
-                    if (loan.payoffDate) {
-                        const payoff = this.parseDate(loan.payoffDate);
-                        if (target.getFullYear() === payoff.getFullYear() && target.getMonth() === payoff.getMonth()) {
-                            itemLoanTotal += loan.payoffAmount || 0;
-                        } else if (target < payoff && target >= start) {
-                            itemLoanTotal += loan.monthlyPayment;
+                        let amount = 0;
+                        if (loan.payoffDate) {
+                            const payoff = this.parseDate(loan.payoffDate);
+                            if (target.getFullYear() === payoff.getFullYear() && target.getMonth() === payoff.getMonth()) {
+                                amount = loan.payoffAmount || 0;
+                            } else if (target < payoff && target >= start) {
+                                amount = loan.monthlyPayment;
+                            }
+                        } else if (target >= start && target < end) {
+                            amount = loan.monthlyPayment;
                         }
-                    } else if (target >= start && target < end) {
-                        itemLoanTotal += loan.monthlyPayment;
+
+                        if (amount > 0) {
+                            breakdown.push({
+                                name: `${item.name} (${loan.description || 'הלוואה'})`,
+                                amount: amount,
+                                isLoan: true
+                            });
+                        }
                     }
                 }
-                if (itemLoanTotal > 0) breakdown.push({ name: item.name, amount: itemLoanTotal, isLoan: true });
-            } else {
+            } else if (item.paymentType === 'manual') {
                 const start = this.toMonthStart(item.startDate);
                 const end = new Date(start.getFullYear(), start.getMonth() + item.installmentsCount, 1);
                 if (target >= start && target < end) { // Only if not a loan component
                     // Check if this installment has manual payments for this month
+                    // This logic is for the main installment's monthly payment, not for loan components
                     const hasManualPaymentForMonth = (item.payments || []).some(p => {
                         const pDate = this.parseDate(p.date);
                         return pDate.getFullYear() === target.getFullYear() && pDate.getMonth() === target.getMonth();
                     });
                     if (!hasManualPaymentForMonth) {
                         breakdown.push({ name: item.name, amount: item.monthlyPayment, isLoan: false });
+                    }
+                }
+            } else if (item.paymentType === 'milestone') {
+                const milestoneForMonth = item.milestones?.find(m => {
+                    const [y, mStr] = m.date.split('-').map(Number);
+                    return y === target.getFullYear() && (mStr - 1) === target.getMonth();
+                });
+                if (milestoneForMonth) {
+                    const isPaid = (item.milestonePayments || []).some(mp => {
+                        const paymentDate = this.parseDate(mp.date);
+                        return mp.milestoneId === milestoneForMonth.id && paymentDate <= targetMonthDate;
+                    });
+                    if (!isPaid) {
+                        breakdown.push({ name: `${item.name} (${milestoneForMonth.description})`, amount: milestoneForMonth.amount, isLoan: false });
                     }
                 }
             }
