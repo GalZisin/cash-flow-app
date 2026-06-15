@@ -26,7 +26,7 @@
       <div class="inst-field mb-3">
         <label class="inst-label">{{ 'INSTALLMENTS.PAYMENT_TYPE' | translate }}</label>
         <div class="d-flex gap-3">
-          <div class="form-check form-check-inline">
+          <div class="form-check form-check-inline pe-0 ps-2">
             <input class="form-check-input" type="radio" name="paymentType" id="typeManual" value="manual" [(ngModel)]="form.paymentType" (ngModelChange)="onPaymentTypeChange.emit()">
             <label class="form-check-label" for="typeManual">{{ 'INSTALLMENTS.TYPE_MANUAL' | translate }}</label>
           </div>
