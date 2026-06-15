@@ -1,25 +1,55 @@
 import { Component, Input, Output, EventEmitter, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Installment, LoanComponent, Milestone } from '../../models/installment.model';
+import { MatIconModule } from '@angular/material/icon';
 // import { Installment, LoanComponent, Milestone } from '../../../models/installment.model';
 
 @Component({
   selector: 'app-installment-form',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, MatTooltipModule],
+  imports: [CommonModule, FormsModule, TranslateModule, MatTooltipModule, MatIconModule],
   templateUrl: './installment-form.component.html',
   styleUrl: './installment-form.component.scss'
 })
 export class InstallmentFormComponent {
   @Input() showForm: boolean = false;
   @Input() form!: Installment | Omit<Installment, 'id'>;
-  @Input() editingId: string | null = null;
+  @Input() editingId: string | null = null; // Keep this for form title logic
   @Input() COLORS: string[] = [];
-  @Input() formValid: boolean = false;
   @Input() amountAfterDown!: (item: Omit<Installment, 'id'> | Installment) => number;
+
+  constructor(private cdr: ChangeDetectorRef, private translate: TranslateService) { }
+
+  readonly Math = Math; // Make Math available in template
+
+  /** סה"כ סכום הפעימות שהוגדרו */
+  get milestonesTotal(): number {
+    return (this.form?.milestones || []).reduce((sum, m) => sum + (Number(m.amount) || 0), 0);
+  }
+
+  /** האם סכום הפעימות חורג מהסכום הכולל? */
+  get isMilestonesTotalExceeded(): boolean {
+    return this.form?.paymentType === 'milestone' && this.milestonesTotal > (Number(this.form?.totalAmount) || 0);
+  }
+
+  /** היתרה שנותרה לחלוקה לפעימות (יכול להיות שלילי) */
+  get milestonesRemaining(): number {
+    const total = Number(this.form?.totalAmount) || 0;
+    return total - this.milestonesTotal;
+  }
+
+  get formValid(): boolean {
+    if (!this.form) return false;
+
+    const nameValid = !!this.form.name?.trim();
+    const dateValid = !!this.form.startDate;
+    const totalAmountValid = (Number(this.form.totalAmount) || 0) > 0;
+
+    return nameValid && dateValid && totalAmountValid && !this.isMilestonesTotalExceeded;
+  }
 
   @Output() closeForm = new EventEmitter<void>();
   @Output() submit = new EventEmitter<void>();
@@ -35,8 +65,6 @@ export class InstallmentFormComponent {
   @Output() removeMilestone = new EventEmitter<number>();
   @Output() onMilestonePctChange = new EventEmitter<Milestone>();
   @Output() onMilestoneAmountChange = new EventEmitter<Milestone>();
-
-  constructor(private cdr: ChangeDetectorRef) { }
 
   // Helper to emit calculateLoanPMT
   emitCalculateLoanPMT(loan: LoanComponent) {

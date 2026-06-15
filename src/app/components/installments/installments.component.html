@@ -50,8 +50,7 @@
 
 <!-- ════ FORM DIALOG ════ -->
 <app-installment-form [showForm]="showForm" [form]="form" [editingId]="editingId" [COLORS]="COLORS"
-  [formValid]="formValid" [amountAfterDown]="amountAfterDown" (closeForm)="closeForm()" (submit)="submit()"
-  (updateParentTotals)="updateTotalsFromLoans()" (onInstallmentsCountChange)="onInstallmentsCountChange()"
+  [amountAfterDown]="amountAfterDown" (closeForm)="closeForm()" (submit)="submit()" (updateParentTotals)="updateTotalsFromLoans()" (onInstallmentsCountChange)="onInstallmentsCountChange()"
   (addLoanComponent)="addLoanComponent()" (removeLoanComponent)="removeLoanComponent($event)"
   (calculateLoanPMT)="calculateLoanPMT($event)" (onPaymentTypeChange)="onPaymentTypeChange()" (calculatePayoffAmount)="calculatePayoffAmount($event)"
   (onMonthlyPaymentChange)="onMonthlyPaymentChange()" (addMilestone)="addMilestone()"

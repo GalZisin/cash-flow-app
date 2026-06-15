@@ -223,6 +223,7 @@
     "DELETED": "הפריסה נמחקה",
     "INVALID_DOWN_PAYMENT": "המקדמה לא יכולה לעלות על הסכום הכולל",
     "INVALID_FORM_FIELDS": "אנא מלא את כל שדות החובה בערכים חיוביים",
+    "INVALID_MILESTONES_TOTAL": "סך הפעימות חורג מהסכום הכולל",
     "LAST_MANUAL_PAYMENT": "תשלום ידני אחרון",
     "MARK_PAID_TITLE": "סמן תשלום כבוצע",
     "PAYMENT_DATE": "תאריך תשלום",

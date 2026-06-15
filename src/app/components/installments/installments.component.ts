@@ -615,11 +615,6 @@ export class InstallmentsComponent implements OnInit {
             amount: Number(mp.amount) || 0
         }));
 
-        if (!this.formValid) {
-            this.translate.get('INSTALLMENTS.INVALID_FORM_FIELDS').subscribe(msg => this.snackBar.open(msg, '', { duration: 2500, panelClass: 'snack-error' }));
-            return;
-        }
-
         // --- Simulation for warnings ---
         if (!ignoreWarnings) {
             this.cashFlowService.cashFlowMonths$.pipe(take(1)).subscribe((cashFlowMonths: any[]) => {
