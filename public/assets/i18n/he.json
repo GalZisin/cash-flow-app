@@ -104,7 +104,9 @@
     "TOTAL_INVESTMENTS": "סה\"כ השקעות",
     "ACTIVE_INSTALLMENTS": "פריסות פעילות",
     "LANG_HE": "עברית",
-    "LANG_EN": "English"
+    "LANG_EN": "English",
+    "PARTIAL_RESPONSE_ERROR": "שגיאה: {{error}}. התשובה עשויה להיות חלקית.",
+    "RETRY_ACTION": "נסה שוב"
   },
   "INVESTMENTS": {
     "TITLE": "מעקב השקעות",

@@ -59,4 +59,41 @@ export class AiService {
   simulate(req: ScenarioRequest): Observable<ScenarioResult> {
     return this.http.post<ScenarioResult>(`${this.base}/scenario`, req);
   }
+
+  chatStream(question: string): Observable<string> {
+    return new Observable<string>(observer => {
+      const controller = new AbortController();
+
+      fetch(`${this.base}/chat-stream`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question }),
+        signal: controller.signal
+      })
+        .then(async (response) => {
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+          }
+
+          const reader = response.body?.getReader();
+          if (!reader) throw new Error('ReadableStream not supported');
+
+          const decoder = new TextDecoder();
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            observer.next(decoder.decode(value, { stream: true }));
+          }
+          observer.complete();
+        })
+        .catch((err) => {
+          if (err.name !== 'AbortError') {
+            observer.error(err);
+          }
+        });
+
+      return () => controller.abort();
+    });
+  }
 }

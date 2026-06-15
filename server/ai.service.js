@@ -10,6 +10,51 @@ const OLLAMA_PORT = 11434;
 const MODEL = process.env.AI_MODEL || 'qwen3:8b';
 
 /**
+ * Helper to handle streaming from Ollama.
+ */
+function streamOllama(prompt, onToken, onDone, onError) {
+  const body = JSON.stringify({ 
+    model: MODEL, 
+    prompt, 
+    stream: true, 
+    options: { temperature: 0.3, num_ctx: 2048, num_predict: 1024 } 
+  });
+
+  const req = http.request(
+    { hostname: OLLAMA_HOST, port: OLLAMA_PORT, path: '/api/generate', method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) } },
+    (res) => {
+      let isThinking = false;
+      res.on('data', chunk => {
+        const lines = chunk.toString().split('\n');
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          try {
+            const parsed = JSON.parse(line);
+            let token = parsed.response || '';
+            
+            // Simple filtering for <think> blocks in streaming
+            if (token.includes('<think>')) isThinking = true;
+            if (isThinking) {
+              if (token.includes('</think>')) {
+                isThinking = false;
+                token = token.split('</think>')[1] || '';
+              } else continue;
+            }
+            
+            if (token) onToken(token);
+            if (parsed.done) onDone();
+          } catch (e) { /* ignore partial parse errors */ }
+        }
+      });
+    }
+  );
+  req.on('error', onError);
+  req.write(body);
+  req.end();
+}
+
+/**
  * Send a prompt to Ollama and return the full response text.
  * Uses non-streaming mode for simplicity.
  */
@@ -135,6 +180,11 @@ async function getAnalysis(summary) {
   return { model: MODEL, analysis: text };
 }
 
+async function getChatStream(summary, userQuestion, onToken, onDone, onError) {
+  const prompt = buildChatPrompt(summary, userQuestion);
+  streamOllama(prompt, onToken, onDone, onError);
+}
+
 async function getChat(summary, userQuestion) {
   const prompt = buildChatPrompt(summary, userQuestion);
   const text = await callOllama(prompt);
@@ -147,4 +197,4 @@ async function getScenario(summary, scenario, simulationResult) {
   return { model: MODEL, scenarioAnalysis: text };
 }
 
-module.exports = { getAnalysis, getChat, getScenario };
+module.exports = { getAnalysis, getChat, getScenario, getChatStream };

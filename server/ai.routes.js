@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 
 const { buildSummary, simulateScenario } = require('./cashflow-engine');
-const { getAnalysis, getChat, getScenario } = require('./ai.service');
+const { getAnalysis, getChat, getScenario, getChatStream } = require('./ai.service');
 
 // --- File paths ---
 const CASHFLOW_FILE = path.join(__dirname, 'cash-flow-data-miluim.json');
@@ -65,6 +65,32 @@ router.post('/chat', async (req, res) => {
     const summary = buildSummary(data);
     const result = await getChat(summary, question);
     res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * POST /api/ai/chat-stream
+ * Streaming version of the chat.
+ */
+router.post('/chat-stream', async (req, res) => {
+  const { question } = req.body;
+  if (!question?.trim()) return res.status(400).json({ error: 'question is required' });
+
+  try {
+    const data = loadAllData();
+    const summary = buildSummary(data);
+
+    // הגדרת Headers ל-Streaming
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    res.setHeader('Transfer-Encoding', 'chunked');
+
+    getChatStream(summary, question, 
+      (token) => res.write(token),
+      () => res.end(),
+      (err) => { console.error(err); res.status(500).end(); }
+    );
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

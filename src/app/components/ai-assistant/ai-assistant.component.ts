@@ -11,6 +11,7 @@ import { InstallmentService } from '../../services/installment.service';
 import { ThemeService } from '../../services/theme.service';
 import { InvestmentService } from '../../services/investment.service';
 import { AiReportService, AiReport } from '../../services/ai-report.service';
+import { Subscription } from 'rxjs'; // Import Subscription
 
 type ActiveTab = 'chat' | 'analysis' | 'scenario' | 'dashboard' | 'archive';
 
@@ -34,6 +35,8 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
   messages: ChatMessage[] = [];
   userInput = '';
   chatLoading = false;
+  private currentStreamSubscription: Subscription | null = null; // To manage the streaming subscription
+  private lastUserQuestion: string | null = null; // Store the last user question for retry
 
   // Conversations
   conversations: Conversation[] = [];
@@ -68,8 +71,6 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
   // Confirmation for deleting chat
   pendingDeleteChatId: string | null = null;
 
-  private shouldScroll = false;
-
   // הגישה החדשה: שימוש ב-inject() במקום ב-Constructor
   private ai = inject(AiService);
   private convService = inject(ConversationService);
@@ -82,6 +83,8 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
   public themeService = inject(ThemeService); // Keep public for template access
 
   constructor() { }
+
+  private shouldScroll = false; // Moved here to be consistent
 
   ngOnInit() {
     this.loadSummary();
@@ -120,7 +123,7 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
   }
 
   ngAfterViewChecked() {
-    if (this.shouldScroll) { this.scrollToBottom(); this.shouldScroll = false; }
+    if (this.shouldScroll && this.chatContainer) { this.scrollToBottom(); this.shouldScroll = false; }
   }
 
   loadSummary() {
@@ -328,35 +331,93 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
     });
   }
 
-  sendMessage() {
-    const q = this.userInput.trim();
+  sendMessage(questionToAsk?: string) {
+    const q = questionToAsk || this.userInput.trim();
     if (!q || this.chatLoading) return;
 
-    const context = this.prepareRelevantContext(q);
+    // Cancel any previous ongoing stream
+    if (this.currentStreamSubscription) {
+      this.currentStreamSubscription.unsubscribe();
+      this.currentStreamSubscription = null;
+    }
 
-    this.messages.push({ role: 'user', content: q, timestamp: new Date() });
-    this.userInput = '';
+    // If this is a new user input, add it to messages and clear input
+    if (!questionToAsk) {
+      this.messages.push({ role: 'user', content: q, timestamp: new Date() });
+      this.userInput = '';
+    }
+
     this.chatLoading = true;
     this.shouldScroll = true;
+    this.lastUserQuestion = q; // Store the user's question for retry
 
-    // Combine question and context into a single enriched prompt
+    // If retrying, remove the previous failed assistant message to start clean
+    if (questionToAsk && this.messages.length > 0 && this.messages[this.messages.length - 1].role === 'assistant') {
+      this.messages.pop();
+    }
+
+    let assistantMsg: ChatMessage | null = null;
+
+    // בניית היסטוריית השיחה כטקסט עבור המודל (לוקחים למשל את 5 ההודעות האחרונות)
+    const historyContext = this.messages
+      .slice(-6, -1) // מוציאים את ההודעות האחרונות לפני השאלה הנוכחית
+      .map(m => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`)
+      .join('\n');
+
+    // שילוב הקשר פיננסי + היסטוריית שיחה + שאלה נוכחית
+    const context = this.prepareRelevantContext(q);
     const langText = this.aiResponseLang === 'he' ? 'Hebrew' : 'English';
-    const enrichedPrompt = context ? `Context: ${JSON.stringify(context)}\n\nUser Question: ${q}\n\nRespond strictly in ${langText}.` : `${q}\n\nRespond strictly in ${langText}.`;
 
-    this.ai.chat(enrichedPrompt).subscribe({
-      next: res => {
-        this.messages.push({ role: 'assistant', content: res.answer, timestamp: new Date() });
-        this.chatLoading = false;
+    const enrichedPrompt = `
+      System Financial Context: ${JSON.stringify(context)}
+      ${historyContext ? '\nRecent Conversation History:\n' + historyContext : ''}
+      
+      User Question: ${q}
+      
+      Respond strictly in ${langText}.`;
+
+    this.currentStreamSubscription = this.ai.chatStream(enrichedPrompt).subscribe({
+      next: (token: string) => {
+        if (!assistantMsg) {
+          // First token received: Stop loading animation and create the actual message bubble
+          this.chatLoading = false;
+          assistantMsg = { role: 'assistant', content: '', timestamp: new Date() };
+          this.messages.push(assistantMsg);
+        }
+        assistantMsg.content += token;
         this.shouldScroll = true;
-        this.saveConversation();
       },
-      error: err => {
-        this.messages.push({ role: 'assistant', content: `Error: ${err.error?.error || 'Failed to get response'}`, timestamp: new Date() });
+      error: (err: any) => {
+        this.chatLoading = false;
+        const errorMessage = this.translate.instant('AI.PARTIAL_RESPONSE_ERROR', { error: err.message || 'Failed to get response' });
+
+        if (!assistantMsg) {
+          assistantMsg = { role: 'assistant', content: '', timestamp: new Date() };
+          this.messages.push(assistantMsg);
+        }
+
+        assistantMsg.content += `\n\n**${errorMessage}**`;
+        this.saveConversation();
+        this.currentStreamSubscription = null; // Clear subscription on error
+      },
+      complete: () => {
+        if (this.chatLoading) {
+          this.chatLoading = false;
+        }
         this.chatLoading = false;
         this.shouldScroll = true;
         this.saveConversation();
+        this.lastUserQuestion = null; // Clear on successful completion
+        this.currentStreamSubscription = null; // Clear subscription on completion
       }
     });
+  }
+
+  retryLastMessage(event: Event) {
+    event.preventDefault(); // Prevent default link behavior
+    if (this.lastUserQuestion && !this.chatLoading) {
+      this.sendMessage(this.lastUserQuestion);
+    }
   }
 
   runAnalysis() {
@@ -413,11 +474,11 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
 
   formatText(text: string): string {
     return text
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*(.*?)\*/g, '<em>$1</em>')
-      .replace(/^### (.+)$/gm, '<h6 class="fw-bold mt-2 mb-1">$1</h6>')
-      .replace(/^## (.+)$/gm, '<h5 class="fw-bold mt-3 mb-1">$1</h5>')
-      .replace(/^# (.+)$/gm, '<h4 class="fw-bold mt-3 mb-1">$1</h4>')
-      .replace(/\n/g, '<br>');
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold
+      .replace(/\*(.*?)\*/g, '<em>$1</em>') // Italic
+      .replace(/^### (.+)$/gm, '<h6 class="fw-bold mt-2 mb-1">$1</h6>') // H3
+      .replace(/^## (.+)$/gm, '<h5 class="fw-bold mt-3 mb-1">$1</h5>') // H2
+      .replace(/^# (.+)$/gm, '<h4 class="fw-bold mt-3 mb-1">$1</h4>') // H1
+      .replace(/\n/g, '<br>'); // Newlines to <br>
   }
 }
