@@ -1,20 +1,25 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, tap, of, map } from 'rxjs';
+import { Observable, tap, of } from 'rxjs';
 import { Installment, InstallmentStatus, LoanComponentStatus, CashFlowWarning, MilestonePayment } from '../models/installment.model';
 import { environment } from '../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class InstallmentService {
     private readonly url = `${environment.apiUrl}/installments`;
-    private _items = new BehaviorSubject<Installment[]>([]);
-    items$ = this._items.asObservable();
+    private _items = signal<Installment[]>([]);
+
+    // Public readonly signal for components to consume
+    items = this._items.asReadonly();
+
+    // Derived state: Total monthly payment of all active installments
+    totalMonthlyActive = computed(() =>
+        this._items()
+            .filter(i => !this.getStatus(i).isCompleted)
+            .reduce((sum, i) => sum + i.monthlyPayment, 0)
+    );
 
     constructor(private http: HttpClient) { }
-
-    get itemsValue(): Installment[] {
-        return this._items.value;
-    }
 
     load() {
         return this.http.get<Installment[]>(this.url).pipe(
@@ -23,31 +28,28 @@ export class InstallmentService {
                     ...item,
                     paymentType: item.paymentType || (item.loanComponents?.length ? 'loan' : (item.milestones?.length ? 'milestone' : 'manual'))
                 }));
-                this._items.next(processedData);
+                this._items.set(processedData);
             })
         );
     }
 
     add(item: Omit<Installment, 'id'>) {
         return this.http.post<Installment>(this.url, item).pipe(
-            tap(created => this._items.next([...this._items.value, created]))
+            tap(created => this._items.update(items => [...items, created]))
         );
     }
 
-    // Changed 'changes: Partial<Installment>' to 'updatedInstallment: Installment'
-    // to ensure the full object is sent and merged, preventing data loss if backend doesn't merge.
-    // The backend should return the fully updated item.
     update(id: string, updatedInstallment: Installment) {
         return this.http.put<Installment>(`${this.url}/${id}`, updatedInstallment).pipe(
-            tap(updated => this._items.next(
-                this._items.value.map(i => i.id === id ? updated : i)
+            tap(updated => this._items.update(items =>
+                items.map(i => i.id === id ? updated : i)
             ))
         );
     }
 
     delete(id: string) {
         return this.http.delete(`${this.url}/${id}`).pipe(
-            tap(() => this._items.next(this._items.value.filter(i => i.id !== id)))
+            tap(() => this._items.update(items => items.filter(i => i.id !== id)))
         );
     }
 
@@ -464,7 +466,7 @@ export class InstallmentService {
         const THRESHOLD = 30000; // סף האזהרה
         const SIGNIFICANCE_THRESHOLD = 100; // התעלמות משינויים קטנים ברמת היתרה
 
-        const baselineInstallments = this._items.value;
+        const baselineInstallments = this._items();
         const proposedId = (proposedInstallment as Installment).id;
 
         // יצירת רשימה היפותטית המשלבת את העדכון
@@ -538,12 +540,4 @@ export class InstallmentService {
 
         return warnings;
     }
-
-    /** סה"כ תשלום חודשי פעיל מכל הפריסות */
-    totalMonthlyActive(items: Installment[]): number {
-        return items
-            .filter(i => !this.getStatus(i).isCompleted)
-            .reduce((sum, i) => sum + i.monthlyPayment, 0);
-    }
-
 }

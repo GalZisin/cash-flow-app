@@ -3,27 +3,27 @@
   <!-- Tab Bar -->
   <ul class="nav nav-tabs mb-3">
     <li class="nav-item">
-      <a class="nav-link" [class.active]="activeTab === 'chat'" (click)="setTab('chat')" style="cursor:pointer">
+      <a class="nav-link" [class.active]="activeTab() === 'chat'" (click)="setTab('chat')" style="cursor:pointer">
         {{ 'AI.TAB_CHAT' | translate }}
       </a>
     </li>
     <li class="nav-item">
-      <a class="nav-link" [class.active]="activeTab === 'analysis'" (click)="setTab('analysis')" style="cursor:pointer">
+      <a class="nav-link" [class.active]="activeTab() === 'analysis'" (click)="setTab('analysis')" style="cursor:pointer">
         {{ 'AI.TAB_ANALYSIS' | translate }}
       </a>
     </li>
     <li class="nav-item">
-      <a class="nav-link" [class.active]="activeTab === 'scenario'" (click)="setTab('scenario')" style="cursor:pointer">
+      <a class="nav-link" [class.active]="activeTab() === 'scenario'" (click)="setTab('scenario')" style="cursor:pointer">
         {{ 'AI.TAB_SCENARIO' | translate }}
       </a>
     </li>
     <li class="nav-item">
-      <a class="nav-link" [class.active]="activeTab === 'dashboard'" (click)="setTab('dashboard')" style="cursor:pointer">
+      <a class="nav-link" [class.active]="activeTab() === 'dashboard'" (click)="setTab('dashboard')" style="cursor:pointer">
         {{ 'AI.TAB_DASHBOARD' | translate }}
       </a>
     </li>
     <li class="nav-item">
-      <a class="nav-link" [class.active]="activeTab === 'archive'" (click)="setTab('archive')" style="cursor:pointer">
+      <a class="nav-link" [class.active]="activeTab() === 'archive'" (click)="setTab('archive')" style="cursor:pointer">
         {{ 'AI.TAB_ARCHIVE' | translate }}
       </a>
     </li>
@@ -33,10 +33,10 @@
       <!-- שפת ה-AI -->
       <div class="form-check form-switch mb-0" [matTooltip]="'AI.LANG_TOOLTIP' | translate" matTooltipPosition="below">
         <input class="form-check-input" type="checkbox" role="switch" id="aiLangToggle" 
-               [checked]="aiResponseLang === 'en'" 
+               [checked]="aiResponseLang() === 'en'" 
                (change)="toggleAiLang()">
         <label class="form-check-label small text-muted ms-1" for="aiLangToggle">
-          AI: {{ (aiResponseLang === 'he' ? 'AI.LANG_HE' : 'AI.LANG_EN') | translate }}
+          AI: {{ (aiResponseLang() === 'he' ? 'AI.LANG_HE' : 'AI.LANG_EN') | translate }}
         </label>
       </div>
       <!-- מצב כהה -->
@@ -52,7 +52,7 @@
   </ul>
 
   <!-- ===================== CHAT TAB ===================== -->
-  @if (activeTab === 'chat') {
+  @if (activeTab() === 'chat') {
     <div class="chat-layout" [class.rtl]="lang.isRtl">
 
       <!-- History Sidebar -->
@@ -63,11 +63,11 @@
             <button class="btn btn-primary btn-sm" (click)="newConversation()" [title]="'AI.NEW_CHAT' | translate" [attr.aria-label]="'AI.NEW_CHAT' | translate">＋</button>
           </div>
           <div class="card-body p-1 overflow-auto flex-grow-1">
-            @if (!conversations.length) {
+            @if (!conversationsSignal().length) {
               <small class="text-muted d-block text-center mt-3">{{ 'AI.NO_CONVERSATIONS' | translate }}</small>
             }
-            @for (conv of conversations; track conv.id) {
-              <div class="conv-item" [class.active]="conv.id === activeConversationId" (click)="loadConversation(conv)">
+            @for (conv of conversationsSignal(); track conv.id) {
+              <div class="conv-item" [class.active]="conv.id === activeConversationId()" (click)="loadConversation(conv)">
                 <div class="conv-title">{{ conv.title }}</div>
                 <div class="d-flex justify-content-between align-items-center">
                   <small class="text-muted">{{ conv.updatedAt | date:'dd/MM HH:mm' }}</small>
@@ -82,7 +82,7 @@
       <!-- Chat Panel -->
       <div class="chat-panel d-flex flex-column">
         <div class="chat-messages flex-grow-1" #chatContainer>
-          @if (!messages.length) {
+          @if (!messages().length) {
             <div class="empty-chat text-center text-muted py-5">
               <div style="font-size: 2.5rem">🤖</div>
               <p class="mt-2 mb-1 fw-bold">{{ 'AI.EMPTY_CHAT_TITLE' | translate }}</p>
@@ -94,7 +94,7 @@
               </div>
             </div>
           }
-          @for (msg of messages; track $index) {
+          @for (msg of messages(); track $index) {
             <div class="message" [class.user-message]="msg.role === 'user'" [class.assistant-message]="msg.role === 'assistant'">
               <div class="bubble">
                 @if (msg.role === 'assistant') {
@@ -105,7 +105,7 @@
               <small class="msg-time text-muted">{{ msg.timestamp | date:'HH:mm' }}</small>
             </div>
           }
-          @if (chatLoading) {
+          @if (chatLoading()) {
             <div class="message assistant-message">
               <div class="bubble">
                 <span class="bot-icon me-1">🤖</span>
@@ -124,10 +124,10 @@
             [placeholder]="'AI.INPUT_PLACEHOLDER' | translate"
             [(ngModel)]="userInput"
             (keydown)="onEnter($event)"
-            [disabled]="chatLoading">
+            [disabled]="chatLoading()">
           </textarea>
-          <button class="btn btn-primary ms-2" (click)="sendMessage()" [disabled]="chatLoading || !userInput.trim()" [attr.aria-label]="'AI.INPUT_PLACEHOLDER' | translate">
-            @if (chatLoading) { <span class="spinner-border spinner-border-sm"></span> }
+          <button class="btn btn-primary ms-2" (click)="sendMessage()" [disabled]="chatLoading() || !userInput.trim()" [attr.aria-label]="'AI.INPUT_PLACEHOLDER' | translate">
+            @if (chatLoading()) { <span class="spinner-border spinner-border-sm"></span> }
             @else { ➤ }
           </button>
         </div>
@@ -141,26 +141,26 @@
             <button class="btn btn-link btn-sm p-0" (click)="loadSummary()" [title]="'AI.REFRESH' | translate" [attr.aria-label]="'AI.REFRESH' | translate">🔄</button>
           </div>
           <div class="card-body p-2 overflow-auto">
-            @if (summaryLoading) {
+            @if (summaryLoading()) {
               <div class="text-center py-3"><div class="spinner-border spinner-border-sm"></div></div>
             }
-            @if (summary && !summaryLoading) {
+            @if (summary() && !summaryLoading()) {
               <div class="summary-item">
                 <span class="label">{{ 'AI.BALANCE' | translate }}</span>
-                <span class="value text-success">₪{{ (realCurrentBalance || summary.currentBalance) | number:'1.0-0' }}</span>
+                <span class="value text-success">₪{{ (realCurrentBalance() || summary()?.currentBalance) | number:'1.0-0' }}</span>
               </div>
               <div class="summary-item">
                 <span class="label">{{ 'AI.AVG_INCOME' | translate }}</span>
-                <span class="value">₪{{ summary.income.average | number:'1.0-0' }}</span>
+                <span class="value">₪{{ summary()?.income?.average | number:'1.0-0' }}</span>
               </div>
               <div class="summary-item">
                 <span class="label">{{ 'AI.AVG_EXPENSES' | translate }}</span>
-                <span class="value text-danger">₪{{ summary.expenses.averageTotal | number:'1.0-0' }}</span>
+                <span class="value text-danger">₪{{ summary()?.expenses?.averageTotal | number:'1.0-0' }}</span>
               </div>
               <div class="summary-item">
                 <span class="label">{{ 'AI.AVG_SAVINGS' | translate }}</span>
-                <span class="value" [class.text-success]="summary.monthlySavingsAvg >= 0" [class.text-danger]="summary.monthlySavingsAvg < 0">
-                  ₪{{ summary.monthlySavingsAvg | number:'1.0-0' }}
+                <span class="value" [class.text-success]="(summary()?.monthlySavingsAvg ?? 0) >= 0" [class.text-danger]="(summary()?.monthlySavingsAvg ?? 0) < 0">
+                  ₪{{ summary()?.monthlySavingsAvg | number:'1.0-0' }}
                 </span>
               </div>
               <hr class="my-2">
@@ -171,10 +171,10 @@
                   <span class="value">₪{{ f.projectedBalance | number:'1.0-0' }}</span>
                 </div>
               }
-              @if (summary.loans.length) {
+              @if (summary()?.loans?.length) {
                 <hr class="my-2">
                 <small class="text-muted d-block mb-1 fw-bold">{{ 'AI.LOANS' | translate }}</small>
-                @for (l of summary.loans; track l.name) {
+                @for (l of summary()?.loans; track l.name) {
                   <div class="summary-item">
                     <span class="label">{{ l.name }}</span>
                     <span class="value text-warning">₪{{ l.monthlyPayment | number:'1.0-0' }}/mo</span>
@@ -190,33 +190,33 @@
   }
 
   <!-- ===================== ANALYSIS TAB ===================== -->
-  @if (activeTab === 'analysis') {
+  @if (activeTab() === 'analysis') {
     <div class="analysis-panel">
-      <button class="btn btn-primary mb-3" (click)="runAnalysis()" [disabled]="analysisLoading" [attr.aria-label]="'AI.RUN_ANALYSIS' | translate">
-        @if (analysisLoading) {
+      <button class="btn btn-primary mb-3" (click)="runAnalysis()" [disabled]="analysisLoading()" [attr.aria-label]="'AI.RUN_ANALYSIS' | translate">
+        @if (analysisLoading()) {
           <span class="spinner-border spinner-border-sm me-2"></span>{{ 'AI.ANALYZING' | translate }}
         } @else {
           {{ 'AI.RUN_ANALYSIS' | translate }}
         }
       </button>
 
-      @if (analysisLoading) {
+      @if (analysisLoading()) {
         <div class="text-center py-5">
           <div class="spinner-border text-primary mb-3"></div>
           <p class="text-muted">{{ 'AI.ANALYZING' | translate }}</p>
         </div>
       }
 
-      @if (analysisText && !analysisLoading) {
+      @if (analysisText() && !analysisLoading()) {
         <div class="card">
-          <div class="card-body analysis-text" [innerHTML]="formatText(analysisText)"></div>
+          <div class="card-body analysis-text" [innerHTML]="formatText(analysisText())"></div>
         </div>
       }
     </div>
   }
 
   <!-- ===================== SCENARIO TAB ===================== -->
-  @if (activeTab === 'scenario') {
+  @if (activeTab() === 'scenario') {
     <div class="scenario-panel">
       <div class="card mb-3">
         <div class="card-header"><strong>{{ 'AI.SCENARIO_TITLE' | translate }}</strong></div>
@@ -238,8 +238,8 @@
           <button
             class="btn btn-primary mt-3"
             (click)="runScenario()"
-            [disabled]="scenarioLoading || !scenario.description || !scenario.amount || !scenario.date" [attr.aria-label]="'AI.SCENARIO_RUN' | translate">
-            @if (scenarioLoading) {
+            [disabled]="scenarioLoading() || !scenario.description || !scenario.amount || !scenario.date" [attr.aria-label]="'AI.SCENARIO_RUN' | translate">
+            @if (scenarioLoading()) {
               <span class="spinner-border spinner-border-sm me-2"></span>{{ 'AI.SCENARIO_RUNNING' | translate }}
             } @else {
               {{ 'AI.SCENARIO_RUN' | translate }}
@@ -248,14 +248,14 @@
         </div>
       </div>
 
-      @if (scenarioLoading) {
+      @if (scenarioLoading()) {
         <div class="text-center py-5">
           <div class="spinner-border text-primary mb-3"></div>
           <p class="text-muted">{{ 'AI.SCENARIO_RUNNING' | translate }}</p>
         </div>
       }
 
-      @if (scenarioResult && !scenarioLoading) {
+      @if (scenarioResult() && !scenarioLoading()) {
         <div class="row g-3">
           <div class="col-md-5">
             <div class="card h-100">
@@ -270,7 +270,7 @@
                     </tr>
                   </thead>
                   <tbody>
-                    @for (f of scenarioResult.simulation.forecast; track f.month) {
+                    @for (f of scenarioResult()?.simulation?.forecast; track f.month) {
                       <tr [class.table-danger]="!!f.note">
                         <td>{{ f.month }}</td>
                         <td>₪{{ f.projectedBalance | number:'1.0-0' }}</td>
@@ -285,7 +285,7 @@
           <div class="col-md-7">
             <div class="card h-100">
               <div class="card-header"><strong>{{ 'AI.AI_SCENARIO_ANALYSIS' | translate }}</strong></div>
-              <div class="card-body analysis-text" [innerHTML]="formatText(scenarioResult.scenarioAnalysis)"></div>
+              <div class="card-body analysis-text" [innerHTML]="formatText(scenarioResult()?.scenarioAnalysis ?? '')"></div>
             </div>
           </div>
         </div>
@@ -294,7 +294,7 @@
   }
 
   <!-- ===================== DASHBOARD TAB ===================== -->
-  @if (activeTab === 'dashboard') {
+  @if (activeTab() === 'dashboard') {
     <div class="dashboard-panel p-3">
       <div class="d-flex justify-content-between align-items-center mb-4">
         <h4 class="mb-0">{{ 'AI.DASHBOARD_TITLE' | translate }}</h4>
@@ -303,12 +303,12 @@
         </button>
       </div>
 
-      @if (summaryLoading) {
+      @if (summaryLoading()) {
         <div class="text-center py-5">
           <div class="spinner-border text-primary mb-3"></div>
           <p class="text-muted">{{ 'AI.LOADING_DATA' | translate }}</p>
         </div>
-      } @else if (summary) {
+      } @else if (summary()) {
         <div class="row g-4">
           <!-- Current Balance -->
           <div class="col-md-4 col-lg-3">
@@ -316,7 +316,7 @@
               <div class="card-icon text-success"><i class="bi bi-wallet2"></i></div>
               <div class="card-content">
                 <div class="card-label">{{ 'AI.BALANCE' | translate }}</div>
-                <div class="card-value text-success">₪{{ (realCurrentBalance || summary.currentBalance) | number:'1.0-0' }}</div>
+                <div class="card-value text-success">₪{{ (realCurrentBalance() || summary()?.currentBalance) | number:'1.0-0' }}</div>
               </div>
             </div>
           </div>
@@ -324,11 +324,11 @@
           <!-- Avg Monthly Savings -->
           <div class="col-md-4 col-lg-3">
             <div class="dashboard-card">
-              <div class="card-icon" [class.text-success]="(summary.monthlySavingsAvg) >= 0" [class.text-danger]="(summary.monthlySavingsAvg) < 0"><i class="bi bi-piggy-bank"></i></div>
+              <div class="card-icon" [class.text-success]="(summary()?.monthlySavingsAvg ?? 0) >= 0" [class.text-danger]="(summary()?.monthlySavingsAvg ?? 0) < 0"><i class="bi bi-piggy-bank"></i></div>
               <div class="card-content">
                 <div class="card-label">{{ 'AI.AVG_SAVINGS' | translate }}</div>
-                <div class="card-value" [class.text-success]="(summary.monthlySavingsAvg) >= 0" [class.text-danger]="(summary.monthlySavingsAvg) < 0">
-                  ₪{{ summary.monthlySavingsAvg | number:'1.0-0' }}
+                <div class="card-value" [class.text-success]="(summary()?.monthlySavingsAvg ?? 0) >= 0" [class.text-danger]="(summary()?.monthlySavingsAvg ?? 0) < 0">
+                  ₪{{ summary()?.monthlySavingsAvg | number:'1.0-0' }}
                 </div>
               </div>
             </div>
@@ -340,7 +340,7 @@
               <div class="card-icon text-primary"><i class="bi bi-graph-up"></i></div>
               <div class="card-content">
                 <div class="card-label">{{ 'AI.AVG_INCOME' | translate }}</div>
-                <div class="card-value">₪{{ summary.income.average | number:'1.0-0' }}</div>
+                <div class="card-value">₪{{ summary()?.income?.average | number:'1.0-0' }}</div>
               </div>
             </div>
           </div>
@@ -351,7 +351,7 @@
               <div class="card-icon text-danger"><i class="bi bi-graph-down"></i></div>
               <div class="card-content">
                 <div class="card-label">{{ 'AI.AVG_EXPENSES' | translate }}</div>
-                <div class="card-value text-danger">₪{{ summary.expenses.averageTotal | number:'1.0-0' }}</div>
+                <div class="card-value text-danger">₪{{ summary()?.expenses?.averageTotal | number:'1.0-0' }}</div>
               </div>
             </div>
           </div>
@@ -362,7 +362,7 @@
               <div class="card-icon text-info"><i class="bi bi-currency-dollar"></i></div>
               <div class="card-content">
                 <div class="card-label">{{ 'AI.TOTAL_INVESTMENTS' | translate }}</div>
-                <div class="card-value">₪{{ totalInvestmentsValue | number:'1.0-0' }}</div>
+                <div class="card-value">₪{{ totalInvestmentsValue() | number:'1.0-0' }}</div>
               </div>
             </div>
           </div>
@@ -373,7 +373,7 @@
               <div class="card-icon text-warning"><i class="bi bi-receipt"></i></div>
               <div class="card-content">
                 <div class="card-label">{{ 'AI.ACTIVE_INSTALLMENTS' | translate }}</div>
-                <div class="card-value">{{ totalActiveInstallments }} (₪{{ totalMonthlyInstallmentsPayment | number:'1.0-0' }}/{{ 'INSTALLMENTS.MONTHLY' | translate }})</div>
+                <div class="card-value">{{ totalActiveInstallments() }} (₪{{ totalMonthlyInstallmentsPayment() | number:'1.0-0' }}/{{ 'INSTALLMENTS.MONTHLY' | translate }})</div>
               </div>
             </div>
           </div>
@@ -388,19 +388,19 @@
                   <i class="bi bi-lightbulb text-warning me-2"></i>
                   {{ 'AI.INSIGHTS_TITLE' | translate }}
                 </div>
-                <button class="btn btn-outline-warning btn-sm" (click)="loadInsights()" [disabled]="insightsLoading" [attr.aria-label]="'AI.GENERATE_INSIGHTS' | translate">
+                <button class="btn btn-outline-warning btn-sm" (click)="loadInsights()" [disabled]="insightsLoading()" [attr.aria-label]="'AI.GENERATE_INSIGHTS' | translate">
                   <i class="bi bi-magic me-1"></i> {{ 'AI.GENERATE_INSIGHTS' | translate }}
                 </button>
               </h5>
               
-              @if (insightsLoading) {
+              @if (insightsLoading()) {
                 <div class="d-flex align-items-center p-3 border rounded bg-opacity-10 bg-info">
                   <span class="spinner-border spinner-border-sm me-2 text-info"></span>
                   <span class="text-muted">{{ 'AI.INSIGHTS_LOADING' | translate }}</span>
                 </div>
               } @else {
                 <div class="row g-3">
-                  @for (insight of insights; track $index) {
+                  @for (insight of insights(); track $index) {
                     <div class="col-md-6">
                       <div class="insight-card p-3 h-100">
                         <div class="d-flex align-items-start">
@@ -410,7 +410,7 @@
                       </div>
                     </div>
                   }
-                  @if (!insights.length && !insightsLoading && insightsLoaded) {
+                  @if (!insights().length && !insightsLoading() && insightsLoaded()) {
                     <div class="col-12 text-muted small italic">{{ 'AI.NO_INSIGHTS' | translate }}</div>
                   }
                 </div>
@@ -423,11 +423,11 @@
   }
 
   <!-- ===================== ARCHIVE TAB ===================== -->
-  @if (activeTab === 'archive') {
+  @if (activeTab() === 'archive') {
     <div class="archive-panel p-3">
       <div class="d-flex justify-content-between align-items-center mb-4">
         <h4 class="mb-0">{{ 'AI.ARCHIVE_TITLE' | translate }}</h4>
-        <button class="btn btn-outline-primary btn-sm" (click)="loadArchive()" [disabled]="archiveLoading">
+        <button class="btn btn-outline-primary btn-sm" (click)="loadArchive()" [disabled]="archiveLoading()">
           <i class="bi bi-arrow-clockwise me-1"></i> {{ 'AI.REFRESH' | translate }}
         </button>
       </div>
@@ -437,7 +437,7 @@
         <div class="col-md-4">
           <div class="input-group input-group-sm">
             <span class="input-group-text bg-light"><i class="bi bi-funnel"></i></span>
-            <select class="form-select" [(ngModel)]="archiveFilterType">
+            <select class="form-select" [ngModel]="archiveFilterType()" (ngModelChange)="archiveFilterType.set($event)">
               <option value="all">{{ 'AI.FILTER_ALL' | translate }}</option>
               <option value="analysis">{{ 'AI.TAB_ANALYSIS' | translate }}</option>
               <option value="insights">{{ 'AI.INSIGHTS_TITLE' | translate }}</option>
@@ -446,15 +446,15 @@
           </div>
         </div>
         <div class="col-md-8">
-          <input type="text" class="form-control form-control-sm" [placeholder]="'AI.SEARCH_REPORTS' | translate" [(ngModel)]="archiveSearchQuery" />
+          <input type="text" class="form-control form-control-sm" [placeholder]="'AI.SEARCH_REPORTS' | translate" [ngModel]="archiveSearchQuery()" (ngModelChange)="archiveSearchQuery.set($event)" />
         </div>
       </div>
 
-      @if (archiveLoading) {
+      @if (archiveLoading()) {
         <div class="text-center py-5">
           <div class="spinner-border text-primary"></div>
         </div>
-      } @else if (!archivedReports.length) {
+      } @else if (!archivedReports().length) {
         <div class="text-center py-5 text-muted italic">
           {{ 'AI.NO_INSIGHTS' | translate }}
         </div>
@@ -500,7 +500,7 @@
   }
 
   <!-- Overlay לאישור מחיקת דוח מהארכיון -->
-  @if (pendingDeleteReportId) {
+  @if (pendingDeleteReportId()) {
     <div class="cf-overlay position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style="background: rgba(15, 23, 42, 0.5); z-index: 1100;">
       <div class="cf-confirm-card card p-4 text-center" dir="rtl" style="border-radius: 16px; min-width: 300px;">
         <div class="cf-confirm-icon mb-2" style="font-size: 2rem;">🗑️</div>
@@ -519,7 +519,7 @@
   }
 
   <!-- Overlay לאישור מחיקת שיחה -->
-  @if (pendingDeleteChatId) {
+  @if (pendingDeleteChatId()) {
     <div class="cf-overlay position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style="background: rgba(15, 23, 42, 0.5); z-index: 1100;">
       <div class="cf-confirm-card card p-4 text-center" dir="rtl" style="border-radius: 16px; min-width: 300px;">
         <div class="cf-confirm-icon mb-2" style="font-size: 2rem;">🗑️</div>

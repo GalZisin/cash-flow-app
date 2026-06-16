@@ -1,26 +1,26 @@
 <div class="inst-wrap" dir="rtl">
 
   <!-- ════ STICKY HEADER ════ -->
-  <app-installments-header [activeCount]="activeCount" [totalRemaining]="totalRemaining" [totalMonthly]="totalMonthly"
-    [itemsCount]="items.length" [viewMode]="viewMode" (toggleView)="toggleView()" (openAdd)="openAdd()">
+  <app-installments-header [activeCount]="activeCount()" [totalRemaining]="totalRemaining()" [totalMonthly]="totalMonthly()"
+    [itemsCount]="items().length" [viewMode]="viewMode()" (toggleView)="toggleView()" (openAdd)="openAdd()">
   </app-installments-header>
 
   <!-- ════ CONTENT BODY ════ -->
   <div class="inst-body">
-    @if (items.length === 0) {
+    @if (items().length === 0) {
       <!-- Empty State -->
       <app-installments-empty-state (openAdd)="openAdd()"></app-installments-empty-state>
     } @else {
-      @if (viewMode === 'grid') {
+      @if (viewMode() === 'grid') {
         <!-- Grid View (Cards) -->
         <div class="row g-4">
-          @for (item of items; track item.id) {
+          @for (item of items(); track item.id) {
             @let st = statusOf(item.id);
             <div class="col-12 col-lg-6">
               <app-installment-card
                 [item]="item"
                 [st]="st"
-                [expandedLoans]="expandedLoans"
+                [expandedLoans]="expandedLoans()"
                 (undoPayment)="undoPayment($event.item, $event.loanId)"
                 (markAsPaid)="markAsPaid($event.item, $event.loan)"
                 (openEdit)="openEdit($event)"
@@ -35,8 +35,8 @@
         </div>
       } @else {
         <!-- Table View -->
-        <app-installments-table [sortedStatuses]="sortedStatuses" [expandedLoans]="expandedLoans" [sortKey]="sortKey"
-          [sortDir]="sortDir" (setSort)="setSort($event)" (toggleTopHistory)="toggleTopHistory($event)"
+        <app-installments-table [sortedStatuses]="sortedStatuses()" [expandedLoans]="expandedLoans()" [sortKey]="sortKey()"
+          [sortDir]="sortDir()" (setSort)="setSort($event)" (toggleTopHistory)="toggleTopHistory($event)"
           (undoPayment)="undoPayment($event.item, $event.loanId)"
           (markAsPaid)="markAsPaid($event.item, $event.loan)" (openEdit)="openEdit($event)"
           (confirmDelete)="confirmDelete($event)" (toggleLoanHistory)="toggleLoanHistory($event)"
@@ -49,28 +49,28 @@
 </div>
 
 <!-- ════ FORM DIALOG ════ -->
-<app-installment-form [showForm]="showForm" [form]="form" [editingId]="editingId" [COLORS]="COLORS"
+<app-installment-form [showForm]="showForm()" [form]="form()" [editingId]="editingId()" [COLORS]="COLORS"
   [amountAfterDown]="amountAfterDown" (closeForm)="closeForm()" (submit)="submit()" (updateParentTotals)="updateTotalsFromLoans()" (onInstallmentsCountChange)="onInstallmentsCountChange()"
   (addLoanComponent)="addLoanComponent()" (removeLoanComponent)="removeLoanComponent($event)"
   (calculateLoanPMT)="calculateLoanPMT($event)" (onPaymentTypeChange)="onPaymentTypeChange()" (calculatePayoffAmount)="calculatePayoffAmount($event)"
   (onMonthlyPaymentChange)="onMonthlyPaymentChange()" (addMilestone)="addMilestone()"
   (removeMilestone)="removeMilestone($event)" (onMilestonePctChange)="onMilestonePctChange($event)"
-  (onMilestoneAmountChange)="onMilestoneAmountChange($event)">
+  (onMilestoneAmountChange)="onMilestoneAmountChange($event)"> <!-- form is passed as form() -->
 </app-installment-form>
 
 <!-- ════ CONFIRMATION DIALOGS ════ -->
-<app-installment-confirm-dialogs [pendingDeleteId]="pendingDeleteId" [pendingUndoAction]="pendingUndoAction"
-  [pendingWarnings]="pendingWarnings" [showMarkAsPaidDialog]="showMarkAsPaidDialog"
-  [paymentDateInput]="paymentDateInput" 
-  [milestonePercentageInput]="milestonePercentageInput"
-  [milestoneAmountInput]="milestoneAmountInput"
-  [milestoneDescriptionInput]="milestoneDescriptionInput"
+<app-installment-confirm-dialogs [pendingDeleteId]="pendingDeleteId()" [pendingUndoAction]="pendingUndoAction"
+  [pendingWarnings]="pendingWarnings" [showMarkAsPaidDialog]="showMarkAsPaidDialog()"
+  [paymentDateInput]="paymentDateInput()" 
+  [milestonePercentageInput]="milestonePercentageInput()"
+  [milestoneAmountInput]="milestoneAmountInput()"
+  [milestoneDescriptionInput]="milestoneDescriptionInput()"
   (doDelete)="doDelete()" (cancelDelete)="cancelDelete()"
   (doUndoPayment)="doUndoPayment()" (cancelUndoPayment)="cancelUndoPayment()"
   (confirmWarnings)="confirmWarnings()" (cancelWarnings)="cancelWarnings()"
   (cancelMarkAsPaidDialog)="cancelMarkAsPaidDialog()" (confirmMarkAsPaid)="confirmMarkAsPaid()"
-  (paymentDateInputChange)="paymentDateInput = $event" 
-  (milestonePercentageInputChange)="milestonePercentageInput = $event; onMilestoneDialogPercentageChange()"
-  (milestoneAmountInputChange)="milestoneAmountInput = $event"
-  (milestoneDescriptionInputChange)="milestoneDescriptionInput = $event">
+  (paymentDateInputChange)="paymentDateInput.set($event)" 
+  (milestonePercentageInputChange)="milestonePercentageInput.set($event); onMilestoneDialogPercentageChange()"
+  (milestoneAmountInputChange)="milestoneAmountInput.set($event)"
+  (milestoneDescriptionInputChange)="milestoneDescriptionInput.set($event)">
 </app-installment-confirm-dialogs>

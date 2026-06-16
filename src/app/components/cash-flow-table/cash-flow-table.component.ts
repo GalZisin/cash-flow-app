@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, inject } from '@angular/core';
 import { FormBuilder, FormGroup, FormArray, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
@@ -9,10 +9,11 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
+import { CommonModule, DecimalPipe } from '@angular/common';
 import { registerLocaleData } from '@angular/common';
 import localeHe from '@angular/common/locales/he'; // Import Hebrew locale data
 import { combineLatest } from 'rxjs';
+import { toObservable } from '@angular/core/rxjs-interop';
 import { TranslateModule, TranslateService, LangChangeEvent } from '@ngx-translate/core';
 import { CashFlowService, CashFlowDefaults } from '../../services/cash-flow.service';
 import { InstallmentService } from '../../services/installment.service';
@@ -32,12 +33,22 @@ registerLocaleData(localeHe);
   styleUrl: './cash-flow-table.component.scss'
 })
 export class CashFlowTableComponent implements OnInit {
+  private fb = inject(FormBuilder);
+  private cashFlowService = inject(CashFlowService);
+  private snackBar = inject(MatSnackBar);
+  private cdr = inject(ChangeDetectorRef);
+  private translate = inject(TranslateService);
+  private installmentService = inject(InstallmentService);
+  private decimalPipe = inject(DecimalPipe);
+
   cashFlowForm!: FormGroup;
   dataSource = new MatTableDataSource<any>(); // Use MatTableDataSource
   activeRowCtrl: any = null;
   activeRowIndex = 0;
   focusedField: Record<string, boolean> = {};
   private isInitialized = false;
+  private installmentItems$ = toObservable(this.installmentService.items); // Corrected: installmentService.items is already a signal
+
   displayedColumns = [
     'rowActions',
     'month',
@@ -58,16 +69,6 @@ export class CashFlowTableComponent implements OnInit {
     { labelKey: 'CASH_FLOW.COLOR_YELLOW', value: '#fef9c3' },
     { labelKey: 'CASH_FLOW.COLOR_GREEN', value: '#dcfce7' },
   ];
-
-  constructor(
-    private fb: FormBuilder,
-    private cashFlowService: CashFlowService,
-    private snackBar: MatSnackBar,
-    private cdr: ChangeDetectorRef,
-    private translate: TranslateService,
-    private installmentService: InstallmentService,
-    private decimalPipe: DecimalPipe
-  ) { }
 
   getExpenseAmount(monthIndex: number, expenseIndex: number): FormControl<number> {
     const control = this.getRegularExpenses(monthIndex)
@@ -93,7 +94,7 @@ export class CashFlowTableComponent implements OnInit {
     });
 
     // האזנה לשינויים בפריסות - עדכון התצוגה ושמירה אוטומטית לקובץ ה-JSON
-    this.installmentService.items$.subscribe(() => {
+    this.installmentItems$.subscribe(() => {
       if (!this.isInitialized) return;
       this.calculateEndingBalances();
       this.save(true); // שמירה שקטה כדי לסנכרן את ה-loanPayment החדש לקובץ
@@ -112,7 +113,7 @@ export class CashFlowTableComponent implements OnInit {
           const isGreen = m.rowColor === '#dcfce7';
 
           // חישוב החלק הידני המקורי: הסכום השמור ב-JSON פחות מה שמחושב אוטומטית בפריסות
-          const totals = this.installmentService.getMonthlyInstallmentsForMonth(monthDate, this.installmentService.itemsValue);
+          const totals = this.installmentService.getMonthlyInstallmentsForMonth(monthDate, this.installmentService.items());
           const savedTotal = Number(m.loanPayment) || 0;
           const manualPart = Math.max(0, savedTotal - totals.loans);
 
@@ -415,7 +416,7 @@ export class CashFlowTableComponent implements OnInit {
     const monthDateValue = monthCtrl.get('month')?.value;
     if (!monthDateValue) return;
 
-    const totals = this.installmentService.getMonthlyInstallmentsForMonth(new Date(monthDateValue), this.installmentService.itemsValue);
+    const totals = this.installmentService.getMonthlyInstallmentsForMonth(new Date(monthDateValue), this.installmentService.items());
     const totalEntered = Number(monthCtrl.get('loanPayment')?.value) || 0;
 
     // החלק הידני הוא הסכום שהוכנס פחות מה שמגיע אוטומטית מהפריסות
@@ -439,7 +440,7 @@ export class CashFlowTableComponent implements OnInit {
         const targetDate = new Date(monthDateValue);
         const totals = this.installmentService.getMonthlyInstallmentsForMonth(
           targetDate,
-          this.installmentService.itemsValue
+          this.installmentService.items()
         );
 
         const manualValue = Number(monthCtrl.get('manualLoanPayment')?.value) || 0;
@@ -510,7 +511,7 @@ export class CashFlowTableComponent implements OnInit {
       newMonth.get('income')?.setValue(defaults.income, { emitEvent: false });
       newMonth.get('mortgagePayment')?.setValue(defaults.mortgagePayment, { emitEvent: false });
 
-      const totals = this.installmentService.getMonthlyInstallmentsForMonth(nextMonth, this.installmentService.itemsValue);
+      const totals = this.installmentService.getMonthlyInstallmentsForMonth(nextMonth, this.installmentService.items());
       // הגדרת ברירת המחדל בשדה הידני
       newMonth.get('manualLoanPayment')?.setValue(defaults.loanPayment, { emitEvent: false });
       newMonth.get('loanPayment')?.setValue(totals.loans + defaults.loanPayment, { emitEvent: false });
@@ -603,7 +604,7 @@ export class CashFlowTableComponent implements OnInit {
 
     const breakdown = this.installmentService.getMonthlyBreakdownForMonth(
       new Date(dateValue),
-      this.installmentService.itemsValue
+      this.installmentService.items()
     );
 
     const relevant = breakdown.filter(b => type === 'loans' ? b.isLoan : !b.isLoan);
