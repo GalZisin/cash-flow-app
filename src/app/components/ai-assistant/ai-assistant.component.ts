@@ -1,6 +1,6 @@
 import { Component, OnInit, ViewChild, ElementRef, AfterViewChecked, inject, signal, computed, ChangeDetectionStrategy, DestroyRef, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { AiService, ChatMessage, FinancialSummary, ScenarioRequest, ScenarioResult } from '../../services/ai.service';
@@ -20,7 +20,7 @@ type ActiveTab = 'chat' | 'analysis' | 'scenario' | 'dashboard' | 'archive';
   selector: 'app-ai-assistant',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, TranslateModule, MatTooltipModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, TranslateModule, MatTooltipModule],
   templateUrl: './ai-assistant.component.html',
   styleUrl: './ai-assistant.component.scss'
 })
@@ -35,7 +35,7 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
 
   // Chat
   messages = signal<ChatMessage[]>([]);
-  userInput = '';
+  chatControl = new FormControl('', { nonNullable: true });
   chatLoading = signal(false);
   private currentStreamSubscription: Subscription | null = null; // To manage the streaming subscription
   private lastUserQuestion: string | null = null; // Store the last user question for retry
@@ -93,7 +93,7 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
   // Convert Observables to Signals
   conversationsSignal = toSignal(this.convService.items$, { initialValue: [] });
   cashFlowMonthsSignal = toSignal(this.cashFlowService.cashFlowMonths$, { initialValue: [] });
-  investmentsSignal = toSignal(this.investmentService.investments$, { initialValue: [] });
+  investmentsSignal = toSignal(this.investmentService.investments$, { initialValue: [] as any[] });
 
   ngOnInit() {
     this.loadSummary();
@@ -280,18 +280,18 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
   /**
    * מחזירה את התחזית החל מהחודש הנוכחי בלבד (עד 6 חודשים קדימה)
    */
-  get displayForecast(): any[] {
+  get displayForecast(): Array<{ month: string, balance: number }> {
     if (!this.summary()?.forecast || this.summary()!.forecast.length === 0) return [];
 
     const now = new Date();
     const nowStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 
     // 1. הסרת כפילויות לפי חודש (למשל אם מגיע פעמיים 2029-03) ונרמול הפורמט ל-YYYY-MM
-    const uniqueMap = new Map<string, any>();
+    const uniqueMap = new Map<string, { month: string, balance: number }>(); // Ensure correct type for map values
     this.summary()!.forecast.forEach(f => {
       const monthKey = f.month.trim().substring(0, 7);
       // אם יש כפילות, נשמור את הרשומה האחרונה שמופיעה
-      uniqueMap.set(monthKey, { ...f, month: monthKey });
+      uniqueMap.set(monthKey, { month: monthKey, balance: f.projectedBalance });
     });
 
     // 2. המרה למערך ומיון כרונולוגי (מהקרוב לרחוק)
@@ -309,14 +309,15 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
    * Reduces the financial summary to essential data based on the user's question.
    * This implements a RAG-like filtering to minimize token usage and improve response accuracy.
    */
-  private prepareRelevantContext(query: string): any {
-    if (!this.summary()) return null;
+  private prepareRelevantContext(query: string): Record<string, unknown> | null {
+    const summary = this.summary();
+    if (!summary) return null;
 
     const q = query.toLowerCase();
-    const context: any = {
+    const context: Record<string, unknown> = {
       currentBalance: this.realCurrentBalance(),
-      monthlySavings: this.summary()!.monthlySavingsAvg
-    }; // Use .get() for signals
+      monthlySavings: summary.monthlySavingsAvg
+    };
 
     // Semantic matching for intent-based filtering (supports Hebrew and English)
     const isExpenseQuery = /expense|spend|cost|buying|הוצאות|קנייה|כמה עולה/i.test(q);
@@ -324,16 +325,16 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
     const isForecastQuery = /forecast|future|reach|predict|תחזית|מתי אגיע|עתיד/i.test(q);
     const isDebtQuery = /loan|debt|mortgage|payment|הלוואה|משכנתא|תשלום/i.test(q);
 
-    if (isExpenseQuery) context.expenses = this.summary()!.expenses;
-    if (isIncomeQuery) context.income = this.summary()!.income;
-    if (isForecastQuery) context.forecast = this.displayForecast; // שולח את כל 6 החודשים שהוגדרו ב-displayForecast
-    if (isDebtQuery) context.loans = this.summary()!.loans.map(l => ({ name: l.name, payment: l.monthlyPayment }));
+    if (isExpenseQuery) context['expenses'] = summary.expenses; // Access with bracket notation
+    if (isIncomeQuery) context['income'] = summary.income;     // Access with bracket notation
+    if (isForecastQuery) context['forecast'] = this.displayForecast; // Access with bracket notation
+    if (isDebtQuery) context['loans'] = summary.loans.map(l => ({ name: l.name, payment: l.monthlyPayment })); // Access with bracket notation
 
     // Provide a high-level summary if no specific intent is detected
     if (!isExpenseQuery && !isIncomeQuery && !isForecastQuery && !isDebtQuery) {
-      context.overview = {
-        avgIncome: this.summary()!.income.average,
-        avgExpenses: this.summary()!.expenses.averageTotal
+      context['overview'] = {
+        avgIncome: summary.income.average,
+        avgExpenses: summary.expenses.averageTotal
       };
     }
 
@@ -343,12 +344,12 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
   handleSuggestion(key: string) {
     // שליפת התרגום עבור המפתח שנבחר והזנתו לשדה הקלט
     this.translate.get(key).subscribe(translatedValue => {
-      this.userInput = translatedValue;
+      this.chatControl.setValue(translatedValue);
     });
   }
 
   sendMessage(questionToAsk?: string) {
-    const q = questionToAsk || this.userInput.trim(); // userInput is still a string
+    const q = questionToAsk || this.chatControl.value.trim();
     if (!q || this.chatLoading()) return;
 
     // Cancel any previous ongoing stream
@@ -360,7 +361,7 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
     // If this is a new user input, add it to messages and clear input
     if (!questionToAsk) {
       this.messages.update(msgs => [...msgs, { role: 'user', content: q, timestamp: new Date() }]);
-      this.userInput = '';
+      this.chatControl.setValue('');
     } // userInput is a string, not a signal, so direct assignment is fine
 
     this.chatLoading.set(true);

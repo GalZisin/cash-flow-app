@@ -286,6 +286,7 @@
       }
 
       <!-- תאריך התחלה -->
+      @if (form.paymentType === "manual") {
       <div class="inst-field mb-3">
         <label class="inst-label" for="inst-start">{{
           "INSTALLMENTS.START_DATE" | translate
@@ -294,6 +295,7 @@
           placeholder="{{ 'INSTALLMENTS.START_DATE' | translate }}" title="תאריך תחילת תשלומים"
           aria-label="תאריך תחילת תשלומים" [(ngModel)]="form.startDate" />
       </div>
+      }
 
       <!-- צבע -->
       <div class="inst-field mb-3">

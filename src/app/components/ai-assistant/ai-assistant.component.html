@@ -122,11 +122,11 @@
             rows="2"
             aria-label="AI.INPUT_PLACEHOLDER"
             [placeholder]="'AI.INPUT_PLACEHOLDER' | translate"
-            [(ngModel)]="userInput"
+            [formControl]="chatControl"
             (keydown)="onEnter($event)"
-            [disabled]="chatLoading()">
+            [disabled]="chatLoading() || chatControl.invalid">
           </textarea>
-          <button class="btn btn-primary ms-2" (click)="sendMessage()" [disabled]="chatLoading() || !userInput.trim()" [attr.aria-label]="'AI.INPUT_PLACEHOLDER' | translate">
+          <button class="btn btn-primary ms-2" (click)="sendMessage()" [disabled]="chatLoading() || chatControl.invalid" [attr.aria-label]="'AI.INPUT_PLACEHOLDER' | translate">
             @if (chatLoading()) { <span class="spinner-border spinner-border-sm"></span> }
             @else { ➤ }
           </button>
@@ -168,7 +168,7 @@
               @for (f of displayForecast; track f.month) {
                 <div class="summary-item">
                   <span class="label">{{ f.month }}</span>
-                  <span class="value">₪{{ f.projectedBalance | number:'1.0-0' }}</span>
+                  <span class="value">₪{{ f.balance | number:'1.0-0' }}</span>
                 </div>
               }
               @if (summary()?.loans?.length) {

@@ -1,5 +1,5 @@
 import { Component, OnInit, ChangeDetectorRef, inject } from '@angular/core';
-import { FormBuilder, FormGroup, FormArray, ReactiveFormsModule, FormControl } from '@angular/forms';
+import { FormBuilder, FormGroup, FormArray, ReactiveFormsModule, FormControl, AbstractControl } from '@angular/forms';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -42,8 +42,8 @@ export class CashFlowTableComponent implements OnInit {
   private decimalPipe = inject(DecimalPipe);
 
   cashFlowForm!: FormGroup;
-  dataSource = new MatTableDataSource<any>(); // Use MatTableDataSource
-  activeRowCtrl: any = null;
+  dataSource = new MatTableDataSource<AbstractControl>();
+  activeRowCtrl: AbstractControl | null = null;
   activeRowIndex = 0;
   focusedField: Record<string, boolean> = {};
   private isInitialized = false;
@@ -104,7 +104,7 @@ export class CashFlowTableComponent implements OnInit {
     combineLatest([
       this.installmentService.load(),
       this.cashFlowService.load()
-    ]).subscribe(([_, data]) => {
+    ]).subscribe(([_, data]: [unknown, { months: any[] }]) => {
       if (data && data.months?.length) {
         data.months.forEach((m: any) => {
           const rawDate = new Date(m.month);

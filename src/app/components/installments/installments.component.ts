@@ -119,7 +119,7 @@ export class InstallmentsComponent implements OnInit {
         const key = this.sortKey();
         const dir = this.sortDir();
         return [...this.statuses()].sort((a, b) => {
-            let v1: any, v2: any;
+            let v1: string | number, v2: string | number;
             if (key === 'name') { v1 = a.installment.name; v2 = b.installment.name; }
             else if (key === 'total') { v1 = a.installment.totalAmount; v2 = b.installment.totalAmount; }
             else if (key === 'monthly') { v1 = a.installment.monthlyPayment; v2 = b.installment.monthlyPayment; }
@@ -624,6 +624,11 @@ export class InstallmentsComponent implements OnInit {
                 interestRate: loan.interestRate !== undefined ? Number(loan.interestRate) : 0,
                 payoffAmount: Number(loan.payoffAmount) || 0
             }));
+            // סנכרון תאריך התחלה ראשי עם ההלוואה המוקדמת ביותר
+            if (currentForm.loanComponents.length > 0) {
+                const startDates = currentForm.loanComponents.map(l => l.startDate).sort();
+                currentForm.startDate = startDates[0];
+            }
             this.updateTotalsFromLoans(); // This will update the form signal
             currentForm = this.form(); // Get updated form after updateTotalsFromLoans
         } else if (currentForm.paymentType === 'milestone') {
@@ -635,6 +640,11 @@ export class InstallmentsComponent implements OnInit {
                 percentage: Number(m.percentage) || 0,
                 amount: Number(m.amount) || 0
             }));
+            // סנכרון תאריך התחלה ראשי עם הפעימה המוקדמת ביותר
+            if (currentForm.milestones.length > 0) {
+                const dates = currentForm.milestones.map(m => m.date).sort();
+                currentForm.startDate = dates[0].length === 7 ? `${dates[0]}-01` : dates[0];
+            }
             // Calculate installmentsCount based on milestones (duration)
             if (currentForm.milestones.length > 0) {
                 const start = new Date(currentForm.startDate);

@@ -151,8 +151,8 @@ export class InstallmentService {
         });
     }
 
-    private isValidDate(d: any): boolean {
-        return d instanceof Date && !isNaN(d.getTime());
+    private isValidDate(d: unknown): d is Date {
+        return d instanceof Date && !isNaN((d as Date).getTime());
     }
 
     private parseDate(dateStr: string): Date {
@@ -288,6 +288,14 @@ export class InstallmentService {
             const milestoneTimes = item.milestones.map(m => this.parseDate(m.date).getTime()).filter(t => !isNaN(t));
             const lastMilestoneDate = milestoneTimes.length > 0 ? new Date(Math.max(...milestoneTimes)) : today;
             expectedEndDate = this.isValidDate(lastMilestoneDate) ? lastMilestoneDate.toISOString().slice(0, 7) : item.startDate.slice(0, 7);
+        } else if (item.paymentType === 'loan' && item.loanComponents?.length > 0) {
+            const loanEndTimes = item.loanComponents.map(l => {
+                const d = new Date(l.startDate);
+                d.setMonth(d.getMonth() + l.installmentsCount);
+                return d.getTime();
+            });
+            const maxEndDate = new Date(Math.max(...loanEndTimes));
+            expectedEndDate = this.isValidDate(maxEndDate) ? maxEndDate.toISOString().slice(0, 7) : item.startDate.slice(0, 7);
         } else {
             const endDateCalc = new Date(itemStart);
             endDateCalc.setMonth(endDateCalc.getMonth() + (Number(totalInstallments) || 0));
@@ -461,18 +469,17 @@ export class InstallmentService {
      * @param currentCashFlowMonths The current state of the cash flow months.
      * @returns An array of CashFlowWarning objects.
      */
-    simulateInstallmentImpact(proposedInstallment: Omit<Installment, 'id'> | Installment, currentCashFlowMonths: any[]): CashFlowWarning[] {
+    simulateInstallmentImpact(proposedInstallment: Omit<Installment, 'id'> | Installment, currentCashFlowMonths: Array<{ month: string, startingBalance: number, income: number, mortgagePayment: number, loanPayment: number, specialExpenses: any[], regularExpenses: any[], additionalIncomes: any[] }>): CashFlowWarning[] {
         const warnings: CashFlowWarning[] = [];
         const THRESHOLD = 30000; // סף האזהרה
-        const SIGNIFICANCE_THRESHOLD = 100; // התעלמות משינויים קטנים ברמת היתרה
 
         const baselineInstallments = this._items();
         const proposedId = (proposedInstallment as Installment).id;
 
         // יצירת רשימה היפותטית המשלבת את העדכון
         const hypotheticalInstallments = proposedId
-            ? baselineInstallments.map(i => String(i.id) === String(proposedId) ? { ...i, ...proposedInstallment } as any : i)
-            : [...baselineInstallments, { ...proposedInstallment, id: 'temp-sim-id' } as any];
+            ? baselineInstallments.map(i => String(i.id) === String(proposedId) ? { ...i, ...proposedInstallment } as Installment : i)
+            : [...baselineInstallments, { ...proposedInstallment, id: 'temp-sim-id' } as Installment];
 
         let prevBaseBalance = 0;
         let prevSimBalance = 0;
@@ -488,16 +495,16 @@ export class InstallmentService {
             const baseTotals = this.getMonthlyInstallmentsForMonth(targetDate, baselineInstallments);
             const baseManualLoan = Number(month.loanPayment) || 0; // manualLoanPayment מהטבלה
             const baseExpenses = (Number(month.mortgagePayment) || 0) + (baseManualLoan + baseTotals.loans) + baseTotals.installments +
-                (month.specialExpenses || []).reduce((s: number, r: any) => s + (Number(r.amount) || 0), 0) +
-                (month.regularExpenses || []).reduce((s: number, r: any) => s + (Number(r.amount) || 0), 0);
+                (month.specialExpenses || []).reduce((s: number, r: { amount: number }) => s + (Number(r.amount) || 0), 0) +
+                (month.regularExpenses || []).reduce((s: number, r: { amount: number }) => s + (Number(r.amount) || 0), 0);
 
             // 2. חישוב הוצאות מדומות (אחרי השינוי)
             const simTotals = this.getMonthlyInstallmentsForMonth(targetDate, hypotheticalInstallments);
             const simExpenses = (Number(month.mortgagePayment) || 0) + (baseManualLoan + simTotals.loans) + simTotals.installments +
-                (month.specialExpenses || []).reduce((s: number, r: any) => s + (Number(r.amount) || 0), 0) +
-                (month.regularExpenses || []).reduce((s: number, r: any) => s + (Number(r.amount) || 0), 0);
+                (month.specialExpenses || []).reduce((s: number, r: { amount: number }) => s + (Number(r.amount) || 0), 0) +
+                (month.regularExpenses || []).reduce((s: number, r: { amount: number }) => s + (Number(r.amount) || 0), 0);
 
-            const income = (Number(month.income) || 0) + (month.additionalIncomes || []).reduce((s: number, r: any) => s + (Number(r.amount) || 0), 0);
+            const income = (Number(month.income) || 0) + (month.additionalIncomes || []).reduce((s: number, r: { amount: number }) => s + (Number(r.amount) || 0), 0);
 
             // 3. חישוב יתרות
             const startBase = i === 0 ? (Number(month.startingBalance) || 0) : prevBaseBalance;
