@@ -93,11 +93,11 @@
           </div>
           <div class="text-end">
             <div class="fw-bold small">{{ p.amount | number:'1.0-0' }} ₪</div>
-            @if (p.description) { <div class="extra-small text-muted" style="font-size: 0.7rem;">{{ p.description }}</div> }
+            @if (p.description) { <div class="extra-small text-muted inst-payment-desc">{{ p.description }}</div> }
           </div>
         </div>
       }
-      @if (!st.combinedPaymentHistory?.length) { <div class="small text-muted text-center py-2">אין היסטוריית תשלומים</div> }
+      @if (!st.combinedPaymentHistory!.length) { <div class="small text-muted text-center py-2">אין היסטוריית תשלומים</div> }
     </div>
   }
 
