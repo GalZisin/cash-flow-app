@@ -31,6 +31,7 @@ interface SankeyLinkData {
 export class AiSankeyDiagramComponent implements OnChanges, AfterViewInit {
   @Input() cashFlowMonths: MonthData[] = [];
   @ViewChild('sankeyContainer') sankeyContainer!: ElementRef<HTMLDivElement>;
+  @ViewChild('tooltip') tooltipElement!: ElementRef<HTMLDivElement>;
 
   // מאזין לשינוי גודל מסך כדי לרנדר מחדש את הגרף
   @HostListener('window:resize')
@@ -246,10 +247,56 @@ export class AiSankeyDiagramComponent implements OnChanges, AfterViewInit {
     const width = container.clientWidth;
     const height = 500; // Fixed height, can be dynamic
 
+    // Fetch colors from CSS variables for theme compatibility
+    const style = getComputedStyle(container);
+    const incomeColor = style.getPropertyValue('--sankey-income-color').trim() || '#4CAF50';
+    const startingBalanceColor = style.getPropertyValue('--sankey-starting-balance-color').trim() || '#607D8B';
+    const savingsColor = style.getPropertyValue('--sankey-savings-color').trim() || '#2196F3';
+    const endingBalanceColor = style.getPropertyValue('--sankey-ending-balance-color').trim() || '#9C27B0';
+
+    const mortgageColor = style.getPropertyValue('--sankey-mortgage-color').trim() || '#F44336';
+    const loanColor = style.getPropertyValue('--sankey-loan-color').trim() || '#FF9800';
+    const installmentsColor = style.getPropertyValue('--sankey-installments-color').trim() || '#FFC107';
+    const regularExpensesColor = style.getPropertyValue('--sankey-regular-expenses-color').trim() || '#E91E63';
+    const specialExpensesColor = style.getPropertyValue('--sankey-special-expenses-color').trim() || '#673AB7';
+    const defaultExpenseColor = style.getPropertyValue('--sankey-default-expense-color').trim() || '#EF5350';
+
+    const linkStrokeColor = style.getPropertyValue('--sankey-link-stroke-color').trim() || '#BDBDBD';
+    const nodeStrokeColor = style.getPropertyValue('--sankey-node-stroke-color').trim() || '#757575';
+
     const monthStr = this.getCurrentViewData()?.month || ''; // Use currentViewData for month string
     const svg = d3.select(container).append('svg')
       .attr('width', width)
       .attr('height', height);
+
+    const defs = svg.append('defs');
+    const tooltip = d3.select(this.tooltipElement.nativeElement);
+
+    // Helper to get node color
+    const getNodeColor = (id: string) => {
+      if (id === 'income' || id === 'startingBalance') return incomeColor;
+      if (id === 'savings' || id === 'endingBalance') return savingsColor;
+      if (id === 'mortgage') return mortgageColor;
+      if (id === 'loanPayments') return loanColor;
+      if (id === 'installmentsPayment') return installmentsColor;
+      if (id === 'regularExpenses') return regularExpensesColor;
+      if (id === 'specialExpenses') return specialExpensesColor;
+      return defaultExpenseColor;
+    };
+
+    // Helper functions for custom tooltip
+    const showTooltip = (event: MouseEvent, content: string) => {
+      tooltip.style('opacity', 1).html(content);
+      moveTooltip(event);
+    };
+
+    const moveTooltip = (event: MouseEvent) => {
+      tooltip
+        .style('left', (event.clientX + 15) + 'px')
+        .style('top', (event.clientY - 20) + 'px');
+    };
+
+    const hideTooltip = () => tooltip.style('opacity', 0);
 
     const g = svg.append('g');
 
@@ -272,60 +319,73 @@ export class AiSankeyDiagramComponent implements OnChanges, AfterViewInit {
       links: links.map(d => ({ ...d }))
     });
 
+    // Create gradients for links
+    graph.links.forEach((link: any, i) => { // Use 'any' here for simplicity, or cast inside
+      const sourceNode = link.source as SankeyNode<SankeyNodeData, SankeyLinkData>;
+      const targetNode = link.target as SankeyNode<SankeyNodeData, SankeyLinkData>;
+
+      const gradientId = `link-grad-${i}`;
+      const grad = defs.append('linearGradient')
+        .attr('id', gradientId)
+        .attr('gradientUnits', 'userSpaceOnUse')
+        .attr('x1', sourceNode.x1 || 0)
+        .attr('x2', targetNode.x0 || 0);
+
+      grad.append('stop').attr('offset', '0%').attr('stop-color', getNodeColor(sourceNode.id));
+      grad.append('stop').attr('offset', '100%').attr('stop-color', getNodeColor(targetNode.id));
+    });
+
     // Draw links
     g.append('g')
       .attr('fill', 'none')
-      .attr('stroke', '#000')
-      .attr('stroke-opacity', 0.2)
+      .attr('stroke-opacity', 0.3)
       .selectAll<SVGPathElement, SankeyLink<SankeyNodeData, SankeyLinkData>>('path') // Explicit type for selection
       .data(graph.links as Array<SankeyLink<SankeyNodeData, SankeyLinkData>>) // Cast to expected type
       .join('path')
+      .attr('class', 'sankey-link')
       .attr('d', sankeyLinkHorizontal())
       .attr('stroke-width', (d: SankeyLink<SankeyNodeData, SankeyLinkData>) => Math.max(1, d.width || 0))
-      .attr('stroke', (d: SankeyLink<SankeyNodeData, SankeyLinkData>) => {
-        // Color links based on source/target type (e.g., green for income, red for expenses)
+      .attr('stroke', (d: any, i) => `url(#link-grad-${i})`)
+      .on('mouseover', (event, d: any) => {
         const source = d.source as SankeyNode<SankeyNodeData, SankeyLinkData>;
         const target = d.target as SankeyNode<SankeyNodeData, SankeyLinkData>;
-        if (source.id === 'income' || source.id === 'startingBalance') return '#28a745'; // Green for income/starting balance
-        if (target.id === 'savings' || target.id === 'endingBalance') return '#17a2b8'; // Blue for savings/ending balance
-        // Specific colors for different expense types
-        if (target.id === 'mortgage') return '#dc3545'; // Red
-        if (target.id === 'loanPayments') return '#ffc107'; // Yellow/Orange
-        if (target.id === 'installmentsPayment') return '#fd7e14'; // Orange
-        if (target.id === 'regularExpenses') return '#e83e8c'; // Pink
-        if (target.id === 'specialExpenses') return '#6f42c1'; // Purple
-        return '#dc3545'; // Default red for other expenses
+        const content = `
+          <div class="fw-bold mb-1">${source.name} <i class="bi bi-arrow-left small"></i> ${target.name}</div>
+          <div class="text-primary fw-bold">₪${d.value?.toLocaleString()}</div>
+          <div class="text-muted small">${monthStr}</div>
+        `;
+        showTooltip(event, content);
+        d3.select(event.currentTarget).style('stroke-opacity', 0.6);
       })
-      .append('title')
-      .text((d: SankeyLink<SankeyNodeData, SankeyLinkData>) => {
-        const source = d.source as SankeyNode<SankeyNodeData, SankeyLinkData>;
-        const target = d.target as SankeyNode<SankeyNodeData, SankeyLinkData>;
-        return `${source.name} → ${target.name} (${monthStr})\n${d.value?.toLocaleString()} ₪`;
+      .on('mousemove', moveTooltip)
+      .on('mouseout', (event) => {
+        hideTooltip();
+        d3.select(event.currentTarget).style('stroke-opacity', 0.3);
       });
 
     // Draw nodes
     g.append('g')
-      .attr('stroke', '#000')
+      .attr('class', 'sankey-nodes-group')
       .selectAll<SVGRectElement, SankeyNode<SankeyNodeData, SankeyLinkData>>('rect') // Explicit type for selection
       .data(graph.nodes as Array<SankeyNode<SankeyNodeData, SankeyLinkData>>) // Cast to expected type
       .join('rect')
+      .attr('class', 'sankey-node')
       .attr('x', (d: SankeyNode<SankeyNodeData, SankeyLinkData>) => d.x0 || 0)
       .attr('y', (d: SankeyNode<SankeyNodeData, SankeyLinkData>) => d.y0 || 0)
       .attr('height', (d: SankeyNode<SankeyNodeData, SankeyLinkData>) => (d.y1 || 0) - (d.y0 || 0))
       .attr('width', (d: SankeyNode<SankeyNodeData, SankeyLinkData>) => (d.x1 || 0) - (d.x0 || 0))
-      .attr('fill', (d: SankeyNode<SankeyNodeData, SankeyLinkData>) => {
-        if (d.id === 'income' || d.id === 'startingBalance') return '#28a745'; // Green for income/starting balance
-        if (d.id === 'savings' || d.id === 'endingBalance') return '#17a2b8'; // Blue
-        // Specific colors for different expense types
-        if (d.id === 'mortgage') return '#dc3545'; // Red
-        if (d.id === 'loanPayments') return '#ffc107'; // Yellow/Orange
-        if (d.id === 'installmentsPayment') return '#fd7e14'; // Orange
-        if (d.id === 'regularExpenses') return '#e83e8c'; // Pink
-        if (d.id === 'specialExpenses') return '#6f42c1'; // Purple
-        return '#dc3545'; // Default red for other expenses
+      .attr('rx', 3)
+      .attr('fill', (d: any) => getNodeColor(d.id))
+      .on('mouseover', (event, d: any) => {
+        const content = `
+          <div class="fw-bold">${d.name}</div>
+          <div class="text-primary fw-bold">₪${(d.value || 0).toLocaleString()}</div>
+          <div class="text-muted small">${monthStr}</div>
+        `;
+        showTooltip(event, content);
       })
-      .append('title')
-      .text((d: SankeyNode<SankeyNodeData, SankeyLinkData>) => `${d.name} (${monthStr})\n${(d.value || 0).toLocaleString()} ₪`);
+      .on('mousemove', moveTooltip)
+      .on('mouseout', hideTooltip);
 
     // הוספת קווי קישור (Connectors) בין העמודות לטקסט בצדדים
     g.append('g')
