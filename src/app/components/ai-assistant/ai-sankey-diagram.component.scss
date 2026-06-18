@@ -4,22 +4,6 @@
   border-radius: 12px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   overflow: hidden; // Ensure SVG doesn't overflow
-
-  // Modern Color Palette Variables (Light Mode)
-  --sankey-income-color: #4CAF50; // Green
-  --sankey-starting-balance-color: #607D8B; // Blue Grey
-  --sankey-savings-color: #2196F3; // Blue
-  --sankey-ending-balance-color: #9C27B0; // Purple
-
-  --sankey-mortgage-color: #F44336; // Red
-  --sankey-loan-color: #FF9800; // Orange
-  --sankey-installments-color: #FFC107; // Amber
-  --sankey-regular-expenses-color: #E91E63; // Pink
-  --sankey-special-expenses-color: #673AB7; // Deep Purple
-  --sankey-default-expense-color: #EF5350; // Light Red
-
-  --sankey-link-stroke-color: #BDBDBD; // Light grey for links
-  --sankey-node-stroke-color: #757575; // Darker grey for node borders
 }
 
 .sankey-chart-container {
@@ -33,25 +17,6 @@
   svg {
     display: block;
     overflow: visible; // Allow text labels to extend slightly
-
-    // Dark Mode Color Palette Overrides
-    [data-bs-theme="dark"] &, .dark-mode & {
-      --sankey-income-color: #81C784; // Lighter Green
-      --sankey-starting-balance-color: #90A4AE; // Lighter Blue Grey
-      --sankey-savings-color: #64B5F6; // Lighter Blue
-      --sankey-ending-balance-color: #CE93D8; // Lighter Purple
-
-      --sankey-mortgage-color: #EF9A9A; // Lighter Red
-      --sankey-loan-color: #FFB74D; // Lighter Orange
-      --sankey-installments-color: #FFE082; // Lighter Amber
-      --sankey-regular-expenses-color: #F06292; // Lighter Pink
-      --sankey-special-expenses-color: #9575CD; // Lighter Deep Purple
-      --sankey-default-expense-color: #E57373; // Lighter Light Red
-
-      --sankey-link-stroke-color: #616161; // Darker grey for links
-      --sankey-node-stroke-color: #BDBDBD; // Lighter grey for node borders
-    }
-
     text {
       fill: var(--bs-body-color); // מבטיח שהטקסט יהיה קריא גם במצב כהה
       font-weight: 500; 
