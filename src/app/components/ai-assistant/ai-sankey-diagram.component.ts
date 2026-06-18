@@ -1,6 +1,7 @@
-import { Component, Input, OnChanges, SimpleChanges, ViewChild, ElementRef, AfterViewInit, signal, HostListener } from '@angular/core';
+import { Component, Input, OnChanges, SimpleChanges, ViewChild, ElementRef, AfterViewInit, signal, HostListener, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { TranslateModule } from '@ngx-translate/core';
+import { ThemeService } from '../../services/theme.service'; // Import ThemeService
 import { ReactiveFormsModule, FormControl } from '@angular/forms'; // Import ReactiveFormsModule and FormControl
 
 import * as d3 from 'd3';
@@ -25,6 +26,7 @@ interface SankeyLinkData {
   selector: 'app-ai-sankey-diagram',
   standalone: true,
   imports: [CommonModule, TranslateModule, ReactiveFormsModule], // Add ReactiveFormsModule
+  // providers: [TranslateService] // TranslateService is provided in root, no need here
   templateUrl: './ai-sankey-diagram.component.html',
   styleUrl: './ai-sankey-diagram.component.scss'
 })
@@ -111,7 +113,10 @@ export class AiSankeyDiagramComponent implements OnChanges, AfterViewInit {
     return this.getAllMonthsAggregatedData();
   }
 
-  constructor(private translate: TranslateService) {}
+  // Inject ThemeService to check dark mode status
+  private themeService = inject(ThemeService); // Inject ThemeService here
+
+  constructor() { } // TranslateService is not directly used in constructor, can remove
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['cashFlowMonths'] && this.cashFlowMonths) {
@@ -264,6 +269,7 @@ export class AiSankeyDiagramComponent implements OnChanges, AfterViewInit {
     const linkStrokeColor = style.getPropertyValue('--sankey-link-stroke-color').trim() || '#BDBDBD';
     const nodeStrokeColor = style.getPropertyValue('--sankey-node-stroke-color').trim() || '#757575';
 
+    const isDarkMode = this.themeService.isDarkMode(); // Ensure this is correctly accessed
     const monthStr = this.getCurrentViewData()?.month || ''; // Use currentViewData for month string
     const svg = d3.select(container).append('svg')
       .attr('width', width)
@@ -404,11 +410,13 @@ export class AiSankeyDiagramComponent implements OnChanges, AfterViewInit {
 
     // הוספת תוויות טקסט בצדדי הגרף
     g.append('g')
+      .attr('class', 'sankey-labels')
       .attr('font-family', 'sans-serif')
       .attr('font-size', 13)
       .selectAll<SVGTextElement, SankeyNode<SankeyNodeData, SankeyLinkData>>('text') // Explicit type for selection
       .data(graph.nodes as Array<SankeyNode<SankeyNodeData, SankeyLinkData>>) // Cast to expected type
       .join('text')
+      .attr('fill', isDarkMode ? '#ffffff' : 'var(--bs-body-color)') // הגדרת צבע הטקסט בהתאם למצב התמה
       // מיקום הטקסט: צמוד לקצה העמודה עם רווח קטן
       .attr('x', (d: SankeyNode<SankeyNodeData, SankeyLinkData>) => (d.x0 || 0) < width / 2 ? (d.x1 || 0) + textPadding : (d.x0 || 0) - textPadding)
       .attr('y', (d: SankeyNode<SankeyNodeData, SankeyLinkData>) => ((d.y1 || 0) + (d.y0 || 0)) / 2)
