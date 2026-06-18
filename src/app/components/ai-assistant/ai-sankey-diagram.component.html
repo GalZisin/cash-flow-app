@@ -1,0 +1,22 @@
+<div class="sankey-diagram-wrapper">
+  <div class="sankey-controls mb-3 d-flex align-items-center gap-2">
+    <label for="sankeyMonthPicker" class="form-label mb-0">{{ 'AI.SANKEY_SELECT_MONTH' | translate }}:</label>
+    <input
+      type="month"
+      id="sankeyMonthPicker"
+      [formControl]="selectedMonthControl"
+      class="form-control form-control-sm w-auto"
+      [max]="cashFlowMonths.length > 0 ? cashFlowMonths[cashFlowMonths.length - 1].month.substring(0, 7) : ''"
+      [min]="cashFlowMonths.length > 0 ? cashFlowMonths[0].month.substring(0, 7) : ''"
+    >
+    <button class="btn btn-primary btn-sm" (click)="updateChart()">
+      {{ 'AI.SANKEY_SHOW' | translate }}
+    </button>
+    <button class="btn btn-outline-secondary btn-sm" (click)="showAllMonths()">
+      {{ 'AI.SANKEY_ALL_MONTHS' | translate }}
+    </button>
+  </div>
+  <div #sankeyContainer class="sankey-chart-container">
+    <!-- D3.js Sankey diagram will be rendered here -->
+  </div>
+</div>

@@ -7,6 +7,8 @@ import { AiService, ChatMessage, FinancialSummary, ScenarioRequest, ScenarioResu
 import { ConversationService, Conversation } from '../../services/conversation.service';
 import { LanguageService } from '../../services/language.service';
 import { CashFlowService } from '../../services/cash-flow.service';
+import { AiSankeyDiagramComponent } from './ai-sankey-diagram.component';
+import { MonthData } from '../../models/cash-flow.model'; // Import shared MonthData
 import { InstallmentService } from '../../services/installment.service';
 import { ThemeService } from '../../services/theme.service';
 import { InvestmentService } from '../../services/investment.service';
@@ -14,13 +16,13 @@ import { AiReportService, AiReport } from '../../services/ai-report.service';
 import { Subscription, take } from 'rxjs';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 
-type ActiveTab = 'chat' | 'analysis' | 'scenario' | 'dashboard' | 'archive';
+type ActiveTab = 'chat' | 'analysis' | 'scenario' | 'dashboard' | 'archive' | 'sankey';
 
 @Component({
   selector: 'app-ai-assistant',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, TranslateModule, MatTooltipModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, TranslateModule, MatTooltipModule, AiSankeyDiagramComponent], // ReactiveFormsModule already here
   templateUrl: './ai-assistant.component.html',
   styleUrl: './ai-assistant.component.scss'
 })
@@ -104,8 +106,8 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
     effect(() => {
       const months = this.cashFlowMonthsSignal();
       const now = new Date();
-      const nowStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`; // פורמט YYYY-MM מקומי
-      const currentMonth = months.find((m: any) => m.month.startsWith(nowStr));
+      const nowStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      const currentMonth = months.find((m: MonthData) => m.month.startsWith(nowStr)); // Type currentMonth
       if (currentMonth) {
         this.realCurrentBalance.set(currentMonth.endingBalance);
       }
@@ -124,7 +126,7 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
       this.totalInvestmentsValue.set((items || []).reduce((sum: number, inv: any) => {
         const snaps = inv.snapshots || [];
         return sum + (snaps[snaps.length - 1]?.value ?? 0);
-      }, 0));
+      }, 0)); // Ensure initial value is 0 for reduce
     });
 
     this.loadDashboardData(); // Initial load for dashboard data
@@ -133,7 +135,7 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
   setTab(tab: ActiveTab) {
     this.activeTab.set(tab);
     if (tab === 'archive') {
-      this.loadArchive();
+      this.loadArchive(); // Load archive data only when archive tab is active
     } 
   }
 

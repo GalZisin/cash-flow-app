@@ -23,6 +23,11 @@
       </a>
     </li>
     <li class="nav-item">
+          <a class="nav-link" [class.active]="activeTab() === 'sankey'" (click)="setTab('sankey')" style="cursor:pointer">
+            {{ 'AI.TAB_SANKEY' | translate }}
+          </a>
+        </li>
+        <li class="nav-item">
       <a class="nav-link" [class.active]="activeTab() === 'archive'" (click)="setTab('archive')" style="cursor:pointer">
         {{ 'AI.TAB_ARCHIVE' | translate }}
       </a>
@@ -187,6 +192,11 @@
       </div>
 
     </div>
+  }
+
+  <!-- ===================== SANKEY TAB ===================== -->
+  @if (activeTab() === 'sankey') {
+    <app-ai-sankey-diagram [cashFlowMonths]="cashFlowMonthsSignal()"></app-ai-sankey-diagram>
   }
 
   <!-- ===================== ANALYSIS TAB ===================== -->

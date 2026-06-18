@@ -104,6 +104,10 @@
     "TOTAL_INVESTMENTS": "סה\"כ השקעות",
     "ACTIVE_INSTALLMENTS": "פריסות פעילות",
     "LANG_HE": "עברית",
+    "TAB_SANKEY": "תרשים זרימה",
+    "SANKEY_SELECT_MONTH": "בחר חודש",
+    "SANKEY_ALL_MONTHS": "כל החודשים",
+    "SANKEY_SHOW": "הצג",
     "LANG_EN": "English",
     "PARTIAL_RESPONSE_ERROR": "שגיאה: {{error}}. התשובה עשויה להיות חלקית.",
     "RETRY_ACTION": "נסה שוב"
