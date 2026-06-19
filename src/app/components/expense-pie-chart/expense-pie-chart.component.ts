@@ -128,8 +128,8 @@ export class ExpensePieChartComponent implements OnChanges, AfterViewInit {
 
     // Center total
     g.append('text').attr('text-anchor', 'middle').attr('dy', '-0.5em')
-      .attr('font-size', '11px').attr('fill', isDark ? '#6b7280' : '#94a3b8')
-      .text(this.translate.instant('CHART.TOTAL'));
+      .text(this.translate.instant('CHART.TOTAL'))
+      .attr('font-size', '11px').attr('fill', isDark ? '#b3bac7' : '#94a3b8');
     g.append('text').attr('text-anchor', 'middle').attr('dy', '1em')
       .attr('font-size', '18px').attr('font-weight', '700').attr('fill', textColor)
       .text(`₪${total.toLocaleString()}`);
