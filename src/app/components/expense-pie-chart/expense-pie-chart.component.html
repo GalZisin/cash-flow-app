@@ -1,0 +1,54 @@
+<div class="pie-chart-wrapper" [dir]="lang.isRtl ? 'rtl' : 'ltr'">
+
+  <!-- Toolbar -->
+  <div class="pie-toolbar">
+    <label class="pie-label">{{ 'CHART.MONTH_SELECTOR' | translate }}</label>
+    <select class="form-select form-select-sm pie-select" [(ngModel)]="selectedMonth" (ngModelChange)="onMonthChange()">
+      <option [ngValue]="null">{{ 'CHART.ALL_MONTHS' | translate }}</option>
+      @for (m of monthOptions; track m) {
+        <option [value]="m">{{ m }}</option>
+      }
+    </select>
+  </div>
+
+  <!-- Title -->
+  <div class="pie-title">{{ 'CHART.EXPENSES_BY_CATEGORY' | translate }}</div>
+
+  @if (!slices.length) {
+    <div class="pie-no-data">{{ 'CHART.NO_DATA' | translate }}</div>
+  } @else {
+    <div class="pie-body">
+
+      <!-- D3 donut chart -->
+      <div #chartContainer class="pie-chart-container"></div>
+
+      <!-- HTML legend -->
+      <div class="pie-legend">
+        @for (s of slices; track s.category) {
+          <div class="legend-row">
+            <span class="legend-icon-wrap" [style.background]="s.color + '22'" [style.color]="s.color">
+              <mat-icon>{{ s.icon }}</mat-icon>
+            </span>
+            <div class="legend-info">
+              <span class="legend-name">{{ s.labelKey | translate }}</span>
+              <div class="legend-amounts">
+                <span class="legend-amount">₪{{ s.total.toLocaleString() }}</span>
+                <span class="legend-pct" [style.background]="s.color + '22'" [style.color]="s.color">
+                  {{ s.percentage.toFixed(1) }}%
+                </span>
+              </div>
+            </div>
+            <div class="legend-bar-track">
+              <div class="legend-bar-fill" [style.width.%]="s.percentage" [style.background]="s.color"></div>
+            </div>
+          </div>
+        }
+      </div>
+
+    </div>
+  }
+
+  <!-- D3 Tooltip -->
+  <div #tooltip class="pie-tooltip"></div>
+
+</div>

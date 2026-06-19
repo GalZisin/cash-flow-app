@@ -151,7 +151,32 @@
     "TOTAL_INVESTMENTS": "Total Investments",
     "ACTIVE_INSTALLMENTS": "Active Installments",
     "LANG_HE": "Hebrew",
-    "LANG_EN": "English"
+    "LANG_EN": "English",
+    "TAB_SANKEY": "Flow Chart",
+    "TAB_PIE": "Expense Chart"
+  },
+  "CATEGORIES": {
+    "CAR": "Car",
+    "FOOD": "Food",
+    "ENTERTAINMENT": "Entertainment",
+    "VACATION": "Vacation",
+    "GIFTS": "Gifts",
+    "HEALTH": "Health",
+    "SHOPPING": "Shopping",
+    "HOME": "Home",
+    "EDUCATION": "Education",
+    "PROFESSIONAL": "Professional",
+    "INVESTMENTS": "Investments",
+    "OTHER": "Other"
+  },
+  "CHART": {
+    "EXPENSES_BY_CATEGORY": "Expenses by Category",
+    "TOTAL": "Total",
+    "PERCENTAGE": "Percentage",
+    "AMOUNT": "Amount",
+    "MONTH_SELECTOR": "Select Month",
+    "ALL_MONTHS": "All Months",
+    "NO_DATA": "No data to display"
   },
   "INSTALLMENTS": {
     "TITLE": "Installment Management",

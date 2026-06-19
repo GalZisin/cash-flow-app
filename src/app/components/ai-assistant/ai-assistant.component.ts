@@ -8,6 +8,7 @@ import { ConversationService, Conversation } from '../../services/conversation.s
 import { LanguageService } from '../../services/language.service';
 import { CashFlowService } from '../../services/cash-flow.service';
 import { AiSankeyDiagramComponent } from './ai-sankey-diagram.component';
+import { ExpensePieChartComponent } from '../expense-pie-chart/expense-pie-chart.component';
 import { MonthData } from '../../models/cash-flow.model'; // Import shared MonthData
 import { InstallmentService } from '../../services/installment.service';
 import { ThemeService } from '../../services/theme.service';
@@ -16,13 +17,13 @@ import { AiReportService, AiReport } from '../../services/ai-report.service';
 import { Subscription, take } from 'rxjs';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 
-type ActiveTab = 'chat' | 'analysis' | 'scenario' | 'dashboard' | 'archive' | 'sankey';
+type ActiveTab = 'chat' | 'analysis' | 'scenario' | 'dashboard' | 'archive' | 'sankey' | 'pie';
 
 @Component({
   selector: 'app-ai-assistant',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, TranslateModule, MatTooltipModule, AiSankeyDiagramComponent], // ReactiveFormsModule already here
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, TranslateModule, MatTooltipModule, AiSankeyDiagramComponent, ExpensePieChartComponent], // ReactiveFormsModule already here
   templateUrl: './ai-assistant.component.html',
   styleUrl: './ai-assistant.component.scss'
 })

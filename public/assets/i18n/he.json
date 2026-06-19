@@ -105,12 +105,36 @@
     "ACTIVE_INSTALLMENTS": "פריסות פעילות",
     "LANG_HE": "עברית",
     "TAB_SANKEY": "תרשים זרימה",
+    "TAB_PIE": "תרשים הוצאות",
     "SANKEY_SELECT_MONTH": "בחר חודש",
     "SANKEY_ALL_MONTHS": "כל החודשים",
     "SANKEY_SHOW": "הצג",
     "LANG_EN": "English",
     "PARTIAL_RESPONSE_ERROR": "שגיאה: {{error}}. התשובה עשויה להיות חלקית.",
     "RETRY_ACTION": "נסה שוב"
+  },
+  "CATEGORIES": {
+    "CAR": "רכב",
+    "FOOD": "מזון",
+    "ENTERTAINMENT": "בידור",
+    "VACATION": "חופשה",
+    "GIFTS": "מתנות",
+    "HEALTH": "בריאות",
+    "SHOPPING": "קניות",
+    "HOME": "בית",
+    "EDUCATION": "חינוך",
+    "PROFESSIONAL": "ייעוץ",
+    "INVESTMENTS": "השקעות",
+    "OTHER": "אחר"
+  },
+  "CHART": {
+    "EXPENSES_BY_CATEGORY": "הוצאות לפי קטגוריה",
+    "TOTAL": "סה\"כ",
+    "PERCENTAGE": "אחוז",
+    "AMOUNT": "סכום",
+    "MONTH_SELECTOR": "בחר חודש",
+    "ALL_MONTHS": "כל החודשים",
+    "NO_DATA": "אין נתונים להצגה"
   },
   "INVESTMENTS": {
     "TITLE": "מעקב השקעות",
