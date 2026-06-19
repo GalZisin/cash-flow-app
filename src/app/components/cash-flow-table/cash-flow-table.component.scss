@@ -189,6 +189,24 @@ $white: #ffffff;
   }
 }
 
+.expense-item-block {
+  margin-bottom: 12px;
+  padding: 10px;
+  border: 1px solid $border;
+  border-radius: 12px;
+  background: $white;
+  direction: rtl;
+
+  .expense-row {
+    margin-bottom: 8px;
+  }
+
+  app-expense-category-selector {
+    display: block;
+    min-width: 280px;
+  }
+}
+
 // Mini Bar Chart
 .mini-chart-container {
   display: flex;

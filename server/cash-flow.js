@@ -46,11 +46,13 @@ router.post('/cash-flow-defaults', (req, res) => {
         })),
         regularExpenses: (req.body.regularExpenses || []).map(e => ({
             description: e.description ?? '',
-            amount: Number(e.amount) || 0
+            amount: Number(e.amount) || 0,
+            ...(e.category ? { category: e.category } : {})
         })),
         specialExpenses: (req.body.specialExpenses || []).map(e => ({
             description: e.description ?? '',
-            amount: Number(e.amount) || 0
+            amount: Number(e.amount) || 0,
+            ...(e.category ? { category: e.category } : {})
         }))
     };
     writeDefaults(defaults);

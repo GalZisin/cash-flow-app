@@ -179,21 +179,26 @@
         }
 
         <div *ngIf="monthCtrl.get('expanded')?.value" class="no-print">
-          <div *ngFor="let expCtrl of getRegularExpenses(i).controls; let j=index" class="expense-row">
-            <input dir="rtl" placeholder="תיאור" title="תיאור" aria-label="תיאור" [formControl]="getExpenseDescription(i, j)" />
-            <span *ngIf="!focusedField['reg_' + i + '_' + j]" class="amount-display" (click)="focusField('reg_' + i + '_' + j)">
-              {{ getExpenseAmount(i, j).value | number:'1.0-0' }} ₪
-            </span>
-            <input *ngIf="focusedField['reg_' + i + '_' + j]" type="number" dir="rtl"
-              placeholder="סכום" title="סכום" aria-label="סכום"
-              [formControl]="getExpenseAmount(i, j)"
-              (input)="calculateEndingBalances()"
-              (blur)="blurField('reg_' + i + '_' + j)"
-              [attr.data-focus-key]="'reg_' + i + '_' + j" />
-            <button mat-icon-button color="warn" (click)="removeRegularExpense(i,j)"
-              [title]="'INSTALLMENTS.DELETE' | translate" [matTooltip]="'INSTALLMENTS.DELETE' | translate" [attr.aria-label]="'INSTALLMENTS.DELETE' | translate">
-              <mat-icon>delete</mat-icon>
-            </button>
+          <div *ngFor="let expCtrl of getRegularExpenses(i).controls; let j=index" class="expense-item-block">
+            <div class="expense-row">
+              <input dir="rtl" placeholder="תיאור" title="תיאור" aria-label="תיאור" [formControl]="getExpenseDescription(i, j)" />
+              <span *ngIf="!focusedField['reg_' + i + '_' + j]" class="amount-display" (click)="focusField('reg_' + i + '_' + j)">
+                {{ getExpenseAmount(i, j).value | number:'1.0-0' }} ₪
+              </span>
+              <input *ngIf="focusedField['reg_' + i + '_' + j]" type="number" dir="rtl"
+                placeholder="סכום" title="סכום" aria-label="סכום"
+                [formControl]="getExpenseAmount(i, j)"
+                (input)="calculateEndingBalances()"
+                (blur)="blurField('reg_' + i + '_' + j)"
+                [attr.data-focus-key]="'reg_' + i + '_' + j" />
+              <button mat-icon-button color="warn" (click)="removeRegularExpense(i,j)"
+                [title]="'INSTALLMENTS.DELETE' | translate" [matTooltip]="'INSTALLMENTS.DELETE' | translate" [attr.aria-label]="'INSTALLMENTS.DELETE' | translate">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+            <app-expense-category-selector
+              [selectedCategory]="getExpenseCategory(i, j).value"
+              (selectedCategoryChange)="getExpenseCategory(i, j).setValue($event)" />
           </div>
           <button mat-button (click)="addRegularExpense(i)">{{ 'CASH_FLOW.ADD_EXPENSE' | translate }}</button>
         </div>
@@ -224,21 +229,26 @@
         }
 
         <div *ngIf="monthCtrl.get('expandedSpecial')?.value" class="no-print">
-          <div *ngFor="let expCtrl of getSpecialExpenses(i).controls; let j=index" class="expense-row">
-            <input dir="rtl" placeholder="תיאור" title="תיאור" aria-label="תיאור" [formControl]="getSpecialExpenseDescription(i, j)" />
-            <span *ngIf="!focusedField['spec_' + i + '_' + j]" class="amount-display" (click)="focusField('spec_' + i + '_' + j)">
-              {{ getSpecialExpenseAmount(i, j).value | number:'1.0-0' }} ₪
-            </span>
-            <input *ngIf="focusedField['spec_' + i + '_' + j]" type="number" dir="rtl"
-              placeholder="סכום" title="סכום" aria-label="סכום"
-              [formControl]="getSpecialExpenseAmount(i, j)"
-              (input)="calculateEndingBalances()"
-              (blur)="blurField('spec_' + i + '_' + j)"
-              [attr.data-focus-key]="'spec_' + i + '_' + j" />
-            <button mat-icon-button color="warn" (click)="removeSpecialExpense(i, j)"
-              [title]="'INSTALLMENTS.DELETE' | translate" [matTooltip]="'INSTALLMENTS.DELETE' | translate" [attr.aria-label]="'INSTALLMENTS.DELETE' | translate">
-              <mat-icon>delete</mat-icon>
-            </button>
+          <div *ngFor="let expCtrl of getSpecialExpenses(i).controls; let j=index" class="expense-item-block">
+            <div class="expense-row">
+              <input dir="rtl" placeholder="תיאור" title="תיאור" aria-label="תיאור" [formControl]="getSpecialExpenseDescription(i, j)" />
+              <span *ngIf="!focusedField['spec_' + i + '_' + j]" class="amount-display" (click)="focusField('spec_' + i + '_' + j)">
+                {{ getSpecialExpenseAmount(i, j).value | number:'1.0-0' }} ₪
+              </span>
+              <input *ngIf="focusedField['spec_' + i + '_' + j]" type="number" dir="rtl"
+                placeholder="סכום" title="סכום" aria-label="סכום"
+                [formControl]="getSpecialExpenseAmount(i, j)"
+                (input)="calculateEndingBalances()"
+                (blur)="blurField('spec_' + i + '_' + j)"
+                [attr.data-focus-key]="'spec_' + i + '_' + j" />
+              <button mat-icon-button color="warn" (click)="removeSpecialExpense(i, j)"
+                [title]="'INSTALLMENTS.DELETE' | translate" [matTooltip]="'INSTALLMENTS.DELETE' | translate" [attr.aria-label]="'INSTALLMENTS.DELETE' | translate">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+            <app-expense-category-selector
+              [selectedCategory]="getSpecialExpenseCategory(i, j).value"
+              (selectedCategoryChange)="getSpecialExpenseCategory(i, j).setValue($event)" />
           </div>
           <button mat-button (click)="addSpecialExpense(i)">{{ 'CASH_FLOW.ADD_EXPENSE' | translate }}</button>
         </div>
@@ -377,17 +387,22 @@
       <div class="cf-section-title mb-2">{{ 'CASH_FLOW.REGULAR_EXPENSES' | translate }}</div>
       <div formArrayName="regularExpenses">
         <div *ngFor="let ctrl of defaultsRegularExpenses.controls; let j = index"
-          [formGroupName]="j" class="expense-row mb-2">
-          <input type="text" class="form-control form-control-sm" dir="rtl"
-            formControlName="description"
-            placeholder="תיאור" title="תיאור" aria-label="תיאור" />
-          <input type="number" class="form-control form-control-sm" dir="rtl"
-            formControlName="amount"
-            placeholder="סכום" title="סכום" aria-label="סכום" />
-          <button mat-icon-button type="button" color="warn" (click)="removeDefaultRegularExpense(j)"
-            [title]="'INSTALLMENTS.DELETE' | translate" [matTooltip]="'INSTALLMENTS.DELETE' | translate" [attr.aria-label]="'INSTALLMENTS.DELETE' | translate">
-            <mat-icon>delete</mat-icon>
-          </button>
+          [formGroupName]="j" class="expense-item-block mb-2">
+          <div class="expense-row">
+            <input type="text" class="form-control form-control-sm" dir="rtl"
+              formControlName="description"
+              placeholder="תיאור" title="תיאור" aria-label="תיאור" />
+            <input type="number" class="form-control form-control-sm" dir="rtl"
+              formControlName="amount"
+              placeholder="סכום" title="סכום" aria-label="סכום" />
+            <button mat-icon-button type="button" color="warn" (click)="removeDefaultRegularExpense(j)"
+              [title]="'INSTALLMENTS.DELETE' | translate" [matTooltip]="'INSTALLMENTS.DELETE' | translate" [attr.aria-label]="'INSTALLMENTS.DELETE' | translate">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+          <app-expense-category-selector
+            [selectedCategory]="ctrl.get('category')!.value"
+            (selectedCategoryChange)="ctrl.get('category')!.setValue($event)" />
         </div>
       </div>
       <button mat-button type="button" (click)="addDefaultRegularExpense()">
@@ -400,17 +415,22 @@
       <div class="cf-section-title mb-2">{{ 'CASH_FLOW.SPECIAL_EXPENSES' | translate }}</div>
       <div formArrayName="specialExpenses">
         <div *ngFor="let ctrl of defaultsSpecialExpenses.controls; let j = index"
-          [formGroupName]="j" class="expense-row mb-2">
-          <input type="text" class="form-control form-control-sm" dir="rtl"
-            formControlName="description"
-            placeholder="תיאור" title="תיאור" aria-label="תיאור" />
-          <input type="number" class="form-control form-control-sm" dir="rtl"
-            formControlName="amount"
-            placeholder="סכום" title="סכום" aria-label="סכום" />
-          <button mat-icon-button type="button" color="warn" (click)="removeDefaultSpecialExpense(j)"
-            [title]="'INSTALLMENTS.DELETE' | translate" [matTooltip]="'INSTALLMENTS.DELETE' | translate" [attr.aria-label]="'INSTALLMENTS.DELETE' | translate">
-            <mat-icon>delete</mat-icon>
-          </button>
+          [formGroupName]="j" class="expense-item-block mb-2">
+          <div class="expense-row">
+            <input type="text" class="form-control form-control-sm" dir="rtl"
+              formControlName="description"
+              placeholder="תיאור" title="תיאור" aria-label="תיאור" />
+            <input type="number" class="form-control form-control-sm" dir="rtl"
+              formControlName="amount"
+              placeholder="סכום" title="סכום" aria-label="סכום" />
+            <button mat-icon-button type="button" color="warn" (click)="removeDefaultSpecialExpense(j)"
+              [title]="'INSTALLMENTS.DELETE' | translate" [matTooltip]="'INSTALLMENTS.DELETE' | translate" [attr.aria-label]="'INSTALLMENTS.DELETE' | translate">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+          <app-expense-category-selector
+            [selectedCategory]="ctrl.get('category')!.value"
+            (selectedCategoryChange)="ctrl.get('category')!.setValue($event)" />
         </div>
       </div>
       <button mat-button type="button" (click)="addDefaultSpecialExpense()">

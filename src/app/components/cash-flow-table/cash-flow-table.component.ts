@@ -17,6 +17,9 @@ import { toObservable } from '@angular/core/rxjs-interop';
 import { TranslateModule, TranslateService, LangChangeEvent } from '@ngx-translate/core';
 import { CashFlowService, CashFlowDefaults } from '../../services/cash-flow.service';
 import { InstallmentService } from '../../services/installment.service';
+import { ExpenseCategorySelectorComponent } from '../expense-category-selector/expense-category-selector.component';
+import { ExpenseCategory } from '../../models/expense-category.model';
+import { ExpenseItem, normalizeExpenseItem } from '../../models/expense.model';
 
 registerLocaleData(localeHe);
 
@@ -26,7 +29,8 @@ registerLocaleData(localeHe);
     CommonModule, ReactiveFormsModule, TranslateModule,
     MatTableModule, MatButtonModule, MatIconModule,
     MatInputModule, MatSnackBarModule, MatMenuModule,
-    MatDividerModule, MatDialogModule, MatTooltipModule
+    MatDividerModule, MatDialogModule, MatTooltipModule,
+    ExpenseCategorySelectorComponent
   ],
   providers: [DecimalPipe],
   templateUrl: './cash-flow-table.component.html',
@@ -88,6 +92,33 @@ export class CashFlowTableComponent implements OnInit {
     return control as FormControl<string>;
   }
 
+  getExpenseCategory(monthIndex: number, expenseIndex: number): FormControl<ExpenseCategory> {
+    const control = this.getRegularExpenses(monthIndex)
+      .at(expenseIndex)
+      .get('category');
+
+    if (!control) throw new Error('category control is missing!');
+    return control as FormControl<ExpenseCategory>;
+  }
+
+  getSpecialExpenseCategory(monthIndex: number, expenseIndex: number): FormControl<ExpenseCategory> {
+    const control = this.getSpecialExpenses(monthIndex)
+      .at(expenseIndex)
+      .get('category');
+
+    if (!control) throw new Error('category control is missing!');
+    return control as FormControl<ExpenseCategory>;
+  }
+
+  private createExpenseGroup(expense?: Partial<ExpenseItem>): FormGroup {
+    const normalized = normalizeExpenseItem(expense ?? {});
+    return this.fb.group({
+      description: [normalized.description],
+      amount: [normalized.amount],
+      category: [normalized.category],
+    });
+  }
+
   ngOnInit(): void {
     this.cashFlowForm = this.fb.group({
       months: this.fb.array([]),
@@ -133,16 +164,12 @@ export class CashFlowTableComponent implements OnInit {
             )
           );
 
-          m.regularExpenses?.forEach((e: any) =>
-            (monthGroup.get('regularExpenses') as FormArray).push(
-              this.fb.group({ description: [e.description ?? ''], amount: [e.amount ?? 0] })
-            )
+          m.regularExpenses?.forEach((e: Partial<ExpenseItem>) =>
+            (monthGroup.get('regularExpenses') as FormArray).push(this.createExpenseGroup(e))
           );
 
-          m.specialExpenses?.forEach((e: any) =>
-            (monthGroup.get('specialExpenses') as FormArray).push(
-              this.fb.group({ description: [e.description ?? ''], amount: [e.amount ?? 0] })
-            )
+          m.specialExpenses?.forEach((e: Partial<ExpenseItem>) =>
+            (monthGroup.get('specialExpenses') as FormArray).push(this.createExpenseGroup(e))
           );
 
           if (m.rowColor) monthGroup.get('rowColor')?.setValue(m.rowColor, { emitEvent: false });
@@ -239,7 +266,7 @@ export class CashFlowTableComponent implements OnInit {
   }
 
   addRegularExpense(monthIndex: number) {
-    this.getRegularExpenses(monthIndex).push(this.fb.group({ description: [''], amount: [0] }));
+    this.getRegularExpenses(monthIndex).push(this.createExpenseGroup());
     this.calculateEndingBalances();
   }
 
@@ -268,10 +295,10 @@ export class CashFlowTableComponent implements OnInit {
           (defaults as any).additionalIncomes?.map((e: any) => this.fb.group({ description: [e.description], amount: [e.amount] })) || []
         ),
         regularExpenses: this.fb.array(
-          defaults.regularExpenses.map(e => this.fb.group({ description: [e.description], amount: [e.amount] }))
+          defaults.regularExpenses.map(e => this.createExpenseGroup(e))
         ),
         specialExpenses: this.fb.array(
-          defaults.specialExpenses.map(e => this.fb.group({ description: [e.description], amount: [e.amount] }))
+          defaults.specialExpenses.map(e => this.createExpenseGroup(e))
         )
       });
       this.showDefaultsDialog = true;
@@ -285,7 +312,7 @@ export class CashFlowTableComponent implements OnInit {
   get defaultsSpecialExpenses(): FormArray { return this.defaultsForm.get('specialExpenses') as FormArray; }
 
   addDefaultRegularExpense() {
-    this.defaultsRegularExpenses.push(this.fb.group({ description: [''], amount: [0] }));
+    this.defaultsRegularExpenses.push(this.createExpenseGroup());
   }
   removeDefaultRegularExpense(i: number) { this.defaultsRegularExpenses.removeAt(i); }
   addDefaultAdditionalIncome() {
@@ -293,7 +320,7 @@ export class CashFlowTableComponent implements OnInit {
   }
   removeDefaultAdditionalIncome(i: number) { this.defaultsAdditionalIncomes.removeAt(i); }
   addDefaultSpecialExpense() {
-    this.defaultsSpecialExpenses.push(this.fb.group({ description: [''], amount: [0] }));
+    this.defaultsSpecialExpenses.push(this.createExpenseGroup());
   }
   removeDefaultSpecialExpense(i: number) { this.defaultsSpecialExpenses.removeAt(i); }
 
@@ -331,19 +358,15 @@ export class CashFlowTableComponent implements OnInit {
     );
     if (!isGreen && srcAddIncome.length > 0) newMonth.get('expandedAdditionalIncomes')?.setValue(true, { emitEvent: false });
 
-    const srcRegular: { description: string; amount: number }[] = src.get('regularExpenses')?.value || [];
+    const srcRegular: ExpenseItem[] = (src.get('regularExpenses')?.value || []).map(normalizeExpenseItem);
     srcRegular.forEach(e =>
-      (newMonth.get('regularExpenses') as FormArray).push(
-        this.fb.group({ description: [e.description], amount: [e.amount] })
-      )
+      (newMonth.get('regularExpenses') as FormArray).push(this.createExpenseGroup(e))
     );
     if (!isGreen && srcRegular.length > 0) newMonth.get('expanded')?.setValue(true, { emitEvent: false });
 
-    const srcSpecial: { description: string; amount: number }[] = src.get('specialExpenses')?.value || [];
+    const srcSpecial: ExpenseItem[] = (src.get('specialExpenses')?.value || []).map(normalizeExpenseItem);
     srcSpecial.forEach(e =>
-      (newMonth.get('specialExpenses') as FormArray).push(
-        this.fb.group({ description: [e.description], amount: [e.amount] })
-      )
+      (newMonth.get('specialExpenses') as FormArray).push(this.createExpenseGroup(e))
     );
     if (!isGreen && srcSpecial.length > 0) newMonth.get('expandedSpecial')?.setValue(true, { emitEvent: false });
 
@@ -375,7 +398,7 @@ export class CashFlowTableComponent implements OnInit {
   }
 
   addSpecialExpense(monthIndex: number) {
-    this.getSpecialExpenses(monthIndex).push(this.fb.group({ description: [''], amount: [0] }));
+    this.getSpecialExpenses(monthIndex).push(this.createExpenseGroup());
     this.calculateEndingBalances();
   }
 
@@ -525,16 +548,12 @@ export class CashFlowTableComponent implements OnInit {
       if ((defaults as any).additionalIncomes?.length > 0) newMonth.get('expandedAdditionalIncomes')?.setValue(true, { emitEvent: false });
 
       defaults.regularExpenses.forEach(e =>
-        (newMonth.get('regularExpenses') as FormArray).push(
-          this.fb.group({ description: [e.description], amount: [e.amount] })
-        )
+        (newMonth.get('regularExpenses') as FormArray).push(this.createExpenseGroup(e))
       );
       if (defaults.regularExpenses.length > 0) newMonth.get('expanded')?.setValue(true, { emitEvent: false });
 
       defaults.specialExpenses.forEach(e =>
-        (newMonth.get('specialExpenses') as FormArray).push(
-          this.fb.group({ description: [e.description], amount: [e.amount] })
-        )
+        (newMonth.get('specialExpenses') as FormArray).push(this.createExpenseGroup(e))
       );
       if (defaults.specialExpenses.length > 0) newMonth.get('expandedSpecial')?.setValue(true, { emitEvent: false });
 

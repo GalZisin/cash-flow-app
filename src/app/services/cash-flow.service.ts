@@ -2,11 +2,9 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { ExpenseItem } from '../models/expense.model';
 
-export interface ExpenseItem {
-  description: string;
-  amount: number;
-}
+export type { ExpenseItem };
 
 export interface MonthData {
   month: string;
