@@ -1,7 +1,8 @@
 /* You can add global styles to this file, and also import other style files */
 
 // ---------- Color Palette Variables ----------
-@use 'sankey-colors'; // Import Sankey specific colors using @use
+@use 'sankey-colors';
+@use 'dark-theme';
 $primary-color: #1976d2;
 $accent-color: #4f46e5;
 $white-color: #ffffff;
@@ -35,6 +36,7 @@ body {
 }
 
 .app-navbar {
+    // Styles moved to app.component.scss — only z-index kept globally
     position: sticky;
     top: 0;
     z-index: 100;
@@ -446,6 +448,7 @@ app-cash-flow-table .actions {
 .inst-table {
     width: 100%;
     border-collapse: collapse;
+
     th {
         background-color: #f8fafc;
         color: #64748b;
@@ -456,6 +459,7 @@ app-cash-flow-table .actions {
         text-align: right;
         border-bottom: 1px solid #e2e8f0;
     }
+
     td {
         padding: 12px 20px;
         border-bottom: 1px solid #f1f5f9;
@@ -463,94 +467,75 @@ app-cash-flow-table .actions {
     }
 }
 
-/* ---------- VS Code Dark Modern Theme Overrides ---------- */
-[data-bs-theme="dark"], .dark-mode {
-    --bs-body-bg: #1f1f1f;           /* Editor Background */
-    --bs-body-color: #cccccc;        /* Foreground text */
-    --bs-secondary-bg: #181818;      /* Sidebar / Activity Bar */
-    --bs-tertiary-bg: #252526;       /* Cards / Popups */
-    --bs-border-color: #2b2b2b;      /* Subtle borders */
-    --bs-primary: #007acc;           /* VS Code Blue */
-    --bs-primary-rgb: 0, 122, 204;
+/* ---------- Dark Theme Overrides (see src/_dark-theme.scss) ---------- */
+[data-bs-theme="dark"],
+.dark-mode {
+    --bs-body-bg: #0f172a;
+    --bs-body-color: #e5e7eb;
+    --bs-secondary-bg: #0d1526;
+    --bs-tertiary-bg: #111827;
+    --bs-border-color: #1e2d45;
+    --bs-primary: #6366f1;
+    --bs-primary-rgb: 99, 102, 241;
 
     background-color: var(--bs-body-bg) !important;
     color: var(--bs-body-color) !important;
-
-    /* תיקון עבור סרגל הניווט והכותרות הראשיות */
-    .navbar, .app-navbar, header {
-        background-color: var(--bs-secondary-bg) !important;
-        border-bottom: 1px solid var(--bs-border-color);
-    }
 
     .card {
         background-color: var(--bs-tertiary-bg);
         border-color: var(--bs-border-color);
         color: var(--bs-body-color);
+
         .card-header {
             background-color: rgba(255, 255, 255, 0.03);
             border-bottom-color: var(--bs-border-color);
-            color: #ffffff;
+            color: #e5e7eb;
         }
     }
 
     .nav-tabs {
         border-bottom-color: var(--bs-border-color);
-        .nav-link {
-            color: #858585;
-            border: none;
-            &:hover:not(.active) {
-                background-color: rgba(255, 255, 255, 0.05);
-                color: #cccccc;
-            }
-            &.active {
-                background-color: transparent;
-                color: #ffffff;
-                border-bottom: 2px solid #007acc;
-            }
-        }
     }
 
-    /* AI Assistant Specific Dark Styles */
-    .history-sidebar, .summary-sidebar {
-        background-color: #181818 !important;
+    /* AI Assistant */
+    .history-sidebar,
+    .summary-sidebar {
+        background-color: #0d1526 !important;
         border-color: var(--bs-border-color) !important;
     }
 
     .chat-panel {
-        background-color: #1f1f1f;
+        background-color: #0f172a;
     }
 
     .bubble {
         &.assistant-message {
-            background-color: #2d2d30;
-            color: #cccccc;
-            border: 1px solid #333;
+            background-color: #1f2937;
+            color: #e5e7eb;
+            border: 1px solid #1e2d45;
         }
+
         &.user-message {
-            background-color: #0e639c;
+            background-color: #1d4ed8;
             color: #ffffff;
             border: none;
         }
     }
 
     .conv-item {
-        border-bottom-color: #2b2b2b;
-        &:hover { background-color: #2a2d2e; }
-        &.active { background-color: #37373d; border-right: 2px solid #007acc; }
+        border-bottom-color: #1e2d45;
+
+        &:hover {
+            background-color: #111827;
+        }
+
+        &.active {
+            background-color: #1a2233;
+            border-right: 2px solid #38bdf8;
+        }
     }
 
-    /* Material Table Dark Overrides */
-    .mat-mdc-table {
-        background-color: transparent !important;
-    }
-    .mat-mdc-header-row {
-        background-color: #333333 !important;
-    }
-    .mat-mdc-row {
-        background-color: #252526 !important;
-        &:hover { background-color: #2a2d2e !important; }
-    }
-
+    /* Installments table */
     .inst-table-container {
         background-color: var(--bs-tertiary-bg);
         border: 1px solid var(--bs-border-color);
@@ -558,25 +543,27 @@ app-cash-flow-table .actions {
 
     .inst-table {
         th {
-            background-color: rgba(255, 255, 255, 0.03);
-            color: #858585;
+            background-color: rgba(255, 255, 255, 0.02);
+            color: #64748b;
             border-bottom: 1px solid var(--bs-border-color);
         }
+
         td {
             border-bottom: 1px solid var(--bs-border-color);
         }
+
         tr:hover {
             background-color: rgba(255, 255, 255, 0.02);
         }
 
-        /* Style for expanded rows in Table View */
         .inst-row-expanded {
-            background-color: rgba(0, 122, 204, 0.05) !important;
+            background-color: rgba(99, 102, 241, 0.06) !important;
             border-bottom: none;
         }
 
         .inst-detail-row {
-            background-color: #1a1a1a;
+            background-color: #0d1526;
+
             td {
                 padding: 0 !important;
                 border-bottom: 1px solid var(--bs-border-color);
@@ -586,7 +573,7 @@ app-cash-flow-table .actions {
         .inst-detail-content {
             border-right: 2px solid var(--bs-primary);
             margin: 10px 40px;
-            background: #252526;
+            background: #111827;
             border-radius: 4px;
         }
     }
@@ -595,7 +582,8 @@ app-cash-flow-table .actions {
 /* ---------- Dashboard Styles ---------- */
 .dashboard-panel {
     padding: 1rem;
-    height: calc(100vh - 57px - 50px); /* Full height minus navbar and tab bar */
+    height: calc(100vh - 57px - 50px);
+    /* Full height minus navbar and tab bar */
     overflow-y: auto;
 }
 
@@ -638,15 +626,18 @@ app-cash-flow-table .actions {
     }
 }
 
-[data-bs-theme="dark"], .dark-mode {
+[data-bs-theme="dark"],
+.dark-mode {
     .dashboard-card {
-        background-color: var(--bs-tertiary-bg);
-        border-color: var(--bs-border-color);
+        background-color: #111827;
+        border-color: #1e2d45;
+
         .card-label {
-            color: #a0a0a0;
+            color: #94a3b8;
         }
+
         .card-value {
-            color: var(--bs-body-color);
+            color: #e5e7eb;
         }
     }
 }
@@ -665,10 +656,11 @@ app-cash-flow-table .actions {
     }
 }
 
-[data-bs-theme="dark"], .dark-mode {
+[data-bs-theme="dark"],
+.dark-mode {
     .insight-card {
-        background-color: rgba(255, 255, 255, 0.03);
-        border-color: var(--bs-border-color);
-        color: var(--bs-body-color);
+        background-color: rgba(255, 255, 255, 0.02);
+        border-color: #1e2d45;
+        color: #e5e7eb;
     }
 }

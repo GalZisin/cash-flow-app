@@ -1,0 +1,98 @@
+// ── Navbar shell ──────────────────────────────────
+.app-navbar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    height: 57px;
+    background: #ffffff;
+    border-bottom: 1px solid #e8eaed;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    transition: background 0.2s, border-color 0.2s;
+}
+
+// ── Tabs ──────────────────────────────────────────
+.nav-link {
+    cursor: pointer;
+    font-family: 'Heebo', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 500;
+    color: #64748b;
+    border: none !important;
+    padding: 8px 14px;
+    border-bottom: 2px solid transparent !important;
+    transition: color 0.15s, border-color 0.15s;
+    white-space: nowrap;
+
+    &:hover:not(.active) {
+        color: #1e293b;
+        background: transparent;
+    }
+
+    &.active {
+        color: #4f46e5 !important;
+        border-bottom: 2px solid #4f46e5 !important;
+        font-weight: 600;
+        background: transparent !important;
+    }
+}
+
+// ── Navbar buttons (lang + theme) ────────────────
+.navbar-btn {
+    font-family: 'Heebo', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 500;
+    padding: 5px 12px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    background: transparent;
+    color: #475569;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    white-space: nowrap;
+
+    &:hover {
+        background: #f1f5f9;
+        border-color: #cbd5e1;
+        color: #1e293b;
+    }
+}
+
+.theme-toggle-btn {
+    font-size: 1rem;
+    line-height: 1;
+    padding: 5px 10px;
+}
+
+// ── Dark mode overrides ───────────────────────────
+[data-bs-theme="dark"],
+.dark-mode {
+    .app-navbar {
+        background: #0d1526 !important;
+        border-bottom-color: #1e2d45 !important;
+        box-shadow: 0 1px 0 #1e2d45 !important;
+    }
+
+    .nav-link {
+        color: #94a3b8 !important;
+
+        &:hover:not(.active) {
+            color: #e5e7eb !important;
+            background: transparent !important;
+        }
+
+        &.active {
+            color: #38bdf8 !important;
+            border-bottom-color: #38bdf8 !important;
+        }
+    }
+
+    .navbar-btn {
+        border-color: #1e2d45;
+        color: #94a3b8;
+
+        &:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: #334155;
+            color: #e5e7eb;
+        }
+    }
+}

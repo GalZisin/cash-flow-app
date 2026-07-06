@@ -1,0 +1,121 @@
+.mobile-cards-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    overflow-y: auto;
+    height: 100vh;
+}
+
+.month-card {
+    border-radius: 12px;
+    padding: 16px;
+    transition: transform 0.2s;
+
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        padding-bottom: 8px;
+
+        .month-name {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #1e293b;
+        }
+    }
+
+    .card-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .data-item {
+        label {
+            display: block;
+            font-size: 11px;
+            color: #64748b;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .val {
+            font-size: 14px;
+            color: #1e293b;
+        }
+
+        .amount-display {
+            cursor: pointer;
+            border-bottom: 1px dashed #cbd5e1;
+        }
+    }
+
+    .expansion-item {
+        margin-top: 8px;
+        background: rgba(255, 255, 255, 0.5);
+        border-radius: 8px;
+
+        .expansion-trigger {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            cursor: pointer;
+
+            .label {
+                flex: 1;
+                font-size: 13px;
+                font-weight: 600;
+            }
+        }
+
+        .expansion-content {
+            padding: 8px;
+
+            .expense-item-block {
+                margin-bottom: 12px;
+                padding: 10px;
+                border: 1px solid #e2e8f0;
+                border-radius: 12px;
+                background: #fff;
+            }
+
+            .expense-row {
+                display: flex;
+                gap: 4px;
+                margin-bottom: 8px;
+
+                input {
+                    border: 1px solid #e2e8f0;
+                    border-radius: 4px;
+                    padding: 4px;
+                    font-size: 12px;
+                    width: 40%;
+                }
+            }
+        }
+    }
+
+    .visual-summary-container {
+        background: rgba(0, 0, 0, 0.05);
+        height: 8px;
+        border-radius: 4px;
+        overflow: hidden;
+
+        .mini-bar {
+            height: 100%;
+            float: right;
+            transition: width 0.3s;
+        }
+
+        .income-bar {
+            background: #10b981;
+        }
+
+        .expense-bar {
+            background: #ef4444;
+        }
+    }
+}

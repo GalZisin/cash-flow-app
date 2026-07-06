@@ -1,0 +1,607 @@
+// =============================================================
+// DARK THEME — cash-flow-app
+// Only overrides [data-bs-theme="dark"] / .dark-mode selectors.
+// Light mode is untouched.
+// =============================================================
+
+// ── Design tokens ────────────────────────────────────────────
+$dk-bg: #0f172a; // page background
+$dk-surface: #111827; // cards / table rows
+$dk-surface-alt: #1a2233; // zebra / slightly lighter surface
+$dk-surface-high: #1f2937; // elevated surfaces, modals
+$dk-border: #1e2d45; // subtle borders
+$dk-border-mid: #334155; // visible borders
+
+$dk-text: #e5e7eb; // primary text
+$dk-text-muted: #94a3b8; // secondary text
+$dk-text-faint: #64748b; // disabled / placeholder
+
+$dk-accent: #38bdf8; // cyan — balance / savings
+$dk-income: #4ade80; // soft green — income
+$dk-expense: #f87171; // soft red — expense
+$dk-primary: #6366f1; // indigo — primary action
+
+$dk-header-bg: #0d1526; // table header
+$dk-row-hover: rgba(99, 102, 241, 0.08);
+$dk-focus-ring: rgba(56, 189, 248, 0.35);
+
+// ── Mixin helpers ─────────────────────────────────────────────
+@mixin dark {
+
+  [data-bs-theme="dark"],
+  .dark-mode {
+    @content;
+  }
+}
+
+// =============================================================
+// 1. PAGE / BODY
+// =============================================================
+@include dark {
+  background-color: $dk-bg !important;
+  color: $dk-text !important;
+
+  // Navbar
+  .app-navbar,
+  .navbar {
+    background-color: $dk-header-bg !important;
+    border-bottom: 1px solid $dk-border !important;
+    box-shadow: 0 1px 0 $dk-border;
+
+    .nav-link {
+      color: $dk-text-muted;
+      font-weight: 500;
+      border: none !important;
+      padding-bottom: 12px;
+      transition: color 0.15s;
+
+      &:hover:not(.active) {
+        color: $dk-text;
+        background: transparent;
+      }
+
+      &.active {
+        color: $dk-text !important;
+        background: transparent !important;
+        border-bottom: 2px solid $dk-accent !important;
+        font-weight: 600;
+      }
+    }
+  }
+}
+
+// =============================================================
+// 2. CASH FLOW TABLE
+// =============================================================
+@include dark {
+  app-cash-flow-table {
+
+    // wrapper
+    .cash-flow-table {
+      background: $dk-bg;
+    }
+
+    // ── Material Table ──────────────────────────────────────
+    .mat-mdc-table {
+      background: transparent !important;
+      box-shadow: none !important;
+
+      // Header
+      .mat-mdc-header-row {
+        background: $dk-header-bg !important;
+        border-bottom: 1px solid $dk-border-mid !important;
+
+        .mat-mdc-header-cell {
+          color: $dk-text-muted !important;
+          font-size: 11px !important;
+          letter-spacing: 0.6px !important;
+          text-transform: uppercase !important;
+          border: none !important;
+        }
+      }
+
+      // Data rows
+      .mat-mdc-row {
+        // background: $dk-surface !important;
+        background:
+          color-mix(in srgb,
+            var(--row-color, transparent) 18%,
+            $dk-surface );
+        border-bottom: 1px solid $dk-border !important;
+        transition: background 0.15s, box-shadow 0.15s !important;
+
+        &:nth-child(even) {
+          background: $dk-surface-alt !important;
+        }
+
+        &:hover {
+          background: $dk-row-hover !important;
+          box-shadow: inset 3px 0 0 $dk-primary !important;
+        }
+
+        // ── Colored rows ─ handled entirely by resolveRowColor() in TS + component SCSS
+        // Old hex-based overrides removed — dark shade is now set directly via --row-color CSS var
+
+        // Cells
+        .mat-mdc-cell {
+          color: $dk-text !important;
+          border-bottom: 1px solid $dk-border !important;
+          font-size: 13px !important;
+        }
+
+        // Last column (ending balance) — accent
+        td:last-child {
+          color: $dk-accent !important;
+          font-weight: 700 !important;
+        }
+      }
+    }
+
+    // ── Inline inputs inside table cells ───────────────────
+    .mat-mdc-cell {
+
+      input[type='number'],
+      input[type='text'],
+      input:not([type]) {
+        background: $dk-surface-high !important;
+        border-color: $dk-border-mid !important;
+        color: $dk-text !important;
+        border-radius: 6px !important;
+
+        &::placeholder {
+          color: $dk-text-faint !important;
+        }
+
+        &:focus {
+          border-color: $dk-accent !important;
+          background: darken(#1f2937, 2%) !important;
+          box-shadow: 0 0 0 3px $dk-focus-ring !important;
+          outline: none !important;
+        }
+
+        &:hover:not(:focus) {
+          border-color: $dk-border-mid !important;
+        }
+      }
+    }
+
+    // ── Amount display (click-to-edit span) ─────────────────
+    .amount-display {
+      color: $dk-text !important;
+      border-color: transparent !important;
+
+      &:hover {
+        background: $dk-surface-high !important;
+        border-color: $dk-border-mid !important;
+      }
+    }
+
+    // ── Dots action button ──────────────────────────────────
+    .dots-btn {
+      color: $dk-text-faint !important;
+
+      &:hover {
+        color: $dk-text !important;
+      }
+    }
+
+    // ── Expand / collapse badge ─────────────────────────────
+    .expense-count-badge {
+      &.bg-primary {
+        background: rgba(99, 102, 241, 0.25) !important;
+        color: #a5b4fc !important;
+      }
+
+      &.bg-success {
+        background: rgba(74, 222, 128, 0.18) !important;
+        color: #86efac !important;
+      }
+
+      &.bg-warning {
+        background: rgba(251, 191, 36, 0.18) !important;
+        color: #fcd34d !important;
+        color: $dk-text !important;
+      }
+    }
+
+    // ── Expense item block (expanded rows) ──────────────────
+    .expense-item-block {
+      background: $dk-surface-high !important;
+      border-color: $dk-border-mid !important;
+
+      .expense-row input {
+        background: $dk-surface !important;
+        border-color: $dk-border-mid !important;
+        color: $dk-text !important;
+
+        &::placeholder {
+          color: $dk-text-faint !important;
+        }
+
+        &:focus {
+          border-color: $dk-accent !important;
+          box-shadow: 0 0 0 2px $dk-focus-ring !important;
+        }
+      }
+    }
+
+    // ── Mini bar chart ──────────────────────────────────────
+    .mini-chart-container {
+      background: rgba(255, 255, 255, 0.04) !important;
+    }
+
+    .income-bar {
+      background-color: $dk-income !important;
+    }
+
+    .expense-bar {
+      background-color: $dk-expense !important;
+    }
+
+    .savings-bar {
+      background-color: $dk-accent !important;
+    }
+
+    // ── Action buttons bar ──────────────────────────────────
+    .actions {
+
+      // Primary — Save
+      button[color="warn"] {
+        background: linear-gradient(135deg, #7c3aed, #6366f1) !important;
+        color: #fff !important;
+        box-shadow: 0 0 12px rgba(99, 102, 241, 0.35) !important;
+
+        &:hover {
+          box-shadow: 0 0 20px rgba(99, 102, 241, 0.55) !important;
+          filter: brightness(1.1);
+        }
+      }
+
+      // Accent — Export PDF
+      button[color="accent"] {
+        background: rgba(56, 189, 248, 0.12) !important;
+        color: $dk-accent !important;
+        border: 1px solid rgba(56, 189, 248, 0.3) !important;
+        box-shadow: none !important;
+
+        &:hover {
+          background: rgba(56, 189, 248, 0.2) !important;
+          box-shadow: 0 0 12px rgba(56, 189, 248, 0.2) !important;
+        }
+      }
+
+      // Primary — Add Month
+      button[color="primary"] {
+        background: rgba(99, 102, 241, 0.15) !important;
+        color: #a5b4fc !important;
+        border: 1px solid rgba(99, 102, 241, 0.35) !important;
+        box-shadow: none !important;
+
+        &:hover {
+          background: rgba(99, 102, 241, 0.25) !important;
+        }
+      }
+
+      // Stroked — Defaults
+      button.mdc-button--outlined,
+      button[mat-stroked-button] {
+        border-color: $dk-border-mid !important;
+        color: $dk-text-muted !important;
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.05) !important;
+          color: $dk-text !important;
+        }
+      }
+    }
+
+    // ── Confirmation overlay ────────────────────────────────
+    .cf-overlay {
+      background: rgba(2, 6, 23, 0.75) !important;
+      backdrop-filter: blur(4px);
+    }
+
+    .cf-confirm-card {
+      background: $dk-surface-high !important;
+      border: 1px solid $dk-border-mid !important;
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6) !important;
+
+      .cf-confirm-title {
+        color: $dk-text !important;
+      }
+
+      .cf-confirm-msg {
+        color: $dk-text-muted !important;
+      }
+    }
+
+    // ── Defaults dialog ─────────────────────────────────────
+    .cf-defaults-card {
+      background: $dk-surface-high !important;
+      border: 1px solid $dk-border-mid !important;
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6) !important;
+    }
+
+    .cf-defaults-header {
+      border-bottom-color: $dk-border !important;
+
+      .cf-defaults-title {
+        color: $dk-text !important;
+      }
+    }
+
+    .cf-defaults-footer {
+      background: $dk-surface !important;
+      border-top-color: $dk-border !important;
+    }
+
+    .cf-field-label {
+      color: $dk-text-muted !important;
+    }
+
+    .cf-section-title {
+      color: $dk-text-faint !important;
+    }
+
+    // Defaults dialog — form inputs
+    .cf-defaults-body {
+
+      input.form-control,
+      select.form-control,
+      .form-control {
+        background: $dk-surface !important;
+        border-color: $dk-border-mid !important;
+        color: $dk-text !important;
+
+        &::placeholder {
+          color: $dk-text-faint !important;
+        }
+
+        &:focus {
+          border-color: $dk-accent !important;
+          box-shadow: 0 0 0 3px $dk-focus-ring !important;
+        }
+      }
+    }
+  }
+}
+
+// =============================================================
+// 3. EXPENSE CATEGORY SELECTOR (dark mode)
+// =============================================================
+@include dark {
+  app-expense-category-selector {
+    .category-card {
+      background: $dk-surface-high !important;
+      border-color: $dk-border-mid !important;
+      color: $dk-text !important;
+
+      &:hover {
+        background: color-mix(in srgb, var(--category-color) 12%, $dk-surface-high) !important;
+        border-color: color-mix(in srgb, var(--category-color) 50%, $dk-border-mid) !important;
+        box-shadow: 0 4px 14px color-mix(in srgb, var(--category-color) 20%, transparent) !important;
+      }
+
+      &.selected {
+        background: color-mix(in srgb, var(--category-color) 18%, $dk-surface-high) !important;
+        border-color: var(--category-color) !important;
+        box-shadow:
+          0 0 0 1px color-mix(in srgb, var(--category-color) 30%, transparent),
+          0 4px 16px color-mix(in srgb, var(--category-color) 25%, transparent) !important;
+      }
+
+      .color-indicator {
+        box-shadow: 0 0 0 2px color-mix(in srgb, var(--category-color) 25%, $dk-surface-high) !important;
+      }
+    }
+
+    // Toggle (collapsed) card
+    .toggle-card {
+      background: $dk-surface-high !important;
+      border-color: $dk-border-mid !important;
+      color: $dk-text !important;
+
+      .chevron {
+        color: $dk-text-faint !important;
+      }
+    }
+  }
+}
+
+// =============================================================
+// 4. MATERIAL MENU (row color picker)
+// =============================================================
+@include dark {
+  .mat-mdc-menu-panel.color-menu {
+    background: $dk-surface-high !important;
+    border: 1px solid $dk-border-mid !important;
+
+    .mat-mdc-menu-item {
+      color: $dk-text !important;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.05) !important;
+      }
+    }
+  }
+}
+
+// =============================================================
+// 5. MATERIAL TOOLTIP
+// =============================================================
+@include dark {
+  .mat-mdc-tooltip .mdc-tooltip__surface {
+    background: $dk-surface-high !important;
+    color: $dk-text !important;
+    border: 1px solid $dk-border-mid !important;
+  }
+}
+
+// =============================================================
+// 6. PIE CHART (expense-pie-chart)
+// =============================================================
+@include dark {
+  app-expense-pie-chart {
+    .pie-chart-wrapper {
+      background: transparent;
+    }
+
+    .pie-title {
+      color: $dk-text !important;
+      border-bottom-color: $dk-border-mid !important;
+    }
+
+    .pie-label {
+      color: $dk-text-muted !important;
+    }
+
+    .pie-no-data {
+      color: $dk-text-faint !important;
+    }
+
+    .pie-select {
+      background: $dk-surface-high !important;
+      border-color: $dk-border-mid !important;
+      color: $dk-text !important;
+    }
+
+    .legend-row {
+      background: $dk-surface !important;
+      border-color: $dk-border !important;
+
+      &:hover {
+        background: $dk-surface-alt !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+      }
+    }
+
+    .legend-name {
+      color: $dk-text !important;
+    }
+
+    .legend-amount {
+      color: $dk-text !important;
+    }
+
+    .legend-bar-track {
+      background: $dk-border-mid !important;
+    }
+  }
+}
+
+// =============================================================
+// 7. CASH FLOW CARDS (mobile view)
+// =============================================================
+@include dark {
+  app-cash-flow-cards {
+    .month-card {
+      background: $dk-surface !important;
+      border: 1px solid $dk-border !important;
+
+      .card-header {
+        border-bottom-color: $dk-border !important;
+
+        .month-name {
+          color: $dk-text !important;
+        }
+      }
+
+      .data-item {
+        label {
+          color: $dk-text-muted !important;
+        }
+
+        .val {
+          color: $dk-text !important;
+        }
+
+        .amount-display {
+          border-bottom-color: $dk-border-mid !important;
+          color: $dk-text !important;
+        }
+      }
+
+      .expansion-item {
+        background: rgba(255, 255, 255, 0.03) !important;
+
+        .expansion-trigger .label {
+          color: $dk-text !important;
+        }
+
+        .expense-item-block {
+          background: $dk-surface-high !important;
+          border-color: $dk-border-mid !important;
+        }
+
+        .expense-row input {
+          background: $dk-surface !important;
+          border-color: $dk-border-mid !important;
+          color: $dk-text !important;
+        }
+      }
+    }
+  }
+}
+
+// =============================================================
+// 8. GLOBAL FORM CONTROLS (Bootstrap, outside components)
+// =============================================================
+@include dark {
+
+  .form-control,
+  .form-select {
+    background-color: $dk-surface-high !important;
+    border-color: $dk-border-mid !important;
+    color: $dk-text !important;
+
+    &::placeholder {
+      color: $dk-text-faint !important;
+    }
+
+    &:focus {
+      background-color: $dk-surface-high !important;
+      border-color: $dk-accent !important;
+      color: $dk-text !important;
+      box-shadow: 0 0 0 3px $dk-focus-ring !important;
+    }
+  }
+
+  .input-group-text {
+    background-color: $dk-surface !important;
+    border-color: $dk-border-mid !important;
+    color: $dk-text-muted !important;
+  }
+
+  .form-check-input {
+    background-color: $dk-surface-high !important;
+    border-color: $dk-border-mid !important;
+
+    &:checked {
+      background-color: $dk-primary !important;
+      border-color: $dk-primary !important;
+    }
+  }
+}
+
+// =============================================================
+// 9. SCROLLBAR (Webkit)
+// =============================================================
+@include dark {
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: $dk-bg;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: $dk-border-mid;
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #4b5563;
+  }
+}

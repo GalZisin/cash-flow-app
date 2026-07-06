@@ -98,3 +98,60 @@
     .legend-dep {
         color: #cbd5e1;
     }
+
+    // ════════════════════════════════════════════════════════════
+    // DARK MODE
+    // ════════════════════════════════════════════════════════════
+    :host-context([data-bs-theme="dark"]),
+    :host-context(.dark-mode) {
+        .sim-card {
+            background: #111827 !important;
+            border-color: #1e2d45 !important;
+        }
+
+        .sim-header {
+            color: #e5e7eb !important;
+            border-bottom-color: #1e2d45 !important;
+        }
+
+        .sim-label {
+            color: #64748b !important;
+        }
+
+        .result-bar {
+            background: rgba(26, 122, 82, 0.1) !important;
+            border-color: rgba(26, 122, 82, 0.25) !important;
+        }
+
+        .result-item .rl {
+            color: #64748b !important;
+        }
+
+        .result-item .rv {
+            color: #e5e7eb !important;
+        }
+
+        .rv-main {
+            color: #6ee7b7 !important;
+        }
+
+        .rv-gain {
+            color: #93c5fd !important;
+        }
+
+        .chart-wrap {
+            background: #0d1526 !important;
+        }
+
+        .legend {
+            color: #64748b !important;
+        }
+
+        .legend-proj {
+            color: #a5b4fc !important;
+        }
+
+        .legend-dep {
+            color: #475569 !important;
+        }
+    }

@@ -202,3 +202,92 @@
   .btn-cancel-confirm:hover {
       background: #e2e8f0;
   }
+
+  // ════════════════════════════════════════════════════════════
+  // DARK MODE
+  // ════════════════════════════════════════════════════════════
+  :host-context([data-bs-theme="dark"]),
+  :host-context(.dark-mode) {
+      .inv-card {
+          background: #111827 !important;
+          border-color: #1e2d45 !important;
+      }
+
+      .inv-header {
+          background: #0d1526 !important;
+          border-bottom-color: #1e2d45 !important;
+          color: #e5e7eb !important;
+      }
+
+      .inv-wrapper {
+          background: #111827 !important;
+      }
+
+      .add-form {
+          background: #0d1526 !important;
+          border-bottom-color: #1e2d45 !important;
+      }
+
+      .inv-item {
+          border-bottom-color: #1e2d45 !important;
+
+          &:hover {
+              background: rgba(255, 255, 255, 0.03) !important;
+          }
+
+          &.selected {
+              background: rgba(56, 189, 248, 0.08) !important;
+              border-left-color: #38bdf8 !important;
+          }
+      }
+
+      .inv-name {
+          color: #e5e7eb !important;
+      }
+
+      .inv-type {
+          color: #64748b !important;
+      }
+
+      .inv-value {
+          color: #e5e7eb !important;
+      }
+
+      .inv-chevron {
+          color: #475569 !important;
+      }
+
+      .btn-add-investment {
+          background: rgba(79, 110, 247, 0.2) !important;
+          color: #a5b4fc !important;
+          border: 1px solid rgba(79, 110, 247, 0.35) !important;
+
+          &:hover {
+              background: rgba(79, 110, 247, 0.32) !important;
+          }
+      }
+
+      .btn-save-investment {
+          background: rgba(26, 122, 82, 0.2) !important;
+          color: #6ee7b7 !important;
+          border: 1px solid rgba(26, 122, 82, 0.35) !important;
+      }
+
+      .confirm-card {
+          background: #1f2937 !important;
+          border: 1px solid #334155 !important;
+      }
+
+      .confirm-title {
+          color: #e5e7eb !important;
+      }
+
+      .confirm-msg {
+          color: #94a3b8 !important;
+      }
+
+      .btn-cancel-confirm {
+          background: rgba(255, 255, 255, 0.07) !important;
+          color: #94a3b8 !important;
+      }
+  }

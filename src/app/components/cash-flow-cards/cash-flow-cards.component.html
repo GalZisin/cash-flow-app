@@ -1,0 +1,203 @@
+<div class="mobile-cards-container no-print" dir="rtl">
+  @for (monthCtrl of months.controls; track $index; let i = $index) {
+    <div class="month-card mat-elevation-z2" [style.background]="monthCtrl.get('rowColor')?.value">
+      <div class="card-header">
+        <span class="month-name">{{ monthCtrl.get('month')?.value | date:'MMMM yyyy':'':'he' }}</span>
+        <button mat-icon-button (click)="colorRow.emit({monthCtrl, index: i})">
+          <mat-icon>palette</mat-icon>
+        </button>
+      </div>
+
+      <div class="card-grid">
+        <div class="data-item">
+          <label [for]="'startingBalance_' + i">{{ 'CASH_FLOW.STARTING_BALANCE' | translate }}</label>
+          <!-- Input for starting balance -->
+          <div class="val">
+            <span *ngIf="i > 0">{{ monthCtrl.get('startingBalance')?.value | number:'1.0-0' }} ₪</span>
+            <ng-container *ngIf="i === 0">
+              <span *ngIf="!focusedField['startingBalance_' + i]" class="amount-display" (click)="focusField('startingBalance_' + i)">
+                {{ monthCtrl.get('startingBalance')?.value | number:'1.0-0' }} ₪
+              </span>
+              <input *ngIf="focusedField['startingBalance_' + i]" matInput type="number" [id]="'startingBalance_' + i"
+                [formControl]="$any(monthCtrl.get('startingBalance'))" (input)="calculate.emit()" 
+                [placeholder]="'CASH_FLOW.STARTING_BALANCE' | translate"
+                [title]="'CASH_FLOW.STARTING_BALANCE' | translate"
+                [attr.aria-label]="'CASH_FLOW.STARTING_BALANCE' | translate" (blur)="blurField('startingBalance_' + i)"
+                [attr.data-focus-key]="'startingBalance_' + i" />
+            </ng-container>
+          </div>
+        </div>
+
+        <div class="data-item">
+          <label [for]="'endingBalance_' + i" class="visually-hidden">{{ 'CASH_FLOW.ENDING_BALANCE' | translate }}</label>
+          <div class="val fw-bold">{{ monthCtrl.get('endingBalance')?.value | number:'1.0-0' }} ₪</div>
+        </div>
+
+        <div class="data-item">
+          <label [for]="'income_' + i">{{ 'CASH_FLOW.INCOME' | translate }}</label>
+          <!-- Input for income -->
+          <div class="val">
+            <span *ngIf="!focusedField['income_' + i]" class="amount-display" (click)="focusField('income_' + i)">
+              {{ monthCtrl.get('income')?.value | number:'1.0-0' }} ₪
+            </span>
+            <input *ngIf="focusedField['income_' + i]" matInput type="number" [id]="'income_' + i"
+              [formControl]="$any(monthCtrl.get('income'))" (input)="calculate.emit()" 
+              [placeholder]="'CASH_FLOW.INCOME' | translate"
+              [title]="'CASH_FLOW.INCOME' | translate"
+              [attr.aria-label]="'CASH_FLOW.INCOME' | translate" (blur)="blurField('income_' + i)"
+              [attr.data-focus-key]="'income_' + i" />
+          </div>
+        </div>
+
+        <div class="data-item">
+          <label [for]="'mortgagePayment_' + i">{{ 'CASH_FLOW.MORTGAGE' | translate }}</label>
+          <div class="val">
+            {{ monthCtrl.get('mortgagePayment')?.value | number:'1.0-0' }} ₪
+          </div>
+        </div>
+
+        <div class="data-item">
+          <label [for]="'loan_' + i">{{ 'CASH_FLOW.LOAN' | translate }}</label>
+          <!-- Input for loan -->
+          <div class="val">
+            <span *ngIf="!focusedField['loan_' + i]" class="amount-display" (click)="focusField('loan_' + i)" [matTooltip]="getInstallmentTooltip(i, 'loans')">
+              {{ monthCtrl.get('loanPayment')?.value | number:'1.0-0' }} ₪
+            </span>
+            <input *ngIf="focusedField['loan_' + i]" matInput type="number" [id]="'loan_' + i" [formControl]="$any(monthCtrl.get('loanPayment'))" 
+              [placeholder]="'CASH_FLOW.LOAN' | translate"
+              [title]="'CASH_FLOW.LOAN' | translate"
+              [attr.aria-label]="'CASH_FLOW.LOAN' | translate"
+              (blur)="loanChange.emit(i); blurField('loan_' + i)" [attr.data-focus-key]="'loan_' + i" />
+          </div>
+        </div>
+
+        <div class="data-item">
+          <label [for]="'installmentsPayment_' + i" class="visually-hidden">{{ 'CASH_FLOW.INSTALLMENTS_PAYMENT' | translate }}</label>
+          <!-- Read-only span for installments, no direct input -->
+          <div class="val">
+            <span [matTooltip]="getInstallmentTooltip(i, 'installments')">{{ monthCtrl.get('installmentsPayment')?.value | number:'1.0-0' }} ₪</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-expansions">
+        <!-- Incomes -->
+        <div class="expansion-item">
+          <div class="expansion-trigger" (click)="monthCtrl.get('expandedAdditionalIncomes')?.setValue(!monthCtrl.get('expandedAdditionalIncomes')?.value)">
+            <span class="label">{{ 'CASH_FLOW.ADDITIONAL_INCOMES' | translate }}</span>
+            <span class="badge bg-success" *ngIf="getAdditionalIncomes(i).length > 0">{{ getSum(getAdditionalIncomes(i)) | number:'1.0-0' }} ₪</span>
+            <mat-icon>{{ monthCtrl.get('expandedAdditionalIncomes')?.value ? 'expand_less' : 'expand_more' }}</mat-icon>
+          </div>
+          <div *ngIf="monthCtrl.get('expandedAdditionalIncomes')?.value" class="expansion-content">
+            @for (expCtrl of getAdditionalIncomes(i).controls; track $index; let j = $index) {
+              <div class="expense-row">
+                <label [for]="'addIncDesc_' + i + '_' + j" class="visually-hidden">{{ 'CASH_FLOW.DESCRIPTION' | translate }}</label>
+                <input [id]="'addIncDesc_' + i + '_' + j"
+                       [formControl]="$any(expCtrl.get('description'))"
+                       [placeholder]="'CASH_FLOW.DESCRIPTION' | translate"
+                       [title]="'CASH_FLOW.DESCRIPTION' | translate"
+                       [attr.aria-label]="'CASH_FLOW.DESCRIPTION' | translate" />
+                <label [for]="'addIncAmt_' + i + '_' + j" class="visually-hidden">{{ 'CASH_FLOW.AMOUNT' | translate }}</label>
+                <input type="number" [id]="'addIncAmt_' + i + '_' + j"
+                       [formControl]="$any(expCtrl.get('amount'))"
+                       [placeholder]="'CASH_FLOW.AMOUNT' | translate"
+                       [title]="'CASH_FLOW.AMOUNT' | translate"
+                       [attr.aria-label]="'CASH_FLOW.AMOUNT' | translate"
+                       (input)="calculate.emit()" />
+                <button mat-icon-button color="warn" (click)="deleteExpense.emit({monthIndex: i, expenseIndex: j, type: 'additionalIncome'})">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            }
+            <button mat-button (click)="addExpense.emit({monthIndex: i, type: 'additionalIncome'})">+ {{ 'CASH_FLOW.ADD_INCOME' | translate }}</button>
+          </div>
+        </div>
+
+        <!-- Regular Expenses -->
+        <div class="expansion-item">
+          <div class="expansion-trigger" (click)="monthCtrl.get('expanded')?.setValue(!monthCtrl.get('expanded')?.value)">
+            <span class="label">{{ 'CASH_FLOW.REGULAR_EXPENSES' | translate }}</span>
+            <span class="badge bg-primary" *ngIf="getRegularExpenses(i).length > 0">{{ getSum(getRegularExpenses(i)) | number:'1.0-0' }} ₪</span>
+            <mat-icon>{{ monthCtrl.get('expanded')?.value ? 'expand_less' : 'expand_more' }}</mat-icon>
+          </div>
+          <div *ngIf="monthCtrl.get('expanded')?.value" class="expansion-content">
+            @for (expCtrl of getRegularExpenses(i).controls; track $index; let j = $index) {
+              <div class="expense-item-block">
+                <div class="expense-row">
+                  <label [for]="'regExpDesc_' + i + '_' + j" class="visually-hidden">{{ 'CASH_FLOW.DESCRIPTION' | translate }}</label>
+                  <input [id]="'regExpDesc_' + i + '_' + j"
+                         [formControl]="$any(expCtrl.get('description'))"
+                         [placeholder]="'CASH_FLOW.DESCRIPTION' | translate"
+                         [title]="'CASH_FLOW.DESCRIPTION' | translate"
+                         [attr.aria-label]="'CASH_FLOW.DESCRIPTION' | translate" />
+                  <label [for]="'regExpAmt_' + i + '_' + j" class="visually-hidden">{{ 'CASH_FLOW.AMOUNT' | translate }}</label>
+                  <input type="number" [id]="'regExpAmt_' + i + '_' + j"
+                         [attr.aria-label]="'CASH_FLOW.AMOUNT' | translate"
+                         [formControl]="$any(expCtrl.get('amount'))"
+                         [placeholder]="'CASH_FLOW.AMOUNT' | translate"
+                         [title]="'CASH_FLOW.AMOUNT' | translate"
+                         (input)="calculate.emit()" />
+                  <button mat-icon-button color="warn" (click)="deleteExpense.emit({monthIndex: i, expenseIndex: j, type: 'regular'})">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+                <app-expense-category-selector
+                  [selectedCategory]="$any(expCtrl.get('category')!.value)"
+                  (selectedCategoryChange)="expCtrl.get('category')!.setValue($event)" />
+              </div>
+            }
+            <button mat-button (click)="addExpense.emit({monthIndex: i, type: 'regular'})">+ {{ 'CASH_FLOW.ADD_EXPENSE' | translate }}</button>
+          </div>
+        </div>
+
+        <div class="expansion-item">
+          <div class="expansion-trigger" (click)="monthCtrl.get('expandedSpecial')?.setValue(!monthCtrl.get('expandedSpecial')?.value)">
+            <span class="label">{{ 'CASH_FLOW.SPECIAL_EXPENSES' | translate }}</span>
+            <span class="badge bg-warning text-dark" *ngIf="getSpecialExpenses(i).length > 0">{{ getSum(getSpecialExpenses(i)) | number:'1.0-0' }} ₪</span>
+            <mat-icon>{{ monthCtrl.get('expandedSpecial')?.value ? 'expand_less' : 'expand_more' }}</mat-icon>
+          </div>
+          <div *ngIf="monthCtrl.get('expandedSpecial')?.value" class="expansion-content">
+            @for (expCtrl of getSpecialExpenses(i).controls; track $index; let j = $index) {
+              <div class="expense-item-block">
+                <div class="expense-row">
+                  <label [for]="'specExpDesc_' + i + '_' + j" class="visually-hidden">{{ 'CASH_FLOW.DESCRIPTION' | translate }}</label>
+                  <input [id]="'specExpDesc_' + i + '_' + j"
+                         [formControl]="$any(expCtrl.get('description'))"
+                         [placeholder]="'CASH_FLOW.DESCRIPTION' | translate"
+                         [title]="'CASH_FLOW.DESCRIPTION' | translate"
+                         [attr.aria-label]="'CASH_FLOW.DESCRIPTION' | translate" />
+                  <label [for]="'specExpAmt_' + i + '_' + j" class="visually-hidden">{{ 'CASH_FLOW.AMOUNT' | translate }}</label>
+                  <input type="number" [id]="'specExpAmt_' + i + '_' + j"
+                         [formControl]="$any(expCtrl.get('amount'))"
+                         [placeholder]="'CASH_FLOW.AMOUNT' | translate"
+                         [title]="'CASH_FLOW.AMOUNT' | translate"
+                         [attr.aria-label]="'CASH_FLOW.AMOUNT' | translate"
+                         (input)="calculate.emit()" />
+                  <button mat-icon-button color="warn" (click)="deleteExpense.emit({monthIndex: i, expenseIndex: j, type: 'special'})">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+                <app-expense-category-selector
+                  [selectedCategory]="$any(expCtrl.get('category')!.value)"
+                  (selectedCategoryChange)="expCtrl.get('category')!.setValue($event)" />
+              </div>
+            }
+            <button mat-button (click)="addExpense.emit({monthIndex: i, type: 'special'})">+ {{ 'CASH_FLOW.ADD_EXPENSE' | translate }}</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-footer mt-3">
+        <div class="visual-summary-container mb-2">
+          <div class="mini-bar income-bar" [style.width.%]="getBarWidth(getTotalIncome(i), i)"></div>
+          <div class="mini-bar expense-bar" [style.width.%]="getBarWidth(getTotalExpenses(i), i)"></div>
+        </div>
+        <div class="d-flex justify-content-end">
+          <button mat-stroked-button (click)="duplicate.emit(i)">
+            <mat-icon>content_copy</mat-icon> {{ 'CASH_FLOW.DUPLICATE_MONTH' | translate }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

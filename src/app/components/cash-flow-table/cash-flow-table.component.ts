@@ -17,6 +17,7 @@ import { toObservable } from '@angular/core/rxjs-interop';
 import { TranslateModule, TranslateService, LangChangeEvent } from '@ngx-translate/core';
 import { CashFlowService, CashFlowDefaults } from '../../services/cash-flow.service';
 import { InstallmentService } from '../../services/installment.service';
+import { ThemeService } from '../../services/theme.service';
 import { ExpenseCategorySelectorComponent } from '../expense-category-selector/expense-category-selector.component';
 import { ExpenseCategory } from '../../models/expense-category.model';
 import { ExpenseItem, normalizeExpenseItem } from '../../models/expense.model';
@@ -44,6 +45,24 @@ export class CashFlowTableComponent implements OnInit {
   private translate = inject(TranslateService);
   private installmentService = inject(InstallmentService);
   private decimalPipe = inject(DecimalPipe);
+  private themeService = inject(ThemeService);
+
+  resolveRowColor(hexColor: string | null): string | null {
+    if (!hexColor) return null;
+
+    // Map light hex → { light, dark } pair
+    // Dark values: visible but not too bright — enough contrast for #f1f5f9 text
+    const colorMap: Record<string, { light: string; dark: string }> = {
+      '#fee2e2': { light: '#fee2e2', dark: '#3d1a1a' }, // red — dark rose
+      '#fef9c3': { light: '#fef9c3', dark: '#332e10' }, // yellow — dark amber
+      '#dcfce7': { light: '#dcfce7', dark: '#102a1c' }, // green — dark emerald
+    };
+
+    const entry = colorMap[hexColor];
+    if (!entry) return hexColor;
+
+    return this.themeService.isDarkMode() ? entry.dark : entry.light;
+  }
 
   cashFlowForm!: FormGroup;
   dataSource = new MatTableDataSource<AbstractControl>();
@@ -73,6 +92,9 @@ export class CashFlowTableComponent implements OnInit {
     { labelKey: 'CASH_FLOW.COLOR_YELLOW', value: '#fef9c3' },
     { labelKey: 'CASH_FLOW.COLOR_GREEN', value: '#dcfce7' },
   ];
+
+  // Dark-mode equivalents — no longer needed, handled by resolveRowColor()
+  // readonly ROW_COLORS_DARK: Record<string, string> = { ... };
 
   getExpenseAmount(monthIndex: number, expenseIndex: number): FormControl<number> {
     const control = this.getRegularExpenses(monthIndex)

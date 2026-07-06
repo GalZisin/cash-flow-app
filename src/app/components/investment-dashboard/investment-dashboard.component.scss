@@ -101,3 +101,49 @@
         overflow-x: hidden;
         border-radius: 14px;
     }
+
+    // ════════════════════════════════════════════════════════════
+    // DARK MODE
+    // ════════════════════════════════════════════════════════════
+    :host-context([data-bs-theme="dark"]),
+    :host-context(.dark-mode) {
+
+        .dash-wrap,
+        .sticky-header,
+        .scroll-body {
+            background: #0f172a !important;
+        }
+
+        .sticky-header {
+            border-bottom-color: #1e2d45 !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+        }
+
+        .page-title {
+            color: #e5e7eb !important;
+        }
+
+        .stat-blue {
+            background: rgba(45, 79, 214, 0.18);
+            color: #93c5fd;
+        }
+
+        .stat-green {
+            background: rgba(26, 122, 82, 0.18);
+            color: #6ee7b7;
+        }
+
+        .stat-violet {
+            background: rgba(109, 63, 214, 0.18);
+            color: #c4b5fd;
+        }
+
+        .stat-amber {
+            background: rgba(160, 92, 0, 0.18);
+            color: #fcd34d;
+        }
+
+        .stat-card .label {
+            opacity: 0.65;
+        }
+    }

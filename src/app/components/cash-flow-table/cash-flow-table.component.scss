@@ -127,11 +127,28 @@ $white: #ffffff;
         }
       }
     }
+  }
 
-    // עמודת יתרה סגירה - צבע ירוק/אדום
-    td:last-child {
-      font-weight: 600;
-      font-size: 14px;
+  // עמודת יתרה סגירה - צבע ירוק/אדום
+  td:last-child {
+    font-weight: 600;
+    font-size: 14px;
+  }
+}
+
+// ── Dark mode zebra stripes ───────────────────────────────────
+// Must be at :host-context level to override the locally-scoped light styles above
+:host-context([data-bs-theme="dark"]),
+:host-context(.dark-mode) {
+  .mat-mdc-row {
+    background: #111827 !important;
+
+    &:nth-child(even) {
+      background: #1a2233 !important;
+    }
+
+    &:hover {
+      background: rgba(99, 102, 241, 0.08) !important;
     }
   }
 }
@@ -141,6 +158,77 @@ $white: #ffffff;
   padding: 0 4px !important;
   width: 36px;
   min-width: 36px;
+}
+
+// ── Colored rows (red / yellow / green) ──────────────────────
+// --row-color is resolved by resolveRowColor() in TS — light pastels in light mode,
+// deep darks in dark mode. Text color is forced to full readable value always.
+.mat-mdc-row[style*='--row-color'] {
+  background: var(--row-color) !important;
+  border-inline-start: 3px solid var(--row-color) !important;
+  transition: background 0.18s ease !important;
+
+  // ── Light mode text ─────────────────────────────────────
+  .mat-mdc-cell {
+    color: #1e293b !important;
+    border-bottom-color: #e2e8f0 !important;
+
+    input[type='number'],
+    input[type='text'],
+    input:not([type]) {
+      color: #1e293b !important;
+    }
+  }
+
+  td:last-child {
+    color: #1e293b !important;
+    font-weight: 700 !important;
+  }
+
+  .amount-display {
+    color: #1e293b !important;
+  }
+
+  &:hover {
+    filter: brightness(0.95) !important;
+  }
+}
+
+// ── Dark mode colored rows — must be at root level to override correctly ──
+:host-context([data-bs-theme="dark"]) .mat-mdc-row[style*='--row-color'],
+:host-context(.dark-mode) .mat-mdc-row[style*='--row-color'] {
+  background: var(--row-color) !important;
+  border-inline-start: 3px solid color-mix(in srgb, var(--row-color) 60%, #38bdf8) !important;
+
+  .mat-mdc-cell {
+    color: #f1f5f9 !important;
+    border-bottom-color: rgba(255, 255, 255, 0.06) !important;
+
+    input[type='number'],
+    input[type='text'],
+    input:not([type]) {
+      color: #f1f5f9 !important;
+      background: transparent !important;
+    }
+  }
+
+  td:last-child {
+    color: #38bdf8 !important;
+    font-weight: 700 !important;
+  }
+
+  .amount-display {
+    color: #f1f5f9 !important;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.08) !important;
+      border-color: rgba(255, 255, 255, 0.15) !important;
+    }
+  }
+
+  &:hover {
+    filter: brightness(1.2) !important;
+  }
 }
 
 .dots-btn {

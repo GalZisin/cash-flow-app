@@ -286,7 +286,7 @@
 
     <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
     <tr mat-row *matRowDef="let row; columns: displayedColumns;"
-      [style]="row.get('rowColor')?.value ? 'background: ' + row.get('rowColor')?.value + ' !important' : ''"></tr>
+      [style]="row.get('rowColor')?.value ? '--row-color: ' + resolveRowColor(row.get('rowColor')?.value) : ''"></tr>
   </table>
   </div>
 </div>

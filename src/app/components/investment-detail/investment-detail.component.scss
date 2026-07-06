@@ -357,3 +357,207 @@
             background: #e2e8f0;
         }
     }
+
+    // ════════════════════════════════════════════════════════════
+    // DARK MODE
+    // ════════════════════════════════════════════════════════════
+    :host-context([data-bs-theme="dark"]),
+    :host-context(.dark-mode) {
+
+        .det-card {
+            background: #111827 !important;
+            border-color: #1e2d45 !important;
+        }
+
+        .det-header {
+            background: #111827 !important;
+        }
+
+        .det-name-bar {
+            background: #111827 !important;
+            border-bottom-color: #1e2d45 !important;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4) !important;
+        }
+
+        .det-name {
+            color: #e5e7eb !important;
+        }
+
+        .badge-type {
+            background: rgba(255, 255, 255, 0.07) !important;
+            color: #94a3b8 !important;
+        }
+
+        .badge-cagr {
+            background: rgba(45, 79, 214, 0.2) !important;
+            color: #93c5fd !important;
+        }
+
+        .badge-xirr {
+            background: rgba(160, 92, 0, 0.2) !important;
+            color: #fcd34d !important;
+        }
+
+        .edit-btn {
+            background: rgba(255, 255, 255, 0.07) !important;
+            color: #94a3b8 !important;
+
+            &:hover {
+                background: rgba(255, 255, 255, 0.12) !important;
+                color: #e5e7eb !important;
+            }
+        }
+
+        // Chart area
+        .chart-wrap {
+            background: #0d1526 !important;
+        }
+
+        // Performance panel
+        .perf-panel {
+            background: #0d1526 !important;
+        }
+
+        .kpi-card {
+            background: #1f2937 !important;
+            border-color: #334155 !important;
+        }
+
+        .kpi-main {
+            background: rgba(99, 102, 241, 0.12) !important;
+            border-color: rgba(99, 102, 241, 0.4) !important;
+        }
+
+        .kpi-label {
+            color: #64748b !important;
+        }
+
+        .kpi-value {
+            color: #e5e7eb !important;
+        }
+
+        .kpi-value.pos {
+            color: #6ee7b7 !important;
+        }
+
+        .kpi-value.neg {
+            color: #fca5a5 !important;
+        }
+
+        .yearly-chart {
+            background: #1f2937 !important;
+            border-color: #334155 !important;
+        }
+
+        // Snapshots / Transactions tables
+        .section-title {
+            color: #64748b !important;
+        }
+
+        .snap-table th {
+            color: #64748b !important;
+            border-bottom-color: #1e2d45 !important;
+        }
+
+        .snap-table td {
+            color: #e5e7eb !important;
+            border-bottom-color: #1e2d45 !important;
+        }
+
+        .snap-table tr:last-child td {
+            border-bottom: none !important;
+        }
+
+        .table-scroll thead th {
+            background: #111827 !important;
+        }
+
+        .pct-pos {
+            color: #6ee7b7 !important;
+        }
+
+        .pct-neg {
+            color: #fca5a5 !important;
+        }
+
+        // Add row
+        .add-row {
+            background: #0d1526 !important;
+            border-top-color: #1e2d45 !important;
+        }
+
+        .divider {
+            border-top-color: #1e2d45 !important;
+        }
+
+        // Badges
+        .badge-deposit {
+            background: rgba(26, 122, 82, 0.2) !important;
+            color: #6ee7b7 !important;
+        }
+
+        .badge-withdraw {
+            background: rgba(220, 38, 38, 0.2) !important;
+            color: #fca5a5 !important;
+        }
+
+        .row-save-btn {
+            background: rgba(26, 122, 82, 0.2) !important;
+            color: #6ee7b7 !important;
+        }
+
+        .row-cancel-btn {
+            background: rgba(255, 255, 255, 0.07) !important;
+            color: #94a3b8 !important;
+        }
+
+        .save-btn {
+            background: rgba(79, 110, 247, 0.2) !important;
+            color: #a5b4fc !important;
+            border: 1px solid rgba(79, 110, 247, 0.35) !important;
+
+            &:hover {
+                background: rgba(79, 110, 247, 0.32) !important;
+            }
+        }
+
+        .del-btn {
+            color: #475569 !important;
+
+            &:hover {
+                background: rgba(220, 38, 38, 0.15) !important;
+                color: #fca5a5 !important;
+            }
+        }
+
+        // Confirm overlays
+        .det-overlay {
+            background: rgba(2, 6, 23, 0.75) !important;
+        }
+
+        .det-confirm-card {
+            background: #1f2937 !important;
+            border: 1px solid #334155 !important;
+        }
+
+        .det-confirm-title {
+            color: #e5e7eb !important;
+        }
+
+        .det-confirm-msg {
+            color: #94a3b8 !important;
+        }
+
+        .btn-cancel-confirm {
+            background: rgba(255, 255, 255, 0.07) !important;
+            color: #94a3b8 !important;
+        }
+
+        // Edit name form
+        .edit-name-input,
+        .edit-type-select {
+            background: #1f2937 !important;
+            border-color: #334155 !important;
+            color: #e5e7eb !important;
+        }
+    }

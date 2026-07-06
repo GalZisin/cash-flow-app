@@ -189,3 +189,133 @@
 .inst-remaining {
     color: #c0392b;
 }
+
+// ════════════════════════════════════════════════════════════
+// DARK MODE
+// ════════════════════════════════════════════════════════════
+:host-context([data-bs-theme="dark"]),
+:host-context(.dark-mode) {
+    .inst-card {
+        background: #111827 !important;
+        border-color: #1e2d45 !important;
+
+        &:hover {
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
+        }
+    }
+
+    .inst-card-name {
+        color: #e5e7eb !important;
+    }
+
+    .inst-icon-btn {
+        background: rgba(255, 255, 255, 0.07) !important;
+        color: #94a3b8 !important;
+    }
+
+    .inst-icon-btn:hover {
+        background: rgba(255, 255, 255, 0.12) !important;
+        color: #e5e7eb !important;
+    }
+
+    .inst-icon-btn-del {
+        background: transparent !important;
+        color: #475569 !important;
+    }
+
+    .inst-icon-btn-del:hover {
+        background: rgba(220, 38, 38, 0.15) !important;
+        color: #fca5a5 !important;
+    }
+
+    .inst-progress-track {
+        background: #1f2937 !important;
+    }
+
+    .inst-pct-label {
+        color: #94a3b8 !important;
+    }
+
+    .inst-months-left {
+        color: #64748b !important;
+    }
+
+    .inst-done-badge {
+        color: #6ee7b7 !important;
+    }
+
+    .inst-amounts {
+        background: #0f172a !important;
+    }
+
+    .inst-amount-cell {
+        background: #111827 !important;
+    }
+
+    .inst-amount-label {
+        color: #64748b !important;
+    }
+
+    .inst-amount-val {
+        color: #e5e7eb !important;
+    }
+
+    .inst-paid {
+        color: #6ee7b7 !important;
+    }
+
+    .inst-remaining {
+        color: #fca5a5 !important;
+    }
+
+    .inst-card-footer {
+        background: #0d1526 !important;
+        border-top-color: #1e2d45 !important;
+        color: #64748b !important;
+    }
+
+    .inst-loans-detail {
+        color: #94a3b8 !important;
+    }
+
+    // History / expandable panels
+    .bg-light {
+        background: #1f2937 !important;
+    }
+
+    .border {
+        border-color: #334155 !important;
+    }
+
+    .text-muted {
+        color: #64748b !important;
+    }
+
+    .text-primary {
+        color: #93c5fd !important;
+    }
+
+    .text-success {
+        color: #6ee7b7 !important;
+    }
+
+    .fw-bold {
+        color: #e5e7eb;
+    }
+
+    // Progress bars inside cards
+    .progress {
+        background: #1e2d45 !important;
+    }
+
+    .inst-history-popup,
+    .inst-history-text {
+        background: #1f2937 !important;
+        border-color: #334155 !important;
+        color: #94a3b8 !important;
+    }
+
+    .border-bottom-dashed {
+        border-bottom-color: #334155 !important;
+    }
+}

@@ -6,6 +6,7 @@ import { InvestmentDashboardComponent } from './components/investment-dashboard/
 import { InstallmentsComponent } from './components/installments/installments.component';
 import { AiAssistantComponent } from './components/ai-assistant/ai-assistant.component';
 import { LanguageService } from './services/language.service';
+import { ThemeService } from './services/theme.service';
 
 @Component({
   selector: 'app-root',
@@ -16,5 +17,5 @@ import { LanguageService } from './services/language.service';
 })
 export class AppComponent {
   activeTab: 'cashflow' | 'investments' | 'installments' | 'ai' = 'cashflow';
-  constructor(public lang: LanguageService) { }
+  constructor(public lang: LanguageService, public theme: ThemeService) { }
 }
