@@ -51,11 +51,11 @@ export class CashFlowTableComponent implements OnInit {
     if (!hexColor) return null;
 
     // Map light hex → { light, dark } pair
-    // Dark values: visible but not too bright — enough contrast for #f1f5f9 text
+    // Dark values: sleek, modern dark tones with subtle glow effect
     const colorMap: Record<string, { light: string; dark: string }> = {
-      '#fee2e2': { light: '#fee2e2', dark: '#3d1a1a' }, // red — dark rose
-      '#fef9c3': { light: '#fef9c3', dark: '#332e10' }, // yellow — dark amber
-      '#dcfce7': { light: '#dcfce7', dark: '#102a1c' }, // green — dark emerald
+      '#fee2e2': { light: '#fee2e2', dark: '#4a1a1a' }, // red — deep crimson with glow
+      '#fef9c3': { light: '#fef9c3', dark: '#3d3418' }, // yellow — warm dark gold
+      '#dcfce7': { light: '#dcfce7', dark: '#0d3320' }, // green — deep forest emerald
     };
 
     const entry = colorMap[hexColor];

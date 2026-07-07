@@ -56,6 +56,35 @@ $white: #ffffff;
       padding: 0 20px;
       height: 42px;
       letter-spacing: 0;
+      transition: all 0.2s ease;
+
+      &:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+    }
+  }
+}
+
+// ── Dark mode background ──
+:host-context([data-bs-theme="dark"]),
+:host-context(.dark-mode) {
+  .cash-flow-table {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+
+    .actions button {
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      backdrop-filter: blur(10px);
+
+      &:hover {
+        box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3),
+          0 0 20px rgba(99, 102, 241, 0.2);
+        border-color: rgba(99, 102, 241, 0.5);
+      }
     }
   }
 }
@@ -64,6 +93,21 @@ $white: #ffffff;
   width: 100%;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.07) !important;
   font-family: 'Heebo', sans-serif !important;
+  border-radius: 12px;
+  overflow: hidden;
+  animation: fadeInUp 0.4s ease-out;
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 
   .mat-mdc-header-row {
     background: $primary;
@@ -82,7 +126,7 @@ $white: #ffffff;
 
   .mat-mdc-row {
     background: $white;
-    transition: background 0.15s;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 
     &:nth-child(even) {
       background: #f1f5f9;
@@ -136,19 +180,44 @@ $white: #ffffff;
   }
 }
 
-// ── Dark mode zebra stripes ───────────────────────────────────
+// ── Dark mode table styling with glass effect ──
+:host-context([data-bs-theme="dark"]),
+:host-context(.dark-mode) {
+  .mat-mdc-table {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4),
+      0 0 1px rgba(99, 102, 241, 0.2) !important;
+    background: rgba(17, 24, 39, 0.6);
+    backdrop-filter: blur(10px);
+
+    .mat-mdc-header-row {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.9) 0%, rgba(79, 70, 229, 0.8) 100%);
+      box-shadow: 0 2px 10px rgba(99, 102, 241, 0.3);
+
+      .mat-mdc-header-cell {
+        color: #fff;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+      }
+    }
+  }
+}
+
+// ── Dark mode zebra stripes with sleek glass effect ───────────
 // Must be at :host-context level to override the locally-scoped light styles above
 :host-context([data-bs-theme="dark"]),
 :host-context(.dark-mode) {
   .mat-mdc-row {
-    background: #111827 !important;
+    background: rgba(17, 24, 39, 0.9) !important;
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(99, 102, 241, 0.1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
     &:nth-child(even) {
-      background: #1a2233 !important;
+      background: rgba(26, 34, 51, 0.9) !important;
     }
 
     &:hover {
-      background: rgba(99, 102, 241, 0.08) !important;
+      background: rgba(99, 102, 241, 0.15) !important;
+      box-shadow: 0 4px 20px rgba(99, 102, 241, 0.25);
     }
   }
 }
@@ -165,8 +234,8 @@ $white: #ffffff;
 // deep darks in dark mode. Text color is forced to full readable value always.
 .mat-mdc-row[style*='--row-color'] {
   background: var(--row-color) !important;
-  border-inline-start: 3px solid var(--row-color) !important;
-  transition: background 0.18s ease !important;
+  box-shadow: inset 4px 0 0 0 var(--row-color) !important; // משתמש ב-box-shadow במקום border
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
 
   // ── Light mode text ─────────────────────────────────────
   .mat-mdc-cell {
@@ -194,54 +263,87 @@ $white: #ffffff;
   }
 }
 
-// ── Dark mode colored rows — must be at root level to override correctly ──
+// ── Dark mode colored rows with sleek glass effect ──
 :host-context([data-bs-theme="dark"]) .mat-mdc-row[style*='--row-color'],
 :host-context(.dark-mode) .mat-mdc-row[style*='--row-color'] {
   background: var(--row-color) !important;
-  border-inline-start: 3px solid color-mix(in srgb, var(--row-color) 60%, #38bdf8) !important;
+  box-shadow: inset 4px 0 0 0 color-mix(in srgb, var(--row-color) 70%, #60a5fa),
+    0 2px 10px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+  backdrop-filter: blur(12px) saturate(1.8);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
   .mat-mdc-cell {
     color: #f1f5f9 !important;
-    border-bottom-color: rgba(255, 255, 255, 0.06) !important;
+    border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 
     input[type='number'],
     input[type='text'],
     input:not([type]) {
       color: #f1f5f9 !important;
-      background: transparent !important;
+      background: rgba(0, 0, 0, 0.15) !important;
+      border: 1px solid rgba(255, 255, 255, 0.1) !important;
+      transition: all 0.2s ease;
+
+      &:focus {
+        background: rgba(0, 0, 0, 0.25) !important;
+        border-color: rgba(96, 165, 250, 0.5) !important;
+        box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+      }
     }
   }
 
   td:last-child {
-    color: #38bdf8 !important;
+    color: #60a5fa !important;
     font-weight: 700 !important;
+    text-shadow: 0 0 10px rgba(96, 165, 250, 0.3);
   }
 
   .amount-display {
     color: #f1f5f9 !important;
+    transition: all 0.2s ease;
 
     &:hover {
-      background: rgba(255, 255, 255, 0.08) !important;
-      border-color: rgba(255, 255, 255, 0.15) !important;
+      background: rgba(255, 255, 255, 0.12) !important;
+      border-color: rgba(255, 255, 255, 0.2) !important;
+      transform: scale(1.02);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     }
   }
 
   &:hover {
-    filter: brightness(1.2) !important;
+    filter: brightness(1.15) !important;
+    box-shadow: inset 4px 0 0 0 color-mix(in srgb, var(--row-color) 70%, #60a5fa),
+      0 4px 20px rgba(0, 0, 0, 0.3),
+      0 0 30px color-mix(in srgb, var(--row-color) 30%, transparent),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
   }
 }
 
 .dots-btn {
   opacity: 0.3;
-  transition: opacity 0.2s;
+  transition: all 0.2s ease;
 
   &:hover {
     opacity: 1;
+    transform: scale(1.1);
   }
 }
 
 .mat-mdc-row:hover .dots-btn {
   opacity: 0.8;
+}
+
+// ── Dark mode dots button ──
+:host-context([data-bs-theme="dark"]),
+:host-context(.dark-mode) {
+  .dots-btn {
+    &:hover {
+      background: rgba(99, 102, 241, 0.2);
+      box-shadow: 0 0 10px rgba(99, 102, 241, 0.3);
+    }
+  }
 }
 
 .amount-display {
@@ -251,11 +353,36 @@ $white: #ffffff;
   padding: 4px 8px;
   border-radius: 6px;
   border: 1px solid transparent;
-  transition: border 0.15s, background 0.15s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 
   &:hover {
     border-color: $border;
     background: $white;
+    transform: scale(1.02);
+  }
+}
+
+.amount-display-read-only {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+// ── Dark mode amount displays ──
+:host-context([data-bs-theme="dark"]),
+:host-context(.dark-mode) {
+  .amount-display {
+    &:hover {
+      background: rgba(99, 102, 241, 0.15) !important;
+      border-color: rgba(99, 102, 241, 0.3) !important;
+      box-shadow: 0 0 10px rgba(99, 102, 241, 0.2);
+    }
+  }
+
+  .amount-display-read-only {
+    background: rgba(96, 165, 250, 0.1);
+    color: #60a5fa;
   }
 }
 
@@ -284,6 +411,7 @@ $white: #ffffff;
   border-radius: 12px;
   background: $white;
   direction: rtl;
+  transition: all 0.2s ease;
 
   .expense-row {
     margin-bottom: 8px;
@@ -292,6 +420,38 @@ $white: #ffffff;
   app-expense-category-selector {
     display: block;
     min-width: 280px;
+  }
+
+  &:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+}
+
+// ── Dark mode expense blocks with glass effect ──
+:host-context([data-bs-theme="dark"]),
+:host-context(.dark-mode) {
+  .expense-item-block {
+    background: rgba(17, 24, 39, 0.6);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+
+    &:hover {
+      box-shadow: 0 4px 20px rgba(99, 102, 241, 0.2);
+      border-color: rgba(99, 102, 241, 0.4);
+      transform: translateY(-1px);
+    }
+
+    input {
+      background: rgba(0, 0, 0, 0.3) !important;
+      border: 1px solid rgba(99, 102, 241, 0.3) !important;
+      color: #f1f5f9 !important;
+
+      &:focus {
+        border-color: rgba(96, 165, 250, 0.6) !important;
+        box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+      }
+    }
   }
 }
 
@@ -305,6 +465,11 @@ $white: #ffffff;
   background: rgba(0, 0, 0, 0.04);
   border-radius: 4px;
   cursor: help;
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: scale(1.05);
+  }
 }
 
 .mini-bar {
@@ -332,10 +497,103 @@ $white: #ffffff;
 
 // Danger red
 
+// ── Dark mode mini-charts with glow ──
+:host-context([data-bs-theme="dark"]),
+:host-context(.dark-mode) {
+  .mini-chart-container {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    backdrop-filter: blur(5px);
+
+    &:hover {
+      box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);
+      border-color: rgba(99, 102, 241, 0.4);
+    }
+  }
+
+  .income-bar {
+    background: linear-gradient(90deg, #10b981 0%, #34d399 100%);
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+  }
+
+  .expense-bar {
+    background: linear-gradient(90deg, #ef4444 0%, #f87171 100%);
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
+  }
+
+  .savings-bar {
+    background: linear-gradient(90deg, #60a5fa 0%, #93c5fd 100%);
+    box-shadow: 0 0 8px rgba(96, 165, 250, 0.5);
+  }
+}
+
 .mat-mdc-button,
 .mdc-button {
   font-family: 'Heebo', sans-serif !important;
   letter-spacing: 0 !important;
+}
+
+// ── Badge styling ──
+.badge {
+  transition: all 0.2s ease;
+
+  &.expense-count-badge {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 4px 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+    &:hover {
+      transform: scale(1.05);
+    }
+  }
+
+  &.bg-success {
+    background: linear-gradient(135deg, #10b981 0%, #34d399 100%) !important;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+  }
+
+  &.bg-primary {
+    background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%) !important;
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
+  }
+
+  &.bg-warning {
+    background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%) !important;
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+  }
+}
+
+// ── Dark mode badges with glow ──
+:host-context([data-bs-theme="dark"]),
+:host-context(.dark-mode) {
+  .badge {
+    &.expense-count-badge {
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    &.bg-success {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.3) 0%, rgba(52, 211, 153, 0.3) 100%) !important;
+      box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+      color: #6ee7b7 !important;
+      border-color: rgba(16, 185, 129, 0.4);
+    }
+
+    &.bg-primary {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.3) 0%, rgba(79, 70, 229, 0.3) 100%) !important;
+      box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
+      color: #a5b4fc !important;
+      border-color: rgba(99, 102, 241, 0.4);
+    }
+
+    &.bg-warning {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.3) 0%, rgba(251, 191, 36, 0.3) 100%) !important;
+      box-shadow: 0 0 15px rgba(245, 158, 11, 0.4);
+      color: #fcd34d !important;
+      border-color: rgba(245, 158, 11, 0.4);
+    }
+  }
 }
 
 .print-only {
@@ -419,6 +677,7 @@ $white: #ffffff;
 .cf-overlay {
   background: rgba(15, 23, 42, 0.5);
   z-index: 1050;
+  backdrop-filter: blur(8px);
 }
 
 .cf-confirm-card {
@@ -426,6 +685,11 @@ $white: #ffffff;
   border: none;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
   min-width: 300px;
+  transition: transform 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+  }
 }
 
 .cf-confirm-icon {
@@ -443,6 +707,31 @@ $white: #ffffff;
   font-size: 0.875rem;
 }
 
+// ── Dark mode confirmation dialog ──
+:host-context([data-bs-theme="dark"]),
+:host-context(.dark-mode) {
+  .cf-overlay {
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(12px);
+  }
+
+  .cf-confirm-card {
+    background: linear-gradient(135deg, rgba(17, 24, 39, 0.95) 0%, rgba(30, 41, 59, 0.95) 100%);
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5),
+      0 0 1px rgba(99, 102, 241, 0.5);
+    backdrop-filter: blur(20px);
+  }
+
+  .cf-confirm-title {
+    color: #f1f5f9;
+  }
+
+  .cf-confirm-msg {
+    color: #94a3b8;
+  }
+}
+
 // Defaults dialog
 .cf-defaults-card {
   border-radius: 16px;
@@ -454,6 +743,7 @@ $white: #ffffff;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  transition: transform 0.2s ease;
 }
 
 .cf-defaults-header {
@@ -497,4 +787,72 @@ $white: #ffffff;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   color: #94a3b8;
+}
+
+// ── Dark mode defaults dialog with glass effect ──
+:host-context([data-bs-theme="dark"]),
+:host-context(.dark-mode) {
+  .cf-defaults-card {
+    background: linear-gradient(135deg, rgba(17, 24, 39, 0.95) 0%, rgba(30, 41, 59, 0.95) 100%);
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6),
+      0 0 1px rgba(99, 102, 241, 0.5);
+    backdrop-filter: blur(20px);
+  }
+
+  .cf-defaults-header {
+    border-bottom: 1px solid rgba(99, 102, 241, 0.2);
+    background: rgba(99, 102, 241, 0.05);
+  }
+
+  .cf-defaults-title {
+    color: #f1f5f9;
+  }
+
+  .cf-defaults-body {
+
+    // Custom scrollbar for dark mode
+    &::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 4px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: rgba(99, 102, 241, 0.4);
+      border-radius: 4px;
+
+      &:hover {
+        background: rgba(99, 102, 241, 0.6);
+      }
+    }
+
+    input.form-control {
+      background: rgba(0, 0, 0, 0.3) !important;
+      border: 1px solid rgba(99, 102, 241, 0.3) !important;
+      color: #f1f5f9 !important;
+
+      &:focus {
+        border-color: rgba(96, 165, 250, 0.6) !important;
+        box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+        background: rgba(0, 0, 0, 0.4) !important;
+      }
+    }
+  }
+
+  .cf-defaults-footer {
+    border-top: 1px solid rgba(99, 102, 241, 0.2);
+    background: rgba(99, 102, 241, 0.05);
+  }
+
+  .cf-field-label {
+    color: #94a3b8;
+  }
+
+  .cf-section-title {
+    color: #60a5fa;
+  }
 }
