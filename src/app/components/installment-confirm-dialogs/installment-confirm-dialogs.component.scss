@@ -38,3 +38,58 @@
         background: #b91c1c;
     }
 }
+
+// ════════════════════════════════════════════════════════════
+// DARK MODE
+// ════════════════════════════════════════════════════════════
+:host-context([data-bs-theme="dark"]),
+:host-context(.dark-mode) {
+    .inst-confirm-card {
+        background: #1f2937 !important;
+        border: 1px solid #334155 !important;
+        box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6) !important;
+    }
+
+    .inst-confirm-title {
+        color: #e5e7eb !important;
+    }
+
+    .inst-confirm-msg {
+        color: #94a3b8 !important;
+    }
+
+    .inst-btn-delete {
+        background: #dc2626 !important;
+
+        &:hover {
+            background: #b91c1c !important;
+        }
+    }
+
+    // Form controls in dialog
+    .form-control {
+        background: #111827 !important;
+        border-color: #334155 !important;
+        color: #e5e7eb !important;
+
+        &:focus {
+            background: #0f172a !important;
+            border-color: #6366f1 !important;
+        }
+    }
+
+    .form-label {
+        color: #94a3b8 !important;
+    }
+
+    .text-muted {
+        color: #64748b !important;
+    }
+
+    // Input group for percentage
+    .input-group-text {
+        background: #111827 !important;
+        border-color: #334155 !important;
+        color: #94a3b8 !important;
+    }
+}

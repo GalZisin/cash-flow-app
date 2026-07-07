@@ -33,3 +33,25 @@
         background: #3b5bdb;
     }
 }
+
+// ════════════════════════════════════════════════════════════
+// DARK MODE
+// ════════════════════════════════════════════════════════════
+:host-context([data-bs-theme="dark"]),
+:host-context(.dark-mode) {
+    .inst-empty-icon {
+        color: #64748b !important;
+    }
+
+    .inst-empty-text {
+        color: #94a3b8 !important;
+    }
+
+    .inst-add-btn {
+        background: #6366f1 !important;
+
+        &:hover {
+            background: #4f46e5 !important;
+        }
+    }
+}

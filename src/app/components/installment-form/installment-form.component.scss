@@ -44,3 +44,161 @@
     border-color: #1e293b;
     box-shadow: 0 0 0 2px #fff inset;
 }
+
+// ════════════════════════════════════════════════════════════
+// DARK MODE
+// ════════════════════════════════════════════════════════════
+:host-context([data-bs-theme="dark"]),
+:host-context(.dark-mode) {
+    .inst-overlay {
+        background: rgba(2, 6, 23, 0.75) !important;
+    }
+
+    .inst-dialog {
+        background: #1f2937 !important;
+        border: 1px solid #334155 !important;
+        box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6) !important;
+    }
+
+    .inst-dialog-header {
+        border-bottom-color: #334155 !important;
+    }
+
+    .inst-dialog-title {
+        color: #e5e7eb !important;
+    }
+
+    .inst-close-btn {
+        color: #64748b !important;
+
+        &:hover {
+            background: rgba(255, 255, 255, 0.06) !important;
+            color: #94a3b8 !important;
+        }
+    }
+
+    .inst-dialog-footer {
+        background: #111827 !important;
+        border-top-color: #334155 !important;
+    }
+
+    .inst-label {
+        color: #94a3b8 !important;
+    }
+
+    .inst-calc-hint {
+        background: rgba(99, 102, 241, 0.12) !important;
+        border-color: rgba(99, 102, 241, 0.3) !important;
+        color: #a5b4fc !important;
+    }
+
+    // Form controls
+    .form-control,
+    .form-select {
+        background: #111827 !important;
+        border-color: #334155 !important;
+        color: #e5e7eb !important;
+
+        &:focus {
+            background: #0f172a !important;
+            border-color: #6366f1 !important;
+            color: #e5e7eb !important;
+        }
+
+        &::placeholder {
+            color: #64748b !important;
+        }
+    }
+
+    // Radio buttons + labels
+    .form-check-input {
+        background: #111827 !important;
+        border-color: #334155 !important;
+
+        &:checked {
+            background: #6366f1 !important;
+            border-color: #6366f1 !important;
+        }
+    }
+
+    .form-check-label {
+        color: #e5e7eb !important;
+    }
+
+    // Input group (percentage suffix)
+    .input-group-text {
+        background: #111827 !important;
+        border-color: #334155 !important;
+        color: #94a3b8 !important;
+    }
+
+    // Error states
+    .text-danger {
+        color: #fca5a5 !important;
+    }
+
+    .border-danger {
+        border-color: #dc2626 !important;
+    }
+
+    .input-error-state {
+        background: rgba(220, 38, 38, 0.08) !important;
+    }
+
+    // Loan / Milestone grid section headers
+    .inst-loan-header-row {
+        color: #64748b !important;
+    }
+
+    .text-muted {
+        color: #64748b !important;
+    }
+
+    // Bordered loan/milestone rows
+    .border {
+        border-color: #334155 !important;
+        background: rgba(255, 255, 255, 0.02) !important;
+    }
+
+    .bg-light {
+        background: rgba(255, 255, 255, 0.02) !important;
+    }
+
+    // Color picker
+    .inst-color-dot-active {
+        border-color: #e5e7eb !important;
+    }
+
+    // Buttons
+    .inst-btn-cancel {
+        background: rgba(255, 255, 255, 0.07) !important;
+        color: #94a3b8 !important;
+
+        &:hover {
+            background: rgba(255, 255, 255, 0.12) !important;
+            color: #e5e7eb !important;
+        }
+    }
+
+    .btn-outline-primary {
+        border-color: rgba(99, 102, 241, 0.4) !important;
+        color: #a5b4fc !important;
+
+        &:hover {
+            background: rgba(99, 102, 241, 0.15) !important;
+        }
+    }
+
+    .btn-link.text-danger {
+        color: #fca5a5 !important;
+
+        &:hover {
+            color: #f87171 !important;
+        }
+    }
+
+    // Error message row
+    .text-danger.fw-bold {
+        color: #fca5a5 !important;
+    }
+}
