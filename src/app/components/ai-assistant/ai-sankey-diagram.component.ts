@@ -1,8 +1,7 @@
 import { Component, Input, OnChanges, SimpleChanges, ViewChild, ElementRef, AfterViewInit, signal, HostListener, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 import { ThemeService } from '../../services/theme.service'; // Import ThemeService
-import { ReactiveFormsModule, FormControl } from '@angular/forms'; // Import ReactiveFormsModule and FormControl
+import { FormControl, ReactiveFormsModule } from '@angular/forms'; // Import FormControl and ReactiveFormsModule
 
 import * as d3 from 'd3';
 import { sankey, sankeyLinkHorizontal, SankeyGraph, SankeyNode, SankeyLink } from 'd3-sankey';
@@ -25,7 +24,7 @@ interface SankeyLinkData {
 @Component({
   selector: 'app-ai-sankey-diagram',
   standalone: true,
-  imports: [CommonModule, TranslateModule, ReactiveFormsModule], // Add ReactiveFormsModule
+  imports: [TranslateModule, ReactiveFormsModule], // Keep ReactiveFormsModule for [formControl]
   // providers: [TranslateService] // TranslateService is provided in root, no need here
   templateUrl: './ai-sankey-diagram.component.html',
   styleUrl: './ai-sankey-diagram.component.scss'
@@ -56,7 +55,7 @@ export class AiSankeyDiagramComponent implements OnChanges, AfterViewInit {
     if (!this.cashFlowMonths || this.cashFlowMonths.length === 0) {
       return null;
     }
-    
+
     const first = this.cashFlowMonths[0];
     const last = this.cashFlowMonths[this.cashFlowMonths.length - 1];
 
@@ -72,8 +71,8 @@ export class AiSankeyDiagramComponent implements OnChanges, AfterViewInit {
     const totalSavings = this.cashFlowMonths.reduce((sum, m) => sum + (m.savings || 0), 0);
 
     return {
-      month: this.cashFlowMonths.length > 1 
-        ? `${first.month.substring(0, 7)} - ${last.month.substring(0, 7)}` 
+      month: this.cashFlowMonths.length > 1
+        ? `${first.month.substring(0, 7)} - ${last.month.substring(0, 7)}`
         : first.month.substring(0, 7),
       startingBalance: first.startingBalance,
       income: totalIncome, // This is the sum of base income + additional incomes
@@ -163,7 +162,7 @@ export class AiSankeyDiagramComponent implements OnChanges, AfterViewInit {
     const totalSpecialExpenses = data.specialExpenses?.reduce((s, e) => s + e.amount, 0) || 0; // Sum of special expenses
     const totalSavings = data.savings || 0;
     const currentEndingBalance = data.endingBalance;
-    
+
     // Define nodes
     const nodes: SankeyNodeData[] = [
       { id: 'startingBalance', name: 'יתרה התחלתית' },
@@ -177,7 +176,7 @@ export class AiSankeyDiagramComponent implements OnChanges, AfterViewInit {
       { id: 'savings', name: 'חיסכון' },
       { id: 'endingBalance', name: 'יתרה בסוף חודש' },
     ];
-    
+
     // Add a node for 'totalExpenses' to group all expense categories
     // This helps in balancing the Sankey if totalAvailable is directly linked to totalExpenses
     // nodes.push({ id: 'totalExpenses', name: 'סה"כ הוצאות' });
@@ -213,7 +212,7 @@ export class AiSankeyDiagramComponent implements OnChanges, AfterViewInit {
     if (totalSpecialExpenses > 0) {
       links.push({ source: 'totalAvailable', target: 'specialExpenses', value: Math.max(0, totalSpecialExpenses) });
     }
-    
+
     // Flow from Total Available to Savings and Ending Balance
     if (totalSavings > 0) {
       links.push({ source: 'totalAvailable', target: 'savings', value: Math.max(0, totalSavings) });

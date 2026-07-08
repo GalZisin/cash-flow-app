@@ -154,7 +154,7 @@ $dk-focus-ring: rgba(56, 189, 248, 0.35);
 
         &:focus {
           border-color: $dk-accent !important;
-          background: darken(#1f2937, 2%) !important;
+          background: color-mix(in srgb, #1f2937 98%, black) !important;
           box-shadow: 0 0 0 3px $dk-focus-ring !important;
           outline: none !important;
         }
@@ -298,6 +298,7 @@ $dk-focus-ring: rgba(56, 189, 248, 0.35);
     // ── Confirmation overlay ────────────────────────────────
     .cf-overlay {
       background: rgba(2, 6, 23, 0.75) !important;
+      -webkit-backdrop-filter: blur(4px);
       backdrop-filter: blur(4px);
     }
 

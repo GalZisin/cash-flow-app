@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { TranslateModule } from '@ngx-translate/core';
 import { CashFlowTableComponent } from './components/cash-flow-table/cash-flow-table.component';
 import { InvestmentDashboardComponent } from './components/investment-dashboard/investment-dashboard.component';
@@ -11,7 +11,7 @@ import { ThemeService } from './services/theme.service';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, TranslateModule, CashFlowTableComponent, InvestmentDashboardComponent, InstallmentsComponent, AiAssistantComponent],
+  imports: [TranslateModule, CashFlowTableComponent, InvestmentDashboardComponent, InstallmentsComponent, AiAssistantComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })

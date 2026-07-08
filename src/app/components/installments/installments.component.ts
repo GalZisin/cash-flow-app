@@ -1,5 +1,5 @@
 import { Component, OnInit, ChangeDetectorRef, signal, computed, ChangeDetectionStrategy, inject, DestroyRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
@@ -51,20 +51,19 @@ const EMPTY_FORM = (): Omit<Installment, 'id'> => ({
     standalone: true,
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
-        CommonModule,
-        FormsModule,
-        TranslateModule,
-        MatTooltipModule,
-        MatIconModule,
-        MatButtonModule,
-        MatSnackBarModule,
-        InstallmentsHeaderComponent,
-        InstallmentConfirmDialogsComponent,
-        InstallmentFormComponent,
-        InstallmentCardComponent,
-        InstallmentsEmptyStateComponent,
-        InstallmentsTableComponent
-    ],
+    FormsModule,
+    TranslateModule,
+    MatTooltipModule,
+    MatIconModule,
+    MatButtonModule,
+    MatSnackBarModule,
+    InstallmentsHeaderComponent,
+    InstallmentConfirmDialogsComponent,
+    InstallmentFormComponent,
+    InstallmentCardComponent,
+    InstallmentsEmptyStateComponent,
+    InstallmentsTableComponent
+],
     templateUrl: './installments.component.html',
     styleUrl: './installments.component.scss'
 })

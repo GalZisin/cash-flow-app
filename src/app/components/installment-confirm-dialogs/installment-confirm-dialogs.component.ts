@@ -1,5 +1,5 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { CashFlowWarning, Installment } from '../../models/installment.model';
@@ -8,7 +8,7 @@ import { CashFlowWarning, Installment } from '../../models/installment.model';
 @Component({
   selector: 'app-installment-confirm-dialogs',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule],
+  imports: [FormsModule, TranslateModule],
   templateUrl: './installment-confirm-dialogs.component.html',
   styleUrl: './installment-confirm-dialogs.component.scss'
 })

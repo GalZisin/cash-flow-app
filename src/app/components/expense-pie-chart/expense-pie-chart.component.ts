@@ -2,7 +2,7 @@ import {
   Component, Input, OnChanges, SimpleChanges, AfterViewInit,
   ViewChild, ElementRef, HostListener, inject, ChangeDetectionStrategy
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { MatIconModule } from '@angular/material/icon';
@@ -17,7 +17,7 @@ import { getExpenseCategoryConfig } from '../../models/expense-category.model';
   selector: 'app-expense-pie-chart',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, TranslateModule, MatIconModule],
+  imports: [FormsModule, TranslateModule, MatIconModule],
   templateUrl: './expense-pie-chart.component.html',
   styleUrl: './expense-pie-chart.component.scss',
 })

@@ -17,435 +17,497 @@
   </div>
 
   <div class="table-container">
-  <table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
+    <table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
 
-    <!-- Row Color Actions -->
-    <ng-container matColumnDef="rowActions">
-      <th mat-header-cell *matHeaderCellDef class="no-print"></th>
-      <td mat-cell *matCellDef="let monthCtrl; let i = index" class="row-actions-cell no-print">
-        <button mat-icon-button [matMenuTriggerFor]="colorMenu" [title]="'CASH_FLOW.ROW_ACTIONS' | translate"
-          [matTooltip]="'CASH_FLOW.ROW_ACTIONS' | translate" [attr.aria-label]="'CASH_FLOW.ROW_ACTIONS' | translate"
-          (click)="activeRowCtrl = monthCtrl; activeRowIndex = i" class="dots-btn">
-          <mat-icon>more_vert</mat-icon>
-        </button>
-      </td>
-    </ng-container>
+      <!-- Row Color Actions -->
+      <ng-container matColumnDef="rowActions">
+        <th mat-header-cell *matHeaderCellDef class="no-print"></th>
+        <td mat-cell *matCellDef="let monthCtrl; let i = index" class="row-actions-cell no-print">
+          <button mat-icon-button [matMenuTriggerFor]="colorMenu" [title]="'CASH_FLOW.ROW_ACTIONS' | translate"
+            [matTooltip]="'CASH_FLOW.ROW_ACTIONS' | translate" [attr.aria-label]="'CASH_FLOW.ROW_ACTIONS' | translate"
+            (click)="activeRowCtrl = monthCtrl; activeRowIndex = i" class="dots-btn">
+            <mat-icon>more_vert</mat-icon>
+          </button>
+        </td>
+      </ng-container>
 
-    <!-- Month Column -->
-    <ng-container matColumnDef="month">
-      <th mat-header-cell *matHeaderCellDef> {{ 'CASH_FLOW.MONTH' | translate }} </th>
-      <td mat-cell *matCellDef="let monthCtrl; let i = index">
-        {{ monthCtrl.get('month')?.value | date:'MMMM yyyy':'':'he' }}
-      </td>
-    </ng-container>
+      <!-- Month Column -->
+      <ng-container matColumnDef="month">
+        <th mat-header-cell *matHeaderCellDef> {{ 'CASH_FLOW.MONTH' | translate }} </th>
+        <td mat-cell *matCellDef="let monthCtrl; let i = index">
+          {{ monthCtrl.get('month')?.value | date:'MMMM yyyy':'':'he' }}
+        </td>
+      </ng-container>
 
-    <!-- Starting Balance -->
-    <ng-container matColumnDef="startingBalance">
-      <th mat-header-cell *matHeaderCellDef> {{ 'CASH_FLOW.STARTING_BALANCE' | translate }} </th>
-      <td mat-cell *matCellDef="let monthCtrl; let i = index">
-        <span *ngIf="i > 0">{{ monthCtrl.get('startingBalance')?.value | number:'1.0-0' }} ₪</span>
-        <ng-container *ngIf="i === 0">
-          <span *ngIf="!focusedField['startingBalance_' + i]" class="amount-display" (click)="focusField('startingBalance_' + i)">
-            {{ monthCtrl.get('startingBalance')?.value | number:'1.0-0' }} ₪
-          </span>
-          <input *ngIf="focusedField['startingBalance_' + i]" matInput type="number" dir="rtl"
-            placeholder="יתרה בתחילת החודש" title="יתרה בתחילת החודש" aria-label="יתרה בתחילת החודש"
-            [formControl]="monthCtrl.get('startingBalance')"
-            (input)="calculateEndingBalances()"
-            (blur)="blurField('startingBalance_' + i)"
-            [attr.data-focus-key]="'startingBalance_' + i" />
-        </ng-container>
-      </td>
-    </ng-container>
+      <!-- Starting Balance -->
+      <ng-container matColumnDef="startingBalance">
+        <th mat-header-cell *matHeaderCellDef> {{ 'CASH_FLOW.STARTING_BALANCE' | translate }} </th>
+        <td mat-cell *matCellDef="let monthCtrl; let i = index">
+          @if (i > 0) {
+            <span>{{ monthCtrl.get('startingBalance')?.value | number:'1.0-0' }} ₪</span>
+          }
+          @if (i === 0) {
+            @if (!focusedField['startingBalance_' + i]) {
+              <span class="amount-display" (click)="focusField('startingBalance_' + i)">
+                {{ monthCtrl.get('startingBalance')?.value | number:'1.0-0' }} ₪
+              </span>
+            }
+            @if (focusedField['startingBalance_' + i]) {
+              <input matInput type="number" dir="rtl"
+                placeholder="יתרה בתחילת החודש" title="יתרה בתחילת החודש" aria-label="יתרה בתחילת החודש"
+                [formControl]="monthCtrl.get('startingBalance')"
+                (input)="calculateEndingBalances()"
+                (blur)="blurField('startingBalance_' + i)"
+                [attr.data-focus-key]="'startingBalance_' + i" />
+            }
+          }
+        </td>
+      </ng-container>
 
-    <!-- Income -->
-    <ng-container matColumnDef="income">
-      <th mat-header-cell *matHeaderCellDef> {{ 'CASH_FLOW.INCOME' | translate }} </th>
-      <td mat-cell *matCellDef="let monthCtrl; let i = index">
-        <span *ngIf="!focusedField['income_' + i]" class="amount-display" (click)="focusField('income_' + i)">
-          {{ monthCtrl.get('income')?.value | number:'1.0-0' }} ₪
-        </span>
-        <input *ngIf="focusedField['income_' + i]" matInput type="number" dir="rtl"
-          placeholder="הכנסות" title="הכנסות" aria-label="הכנסות"
-          [formControl]="monthCtrl.get('income')"
-          (input)="calculateEndingBalances()"
-          (blur)="blurField('income_' + i)"
-          [attr.data-focus-key]="'income_' + i" />
-      </td>
-    </ng-container>
-
-    <!-- Additional Incomes (Expandable) -->
-    <ng-container matColumnDef="additionalIncomes">
-      <th mat-header-cell *matHeaderCellDef> {{ 'CASH_FLOW.ADDITIONAL_INCOMES' | translate }} </th>
-      <td mat-cell *matCellDef="let monthCtrl; let i = index">
-        <button mat-icon-button class="no-print" (click)="monthCtrl.get('expandedAdditionalIncomes')?.setValue(!monthCtrl.get('expandedAdditionalIncomes')?.value)"
-          [title]="(monthCtrl.get('expandedAdditionalIncomes')?.value ? 'INVESTMENTS.COLLAPSE' : 'INVESTMENTS.EXPAND') | translate"
-          [matTooltip]="(monthCtrl.get('expandedAdditionalIncomes')?.value ? 'INVESTMENTS.COLLAPSE' : 'INVESTMENTS.EXPAND') | translate"
-          [attr.aria-label]="(monthCtrl.get('expandedAdditionalIncomes')?.value ? 'INVESTMENTS.COLLAPSE' : 'INVESTMENTS.EXPAND') | translate">
-          <mat-icon>{{ monthCtrl.get('expandedAdditionalIncomes')?.value ? 'expand_less' : 'expand_more' }}</mat-icon>
-        </button>
-        @if (!monthCtrl.get('expandedAdditionalIncomes')?.value && getAdditionalIncomes(i).length > 0) {
-          <span class="no-print badge rounded-pill bg-success ms-1 expense-count-badge align-top" [matTooltip]="'CASH_FLOW.ADDITIONAL_INCOMES_TOTAL' | translate">
-            {{ getAdditionalIncomes(i).length }} | {{ getAdditionalIncomesSum(i) | number:'1.0-0' }} ₪
-          </span>
-        }
-
-        <div *ngIf="monthCtrl.get('expandedAdditionalIncomes')?.value" class="no-print">
-          <div *ngFor="let expCtrl of getAdditionalIncomes(i).controls; let j=index" class="expense-row">
-            <input dir="rtl" placeholder="תיאור" title="תיאור" aria-label="תיאור" [formControl]="getAdditionalIncomeDescription(i, j)" />
-            <span *ngIf="!focusedField['add_inc_' + i + '_' + j]" class="amount-display" (click)="focusField('add_inc_' + i + '_' + j)">
-              {{ getAdditionalIncomeAmount(i, j).value | number:'1.0-0' }} ₪
+      <!-- Income -->
+      <ng-container matColumnDef="income">
+        <th mat-header-cell *matHeaderCellDef> {{ 'CASH_FLOW.INCOME' | translate }} </th>
+        <td mat-cell *matCellDef="let monthCtrl; let i = index">
+          @if (!focusedField['income_' + i]) {
+            <span class="amount-display" (click)="focusField('income_' + i)">
+              {{ monthCtrl.get('income')?.value | number:'1.0-0' }} ₪
             </span>
-            <input *ngIf="focusedField['add_inc_' + i + '_' + j]" type="number" dir="rtl"
-              placeholder="סכום" title="סכום" aria-label="סכום"
-              [formControl]="getAdditionalIncomeAmount(i, j)"
+          }
+          @if (focusedField['income_' + i]) {
+            <input matInput type="number" dir="rtl"
+              placeholder="הכנסות" title="הכנסות" aria-label="הכנסות"
+              [formControl]="monthCtrl.get('income')"
               (input)="calculateEndingBalances()"
-              (blur)="blurField('add_inc_' + i + '_' + j)"
-              [attr.data-focus-key]="'add_inc_' + i + '_' + j" />
-            <button mat-icon-button color="warn" (click)="confirmDeleteExpense(i, j, 'additionalIncome')"
-              [title]="'INSTALLMENTS.DELETE' | translate" [matTooltip]="'INSTALLMENTS.DELETE' | translate" [attr.aria-label]="'INSTALLMENTS.DELETE' | translate">
-              <mat-icon>delete</mat-icon>
-            </button>
+              (blur)="blurField('income_' + i)"
+              [attr.data-focus-key]="'income_' + i" />
+          }
+        </td>
+      </ng-container>
+
+      <!-- Additional Incomes (Expandable) -->
+      <ng-container matColumnDef="additionalIncomes">
+        <th mat-header-cell *matHeaderCellDef> {{ 'CASH_FLOW.ADDITIONAL_INCOMES' | translate }} </th>
+        <td mat-cell *matCellDef="let monthCtrl; let i = index">
+          <button mat-icon-button class="no-print" (click)="monthCtrl.get('expandedAdditionalIncomes')?.setValue(!monthCtrl.get('expandedAdditionalIncomes')?.value)"
+            [title]="(monthCtrl.get('expandedAdditionalIncomes')?.value ? 'INVESTMENTS.COLLAPSE' : 'INVESTMENTS.EXPAND') | translate"
+            [matTooltip]="(monthCtrl.get('expandedAdditionalIncomes')?.value ? 'INVESTMENTS.COLLAPSE' : 'INVESTMENTS.EXPAND') | translate"
+            [attr.aria-label]="(monthCtrl.get('expandedAdditionalIncomes')?.value ? 'INVESTMENTS.COLLAPSE' : 'INVESTMENTS.EXPAND') | translate">
+            <mat-icon>{{ monthCtrl.get('expandedAdditionalIncomes')?.value ? 'expand_less' : 'expand_more' }}</mat-icon>
+          </button>
+          @if (!monthCtrl.get('expandedAdditionalIncomes')?.value && getAdditionalIncomes(i).length > 0) {
+            <span class="no-print badge rounded-pill bg-success ms-1 expense-count-badge align-top" [matTooltip]="'CASH_FLOW.ADDITIONAL_INCOMES_TOTAL' | translate">
+              {{ getAdditionalIncomes(i).length }} | {{ getAdditionalIncomesSum(i) | number:'1.0-0' }} ₪
+            </span>
+          }
+
+          @if (monthCtrl.get('expandedAdditionalIncomes')?.value) {
+            <div class="no-print">
+              @for (expCtrl of getAdditionalIncomes(i).controls; track expCtrl; let j = $index) {
+                <div class="expense-row">
+                  <input dir="rtl" placeholder="תיאור" title="תיאור" aria-label="תיאור" [formControl]="getAdditionalIncomeDescription(i, j)" />
+                  @if (!focusedField['add_inc_' + i + '_' + j]) {
+                    <span class="amount-display" (click)="focusField('add_inc_' + i + '_' + j)">
+                      {{ getAdditionalIncomeAmount(i, j).value | number:'1.0-0' }} ₪
+                    </span>
+                  }
+                  @if (focusedField['add_inc_' + i + '_' + j]) {
+                    <input type="number" dir="rtl"
+                      placeholder="סכום" title="סכום" aria-label="סכום"
+                      [formControl]="getAdditionalIncomeAmount(i, j)"
+                      (input)="calculateEndingBalances()"
+                      (blur)="blurField('add_inc_' + i + '_' + j)"
+                      [attr.data-focus-key]="'add_inc_' + i + '_' + j" />
+                  }
+                  <button mat-icon-button color="warn" (click)="confirmDeleteExpense(i, j, 'additionalIncome')"
+                    [title]="'INSTALLMENTS.DELETE' | translate" [matTooltip]="'INSTALLMENTS.DELETE' | translate" [attr.aria-label]="'INSTALLMENTS.DELETE' | translate">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+              }
+              <button mat-button (click)="addAdditionalIncome(i)">{{ 'CASH_FLOW.ADD_INCOME' | translate }}</button>
+            </div>
+          }
+
+          <div class="print-only">
+            @for (expCtrl of getAdditionalIncomes(i).controls; track expCtrl; let j = $index) {
+              <div>
+                <span class="label">{{ getAdditionalIncomeDescription(i, j).value }}:</span>
+                <span class="amount">{{ getAdditionalIncomeAmount(i, j).value | number:'1.0-0' }} ₪</span>
+              </div>
+            }
           </div>
-          <button mat-button (click)="addAdditionalIncome(i)">{{ 'CASH_FLOW.ADD_INCOME' | translate }}</button>
-        </div>
+        </td>
+      </ng-container>
 
-        <div class="print-only">
-          <div *ngFor="let expCtrl of getAdditionalIncomes(i).controls; let j=index">
-            <span class="label">{{ getAdditionalIncomeDescription(i, j).value }}:</span>
-            <span class="amount">{{ getAdditionalIncomeAmount(i, j).value | number:'1.0-0' }} ₪</span>
-          </div>
-        </div>
-      </td>
-    </ng-container>
+      <!-- Mortgage -->
+      <ng-container matColumnDef="mortgagePayment">
+        <th mat-header-cell *matHeaderCellDef> {{ 'CASH_FLOW.MORTGAGE' | translate }} </th>
+        <td mat-cell *matCellDef="let monthCtrl; let i = index">
+          @if (!focusedField['mortgage_' + i]) {
+            <span class="amount-display" (click)="focusField('mortgage_' + i)">
+              {{ monthCtrl.get('mortgagePayment')?.value | number:'1.0-0' }} ₪
+            </span>
+          }
+          @if (focusedField['mortgage_' + i]) {
+            <input matInput type="number" dir="rtl"
+              placeholder="משכנתא" title="משכנתא" aria-label="משכנתא"
+              [formControl]="monthCtrl.get('mortgagePayment')"
+              (input)="calculateEndingBalances()"
+              (blur)="blurField('mortgage_' + i)"
+              [attr.data-focus-key]="'mortgage_' + i" />
+          }
+        </td>
+      </ng-container>
 
-    <!-- Mortgage -->
-    <ng-container matColumnDef="mortgagePayment">
-      <th mat-header-cell *matHeaderCellDef> {{ 'CASH_FLOW.MORTGAGE' | translate }} </th>
-      <td mat-cell *matCellDef="let monthCtrl; let i = index">
-        <span *ngIf="!focusedField['mortgage_' + i]" class="amount-display" (click)="focusField('mortgage_' + i)">
-          {{ monthCtrl.get('mortgagePayment')?.value | number:'1.0-0' }} ₪
-        </span>
-        <input *ngIf="focusedField['mortgage_' + i]" matInput type="number" dir="rtl"
-          placeholder="משכנתא" title="משכנתא" aria-label="משכנתא"
-          [formControl]="monthCtrl.get('mortgagePayment')"
-          (input)="calculateEndingBalances()"
-          (blur)="blurField('mortgage_' + i)"
-          [attr.data-focus-key]="'mortgage_' + i" />
-      </td>
-    </ng-container>
-
-    <!-- Loan Payment -->
-    <ng-container matColumnDef="loanPayment">
-      <th mat-header-cell *matHeaderCellDef> {{ 'CASH_FLOW.LOAN' | translate }} </th>
-      <td mat-cell *matCellDef="let monthCtrl; let i = index">
-        <span *ngIf="!focusedField['loan_' + i]" class="amount-display" (click)="focusField('loan_' + i)"
+      <!-- Loan Payment -->
+      <ng-container matColumnDef="loanPayment">
+        <th mat-header-cell *matHeaderCellDef> {{ 'CASH_FLOW.LOAN' | translate }} </th>
+        <td mat-cell *matCellDef="let monthCtrl; let i = index">
+          @if (!focusedField['loan_' + i]) {
+            <span class="amount-display" (click)="focusField('loan_' + i)"
               [matTooltip]="getInstallmentTooltip(i, 'loans')">
-          {{ monthCtrl.get('loanPayment')?.value | number:'1.0-0' }} ₪
-        </span>
-        <input *ngIf="focusedField['loan_' + i]" matInput type="number" dir="rtl"
-          placeholder="הלוואה חודשית (סה״כ)" title="הלוואה חודשית" aria-label="הלוואה חודשית"
-          [formControl]="monthCtrl.get('loanPayment')"
-          (blur)="onLoanPaymentChange(i); blurField('loan_' + i)"
-          (keydown.enter)="onLoanPaymentChange(i); blurField('loan_' + i)"
-          [attr.data-focus-key]="'loan_' + i" />
-      </td>
-    </ng-container>
+              {{ monthCtrl.get('loanPayment')?.value | number:'1.0-0' }} ₪
+            </span>
+          }
+          @if (focusedField['loan_' + i]) {
+            <input matInput type="number" dir="rtl"
+              placeholder="הלוואה חודשית (סה״כ)" title="הלוואה חודשית" aria-label="הלוואה חודשית"
+              [formControl]="monthCtrl.get('loanPayment')"
+              (blur)="onLoanPaymentChange(i); blurField('loan_' + i)"
+              (keydown.enter)="onLoanPaymentChange(i); blurField('loan_' + i)"
+              [attr.data-focus-key]="'loan_' + i" />
+          }
+        </td>
+      </ng-container>
 
-    <!-- Installments Payment -->
-    <ng-container matColumnDef="installmentsPayment">
-      <th mat-header-cell *matHeaderCellDef> {{ 'CASH_FLOW.INSTALLMENTS_PAYMENT' | translate }} </th>
-      <td mat-cell *matCellDef="let monthCtrl; let i = index">
-        <span class="amount-display-read-only" [matTooltip]="getInstallmentTooltip(i, 'installments')">
-          {{ monthCtrl.get('installmentsPayment')?.value | number:'1.0-0' }} ₪
-        </span>
-      </td>
-    </ng-container>
-
-    <!-- Regular Expenses (Expandable) -->
-    <ng-container matColumnDef="regularExpenses">
-      <th mat-header-cell *matHeaderCellDef> {{ 'CASH_FLOW.REGULAR_EXPENSES' | translate }} </th>
-      <td mat-cell *matCellDef="let monthCtrl; let i = index">
-        <button mat-icon-button class="no-print" (click)="monthCtrl.get('expanded')?.setValue(!monthCtrl.get('expanded')?.value)"
-          [title]="(monthCtrl.get('expanded')?.value ? 'INVESTMENTS.COLLAPSE' : 'INVESTMENTS.EXPAND') | translate"
-          [matTooltip]="(monthCtrl.get('expanded')?.value ? 'INVESTMENTS.COLLAPSE' : 'INVESTMENTS.EXPAND') | translate"
-          [attr.aria-label]="(monthCtrl.get('expanded')?.value ? 'INVESTMENTS.COLLAPSE' : 'INVESTMENTS.EXPAND') | translate">
-          <mat-icon>{{ monthCtrl.get('expanded')?.value ? 'expand_less' : 'expand_more' }}</mat-icon>
-        </button>
-        @if (!monthCtrl.get('expanded')?.value && getRegularExpenses(i).length > 0) {
-          <span class="no-print badge rounded-pill bg-primary ms-1 expense-count-badge align-top" [matTooltip]="'CASH_FLOW.REGULAR_EXPENSES_TOTAL' | translate">
-            {{ getRegularExpenses(i).length }} | {{ getRegularExpensesSum(i) | number:'1.0-0' }} ₪
+      <!-- Installments Payment -->
+      <ng-container matColumnDef="installmentsPayment">
+        <th mat-header-cell *matHeaderCellDef> {{ 'CASH_FLOW.INSTALLMENTS_PAYMENT' | translate }} </th>
+        <td mat-cell *matCellDef="let monthCtrl; let i = index">
+          <span class="amount-display-read-only" [matTooltip]="getInstallmentTooltip(i, 'installments')">
+            {{ monthCtrl.get('installmentsPayment')?.value | number:'1.0-0' }} ₪
           </span>
-        }
+        </td>
+      </ng-container>
 
-        <div *ngIf="monthCtrl.get('expanded')?.value" class="no-print">
-          <div *ngFor="let expCtrl of getRegularExpenses(i).controls; let j=index" class="expense-item-block">
-            <div class="expense-row">
-              <input dir="rtl" placeholder="תיאור" title="תיאור" aria-label="תיאור" [formControl]="getExpenseDescription(i, j)" />
-              <span *ngIf="!focusedField['reg_' + i + '_' + j]" class="amount-display" (click)="focusField('reg_' + i + '_' + j)">
-                {{ getExpenseAmount(i, j).value | number:'1.0-0' }} ₪
-              </span>
-              <input *ngIf="focusedField['reg_' + i + '_' + j]" type="number" dir="rtl"
-                placeholder="סכום" title="סכום" aria-label="סכום"
-                [formControl]="getExpenseAmount(i, j)"
-                (input)="calculateEndingBalances()"
-                (blur)="blurField('reg_' + i + '_' + j)"
-                [attr.data-focus-key]="'reg_' + i + '_' + j" />
-              <button mat-icon-button color="warn" (click)="removeRegularExpense(i,j)"
-                [title]="'INSTALLMENTS.DELETE' | translate" [matTooltip]="'INSTALLMENTS.DELETE' | translate" [attr.aria-label]="'INSTALLMENTS.DELETE' | translate">
-                <mat-icon>delete</mat-icon>
-              </button>
+      <!-- Regular Expenses (Expandable) -->
+      <ng-container matColumnDef="regularExpenses">
+        <th mat-header-cell *matHeaderCellDef> {{ 'CASH_FLOW.REGULAR_EXPENSES' | translate }} </th>
+        <td mat-cell *matCellDef="let monthCtrl; let i = index">
+          <button mat-icon-button class="no-print" (click)="monthCtrl.get('expanded')?.setValue(!monthCtrl.get('expanded')?.value)"
+            [title]="(monthCtrl.get('expanded')?.value ? 'INVESTMENTS.COLLAPSE' : 'INVESTMENTS.EXPAND') | translate"
+            [matTooltip]="(monthCtrl.get('expanded')?.value ? 'INVESTMENTS.COLLAPSE' : 'INVESTMENTS.EXPAND') | translate"
+            [attr.aria-label]="(monthCtrl.get('expanded')?.value ? 'INVESTMENTS.COLLAPSE' : 'INVESTMENTS.EXPAND') | translate">
+            <mat-icon>{{ monthCtrl.get('expanded')?.value ? 'expand_less' : 'expand_more' }}</mat-icon>
+          </button>
+          @if (!monthCtrl.get('expanded')?.value && getRegularExpenses(i).length > 0) {
+            <span class="no-print badge rounded-pill bg-primary ms-1 expense-count-badge align-top" [matTooltip]="'CASH_FLOW.REGULAR_EXPENSES_TOTAL' | translate">
+              {{ getRegularExpenses(i).length }} | {{ getRegularExpensesSum(i) | number:'1.0-0' }} ₪
+            </span>
+          }
+
+          @if (monthCtrl.get('expanded')?.value) {
+            <div class="no-print">
+              @for (expCtrl of getRegularExpenses(i).controls; track expCtrl; let j = $index) {
+                <div class="expense-item-block">
+                  <div class="expense-row">
+                    <input dir="rtl" placeholder="תיאור" title="תיאור" aria-label="תיאור" [formControl]="getExpenseDescription(i, j)" />
+                    @if (!focusedField['reg_' + i + '_' + j]) {
+                      <span class="amount-display" (click)="focusField('reg_' + i + '_' + j)">
+                        {{ getExpenseAmount(i, j).value | number:'1.0-0' }} ₪
+                      </span>
+                    }
+                    @if (focusedField['reg_' + i + '_' + j]) {
+                      <input type="number" dir="rtl"
+                        placeholder="סכום" title="סכום" aria-label="סכום"
+                        [formControl]="getExpenseAmount(i, j)"
+                        (input)="calculateEndingBalances()"
+                        (blur)="blurField('reg_' + i + '_' + j)"
+                        [attr.data-focus-key]="'reg_' + i + '_' + j" />
+                    }
+                    <button mat-icon-button color="warn" (click)="removeRegularExpense(i,j)"
+                      [title]="'INSTALLMENTS.DELETE' | translate" [matTooltip]="'INSTALLMENTS.DELETE' | translate" [attr.aria-label]="'INSTALLMENTS.DELETE' | translate">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </div>
+                  <app-expense-category-selector
+                    [selectedCategory]="getExpenseCategory(i, j).value"
+                    (selectedCategoryChange)="getExpenseCategory(i, j).setValue($event)" />
+                  </div>
+                }
+                <button mat-button (click)="addRegularExpense(i)">{{ 'CASH_FLOW.ADD_EXPENSE' | translate }}</button>
+              </div>
+            }
+
+            <div class="print-only">
+              @for (expCtrl of getRegularExpenses(i).controls; track expCtrl; let j = $index) {
+                <div>
+                  <span class="label">{{ getExpenseDescription(i, j).value }}:</span>
+                  <span class="amount">{{ getExpenseAmount(i, j).value | number:'1.0-0' }} ₪</span>
+                </div>
+              }
             </div>
-            <app-expense-category-selector
-              [selectedCategory]="getExpenseCategory(i, j).value"
-              (selectedCategoryChange)="getExpenseCategory(i, j).setValue($event)" />
-          </div>
-          <button mat-button (click)="addRegularExpense(i)">{{ 'CASH_FLOW.ADD_EXPENSE' | translate }}</button>
-        </div>
+          </td>
+        </ng-container>
 
-        <div class="print-only">
-          <div *ngFor="let expCtrl of getRegularExpenses(i).controls; let j=index">
-            <span class="label">{{ getExpenseDescription(i, j).value }}:</span>
-            <span class="amount">{{ getExpenseAmount(i, j).value | number:'1.0-0' }} ₪</span>
-          </div>
-        </div>
-      </td>
-    </ng-container>
-
-    <!-- Special Expenses -->
-    <ng-container matColumnDef="specialExpenses">
-      <th mat-header-cell *matHeaderCellDef> {{ 'CASH_FLOW.SPECIAL_EXPENSES' | translate }} </th>
-      <td mat-cell *matCellDef="let monthCtrl; let i = index">
-        <button mat-icon-button class="no-print" (click)="monthCtrl.get('expandedSpecial')?.setValue(!monthCtrl.get('expandedSpecial')?.value)"
-          [title]="(monthCtrl.get('expandedSpecial')?.value ? 'INVESTMENTS.COLLAPSE' : 'INVESTMENTS.EXPAND') | translate"
-          [matTooltip]="(monthCtrl.get('expandedSpecial')?.value ? 'INVESTMENTS.COLLAPSE' : 'INVESTMENTS.EXPAND') | translate"
-          [attr.aria-label]="(monthCtrl.get('expandedSpecial')?.value ? 'INVESTMENTS.COLLAPSE' : 'INVESTMENTS.EXPAND') | translate">
-          <mat-icon>{{ monthCtrl.get('expandedSpecial')?.value ? 'expand_less' : 'expand_more' }}</mat-icon>
-        </button>
-        @if (!monthCtrl.get('expandedSpecial')?.value && getSpecialExpenses(i).length > 0) {
-          <span class="no-print badge rounded-pill bg-warning text-dark ms-1 expense-count-badge" [matTooltip]="'CASH_FLOW.SPECIAL_EXPENSES_TOTAL' | translate">
-            {{ getSpecialExpenses(i).length }} | {{ getSpecialExpensesSum(i) | number:'1.0-0' }} ₪
-          </span>
-        }
-
-        <div *ngIf="monthCtrl.get('expandedSpecial')?.value" class="no-print">
-          <div *ngFor="let expCtrl of getSpecialExpenses(i).controls; let j=index" class="expense-item-block">
-            <div class="expense-row">
-              <input dir="rtl" placeholder="תיאור" title="תיאור" aria-label="תיאור" [formControl]="getSpecialExpenseDescription(i, j)" />
-              <span *ngIf="!focusedField['spec_' + i + '_' + j]" class="amount-display" (click)="focusField('spec_' + i + '_' + j)">
-                {{ getSpecialExpenseAmount(i, j).value | number:'1.0-0' }} ₪
+        <!-- Special Expenses -->
+        <ng-container matColumnDef="specialExpenses">
+          <th mat-header-cell *matHeaderCellDef> {{ 'CASH_FLOW.SPECIAL_EXPENSES' | translate }} </th>
+          <td mat-cell *matCellDef="let monthCtrl; let i = index">
+            <button mat-icon-button class="no-print" (click)="monthCtrl.get('expandedSpecial')?.setValue(!monthCtrl.get('expandedSpecial')?.value)"
+              [title]="(monthCtrl.get('expandedSpecial')?.value ? 'INVESTMENTS.COLLAPSE' : 'INVESTMENTS.EXPAND') | translate"
+              [matTooltip]="(monthCtrl.get('expandedSpecial')?.value ? 'INVESTMENTS.COLLAPSE' : 'INVESTMENTS.EXPAND') | translate"
+              [attr.aria-label]="(monthCtrl.get('expandedSpecial')?.value ? 'INVESTMENTS.COLLAPSE' : 'INVESTMENTS.EXPAND') | translate">
+              <mat-icon>{{ monthCtrl.get('expandedSpecial')?.value ? 'expand_less' : 'expand_more' }}</mat-icon>
+            </button>
+            @if (!monthCtrl.get('expandedSpecial')?.value && getSpecialExpenses(i).length > 0) {
+              <span class="no-print badge rounded-pill bg-warning text-dark ms-1 expense-count-badge" [matTooltip]="'CASH_FLOW.SPECIAL_EXPENSES_TOTAL' | translate">
+                {{ getSpecialExpenses(i).length }} | {{ getSpecialExpensesSum(i) | number:'1.0-0' }} ₪
               </span>
-              <input *ngIf="focusedField['spec_' + i + '_' + j]" type="number" dir="rtl"
-                placeholder="סכום" title="סכום" aria-label="סכום"
-                [formControl]="getSpecialExpenseAmount(i, j)"
-                (input)="calculateEndingBalances()"
-                (blur)="blurField('spec_' + i + '_' + j)"
-                [attr.data-focus-key]="'spec_' + i + '_' + j" />
-              <button mat-icon-button color="warn" (click)="removeSpecialExpense(i, j)"
-                [title]="'INSTALLMENTS.DELETE' | translate" [matTooltip]="'INSTALLMENTS.DELETE' | translate" [attr.aria-label]="'INSTALLMENTS.DELETE' | translate">
-                <mat-icon>delete</mat-icon>
-              </button>
-            </div>
-            <app-expense-category-selector
-              [selectedCategory]="getSpecialExpenseCategory(i, j).value"
-              (selectedCategoryChange)="getSpecialExpenseCategory(i, j).setValue($event)" />
-          </div>
-          <button mat-button (click)="addSpecialExpense(i)">{{ 'CASH_FLOW.ADD_EXPENSE' | translate }}</button>
-        </div>
+            }
 
-        <div class="print-only">
-          <div *ngFor="let expCtrl of getSpecialExpenses(i).controls; let j=index">
-            <span class="label">{{ getSpecialExpenseDescription(i, j).value }}:</span>
-            <span class="amount">{{ getSpecialExpenseAmount(i, j).value | number:'1.0-0' }} ₪</span>
-          </div>
-        </div>
-      </td>
-    </ng-container>
+            @if (monthCtrl.get('expandedSpecial')?.value) {
+              <div class="no-print">
+                @for (expCtrl of getSpecialExpenses(i).controls; track expCtrl; let j = $index) {
+                  <div class="expense-item-block">
+                    <div class="expense-row">
+                      <input dir="rtl" placeholder="תיאור" title="תיאור" aria-label="תיאור" [formControl]="getSpecialExpenseDescription(i, j)" />
+                      @if (!focusedField['spec_' + i + '_' + j]) {
+                        <span class="amount-display" (click)="focusField('spec_' + i + '_' + j)">
+                          {{ getSpecialExpenseAmount(i, j).value | number:'1.0-0' }} ₪
+                        </span>
+                      }
+                      @if (focusedField['spec_' + i + '_' + j]) {
+                        <input type="number" dir="rtl"
+                          placeholder="סכום" title="סכום" aria-label="סכום"
+                          [formControl]="getSpecialExpenseAmount(i, j)"
+                          (input)="calculateEndingBalances()"
+                          (blur)="blurField('spec_' + i + '_' + j)"
+                          [attr.data-focus-key]="'spec_' + i + '_' + j" />
+                      }
+                      <button mat-icon-button color="warn" (click)="removeSpecialExpense(i, j)"
+                        [title]="'INSTALLMENTS.DELETE' | translate" [matTooltip]="'INSTALLMENTS.DELETE' | translate" [attr.aria-label]="'INSTALLMENTS.DELETE' | translate">
+                        <mat-icon>delete</mat-icon>
+                      </button>
+                    </div>
+                    <app-expense-category-selector
+                      [selectedCategory]="getSpecialExpenseCategory(i, j).value"
+                      (selectedCategoryChange)="getSpecialExpenseCategory(i, j).setValue($event)" />
+                    </div>
+                  }
+                  <button mat-button (click)="addSpecialExpense(i)">{{ 'CASH_FLOW.ADD_EXPENSE' | translate }}</button>
+                </div>
+              }
 
-    <!-- Visual Summary Column -->
-    <ng-container matColumnDef="visualSummary">
-      <th mat-header-cell *matHeaderCellDef> {{ 'CASH_FLOW.VISUAL_SUMMARY' | translate }} </th>
-      <td mat-cell *matCellDef="let monthCtrl; let i = index">
-        <div class="mini-chart-container" 
+              <div class="print-only">
+                @for (expCtrl of getSpecialExpenses(i).controls; track expCtrl; let j = $index) {
+                  <div>
+                    <span class="label">{{ getSpecialExpenseDescription(i, j).value }}:</span>
+                    <span class="amount">{{ getSpecialExpenseAmount(i, j).value | number:'1.0-0' }} ₪</span>
+                  </div>
+                }
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Visual Summary Column -->
+          <ng-container matColumnDef="visualSummary">
+            <th mat-header-cell *matHeaderCellDef> {{ 'CASH_FLOW.VISUAL_SUMMARY' | translate }} </th>
+            <td mat-cell *matCellDef="let monthCtrl; let i = index">
+              <div class="mini-chart-container"
              [matTooltip]="('CASH_FLOW.INCOME' | translate) + ': ' + (getTotalIncome(i) | number:'1.0-0') + ' ₪\n' + 
                            ('CASH_FLOW.EXPENSES' | translate) + ': ' + (getTotalExpenses(i) | number:'1.0-0') + ' ₪\n' +
                            ('CASH_FLOW.SAVINGS' | translate) + ': ' + (getSavings(i) | number:'1.0-0') + ' ₪'">
-          <div class="mini-bar income-bar" [style.width.%]="getBarWidth(getTotalIncome(i), i)"></div>
-          <div class="mini-bar expense-bar" [style.width.%]="getBarWidth(getTotalExpenses(i), i)"></div>
-          <div class="mini-bar savings-bar" *ngIf="getSavings(i) > 0" 
-               [style.width.%]="getBarWidth(getSavings(i), i)"></div>
-        </div>
-      </td>
-    </ng-container>
+                <div class="mini-bar income-bar" [style.width.%]="getBarWidth(getTotalIncome(i), i)"></div>
+                <div class="mini-bar expense-bar" [style.width.%]="getBarWidth(getTotalExpenses(i), i)"></div>
+                @if (getSavings(i) > 0) {
+                  <div class="mini-bar savings-bar"
+                  [style.width.%]="getBarWidth(getSavings(i), i)"></div>
+                }
+              </div>
+            </td>
+          </ng-container>
 
-    <!-- Ending Balance -->
-    <ng-container matColumnDef="endingBalance">
-      <th mat-header-cell *matHeaderCellDef> {{ 'CASH_FLOW.ENDING_BALANCE' | translate }} </th>
-      <td mat-cell *matCellDef="let monthCtrl"> {{ monthCtrl.get('endingBalance')?.value | number:'1.0-0' }} ₪</td>
-    </ng-container>
+          <!-- Ending Balance -->
+          <ng-container matColumnDef="endingBalance">
+            <th mat-header-cell *matHeaderCellDef> {{ 'CASH_FLOW.ENDING_BALANCE' | translate }} </th>
+            <td mat-cell *matCellDef="let monthCtrl"> {{ monthCtrl.get('endingBalance')?.value | number:'1.0-0' }} ₪</td>
+          </ng-container>
 
-    <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
-    <tr mat-row *matRowDef="let row; columns: displayedColumns;"
-      [style]="row.get('rowColor')?.value ? '--row-color: ' + resolveRowColor(row.get('rowColor')?.value) : ''"></tr>
-  </table>
-  </div>
-</div>
-
-<mat-menu #colorMenu="matMenu" class="color-menu">
-  <button mat-menu-item *ngFor="let c of ROW_COLORS" (click)="setRowColor(activeRowCtrl, c.value)" class="color-menu-item">
-    <span class="color-swatch" [style.background]="c.value"
-      [class.active]="activeRowCtrl?.get('rowColor')?.value === c.value"></span>
-    <span>{{ c.labelKey | translate }}</span>
-    <mat-icon *ngIf="activeRowCtrl?.get('rowColor')?.value === c.value" class="check-icon">check</mat-icon>
-  </button>
-  <button mat-menu-item (click)="setRowColor(activeRowCtrl, null)" *ngIf="activeRowCtrl?.get('rowColor')?.value">
-    <mat-icon>format_color_reset</mat-icon>
-    <span>{{ 'CASH_FLOW.CLEAR_COLOR' | translate }}</span>
-  </button>
-  <mat-divider></mat-divider>
-  <button mat-menu-item (click)="duplicateMonth(activeRowIndex)">
-    <mat-icon>content_copy</mat-icon>
-    <span>{{ 'CASH_FLOW.DUPLICATE_MONTH' | translate }}</span>
-  </button>
-</mat-menu>
-
-<!-- Delete expense confirmation overlay -->
-@if (pendingDeleteExpense) {
-<div class="cf-overlay position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center no-print">
-  <div class="cf-confirm-card card p-4 text-center">
-    <div class="cf-confirm-icon mb-2">🗑️</div>
-    <div class="cf-confirm-title mb-1">{{ 'CASH_FLOW.DELETE_CONFIRM_TITLE' | translate }}</div>
-    <div class="cf-confirm-msg mb-4">{{ 'CASH_FLOW.DELETE_CONFIRM_MSG' | translate }}</div>
-    <div class="d-flex gap-2 justify-content-center">
-      <button mat-raised-button color="warn" (click)="doDeleteExpense()">{{ 'CASH_FLOW.DELETE_YES' | translate }}</button>
-      <button mat-button (click)="cancelDeleteExpense()">{{ 'CASH_FLOW.DELETE_NO' | translate }}</button>
-    </div>
-  </div>
-</div>
-}
-
-<!-- Defaults dialog overlay -->
-@if (showDefaultsDialog) {
-<div class="cf-overlay position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center no-print"
-  (click)="closeDefaultsDialog()">
-  <div class="cf-defaults-card card" dir="rtl" (click)="$event.stopPropagation()">
-
-    <div class="cf-defaults-header d-flex justify-content-between align-items-center">
-      <span class="cf-defaults-title">{{ 'CASH_FLOW.DEFAULTS_TITLE' | translate }}</span>
-      <button mat-icon-button type="button" (click)="closeDefaultsDialog()"
-        [title]="'INSTALLMENTS.CANCEL' | translate" [matTooltip]="'INSTALLMENTS.CANCEL' | translate" [attr.aria-label]="'INSTALLMENTS.CANCEL' | translate">
-        <mat-icon>close</mat-icon>
-      </button>
+          <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+          [style]="row.get('rowColor')?.value ? '--row-color: ' + resolveRowColor(row.get('rowColor')?.value) : ''"></tr>
+        </table>
+      </div>
     </div>
 
-    <div class="cf-defaults-body" [formGroup]="defaultsForm">
-
-      <!-- שדות בסיס -->
-      <div class="row g-3 mb-3">
-        <div class="col-md-4">
-          <label class="cf-field-label" for="def-income">{{ 'CASH_FLOW.INCOME' | translate }}</label>
-          <input id="def-income" type="number" class="form-control form-control-sm" dir="rtl"
-            formControlName="income"
-            placeholder="הכנסות" title="הכנסות" aria-label="הכנסות" />
-        </div>
-        <div class="col-md-4">
-          <label class="cf-field-label" for="def-mortgage">{{ 'CASH_FLOW.MORTGAGE' | translate }}</label>
-          <input id="def-mortgage" type="number" class="form-control form-control-sm" dir="rtl"
-            formControlName="mortgagePayment"
-            placeholder="משכנתא" title="משכנתא" aria-label="משכנתא" />
-        </div>
-        <div class="col-md-4">
-          <label class="cf-field-label" for="def-loan">{{ 'CASH_FLOW.LOAN' | translate }}</label>
-          <input id="def-loan" type="number" class="form-control form-control-sm" dir="rtl"
-            formControlName="loanPayment"
-            placeholder="הלוואה" title="הלוואה" aria-label="הלוואה" />
-        </div>
-      </div>
-
-      <mat-divider class="mb-3"></mat-divider>
-
-      <!-- הכנסות נוספות -->
-      <div class="cf-section-title mb-2">{{ 'CASH_FLOW.ADDITIONAL_INCOMES' | translate }}</div>
-      <div formArrayName="additionalIncomes">
-        <div *ngFor="let ctrl of defaultsAdditionalIncomes.controls; let j = index"
-          [formGroupName]="j" class="expense-row mb-2">
-          <input type="text" class="form-control form-control-sm" dir="rtl" formControlName="description" placeholder="תיאור" />
-          <input type="number" class="form-control form-control-sm" dir="rtl" formControlName="amount" placeholder="סכום" />
-          <button mat-icon-button type="button" color="warn" (click)="removeDefaultAdditionalIncome(j)"
-            [title]="'INSTALLMENTS.DELETE' | translate" [matTooltip]="'INSTALLMENTS.DELETE' | translate" [attr.aria-label]="'INSTALLMENTS.DELETE' | translate">
-            <mat-icon>delete</mat-icon>
-          </button>
-        </div>
-      </div>
-      <button mat-button type="button" (click)="addDefaultAdditionalIncome()">
-        <mat-icon>add</mat-icon> {{ 'CASH_FLOW.ADD_INCOME' | translate }}
+    <mat-menu #colorMenu="matMenu" class="color-menu">
+      @for (c of ROW_COLORS; track c) {
+        <button mat-menu-item (click)="setRowColor(activeRowCtrl, c.value)" class="color-menu-item">
+          <span class="color-swatch" [style.background]="c.value"
+          [class.active]="activeRowCtrl?.get('rowColor')?.value === c.value"></span>
+          <span>{{ c.labelKey | translate }}</span>
+          @if (activeRowCtrl?.get('rowColor')?.value === c.value) {
+            <mat-icon class="check-icon">check</mat-icon>
+          }
+        </button>
+      }
+      @if (activeRowCtrl?.get('rowColor')?.value) {
+        <button mat-menu-item (click)="setRowColor(activeRowCtrl, null)">
+          <mat-icon>format_color_reset</mat-icon>
+          <span>{{ 'CASH_FLOW.CLEAR_COLOR' | translate }}</span>
+        </button>
+      }
+      <mat-divider></mat-divider>
+      <button mat-menu-item (click)="duplicateMonth(activeRowIndex)">
+        <mat-icon>content_copy</mat-icon>
+        <span>{{ 'CASH_FLOW.DUPLICATE_MONTH' | translate }}</span>
       </button>
+    </mat-menu>
 
-      <mat-divider class="my-3"></mat-divider>
+    <!-- Delete expense confirmation overlay -->
+    @if (pendingDeleteExpense) {
+      <div class="cf-overlay position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center no-print">
+        <div class="cf-confirm-card card p-4 text-center">
+          <div class="cf-confirm-icon mb-2">🗑️</div>
+          <div class="cf-confirm-title mb-1">{{ 'CASH_FLOW.DELETE_CONFIRM_TITLE' | translate }}</div>
+          <div class="cf-confirm-msg mb-4">{{ 'CASH_FLOW.DELETE_CONFIRM_MSG' | translate }}</div>
+          <div class="d-flex gap-2 justify-content-center">
+            <button mat-raised-button color="warn" (click)="doDeleteExpense()">{{ 'CASH_FLOW.DELETE_YES' | translate }}</button>
+            <button mat-button (click)="cancelDeleteExpense()">{{ 'CASH_FLOW.DELETE_NO' | translate }}</button>
+          </div>
+        </div>
+      </div>
+    }
 
-      <!-- הוצאות שוטפות -->
-      <div class="cf-section-title mb-2">{{ 'CASH_FLOW.REGULAR_EXPENSES' | translate }}</div>
-      <div formArrayName="regularExpenses">
-        <div *ngFor="let ctrl of defaultsRegularExpenses.controls; let j = index"
-          [formGroupName]="j" class="expense-item-block mb-2">
-          <div class="expense-row">
-            <input type="text" class="form-control form-control-sm" dir="rtl"
-              formControlName="description"
-              placeholder="תיאור" title="תיאור" aria-label="תיאור" />
-            <input type="number" class="form-control form-control-sm" dir="rtl"
-              formControlName="amount"
-              placeholder="סכום" title="סכום" aria-label="סכום" />
-            <button mat-icon-button type="button" color="warn" (click)="removeDefaultRegularExpense(j)"
-              [title]="'INSTALLMENTS.DELETE' | translate" [matTooltip]="'INSTALLMENTS.DELETE' | translate" [attr.aria-label]="'INSTALLMENTS.DELETE' | translate">
-              <mat-icon>delete</mat-icon>
+    <!-- Defaults dialog overlay -->
+    @if (showDefaultsDialog) {
+      <div class="cf-overlay position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center no-print"
+        (click)="closeDefaultsDialog()">
+        <div class="cf-defaults-card card" dir="rtl" (click)="$event.stopPropagation()">
+
+          <div class="cf-defaults-header d-flex justify-content-between align-items-center">
+            <span class="cf-defaults-title">{{ 'CASH_FLOW.DEFAULTS_TITLE' | translate }}</span>
+            <button mat-icon-button type="button" (click)="closeDefaultsDialog()"
+              [title]="'INSTALLMENTS.CANCEL' | translate" [matTooltip]="'INSTALLMENTS.CANCEL' | translate" [attr.aria-label]="'INSTALLMENTS.CANCEL' | translate">
+              <mat-icon>close</mat-icon>
             </button>
           </div>
-          <app-expense-category-selector
-            [selectedCategory]="ctrl.get('category')!.value"
-            (selectedCategoryChange)="ctrl.get('category')!.setValue($event)" />
-        </div>
-      </div>
-      <button mat-button type="button" (click)="addDefaultRegularExpense()">
-        <mat-icon>add</mat-icon> {{ 'CASH_FLOW.ADD_EXPENSE' | translate }}
-      </button>
 
-      <mat-divider class="my-3"></mat-divider>
+          <div class="cf-defaults-body" [formGroup]="defaultsForm">
 
-      <!-- הוצאות מיוחדות -->
-      <div class="cf-section-title mb-2">{{ 'CASH_FLOW.SPECIAL_EXPENSES' | translate }}</div>
-      <div formArrayName="specialExpenses">
-        <div *ngFor="let ctrl of defaultsSpecialExpenses.controls; let j = index"
-          [formGroupName]="j" class="expense-item-block mb-2">
-          <div class="expense-row">
-            <input type="text" class="form-control form-control-sm" dir="rtl"
-              formControlName="description"
-              placeholder="תיאור" title="תיאור" aria-label="תיאור" />
-            <input type="number" class="form-control form-control-sm" dir="rtl"
-              formControlName="amount"
-              placeholder="סכום" title="סכום" aria-label="סכום" />
-            <button mat-icon-button type="button" color="warn" (click)="removeDefaultSpecialExpense(j)"
-              [title]="'INSTALLMENTS.DELETE' | translate" [matTooltip]="'INSTALLMENTS.DELETE' | translate" [attr.aria-label]="'INSTALLMENTS.DELETE' | translate">
-              <mat-icon>delete</mat-icon>
-            </button>
-          </div>
-          <app-expense-category-selector
-            [selectedCategory]="ctrl.get('category')!.value"
-            (selectedCategoryChange)="ctrl.get('category')!.setValue($event)" />
-        </div>
-      </div>
-      <button mat-button type="button" (click)="addDefaultSpecialExpense()">
-        <mat-icon>add</mat-icon> {{ 'CASH_FLOW.ADD_EXPENSE' | translate }}
-      </button>
+            <!-- שדות בסיס -->
+            <div class="row g-3 mb-3">
+              <div class="col-md-4">
+                <label class="cf-field-label" for="def-income">{{ 'CASH_FLOW.INCOME' | translate }}</label>
+                <input id="def-income" type="number" class="form-control form-control-sm" dir="rtl"
+                  formControlName="income"
+                  placeholder="הכנסות" title="הכנסות" aria-label="הכנסות" />
+                </div>
+                <div class="col-md-4">
+                  <label class="cf-field-label" for="def-mortgage">{{ 'CASH_FLOW.MORTGAGE' | translate }}</label>
+                  <input id="def-mortgage" type="number" class="form-control form-control-sm" dir="rtl"
+                    formControlName="mortgagePayment"
+                    placeholder="משכנתא" title="משכנתא" aria-label="משכנתא" />
+                  </div>
+                  <div class="col-md-4">
+                    <label class="cf-field-label" for="def-loan">{{ 'CASH_FLOW.LOAN' | translate }}</label>
+                    <input id="def-loan" type="number" class="form-control form-control-sm" dir="rtl"
+                      formControlName="loanPayment"
+                      placeholder="הלוואה" title="הלוואה" aria-label="הלוואה" />
+                    </div>
+                  </div>
 
-    </div>
+                  <mat-divider class="mb-3"></mat-divider>
 
-    <div class="cf-defaults-footer d-flex justify-content-end gap-2">
-      <button mat-button type="button" (click)="closeDefaultsDialog()">{{ 'CASH_FLOW.DELETE_NO' | translate }}</button>
-      <button mat-raised-button color="primary" type="button" (click)="saveDefaults()">
-        {{ 'CASH_FLOW.SAVE' | translate }}
-      </button>
-    </div>
+                  <!-- הכנסות נוספות -->
+                  <div class="cf-section-title mb-2">{{ 'CASH_FLOW.ADDITIONAL_INCOMES' | translate }}</div>
+                  <div formArrayName="additionalIncomes">
+                    @for (ctrl of defaultsAdditionalIncomes.controls; track ctrl; let j = $index) {
+                      <div
+                        [formGroupName]="j" class="expense-row mb-2">
+                        <input type="text" class="form-control form-control-sm" dir="rtl" formControlName="description" placeholder="תיאור" />
+                        <input type="number" class="form-control form-control-sm" dir="rtl" formControlName="amount" placeholder="סכום" />
+                        <button mat-icon-button type="button" color="warn" (click)="removeDefaultAdditionalIncome(j)"
+                          [title]="'INSTALLMENTS.DELETE' | translate" [matTooltip]="'INSTALLMENTS.DELETE' | translate" [attr.aria-label]="'INSTALLMENTS.DELETE' | translate">
+                          <mat-icon>delete</mat-icon>
+                        </button>
+                      </div>
+                    }
+                  </div>
+                  <button mat-button type="button" (click)="addDefaultAdditionalIncome()">
+                    <mat-icon>add</mat-icon> {{ 'CASH_FLOW.ADD_INCOME' | translate }}
+                  </button>
 
-  </div>
-</div>
-}
+                  <mat-divider class="my-3"></mat-divider>
+
+                  <!-- הוצאות שוטפות -->
+                  <div class="cf-section-title mb-2">{{ 'CASH_FLOW.REGULAR_EXPENSES' | translate }}</div>
+                  <div formArrayName="regularExpenses">
+                    @for (ctrl of defaultsRegularExpenses.controls; track ctrl; let j = $index) {
+                      <div
+                        [formGroupName]="j" class="expense-item-block mb-2">
+                        <div class="expense-row">
+                          <input type="text" class="form-control form-control-sm" dir="rtl"
+                            formControlName="description"
+                            placeholder="תיאור" title="תיאור" aria-label="תיאור" />
+                            <input type="number" class="form-control form-control-sm" dir="rtl"
+                              formControlName="amount"
+                              placeholder="סכום" title="סכום" aria-label="סכום" />
+                              <button mat-icon-button type="button" color="warn" (click)="removeDefaultRegularExpense(j)"
+                                [title]="'INSTALLMENTS.DELETE' | translate" [matTooltip]="'INSTALLMENTS.DELETE' | translate" [attr.aria-label]="'INSTALLMENTS.DELETE' | translate">
+                                <mat-icon>delete</mat-icon>
+                              </button>
+                            </div>
+                            <app-expense-category-selector
+                              [selectedCategory]="ctrl.get('category')!.value"
+                              (selectedCategoryChange)="ctrl.get('category')!.setValue($event)" />
+                            </div>
+                          }
+                        </div>
+                        <button mat-button type="button" (click)="addDefaultRegularExpense()">
+                          <mat-icon>add</mat-icon> {{ 'CASH_FLOW.ADD_EXPENSE' | translate }}
+                        </button>
+
+                        <mat-divider class="my-3"></mat-divider>
+
+                        <!-- הוצאות מיוחדות -->
+                        <div class="cf-section-title mb-2">{{ 'CASH_FLOW.SPECIAL_EXPENSES' | translate }}</div>
+                        <div formArrayName="specialExpenses">
+                          @for (ctrl of defaultsSpecialExpenses.controls; track ctrl; let j = $index) {
+                            <div
+                              [formGroupName]="j" class="expense-item-block mb-2">
+                              <div class="expense-row">
+                                <input type="text" class="form-control form-control-sm" dir="rtl"
+                                  formControlName="description"
+                                  placeholder="תיאור" title="תיאור" aria-label="תיאור" />
+                                  <input type="number" class="form-control form-control-sm" dir="rtl"
+                                    formControlName="amount"
+                                    placeholder="סכום" title="סכום" aria-label="סכום" />
+                                    <button mat-icon-button type="button" color="warn" (click)="removeDefaultSpecialExpense(j)"
+                                      [title]="'INSTALLMENTS.DELETE' | translate" [matTooltip]="'INSTALLMENTS.DELETE' | translate" [attr.aria-label]="'INSTALLMENTS.DELETE' | translate">
+                                      <mat-icon>delete</mat-icon>
+                                    </button>
+                                  </div>
+                                  <app-expense-category-selector
+                                    [selectedCategory]="ctrl.get('category')!.value"
+                                    (selectedCategoryChange)="ctrl.get('category')!.setValue($event)" />
+                                  </div>
+                                }
+                              </div>
+                              <button mat-button type="button" (click)="addDefaultSpecialExpense()">
+                                <mat-icon>add</mat-icon> {{ 'CASH_FLOW.ADD_EXPENSE' | translate }}
+                              </button>
+
+                            </div>
+
+                            <div class="cf-defaults-footer d-flex justify-content-end gap-2">
+                              <button mat-button type="button" (click)="closeDefaultsDialog()">{{ 'CASH_FLOW.DELETE_NO' | translate }}</button>
+                              <button mat-raised-button color="primary" type="button" (click)="saveDefaults()">
+                                {{ 'CASH_FLOW.SAVE' | translate }}
+                              </button>
+                            </div>
+
+                          </div>
+                        </div>
+                      }
