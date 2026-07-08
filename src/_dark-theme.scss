@@ -102,13 +102,20 @@ $dk-focus-ring: rgba(56, 189, 248, 0.35);
 
       // Data rows
       .mat-mdc-row {
-        // background: $dk-surface !important;
-        background:
-          color-mix(in srgb,
-            var(--row-color, transparent) 18%,
-            $dk-surface );
+        // Fallback for older browsers
+        background: $dk-surface !important;
+
+        // Modern browsers with color-mix support
+        @supports (background: color-mix(in srgb, red 50%, blue)) {
+          background:
+            color-mix(in srgb,
+              var(--row-color, transparent) 18%,
+              $dk-surface ) !important;
+        }
+
         border-bottom: 1px solid $dk-border !important;
-        transition: background 0.15s, box-shadow 0.15s !important;
+        transition: background 0.15s,
+        box-shadow 0.15s !important;
 
         &:nth-child(even) {
           background: $dk-surface-alt !important;
@@ -154,7 +161,14 @@ $dk-focus-ring: rgba(56, 189, 248, 0.35);
 
         &:focus {
           border-color: $dk-accent !important;
-          background: color-mix(in srgb, #1f2937 98%, black) !important;
+          // Fallback for older browsers
+          background: rgba(31, 41, 57, 0.98) !important;
+
+          // Modern browsers with color-mix support
+          @supports (background: color-mix(in srgb, red 50%, blue)) {
+            background: color-mix(in srgb, #1f2937 98%, black) !important;
+          }
+
           box-shadow: 0 0 0 3px $dk-focus-ring !important;
           outline: none !important;
         }
@@ -378,21 +392,42 @@ $dk-focus-ring: rgba(56, 189, 248, 0.35);
       color: $dk-text !important;
 
       &:hover {
-        background: color-mix(in srgb, var(--category-color) 12%, $dk-surface-high) !important;
-        border-color: color-mix(in srgb, var(--category-color) 50%, $dk-border-mid) !important;
-        box-shadow: 0 4px 14px color-mix(in srgb, var(--category-color) 20%, transparent) !important;
+        // Fallback for older browsers
+        background: rgba(99, 102, 241, 0.12) !important;
+        border-color: rgba(99, 102, 241, 0.4) !important;
+        box-shadow: 0 4px 14px rgba(99, 102, 241, 0.2) !important;
+
+        // Modern browsers with color-mix support
+        @supports (background: color-mix(in srgb, red 50%, blue)) {
+          background: color-mix(in srgb, var(--category-color) 12%, $dk-surface-high) !important;
+          border-color: color-mix(in srgb, var(--category-color) 50%, $dk-border-mid) !important;
+          box-shadow: 0 4px 14px color-mix(in srgb, var(--category-color) 20%, transparent) !important;
+        }
       }
 
       &.selected {
-        background: color-mix(in srgb, var(--category-color) 18%, $dk-surface-high) !important;
+        // Fallback for older browsers
+        background: rgba(99, 102, 241, 0.18) !important;
         border-color: var(--category-color) !important;
-        box-shadow:
-          0 0 0 1px color-mix(in srgb, var(--category-color) 30%, transparent),
-          0 4px 16px color-mix(in srgb, var(--category-color) 25%, transparent) !important;
+        box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.3), 0 4px 16px rgba(99, 102, 241, 0.25) !important;
+
+        // Modern browsers with color-mix support
+        @supports (background: color-mix(in srgb, red 50%, blue)) {
+          background: color-mix(in srgb, var(--category-color) 18%, $dk-surface-high) !important;
+          box-shadow:
+            0 0 0 1px color-mix(in srgb, var(--category-color) 30%, transparent),
+            0 4px 16px color-mix(in srgb, var(--category-color) 25%, transparent) !important;
+        }
       }
 
       .color-indicator {
-        box-shadow: 0 0 0 2px color-mix(in srgb, var(--category-color) 25%, $dk-surface-high) !important;
+        // Fallback for older browsers
+        box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25) !important;
+
+        // Modern browsers with color-mix support
+        @supports (background: color-mix(in srgb, red 50%, blue)) {
+          box-shadow: 0 0 0 2px color-mix(in srgb, var(--category-color) 25%, $dk-surface-high) !important;
+        }
       }
     }
 

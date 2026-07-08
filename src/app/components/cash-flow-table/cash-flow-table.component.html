@@ -16,8 +16,31 @@
     </button>
   </div>
 
-  <div class="table-container">
+  <div class="table-container" appStaggerFadeIn [childSelector]="'tr.mat-mdc-row'" [staggerDelay]="0.05">
     <table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
+
+      <!-- Skeleton Loading State -->
+      @if (isLoading) {
+        <div class="skeleton-table">
+          <div class="skeleton-header"></div>
+          @for (i of [1, 2, 3, 4, 5]; track i) {
+            <div class="skeleton-row">
+              <div class="skeleton-cell skeleton-cell-small"></div>
+              <div class="skeleton-cell skeleton-cell-medium"></div>
+              <div class="skeleton-cell skeleton-cell-large"></div>
+              <div class="skeleton-cell skeleton-cell-large"></div>
+              <div class="skeleton-cell skeleton-cell-small"></div>
+              <div class="skeleton-cell skeleton-cell-large"></div>
+              <div class="skeleton-cell skeleton-cell-large"></div>
+              <div class="skeleton-cell skeleton-cell-small"></div>
+              <div class="skeleton-cell skeleton-cell-medium"></div>
+              <div class="skeleton-cell skeleton-cell-medium"></div>
+              <div class="skeleton-cell skeleton-cell-small"></div>
+              <div class="skeleton-cell skeleton-cell-large"></div>
+            </div>
+          }
+        </div>
+      }
 
       <!-- Row Color Actions -->
       <ng-container matColumnDef="rowActions">
@@ -101,7 +124,7 @@
           }
 
           @if (monthCtrl.get('expandedAdditionalIncomes')?.value) {
-            <div class="no-print">
+            <div class="no-print" appStaggerFadeIn [childSelector]="'.expense-row'" [staggerDelay]="0.03">
               @for (expCtrl of getAdditionalIncomes(i).controls; track expCtrl; let j = $index) {
                 <div class="expense-row">
                   <input dir="rtl" placeholder="תיאור" title="תיאור" aria-label="תיאור" [formControl]="getAdditionalIncomeDescription(i, j)" />
@@ -207,7 +230,7 @@
           }
 
           @if (monthCtrl.get('expanded')?.value) {
-            <div class="no-print">
+            <div class="no-print" appStaggerFadeIn [childSelector]="'.expense-item-block'" [staggerDelay]="0.03">
               @for (expCtrl of getRegularExpenses(i).controls; track expCtrl; let j = $index) {
                 <div class="expense-item-block">
                   <div class="expense-row">
@@ -267,7 +290,7 @@
             }
 
             @if (monthCtrl.get('expandedSpecial')?.value) {
-              <div class="no-print">
+              <div class="no-print" appStaggerFadeIn [childSelector]="'.expense-item-block'" [staggerDelay]="0.03">
                 @for (expCtrl of getSpecialExpenses(i).controls; track expCtrl; let j = $index) {
                   <div class="expense-item-block">
                     <div class="expense-row">
@@ -318,11 +341,10 @@
              [matTooltip]="('CASH_FLOW.INCOME' | translate) + ': ' + (getTotalIncome(i) | number:'1.0-0') + ' ₪\n' + 
                            ('CASH_FLOW.EXPENSES' | translate) + ': ' + (getTotalExpenses(i) | number:'1.0-0') + ' ₪\n' +
                            ('CASH_FLOW.SAVINGS' | translate) + ': ' + (getSavings(i) | number:'1.0-0') + ' ₪'">
-                <div class="mini-bar income-bar" [style.width.%]="getBarWidth(getTotalIncome(i), i)"></div>
-                <div class="mini-bar expense-bar" [style.width.%]="getBarWidth(getTotalExpenses(i), i)"></div>
+                <div class="mini-bar income-bar" [appAnimateProgress]="getBarWidth(getTotalIncome(i), i)" [duration]="0.8"></div>
+                <div class="mini-bar expense-bar" [appAnimateProgress]="getBarWidth(getTotalExpenses(i), i)" [duration]="0.8"></div>
                 @if (getSavings(i) > 0) {
-                  <div class="mini-bar savings-bar"
-                  [style.width.%]="getBarWidth(getSavings(i), i)"></div>
+                  <div class="mini-bar savings-bar" [appAnimateProgress]="getBarWidth(getSavings(i), i)" [duration]="0.8"></div>
                 }
               </div>
             </td>
@@ -331,7 +353,9 @@
           <!-- Ending Balance -->
           <ng-container matColumnDef="endingBalance">
             <th mat-header-cell *matHeaderCellDef> {{ 'CASH_FLOW.ENDING_BALANCE' | translate }} </th>
-            <td mat-cell *matCellDef="let monthCtrl"> {{ monthCtrl.get('endingBalance')?.value | number:'1.0-0' }} ₪</td>
+            <td mat-cell *matCellDef="let monthCtrl">
+              <span [appAnimateNumber]="monthCtrl.get('endingBalance')?.value" [duration]="0.8" [decimals]="0"></span> ₪
+            </td>
           </ng-container>
 
           <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>

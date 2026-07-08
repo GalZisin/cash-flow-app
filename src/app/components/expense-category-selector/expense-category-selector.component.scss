@@ -39,9 +39,18 @@
     transform 0.12s ease;
 
   &:hover {
-    border-color: color-mix(in srgb, var(--category-color) 45%, #e2e8f0);
-    background: color-mix(in srgb, var(--category-color) 6%, #fff);
-    box-shadow: 0 4px 14px color-mix(in srgb, var(--category-color) 18%, transparent);
+    // Fallback for older browsers
+    border-color: rgba(79, 70, 229, 0.45);
+    background: rgba(79, 70, 229, 0.06);
+    box-shadow: 0 4px 14px rgba(79, 70, 229, 0.18);
+
+    // Modern browsers with color-mix support
+    @supports (background: color-mix(in srgb, red 50%, blue)) {
+      border-color: color-mix(in srgb, var(--category-color) 45%, #e2e8f0);
+      background: color-mix(in srgb, var(--category-color) 6%, #fff);
+      box-shadow: 0 4px 14px color-mix(in srgb, var(--category-color) 18%, transparent);
+    }
+
     transform: translateY(-1px);
   }
 
@@ -52,10 +61,18 @@
 
   &.selected {
     border-color: var(--category-color);
-    background: color-mix(in srgb, var(--category-color) 12%, #fff);
-    box-shadow:
-      0 0 0 1px color-mix(in srgb, var(--category-color) 25%, transparent),
-      0 6px 18px color-mix(in srgb, var(--category-color) 22%, transparent);
+
+    // Fallback for older browsers
+    background: rgba(79, 70, 229, 0.12);
+    box-shadow: 0 0 0 1px rgba(79, 70, 229, 0.25), 0 6px 18px rgba(79, 70, 229, 0.22);
+
+    // Modern browsers with color-mix support
+    @supports (background: color-mix(in srgb, red 50%, blue)) {
+      background: color-mix(in srgb, var(--category-color) 12%, #fff);
+      box-shadow:
+        0 0 0 1px color-mix(in srgb, var(--category-color) 25%, transparent),
+        0 6px 18px color-mix(in srgb, var(--category-color) 22%, transparent);
+    }
   }
 
   mat-icon {
@@ -80,7 +97,14 @@
     height: 8px;
     border-radius: 50%;
     background: var(--category-color);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--category-color) 20%, #fff);
+
+    // Fallback for older browsers
+    box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+
+    // Modern browsers with color-mix support
+    @supports (background: color-mix(in srgb, red 50%, blue)) {
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--category-color) 20%, #fff);
+    }
   }
 }
 

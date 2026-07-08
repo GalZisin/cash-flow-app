@@ -21,6 +21,10 @@ import { ThemeService } from '../../services/theme.service';
 import { ExpenseCategorySelectorComponent } from '../expense-category-selector/expense-category-selector.component';
 import { ExpenseCategory } from '../../models/expense-category.model';
 import { ExpenseItem, normalizeExpenseItem } from '../../models/expense.model';
+// GSAP Directives
+import { AnimateNumberDirective } from '../../directives/animate-number.directive';
+import { StaggerFadeInDirective } from '../../directives/stagger-fade-in.directive';
+import { AnimateProgressDirective } from '../../directives/animate-progress.directive';
 
 registerLocaleData(localeHe);
 
@@ -31,7 +35,11 @@ registerLocaleData(localeHe);
     MatTableModule, MatButtonModule, MatIconModule,
     MatInputModule, MatSnackBarModule, MatMenuModule,
     MatDividerModule, MatDialogModule, MatTooltipModule,
-    ExpenseCategorySelectorComponent
+    ExpenseCategorySelectorComponent,
+    // GSAP Directives
+    AnimateNumberDirective,
+    StaggerFadeInDirective,
+    AnimateProgressDirective
   ],
   providers: [DecimalPipe],
   templateUrl: './cash-flow-table.component.html',
@@ -69,6 +77,7 @@ export class CashFlowTableComponent implements OnInit {
   activeRowCtrl: AbstractControl | null = null;
   activeRowIndex = 0;
   focusedField: Record<string, boolean> = {};
+  isLoading = true; // Skeleton loading state
   private isInitialized = false;
   private installmentItems$ = toObservable(this.installmentService.items); // Corrected: installmentService.items is already a signal
 
@@ -206,6 +215,7 @@ export class CashFlowTableComponent implements OnInit {
       this.refreshDataSource();
       this.cashFlowForm.updateValueAndValidity();
       this.isInitialized = true;
+      this.isLoading = false; // הטעינה הושלמה
       this.cdr.detectChanges();
     });
   }
