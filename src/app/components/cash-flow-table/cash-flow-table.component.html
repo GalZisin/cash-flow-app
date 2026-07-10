@@ -16,7 +16,7 @@
     </button>
   </div>
 
-  <div class="table-container" appStaggerFadeIn [childSelector]="'tr.mat-mdc-row'" [staggerDelay]="0.05">
+  <div class="table-container" #tableContainer>
     <table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
 
       <!-- Skeleton Loading State -->
@@ -341,10 +341,10 @@
              [matTooltip]="('CASH_FLOW.INCOME' | translate) + ': ' + (getTotalIncome(i) | number:'1.0-0') + ' ₪\n' + 
                            ('CASH_FLOW.EXPENSES' | translate) + ': ' + (getTotalExpenses(i) | number:'1.0-0') + ' ₪\n' +
                            ('CASH_FLOW.SAVINGS' | translate) + ': ' + (getSavings(i) | number:'1.0-0') + ' ₪'">
-                <div class="mini-bar income-bar" [appAnimateProgress]="getBarWidth(getTotalIncome(i), i)" [duration]="0.8"></div>
-                <div class="mini-bar expense-bar" [appAnimateProgress]="getBarWidth(getTotalExpenses(i), i)" [duration]="0.8"></div>
+                <div class="mini-bar income-bar" [appAnimateProgress]="getBarWidth(getTotalIncome(i), i)" [duration]="animationsEnabled ? 0.8 : 0"></div>
+                <div class="mini-bar expense-bar" [appAnimateProgress]="getBarWidth(getTotalExpenses(i), i)" [duration]="animationsEnabled ? 0.8 : 0"></div>
                 @if (getSavings(i) > 0) {
-                  <div class="mini-bar savings-bar" [appAnimateProgress]="getBarWidth(getSavings(i), i)" [duration]="0.8"></div>
+                  <div class="mini-bar savings-bar" [appAnimateProgress]="getBarWidth(getSavings(i), i)" [duration]="animationsEnabled ? 0.8 : 0"></div>
                 }
               </div>
             </td>
@@ -354,7 +354,7 @@
           <ng-container matColumnDef="endingBalance">
             <th mat-header-cell *matHeaderCellDef> {{ 'CASH_FLOW.ENDING_BALANCE' | translate }} </th>
             <td mat-cell *matCellDef="let monthCtrl">
-              <span [appAnimateNumber]="monthCtrl.get('endingBalance')?.value" [duration]="0.8" [decimals]="0"></span> ₪
+              <span [appAnimateNumber]="monthCtrl.get('endingBalance')?.value" [duration]="animationsEnabled ? 0.8 : 0" [decimals]="0"></span> ₪
             </td>
           </ng-container>
 

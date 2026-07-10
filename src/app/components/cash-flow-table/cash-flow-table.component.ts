@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef, inject } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, inject, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
 import { FormBuilder, FormGroup, FormArray, ReactiveFormsModule, FormControl, AbstractControl } from '@angular/forms';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
@@ -25,6 +25,7 @@ import { ExpenseItem, normalizeExpenseItem } from '../../models/expense.model';
 import { AnimateNumberDirective } from '../../directives/animate-number.directive';
 import { StaggerFadeInDirective } from '../../directives/stagger-fade-in.directive';
 import { AnimateProgressDirective } from '../../directives/animate-progress.directive';
+import gsap from 'gsap';
 
 registerLocaleData(localeHe);
 
@@ -45,7 +46,8 @@ registerLocaleData(localeHe);
   templateUrl: './cash-flow-table.component.html',
   styleUrl: './cash-flow-table.component.scss'
 })
-export class CashFlowTableComponent implements OnInit {
+export class CashFlowTableComponent implements OnInit, AfterViewInit {
+  @ViewChild('tableContainer') tableContainer!: ElementRef;
   private fb = inject(FormBuilder);
   private cashFlowService = inject(CashFlowService);
   private snackBar = inject(MatSnackBar);
@@ -78,6 +80,7 @@ export class CashFlowTableComponent implements OnInit {
   activeRowIndex = 0;
   focusedField: Record<string, boolean> = {};
   isLoading = true; // Skeleton loading state
+  animationsEnabled = false;
   private isInitialized = false;
   private installmentItems$ = toObservable(this.installmentService.items); // Corrected: installmentService.items is already a signal
 
@@ -217,7 +220,46 @@ export class CashFlowTableComponent implements OnInit {
       this.isInitialized = true;
       this.isLoading = false; // הטעינה הושלמה
       this.cdr.detectChanges();
+
+      // אנימציית שורות אחרי טעינת הנתונים
+      requestAnimationFrame(() => this.animationsEnabled = true);
     });
+  }
+
+  ngAfterViewInit(): void {
+    // נוסיף observer למקרה שנוסיפים שורות דינמית
+  }
+
+  /**
+   * אנימציה יפה של שורות הטבלה - מופיעות אחת אחרי השניה
+   */
+  private animateTableRows(): void {
+    // המתנה קצרה לוודא שה-DOM מוכן
+    setTimeout(() => {
+      const rows = document.querySelectorAll('.mat-mdc-row');
+
+      if (rows.length > 0) {
+        // הגדרת מצב התחלתי
+        gsap.set(rows, {
+          opacity: 0,
+          y: 30,
+          scale: 0.95
+        });
+
+        // אנימציה מדורגת
+        gsap.to(rows, {
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          duration: 0.6,
+          ease: 'back.out(1.2)',
+          stagger: {
+            amount: 0.8, // סה"כ זמן לכל השורות
+            from: 'start' // מלמעלה למטה
+          }
+        });
+      }
+    }, 100);
   }
 
   get months(): FormArray {
@@ -592,7 +634,31 @@ export class CashFlowTableComponent implements OnInit {
       this.months.push(newMonth);
       this.calculateEndingBalances();
       this.refreshDataSource();
+
+      // אנימציה לשורה החדשה
+      this.animateNewRow();
     });
+  }
+
+  /**
+   * אנימציה לשורה חדשה שנוספה
+   */
+  private animateNewRow(): void {
+    setTimeout(() => {
+      const rows = document.querySelectorAll('.mat-mdc-row');
+      const lastRow = rows[rows.length - 1];
+
+      if (lastRow) {
+        gsap.from(lastRow, {
+          opacity: 0,
+          x: -50,
+          scale: 0.9,
+          duration: 0.6,
+          ease: 'back.out(1.4)',
+          clearProps: 'all' // ניקוי properties אחרי האנימציה
+        });
+      }
+    }, 50);
   }
 
   toMonthString(date: Date): string {

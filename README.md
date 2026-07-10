@@ -1,59 +1,124 @@
-# CashFlowApp
+# Cash Flow App
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.0.2.
+אפליקציית ניהול פיננסי אישי לניהול תזרים מזומנים, השקעות, תשלומים עתידיים וניתוח מבוסס AI. הממשק תומך בעברית ובאנגלית, וכן במצב בהיר וכהה.
 
-## Development server
+## יכולות עיקריות
 
-To start a local development server, run:
+- **תזרים מזומנים** — הזנת הכנסות, משכנתה, הלוואות, הוצאות קבועות והוצאות חד־פעמיות, וחישוב יתרה חודשית.
+- **השקעות** — ניהול השקעות, עסקאות, צילומי מצב של שווי השקעה וחוקי סימולציה.
+- **תשלומים ופריסות** — מעקב אחר עסקאות בתשלומים, מקדמות, אבני דרך ורכיבי הלוואה.
+- **עוזר AI** — סיכום פיננסי, ניתוח, צ׳אט וסימולציית רכישה עתידית בעזרת Ollama מקומי.
+- **ייצוא ותצוגה** — גרפים, דיאגרמת Sankey, כרטיסי סיכום וייצוא PDF מתוך הממשק.
 
-```bash
-ng serve
-```
+## טכנולוגיות
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+| שכבה | טכנולוגיות |
+| --- | --- |
+| ממשק | Angular 21, Angular Material, Bootstrap, RxJS |
+| ויזואליזציה ואנימציות | D3 / D3-Sankey, GSAP |
+| שרת | Node.js, Express, CORS |
+| התמדה | קובצי JSON מקומיים תחת `server/` |
+| AI אופציונלי | Ollama, מודל `qwen3:8b` כברירת מחדל |
 
-## Code scaffolding
+## דרישות מקדימות
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+- Node.js ו־npm
+- דפדפן עדכני
+- להפעלת יכולות AI: [Ollama](https://ollama.com/) ומודל מקומי תואם
 
-```bash
-ng generate component component-name
-```
+## התקנה והפעלה
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
+התקינו את התלויות של הממשק ושל השרת:
 
 ```bash
-ng test
+npm install
+npm install --prefix server
 ```
 
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
+להפעלת הממשק והשרת יחד:
 
 ```bash
-ng e2e
+npm run dev
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+לאחר ההפעלה:
 
-## Additional Resources
+- הממשק זמין ב־`http://localhost:4300`
+- ה־API זמין ב־`http://localhost:3000/api`
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+ניתן גם להפעיל כל צד בנפרד:
+
+```bash
+npm start       # ממשק Angular בפורט 4300
+npm run server  # שרת Express בפורט 3000
+```
+
+## הפעלת AI מקומי (אופציונלי)
+
+העוזר החכם מתקשר ל־Ollama ב־`localhost:11434`. התקינו והורידו את המודל:
+
+```bash
+ollama pull qwen3:8b
+ollama serve
+```
+
+בחירת מודל אחר נעשית באמצעות משתנה הסביבה `AI_MODEL` לפני הפעלת השרת. לדוגמה ב־PowerShell:
+
+```powershell
+$env:AI_MODEL = 'qwen3:8b'
+npm run server
+```
+
+ללא Ollama, שאר האפליקציה פועלת כרגיל; רק פעולות לשונית ה־AI יחזירו שגיאה מהשרת.
+
+## מבנה הפרויקט
+
+```text
+src/
+  app/
+    components/       רכיבי המסכים והדיאלוגים
+    services/         תקשורת API, שפה וערכת נושא
+    models/           מודלי תזרים, השקעות, תשלומים והוצאות
+    utils/            חישובים וניתוחים פיננסיים
+  environments/       כתובת ה־API לסביבות הפיתוח והייצור
+server/
+  index.js            נקודת הכניסה לשרת והגדרת הנתיבים
+  cash-flow.js        API של תזרים והגדרות ברירת מחדל
+  investments.js      API של השקעות, עסקאות וסימולציות
+  installments.js     API של עסקאות בתשלומים
+  ai.routes.js        API לעוזר ה־AI
+  cashflow-engine.js  חישובי סיכום ותחזית עבור ה־AI
+public/assets/i18n/   קובצי תרגום עברית ואנגלית
+```
+
+## נתונים מקומיים
+
+השרת יוצר ומעדכן קובצי JSON בתוך `server/`, למשל `cash-flow-data-miluim.json`, `investments.json` ו־`installments.json`. הקבצים אינם נכללים ב־Git, כדי למנוע העלאה של נתונים פיננסיים אישיים.
+
+חשוב לגבות את קובצי ה־JSON הללו לפני מחיקת סביבת העבודה או מעבר למחשב אחר.
+
+## API עיקרי
+
+כל הנתיבים מתחילים ב־`http://localhost:3000/api`.
+
+| תחום | נתיבים |
+| --- | --- |
+| תזרים | `GET` / `POST` `/cash-flow`, `GET` / `POST` `/cash-flow-defaults` |
+| השקעות | `GET` / `POST` `/investments`, `PUT` / `DELETE` `/investments/:id` |
+| נתוני השקעה | `/investments/:id/snapshot`, `/transaction`, `/simulation-rule` (כולל `PUT` ו־`DELETE` עם מזהה הפריט) |
+| תשלומים | `GET` / `POST` `/installments`, `PUT` / `DELETE` `/installments/:id` |
+| AI | `GET /ai/summary`, `POST /ai/analysis`, `POST /ai/chat`, `POST /ai/chat-stream`, `POST /ai/scenario` |
+
+## פקודות שימושיות
+
+```bash
+npm run build  # בניית גרסת production לתיקיית dist/
+npm test       # הרצת בדיקות יחידה
+npm run watch  # בנייה מחדש בעת שינוי קבצים
+```
+
+## הערות פיתוח
+
+- כתובת ה־API מוגדרת ב־`src/environments/environment.ts`.
+- השרת מאפשר CORS ומיועד להרצה מקומית; לפני פריסה יש להגדיר הרשאות CORS, אימות משתמשים ואחסון נתונים מאובטח.
+- ליכולות ה־AI יש להימנע מהזנת מידע שלא רוצים להעביר למודל המקומי. השרת שולח ל־Ollama סיכום פיננסי מחושב, ולא את כל קובצי הנתונים הגולמיים.
