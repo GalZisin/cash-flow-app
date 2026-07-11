@@ -38,11 +38,9 @@
 
 <div class="tab-content app-content"
   [class.no-scroll]="activeTab === 'cashflow' || activeTab === 'installments' || activeTab === 'ai'">
-  @if (activeTab === 'cashflow') {
-    <div class="mt-4 mx-4">
-      <app-cash-flow-table />
-    </div>
-  }
+  <div class="mt-4 mx-4" [hidden]="activeTab !== 'cashflow'">
+    <app-cash-flow-table />
+  </div>
   @if (activeTab === 'investments') {
     <app-investment-dashboard />
   }

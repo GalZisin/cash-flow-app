@@ -1,4 +1,14 @@
 <div class="cash-flow-table" dir="rtl">
+  @if (isLoading) {
+    <div class="table-loading" data-testid="cash-flow-table-loader" aria-live="polite">
+      <div class="loading-card">
+        <div class="loading-spinner"></div>
+        <div class="loading-title">{{ loadingTitle }}</div>
+        <div class="loading-subtitle">{{ loadingSubtitle }}</div>
+      </div>
+    </div>
+  }
+
   <div class="actions">
     <button mat-raised-button color="primary" (click)="addMonth()" [title]="'CASH_FLOW.ADD_MONTH' | translate" [attr.aria-label]="'CASH_FLOW.ADD_MONTH' | translate">
       {{ 'CASH_FLOW.ADD_MONTH' | translate }}
@@ -18,29 +28,6 @@
 
   <div class="table-container" #tableContainer>
     <table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
-
-      <!-- Skeleton Loading State -->
-      @if (isLoading) {
-        <div class="skeleton-table">
-          <div class="skeleton-header"></div>
-          @for (i of [1, 2, 3, 4, 5]; track i) {
-            <div class="skeleton-row">
-              <div class="skeleton-cell skeleton-cell-small"></div>
-              <div class="skeleton-cell skeleton-cell-medium"></div>
-              <div class="skeleton-cell skeleton-cell-large"></div>
-              <div class="skeleton-cell skeleton-cell-large"></div>
-              <div class="skeleton-cell skeleton-cell-small"></div>
-              <div class="skeleton-cell skeleton-cell-large"></div>
-              <div class="skeleton-cell skeleton-cell-large"></div>
-              <div class="skeleton-cell skeleton-cell-small"></div>
-              <div class="skeleton-cell skeleton-cell-medium"></div>
-              <div class="skeleton-cell skeleton-cell-medium"></div>
-              <div class="skeleton-cell skeleton-cell-small"></div>
-              <div class="skeleton-cell skeleton-cell-large"></div>
-            </div>
-          }
-        </div>
-      }
 
       <!-- Row Color Actions -->
       <ng-container matColumnDef="rowActions">
@@ -362,7 +349,6 @@
           <tr mat-row *matRowDef="let row; columns: displayedColumns;"
           [style]="row.get('rowColor')?.value ? '--row-color: ' + resolveRowColor(row.get('rowColor')?.value) : ''"></tr>
         </table>
-      </div>
     </div>
 
     <mat-menu #colorMenu="matMenu" class="color-menu">

@@ -1,10 +1,25 @@
 import { TestBed } from '@angular/core/testing';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AppComponent } from './app.component';
 
 describe('AppComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [AppComponent],
+      imports: [AppComponent, TranslateModule.forRoot()],
+      providers: [
+        {
+          provide: TranslateService,
+          useValue: {
+            currentLang: 'he',
+            use: jasmine.createSpy('use'),
+            get: jasmine.createSpy('get').and.returnValue({ subscribe: () => undefined }),
+            setDefaultLang: jasmine.createSpy('setDefaultLang'),
+            onLangChange: { subscribe: () => undefined },
+            onTranslationChange: { subscribe: () => undefined },
+            onDefaultLangChange: { subscribe: () => undefined },
+          },
+        },
+      ],
     }).compileComponents();
   });
 

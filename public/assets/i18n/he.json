@@ -44,7 +44,9 @@
     "ADDITIONAL_INCOMES_TOTAL": "סה\"כ הכנסות נוספות",
     "VISUAL_SUMMARY": "גרף",
     "SAVINGS": "חיסכון",
-    "ROW_ACTIONS": "פעולות שורה"
+    "ROW_ACTIONS": "פעולות שורה",
+    "LOADING": "טוען נתוני התזרים",
+    "LOADING_SUBTITLE": "אנחנו מכינים את הטבלה בשבילך..."
   },
   "AI": {
     "TAB_CHAT": "💬 צ'אט",

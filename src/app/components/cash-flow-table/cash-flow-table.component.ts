@@ -79,9 +79,15 @@ export class CashFlowTableComponent implements OnInit, AfterViewInit {
   activeRowCtrl: AbstractControl | null = null;
   activeRowIndex = 0;
   focusedField: Record<string, boolean> = {};
-  isLoading = true; // Skeleton loading state
+  isLoading = false;
+  loadingTitle = 'טוען נתוני התזרים';
+  loadingSubtitle = 'אנחנו מכינים את הטבלה בשבילך...';
   animationsEnabled = false;
   private isInitialized = false;
+  private readonly minLoadingDisplayMs = 650;
+  private readonly loaderRevealDelayMs = 250;
+  private loaderScheduled = false;
+  private loadingStartedAt = 0;
   private installmentItems$ = toObservable(this.installmentService.items); // Corrected: installmentService.items is already a signal
 
   displayedColumns = [
@@ -154,6 +160,21 @@ export class CashFlowTableComponent implements OnInit, AfterViewInit {
   }
 
   ngOnInit(): void {
+    this.loadingStartedAt = Date.now();
+    this.isLoading = false;
+    this.loaderScheduled = false;
+
+    this.translate.get(['CASH_FLOW.LOADING', 'CASH_FLOW.LOADING_SUBTITLE']).subscribe({
+      next: translations => {
+        this.loadingTitle = translations['CASH_FLOW.LOADING'] || this.loadingTitle;
+        this.loadingSubtitle = translations['CASH_FLOW.LOADING_SUBTITLE'] || this.loadingSubtitle;
+      },
+      error: () => {
+        this.loadingTitle = 'טוען נתוני התזרים';
+        this.loadingSubtitle = 'אנחנו מכינים את הטבלה בשבילך...';
+      }
+    });
+
     this.cashFlowForm = this.fb.group({
       months: this.fb.array([]),
     });
@@ -164,6 +185,8 @@ export class CashFlowTableComponent implements OnInit, AfterViewInit {
       this.calculateEndingBalances();
       this.save(true); // שמירה שקטה כדי לסנכרן את ה-loanPayment החדש לקובץ
     });
+
+    this.scheduleDataLoaderOverlay();
 
     // הבטחת טעינה מסונכרנת: קודם פריסות/הלוואות ואז תזרים
     combineLatest([
@@ -218,8 +241,14 @@ export class CashFlowTableComponent implements OnInit, AfterViewInit {
       this.refreshDataSource();
       this.cashFlowForm.updateValueAndValidity();
       this.isInitialized = true;
-      this.isLoading = false; // הטעינה הושלמה
-      this.cdr.detectChanges();
+
+      const elapsed = Date.now() - this.loadingStartedAt;
+      const remainingDisplayMs = Math.max(this.minLoadingDisplayMs - elapsed, 0);
+      window.setTimeout(() => {
+        this.isLoading = false;
+        this.loaderScheduled = false;
+        this.cdr.detectChanges();
+      }, remainingDisplayMs);
 
       // אנימציית שורות אחרי טעינת הנתונים
       requestAnimationFrame(() => this.animationsEnabled = true);
@@ -227,7 +256,19 @@ export class CashFlowTableComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    // נוסיף observer למקרה שנוסיפים שורות דינמית
+    requestAnimationFrame(() => this.scheduleDataLoaderOverlay());
+  }
+
+  private scheduleDataLoaderOverlay(): void {
+    if (this.loaderScheduled) {
+      return;
+    }
+
+    this.loaderScheduled = true;
+    window.setTimeout(() => {
+      this.isLoading = true;
+      this.cdr.detectChanges();
+    }, this.loaderRevealDelayMs);
   }
 
   /**
