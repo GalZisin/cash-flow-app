@@ -415,7 +415,7 @@ export class AiSankeyDiagramComponent implements OnChanges, AfterViewInit {
       .selectAll<SVGTextElement, SankeyNode<SankeyNodeData, SankeyLinkData>>('text') // Explicit type for selection
       .data(graph.nodes as Array<SankeyNode<SankeyNodeData, SankeyLinkData>>) // Cast to expected type
       .join('text')
-      .attr('fill', isDarkMode ? '#ffffff' : 'var(--bs-body-color)') // הגדרת צבע הטקסט בהתאם למצב התמה
+      .attr('fill', isDarkMode ? '#ffffff' : '#0f172a') // הגדרת צבע הטקסט בהתאם למצב התמה
       // מיקום הטקסט: צמוד לקצה העמודה עם רווח קטן
       .attr('x', (d: SankeyNode<SankeyNodeData, SankeyLinkData>) => (d.x0 || 0) < width / 2 ? (d.x1 || 0) + textPadding : (d.x0 || 0) - textPadding)
       .attr('y', (d: SankeyNode<SankeyNodeData, SankeyLinkData>) => ((d.y1 || 0) + (d.y0 || 0)) / 2)
