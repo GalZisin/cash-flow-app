@@ -207,12 +207,13 @@ app-cash-flow-table .actions {
     min-width: 140px !important;
     border-radius: 12px !important;
     box-shadow: 0 8px 24px $shadow-menu !important;
-    font-family: 'Heebo', sans-serif !important;
     direction: rtl;
+    font-family: 'Heebo', 'Segoe UI', Tahoma, sans-serif !important;
 }
 
-.mat-mdc-menu-panel.color-menu .mat-mdc-menu-item.color-menu-item {
-    font-family: 'Heebo', sans-serif !important;
+.mat-mdc-menu-panel.color-menu .mat-mdc-menu-item.color-menu-item,
+.mat-mdc-menu-panel.color-menu .mat-mdc-menu-item {
+    font-family: 'Heebo', 'Segoe UI', Tahoma, sans-serif !important;
     font-size: 13px !important;
     height: 40px !important;
     min-height: 40px !important;
@@ -223,19 +224,21 @@ app-cash-flow-table .actions {
     direction: rtl;
 }
 
+.mat-mdc-menu-panel.color-menu .mat-mdc-menu-item .mat-mdc-menu-item-text,
 .mat-mdc-menu-panel.color-menu .mat-mdc-menu-item.color-menu-item .mat-mdc-menu-item-text {
     display: flex !important;
     align-items: center !important;
     gap: 10px !important;
     width: 100% !important;
-    font-family: 'Heebo', sans-serif !important;
+    font-family: 'Heebo', 'Segoe UI', Tahoma, sans-serif !important;
     font-size: 13px !important;
+    line-height: 1.4 !important;
 }
 
-// כל פריט בתפריט (כולל שכפל חודש)
-.mat-mdc-menu-panel.color-menu .mat-mdc-menu-item {
-    font-family: 'Heebo', sans-serif !important;
-    font-size: 13px !important;
+.mat-mdc-menu-panel.color-menu .color-swatch,
+.mat-mdc-menu-panel.color-menu .check-icon,
+.mat-mdc-menu-panel.color-menu mat-icon {
+    font-family: 'Heebo', 'Segoe UI', Tahoma, sans-serif !important;
 }
 
 .mat-mdc-menu-panel.color-menu .color-swatch {
