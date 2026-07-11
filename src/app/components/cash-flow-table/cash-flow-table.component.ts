@@ -83,6 +83,7 @@ export class CashFlowTableComponent implements OnInit, AfterViewInit {
   loadingTitle = 'טוען נתוני התזרים';
   loadingSubtitle = 'אנחנו מכינים את הטבלה בשבילך...';
   animationsEnabled = false;
+  lastSavedAt: string | null = null;
   private isInitialized = false;
   private readonly minLoadingDisplayMs = 650;
   private readonly loaderRevealDelayMs = 250;
@@ -730,6 +731,14 @@ export class CashFlowTableComponent implements OnInit, AfterViewInit {
     };
     this.cashFlowService.save(data).subscribe({
       next: () => {
+        this.lastSavedAt = new Date().toLocaleString('he-IL', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+        this.cdr.detectChanges();
         if (!silent) {
           this.translate.get('CASH_FLOW.SAVED_SUCCESS').subscribe(msg =>
             this.snackBar.open(msg, '', { duration: 3000, panelClass: 'snack-success' })

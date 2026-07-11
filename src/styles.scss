@@ -150,18 +150,23 @@ body {
     }
 }
 
+.snack-error .mdc-snackbar__surface,
+.snack-error .mdc-snackbar__label,
+.snack-success .mdc-snackbar__surface,
+.snack-success .mdc-snackbar__label {
+    font-family: inherit !important;
+    font-size: 14px !important;
+    line-height: 1.4 !important;
+}
+
 .snack-error .mdc-snackbar__surface {
     background-color: $error-color !important;
     color: $white-color !important;
-    font-family: 'Heebo', sans-serif !important;
-    font-size: 14px !important;
 }
 
 .snack-success .mdc-snackbar__surface {
     background-color: $success-color !important;
     color: $white-color !important;
-    font-family: 'Heebo', sans-serif !important;
-    font-size: 14px !important;
     font-weight: 500 !important;
 }
 

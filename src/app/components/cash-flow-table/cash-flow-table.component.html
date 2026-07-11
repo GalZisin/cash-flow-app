@@ -10,6 +10,10 @@
   }
 
   <div class="actions">
+    <div class="save-status" *ngIf="lastSavedAt">
+      <span class="save-status-dot"></span>
+      <span>נשמר לאחרונה: {{ lastSavedAt }}</span>
+    </div>
     <button mat-raised-button color="primary" (click)="addMonth()" [title]="'CASH_FLOW.ADD_MONTH' | translate" [attr.aria-label]="'CASH_FLOW.ADD_MONTH' | translate">
       {{ 'CASH_FLOW.ADD_MONTH' | translate }}
     </button>
