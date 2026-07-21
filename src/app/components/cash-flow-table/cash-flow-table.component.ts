@@ -162,7 +162,7 @@ export class CashFlowTableComponent implements OnInit, AfterViewInit {
 
   ngOnInit(): void {
     this.loadingStartedAt = Date.now();
-    this.isLoading = false;
+    // this.isLoading = false;
     this.loaderScheduled = false;
 
     this.translate.get(['CASH_FLOW.LOADING', 'CASH_FLOW.LOADING_SUBTITLE']).subscribe({
