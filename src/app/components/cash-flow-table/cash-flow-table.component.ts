@@ -56,7 +56,7 @@ export class CashFlowTableComponent implements OnInit, AfterViewInit {
   private installmentService = inject(InstallmentService);
   private decimalPipe = inject(DecimalPipe);
   private themeService = inject(ThemeService);
-
+  readonly skeletonRows = Array.from({ length: 50 });
   resolveRowColor(hexColor: string | null): string | null {
     if (!hexColor) return null;
 
@@ -162,7 +162,7 @@ export class CashFlowTableComponent implements OnInit, AfterViewInit {
 
   ngOnInit(): void {
     this.loadingStartedAt = Date.now();
-    // this.isLoading = false;
+    this.isLoading = true;
     this.loaderScheduled = false;
 
     this.translate.get(['CASH_FLOW.LOADING', 'CASH_FLOW.LOADING_SUBTITLE']).subscribe({

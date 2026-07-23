@@ -1,15 +1,31 @@
 <div class="cash-flow-table" dir="rtl">
   @if (isLoading) {
-    <div class="table-loading" data-testid="cash-flow-table-loader" aria-live="polite">
+    <!-- <div class="table-loading" data-testid="cash-flow-table-loader" aria-live="polite">
       <div class="loading-card">
         <div class="loading-spinner"></div>
         <div class="loading-title">{{ loadingTitle }}</div>
         <div class="loading-subtitle">{{ loadingSubtitle }}</div>
       </div>
+    </div> -->
+        <div class="table-loading-skeleton" data-testid="cash-flow-table-loader" aria-live="polite" #skeletonWrapper>
+      <div class="skeleton-table">
+        <div class="skeleton-header"></div>
+        @for (row of skeletonRows; track $index) {
+          <div class="skeleton-row">
+            <div class="skeleton-cell skeleton-cell-small"></div>
+            <div class="skeleton-cell skeleton-cell-medium"></div>
+            <div class="skeleton-cell skeleton-cell-large"></div>
+            <div class="skeleton-cell skeleton-cell-medium"></div>
+            <div class="skeleton-cell skeleton-cell-medium"></div>
+            <div class="skeleton-cell skeleton-cell-large"></div>
+            <div class="skeleton-cell skeleton-cell-medium"></div>
+          </div>
+        }
+      </div>
     </div>
   }
 
-  <div class="actions">
+  <div class="actions" [class.content-hidden]="isLoading">
     <div class="save-status" *ngIf="lastSavedAt">
       <span class="save-status-dot"></span>
       <span>נשמר לאחרונה: {{ lastSavedAt }}</span>
