@@ -7,7 +7,7 @@
         <div class="loading-subtitle">{{ loadingSubtitle }}</div>
       </div>
     </div> -->
-        <div class="table-loading-skeleton" data-testid="cash-flow-table-loader" aria-live="polite" #skeletonWrapper>
+        <div class="table-loading-skeleton" data-testid="cash-flow-table-loader" aria-live="polite">
       <div class="skeleton-table">
         <div class="skeleton-header"></div>
         @for (row of skeletonRows; track $index) {
@@ -355,7 +355,7 @@
                 }
               </div>
             </td>
-          </ng-container>
+          </ng-container>אדום
 
           <!-- Ending Balance -->
           <ng-container matColumnDef="endingBalance">
