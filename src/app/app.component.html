@@ -1,22 +1,22 @@
 <nav class="app-navbar px-3 d-flex justify-content-between align-items-center">
   <ul class="nav nav-tabs border-0">
     <li class="nav-item">
-      <a class="nav-link" [class.active]="activeTab === 'cashflow'" (click)="activeTab = 'cashflow'">
+      <a class="nav-link" routerLink="/cashflow" routerLinkActive="active">
         💰 {{ 'TABS.CASH_FLOW' | translate }}
       </a>
     </li>
     <li class="nav-item">
-      <a class="nav-link" [class.active]="activeTab === 'investments'" (click)="activeTab = 'investments'">
+      <a class="nav-link" routerLink="/investments" routerLinkActive="active">
         📈 {{ 'TABS.INVESTMENTS' | translate }}
       </a>
     </li>
     <li class="nav-item">
-      <a class="nav-link" [class.active]="activeTab === 'installments'" (click)="activeTab = 'installments'">
+      <a class="nav-link" routerLink="/installments" routerLinkActive="active">
         🛒 {{ 'TABS.INSTALLMENTS' | translate }}
       </a>
     </li>
     <li class="nav-item">
-      <a class="nav-link" [class.active]="activeTab === 'ai'" (click)="activeTab = 'ai'">
+      <a class="nav-link" routerLink="/ai" routerLinkActive="active">
         🤖 {{ 'TABS.AI' | translate }}
       </a>
     </li>
@@ -36,18 +36,6 @@
   </div>
 </nav>
 
-<div class="tab-content app-content"
-  [class.no-scroll]="activeTab === 'cashflow' || activeTab === 'installments' || activeTab === 'ai'">
-  <div class="mt-4 mx-4" [hidden]="activeTab !== 'cashflow'">
-    <app-cash-flow-table />
-  </div>
-  @if (activeTab === 'investments') {
-    <app-investment-dashboard />
-  }
-  @if (activeTab === 'installments') {
-    <app-installments />
-  }
-  @if (activeTab === 'ai') {
-    <app-ai-assistant />
-  }
+<div class="tab-content app-content" [class.no-scroll]="noScroll">
+  <router-outlet />
 </div>
