@@ -7,10 +7,10 @@ const { buildSummary, simulateScenario } = require('./cashflow-engine');
 const { getAnalysis, getChat, getScenario, getChatStream } = require('./ai.service');
 
 // --- File paths ---
-const CASHFLOW_FILE = path.join(__dirname, 'cash-flow-data-miluim.json');
-const DEFAULTS_FILE = path.join(__dirname, 'cash-flow-defaults.json');
-const INSTALLMENTS_FILE = path.join(__dirname, 'installments.json');
-const INVESTMENTS_FILE = path.join(__dirname, 'investments.json');
+const CASHFLOW_FILE = path.join(__dirname, 'data/cash-flow-data-miluim.json');
+const DEFAULTS_FILE = path.join(__dirname, 'data/cash-flow-defaults.json');
+const INSTALLMENTS_FILE = path.join(__dirname, 'data/installments.json');
+const INVESTMENTS_FILE = path.join(__dirname, 'data/investments.json');
 
 function loadAllData() {
   const readJson = (file) => fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : null;
@@ -86,7 +86,7 @@ router.post('/chat-stream', async (req, res) => {
     res.setHeader('Content-Type', 'text/plain; charset=utf-8');
     res.setHeader('Transfer-Encoding', 'chunked');
 
-    getChatStream(summary, question, 
+    getChatStream(summary, question,
       (token) => res.write(token),
       () => res.end(),
       (err) => { console.error(err); res.status(500).end(); }

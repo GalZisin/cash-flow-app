@@ -47,6 +47,10 @@ function buildSummary({ cashFlow, installments = [], investments = [], defaults 
   // --- Active Loans / Installments ---
   const activeLoans = installments
     .filter(i => i.loanComponents?.length > 0)
+    .filter(i => {
+      const remaining = i.installmentsCount - (i.manualPaidCount || 0);
+      return remaining > 0 && i.monthlyPayment > 0;
+    })
     .map(i => ({
       name: i.name,
       totalAmount: i.totalAmount,
@@ -57,12 +61,44 @@ function buildSummary({ cashFlow, installments = [], investments = [], defaults 
 
   const activeInstallments = installments
     .filter(i => !i.loanComponents?.length)
-    .map(i => ({
-      name: i.name,
-      totalAmount: i.totalAmount,
-      monthlyPayment: i.monthlyPayment,
-      remainingPayments: i.installmentsCount - (i.manualPaidCount || 0)
-    }));
+    .filter(i => {
+      // Include milestone-based payments or monthly payments
+      if (i.paymentType === 'milestone' && i.milestones?.length > 0) {
+        // Check if there are unpaid milestones
+        const totalMilestones = i.milestones.length;
+        const paidMilestones = i.milestonePayments?.length || 0;
+        return paidMilestones < totalMilestones;
+      }
+      // Regular monthly payments
+      const remaining = i.installmentsCount - (i.manualPaidCount || 0);
+      return remaining > 0 && i.monthlyPayment > 0;
+    })
+    .map(i => {
+      if (i.paymentType === 'milestone') {
+        const totalMilestones = i.milestones?.length || 0;
+        const paidMilestones = i.milestonePayments?.length || 0;
+        const remainingMilestones = totalMilestones - paidMilestones;
+        const remainingAmount = i.milestones
+          ?.slice(paidMilestones)
+          .reduce((sum, m) => sum + (m.amount || 0), 0) || 0;
+
+        return {
+          name: i.name,
+          totalAmount: i.totalAmount,
+          paymentType: 'milestone',
+          remainingMilestones: remainingMilestones,
+          remainingAmount: remainingAmount,
+          nextMilestone: i.milestones?.[paidMilestones]
+        };
+      }
+
+      return {
+        name: i.name,
+        totalAmount: i.totalAmount,
+        monthlyPayment: i.monthlyPayment,
+        remainingPayments: i.installmentsCount - (i.manualPaidCount || 0)
+      };
+    });
 
   // --- Investments ---
   const investmentSummary = investments.map(inv => {
@@ -89,12 +125,24 @@ function buildSummary({ cashFlow, installments = [], investments = [], defaults 
     });
   }
 
+  // --- Monthly Snapshots (for dashboard charts) ---
+  const monthlySnapshots = months.map(m => ({
+    month: m.month?.substring(0, 7),
+    startingBalance: m.startingBalance || 0,
+    endingBalance: m.endingBalance || 0,
+    income: (Number(m.income) || 0) + sumExpenses(m.additionalIncomes || []),
+    expenses: sumExpenses(m.regularExpenses || []) + sumExpenses(m.specialExpenses || []) +
+      (Number(m.mortgagePayment) || 0) + (Number(m.loanPayment) || 0) +
+      (Number(m.installmentsPayment) || 0)
+  }));
+
   return {
     periodCovered: {
       from: oldest.month?.substring(0, 7),
       to: latest.month?.substring(0, 7),
       months: monthCount
     },
+    monthlySnapshots,
     currentBalance: currentBalance,
     balanceGrowth: Math.round(balanceDelta),
     income: {
