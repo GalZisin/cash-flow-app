@@ -97,17 +97,21 @@
 .inst-amounts {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 1px;
-    background: #f0f2f5;
-    margin: 0 0 1px;
+    gap: 8px;
+    padding: 10px 12px 0;
+    margin: 0 0 10px;
 }
 
 .inst-amount-cell {
     background: #fff;
-    padding: 8px 14px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 10px 12px;
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 4px;
+    min-height: 58px;
+    justify-content: center;
 }
 
 .inst-amount-label {
@@ -116,12 +120,14 @@
     text-transform: uppercase;
     letter-spacing: 0.4px;
     color: #94a3b8;
+    line-height: 1.2;
 }
 
 .inst-amount-val {
     font-size: 0.9rem;
     font-weight: 700;
     color: #1e293b;
+    line-height: 1.25;
 }
 
 .inst-paid {
@@ -250,6 +256,12 @@
 
     .inst-amount-cell {
         background: #111827 !important;
+        border: 1px solid #334155 !important;
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04) !important;
+    }
+
+    .inst-amounts {
+        padding: 10px 12px 0 !important;
     }
 
     .inst-amount-label {
