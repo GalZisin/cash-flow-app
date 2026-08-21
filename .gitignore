@@ -13,12 +13,9 @@ yarn-error.log
 
 # ignore server dependencies
 server/node_modules/
-server/cash-flow-data*.json
-server/investments.json
-server/cash-flow-defaults.json
-server/installments.json
-server/cash-flow-data-miluim.json
-server/conversations.json
+# Server-generated data files
+server/data/*.json
+/server/cash-flow-data*.json
 dist/
 .angular/
 .env
