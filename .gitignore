@@ -13,9 +13,19 @@ yarn-error.log
 
 # ignore server dependencies
 server/node_modules/
-# Server-generated data files
+
+# Server data files (contain personal financial data)
 server/data/*.json
+
+# Server logs (contain runtime information)
+server/logs/*.log
+
+# Server backups (old code backups)
+server/backup_old_routes/
+
+# Legacy data files
 /server/cash-flow-data*.json
+
 dist/
 .angular/
 .env
