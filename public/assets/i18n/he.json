@@ -3,6 +3,7 @@
     "CASH_FLOW": "תזרים מזומנים",
     "INVESTMENTS": "השקעות",
     "INSTALLMENTS": "פריסות תשלומים",
+    "BUDGET": "תקציב",
     "AI": "יועץ AI"
   },
   "LANG_BUTTON": "English",
@@ -205,6 +206,26 @@
     "ONE_TIME_DEPOSIT": "הפקדה חד-פעמית",
     "ADD_RULE": "הוסף שלב בהפקדות",
     "DESCRIPTION": "תיאור/מטרה"
+  },
+  "BUDGET": {
+    "TITLE": "מעקב תקציב",
+    "EDIT_BUDGET": "ערוך תקציב",
+    "SAVE_SETTINGS": "שמור הגדרות",
+    "TOTAL_BUDGET": "סך תקציב",
+    "TOTAL_SPENT": "הוצאות",
+    "TOTAL_REMAINING": "נותר",
+    "UTILIZATION": "ניצול",
+    "OVERALL_PROGRESS": "התקדמות כללית",
+    "MONTHLY_BUDGET": "תקציב חודשי",
+    "OVERSPENT": "חריגה",
+    "WARNING": "התראה",
+    "EXCELLENT": "מצוין",
+    "BUDGET_LABEL": "תקציב:",
+    "SPENT_LABEL": "הוצא:",
+    "REMAINING_LABEL": "נותר:",
+    "SPENT_INFO": "הוצא:",
+    "OVERSPENT_BY": "חריגה של",
+    "APPROACHING_LIMIT": "התקרבת לתקרה"
   },
   "INSTALLMENTS": {
     "TITLE": "ניהול פריסות תשלומים",

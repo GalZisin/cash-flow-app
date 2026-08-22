@@ -24,6 +24,13 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'budget',
+    loadComponent: () =>
+      import('./features/budget-tracker/budget-tracker.component').then(
+        (m) => m.BudgetTrackerComponent
+      ),
+  },
+  {
     path: 'ai',
     loadComponent: () =>
       import('./features/ai-assistant/ai-assistant/ai-assistant.component').then(

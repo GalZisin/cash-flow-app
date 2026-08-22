@@ -3,6 +3,7 @@
     "CASH_FLOW": "Cash Flow",
     "INVESTMENTS": "Investments",
     "INSTALLMENTS": "Installments",
+    "BUDGET": "Budget",
     "AI": "AI Advisor"
   },
   "LANG_BUTTON": "עברית",
@@ -177,6 +178,26 @@
     "MONTH_SELECTOR": "Select Month",
     "ALL_MONTHS": "All Months",
     "NO_DATA": "No data to display"
+  },
+  "BUDGET": {
+    "TITLE": "Budget Tracker",
+    "EDIT_BUDGET": "Edit Budget",
+    "SAVE_SETTINGS": "Save Settings",
+    "TOTAL_BUDGET": "Total Budget",
+    "TOTAL_SPENT": "Spent",
+    "TOTAL_REMAINING": "Remaining",
+    "UTILIZATION": "Utilization",
+    "OVERALL_PROGRESS": "Overall Progress",
+    "MONTHLY_BUDGET": "Monthly Budget",
+    "OVERSPENT": "Overspent",
+    "WARNING": "Warning",
+    "EXCELLENT": "Excellent",
+    "BUDGET_LABEL": "Budget:",
+    "SPENT_LABEL": "Spent:",
+    "REMAINING_LABEL": "Remaining:",
+    "SPENT_INFO": "Spent:",
+    "OVERSPENT_BY": "Overspent by",
+    "APPROACHING_LIMIT": "Approaching limit"
   },
   "INSTALLMENTS": {
     "TITLE": "Installment Management",

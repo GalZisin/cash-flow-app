@@ -7,6 +7,7 @@ const installmentsRoutes = require('./installments.routes');
 const investmentsRoutes = require('./investments.routes');
 const conversationsRoutes = require('./conversations.routes');
 const aiReportsRoutes = require('./aiReports.routes');
+const budgetRoutes = require('./budget.routes');
 
 // Import legacy AI routes (not refactored yet)
 const aiRoutes = require('../ai.routes');
@@ -17,6 +18,7 @@ router.use('/installments', installmentsRoutes);
 router.use('/investments', investmentsRoutes);
 router.use('/conversations', conversationsRoutes);
 router.use('/ai-reports', aiReportsRoutes);
+router.use('/budget', budgetRoutes);
 
 // Legacy AI routes
 router.use('/ai', aiRoutes);
