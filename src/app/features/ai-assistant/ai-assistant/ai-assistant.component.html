@@ -133,8 +133,7 @@
             aria-label="AI.INPUT_PLACEHOLDER"
             [placeholder]="'AI.INPUT_PLACEHOLDER' | translate"
             [formControl]="chatControl"
-            (keydown)="onEnter($event)"
-            [disabled]="chatLoading() || chatControl.invalid">
+            (keydown)="onEnter($event)">
           </textarea>
           <button class="btn btn-primary ms-2" (click)="sendMessage()" [disabled]="chatLoading() || chatControl.invalid" [attr.aria-label]="'AI.INPUT_PLACEHOLDER' | translate">
             @if (chatLoading()) { <span class="spinner-border spinner-border-sm"></span> }

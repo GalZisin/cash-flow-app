@@ -137,7 +137,7 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
     this.activeTab.set(tab);
     if (tab === 'archive') {
       this.loadArchive(); // Load archive data only when archive tab is active
-    } 
+    }
   }
 
   ngAfterViewChecked(): void {
@@ -368,6 +368,7 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
     } // userInput is a string, not a signal, so direct assignment is fine
 
     this.chatLoading.set(true);
+    this.chatControl.disable(); // Disable via FormControl
     this.shouldScroll = true;
     this.lastUserQuestion = q; // Store the user's question for retry
 
@@ -408,6 +409,7 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
       },
       error: (err: any) => {
         this.chatLoading.set(false);
+        this.chatControl.enable(); // Re-enable on error
         // Ensure assistantMsg is initialized if error occurs before first token, and update messages signal
         const errorMessage = this.translate.instant('AI.PARTIAL_RESPONSE_ERROR', { error: err.message || 'Failed to get response' });
 
@@ -425,6 +427,7 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
           this.chatLoading.set(false);
         }
         this.chatLoading.set(false);
+        this.chatControl.enable(); // Re-enable on complete
         this.shouldScroll = true;
         this.saveConversation();
         this.lastUserQuestion = null; // Clear on successful completion
