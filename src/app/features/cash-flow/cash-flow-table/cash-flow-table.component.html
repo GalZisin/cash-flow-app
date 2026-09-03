@@ -133,8 +133,9 @@
           @if (monthCtrl.get('expandedAdditionalIncomes')?.value) {
             <div class="no-print" appStaggerFadeIn [childSelector]="'.expense-row'" [staggerDelay]="0.03">
               @for (expCtrl of getAdditionalIncomes(i).controls; track expCtrl; let j = $index) {
-                <div class="expense-row">
-                  <input dir="rtl" placeholder="תיאור" title="תיאור" aria-label="תיאור" [formControl]="getAdditionalIncomeDescription(i, j)" />
+                <div class="expense-item-block">
+                  <div class="expense-row">
+                    <input dir="rtl" placeholder="תיאור" title="תיאור" aria-label="תיאור" [formControl]="getAdditionalIncomeDescription(i, j)" />
                   @if (!focusedField['add_inc_' + i + '_' + j]) {
                     <span class="amount-display" (click)="focusField('add_inc_' + i + '_' + j)">
                       {{ getAdditionalIncomeAmount(i, j).value | number:'1.0-0' }} ₪
@@ -152,6 +153,7 @@
                     [title]="'INSTALLMENTS.DELETE' | translate" [matTooltip]="'INSTALLMENTS.DELETE' | translate" [attr.aria-label]="'INSTALLMENTS.DELETE' | translate">
                     <mat-icon>delete</mat-icon>
                   </button>
+                  </div>
                 </div>
               }
               <button mat-button (click)="addAdditionalIncome(i)">{{ 'CASH_FLOW.ADD_INCOME' | translate }}</button>

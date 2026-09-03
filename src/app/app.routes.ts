@@ -31,6 +31,10 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'goals',
+    loadComponent: () => import('./features/goals/goals.component').then((m) => m.GoalsComponent),
+  },
+  {
     path: 'ai',
     loadComponent: () =>
       import('./features/ai-assistant/ai-assistant/ai-assistant.component').then(

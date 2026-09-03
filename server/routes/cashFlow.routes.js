@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const cashFlowService = require('../services/cashFlow.service');
+const goalsService = require('../services/goals.service');
 const asyncHandler = require('../utils/asyncHandler');
 
 // GET /api/cash-flow
@@ -12,6 +13,7 @@ router.get('/cash-flow', asyncHandler(async (req, res) => {
 // POST /api/cash-flow
 router.post('/cash-flow', asyncHandler(async (req, res) => {
     const result = await cashFlowService.saveCashFlow(req.body);
+    await goalsService.analyzeAllGoals();
     res.json(result);
 }));
 

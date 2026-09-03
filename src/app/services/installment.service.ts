@@ -1,8 +1,9 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, tap, of } from 'rxjs';
+import { Observable, tap, of, switchMap } from 'rxjs';
 import { Installment, InstallmentStatus, LoanComponentStatus, CashFlowWarning, MilestonePayment } from '../models/installment.model';
 import { environment } from '../../environments/environment';
+import { CashFlowService } from './cash-flow.service';
 
 @Injectable({ providedIn: 'root' })
 export class InstallmentService {
@@ -19,7 +20,7 @@ export class InstallmentService {
             .reduce((sum, i) => sum + i.monthlyPayment, 0)
     );
 
-    constructor(private http: HttpClient) { }
+    constructor(private http: HttpClient, private cashFlowService: CashFlowService) { }
 
     load() {
         return this.http.get<Installment[]>(this.url).pipe(
@@ -48,8 +49,40 @@ export class InstallmentService {
     }
 
     delete(id: string) {
+        const deletedItem = this._items().find(item => item.id === id);
         return this.http.delete(`${this.url}/${id}`).pipe(
-            tap(() => this._items.update(items => items.filter(i => i.id !== id)))
+            switchMap(response => {
+                this._items.update(items => items.filter(i => i.id !== id));
+                return deletedItem
+                    ? this.removeDeletedItemFromCashFlow(deletedItem).pipe(switchMap(() => of(response)))
+                    : of(response);
+            })
+        );
+    }
+
+    private removeDeletedItemFromCashFlow(deletedItem: Installment): Observable<unknown> {
+        return this.cashFlowService.load().pipe(
+            switchMap(data => {
+                const months = data.months.map(month => {
+                    const deletedAmount = this.getMonthlyInstallmentsForMonth(
+                        this.parseDate(month.month),
+                        [deletedItem]
+                    ).loans;
+                    const manualPayment = Number(month.manualLoanPayment);
+                    const isStaleManualCopy = Number.isFinite(manualPayment)
+                        && Math.abs(manualPayment - deletedAmount) < 0.01;
+
+                    if (deletedAmount <= 0 || !isStaleManualCopy) return month;
+
+                    return {
+                        ...month,
+                        loanPayment: Math.max(0, Number(month.loanPayment || 0) - deletedAmount),
+                        manualLoanPayment: 0
+                    };
+                });
+
+                return this.cashFlowService.save({ months });
+            })
         );
     }
 

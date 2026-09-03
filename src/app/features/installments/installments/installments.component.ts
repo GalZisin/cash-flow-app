@@ -51,19 +51,19 @@ const EMPTY_FORM = (): Omit<Installment, 'id'> => ({
     standalone: true,
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
-    FormsModule,
-    TranslateModule,
-    MatTooltipModule,
-    MatIconModule,
-    MatButtonModule,
-    MatSnackBarModule,
-    InstallmentsHeaderComponent,
-    InstallmentConfirmDialogsComponent,
-    InstallmentFormComponent,
-    InstallmentCardComponent,
-    InstallmentsEmptyStateComponent,
-    InstallmentsTableComponent
-],
+        FormsModule,
+        TranslateModule,
+        MatTooltipModule,
+        MatIconModule,
+        MatButtonModule,
+        MatSnackBarModule,
+        InstallmentsHeaderComponent,
+        InstallmentConfirmDialogsComponent,
+        InstallmentFormComponent,
+        InstallmentCardComponent,
+        InstallmentsEmptyStateComponent,
+        InstallmentsTableComponent
+    ],
     templateUrl: './installments.component.html',
     styleUrl: './installments.component.scss'
 })

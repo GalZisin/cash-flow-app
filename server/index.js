@@ -13,7 +13,7 @@ app.use(express.json());
 
 // Request logging
 app.use((req, res, next) => {
-    logger.info(`${req.method} ${req.path}`);
+    logger.info(`📥 ${req.method} ${req.path}`);
     next();
 });
 
@@ -27,6 +27,7 @@ app.get('/health', (req, res) => {
 });
 
 // Routes
+logger.info('🚀 Mounting /api routes');
 app.use('/api', routes);
 
 // 404 handler

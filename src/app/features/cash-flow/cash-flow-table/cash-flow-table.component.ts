@@ -21,6 +21,7 @@ import { ThemeService } from '../../../services/theme.service';
 import { ExpenseCategorySelectorComponent } from '../expense-category-selector/expense-category-selector.component';
 import { ExpenseCategory } from '../../../models/expense-category.model';
 import { ExpenseItem, normalizeExpenseItem } from '../../../models/expense.model';
+import { Installment } from '../../../models/installment.model';
 // GSAP Directives
 import { AnimateNumberDirective } from '../../../directives/animate-number.directive';
 import { StaggerFadeInDirective } from '../../../directives/stagger-fade-in.directive';
@@ -90,6 +91,7 @@ export class CashFlowTableComponent implements OnInit, AfterViewInit {
   private loaderScheduled = false;
   private loadingStartedAt = 0;
   private installmentItems$ = toObservable(this.installmentService.items); // Corrected: installmentService.items is already a signal
+  private previousInstallments: Installment[] = [];
 
   displayedColumns = [
     'rowActions',
@@ -182,7 +184,16 @@ export class CashFlowTableComponent implements OnInit, AfterViewInit {
 
     // האזנה לשינויים בפריסות - עדכון התצוגה ושמירה אוטומטית לקובץ ה-JSON
     this.installmentItems$.subscribe(() => {
-      if (!this.isInitialized) return;
+      const currentInstallments = this.installmentService.items();
+      if (!this.isInitialized) {
+        this.previousInstallments = [...currentInstallments];
+        return;
+      }
+      const removedInstallments = this.previousInstallments.filter(previous =>
+        !currentInstallments.some(current => current.id === previous.id)
+      );
+      removedInstallments.forEach(item => this.removeDeletedLoanAmount(item));
+      this.previousInstallments = [...currentInstallments];
       this.calculateEndingBalances();
       this.save(true); // שמירה שקטה כדי לסנכרן את ה-loanPayment החדש לקובץ
     });
@@ -201,10 +212,13 @@ export class CashFlowTableComponent implements OnInit, AfterViewInit {
           const monthGroup = this.createMonth(monthDate, m.startingBalance ?? 0);
           const isGreen = m.rowColor === '#dcfce7';
 
-          // חישוב החלק הידני המקורי: הסכום השמור ב-JSON פחות מה שמחושב אוטומטית בפריסות
+          // נתונים חדשים שומרים את החלק הידני בנפרד, כדי שמחיקת פריסה לא תהפוך
+          // את התשלום האוטומטי הישן לתשלום ידני. נתונים ישנים מקבלים fallback.
           const totals = this.installmentService.getMonthlyInstallmentsForMonth(monthDate, this.installmentService.items());
           const savedTotal = Number(m.loanPayment) || 0;
-          const manualPart = Math.max(0, savedTotal - totals.loans);
+          const manualPart = m.manualLoanPayment !== undefined
+            ? Number(m.manualLoanPayment) || 0
+            : Math.max(0, savedTotal - totals.loans);
 
           monthGroup.patchValue({
             income: m.income ?? 0,
@@ -627,6 +641,7 @@ export class CashFlowTableComponent implements OnInit, AfterViewInit {
       income: Number(ctrl.get('income')?.value) || 0,
       mortgagePayment: Number(ctrl.get('mortgagePayment')?.value) || 0,
       loanPayment: Number(ctrl.get('manualLoanPayment')?.value) || 0, // שומרים את החלק הידני
+      manualLoanPayment: Number(ctrl.get('manualLoanPayment')?.value) || 0,
       regularExpenses: ctrl.get('regularExpenses')?.value || [],
       specialExpenses: ctrl.get('specialExpenses')?.value || [],
       endingBalance: Number(ctrl.get('endingBalance')?.value) || 0
@@ -722,6 +737,7 @@ export class CashFlowTableComponent implements OnInit, AfterViewInit {
         income: ctrl.get('income')?.value,
         mortgagePayment: ctrl.get('mortgagePayment')?.value,
         loanPayment: ctrl.get('loanPayment')?.value,
+        manualLoanPayment: ctrl.get('manualLoanPayment')?.value,
         installmentsPayment: ctrl.get('installmentsPayment')?.value,
         additionalIncomes: ctrl.get('additionalIncomes')?.value,
         regularExpenses: ctrl.get('regularExpenses')?.value,
@@ -780,6 +796,28 @@ export class CashFlowTableComponent implements OnInit, AfterViewInit {
     return relevant
       .map(r => `${r.name}: ${this.decimalPipe.transform(r.amount, '1.0-0')} ₪`)
       .join('\n');
+  }
+
+  private removeDeletedLoanAmount(item: Installment): void {
+    this.months.controls.forEach(monthCtrl => {
+      const monthDate = monthCtrl.get('month')?.value;
+      const manualPayment = Number(monthCtrl.get('manualLoanPayment')?.value) || 0;
+      if (!monthDate || manualPayment <= 0) return;
+
+      const deletedLoanPayment = this.installmentService.getMonthlyInstallmentsForMonth(
+        new Date(monthDate),
+        [item]
+      ).loans;
+
+      // Remove only an exact stale copy; a different amount may be a real manual payment.
+      if (deletedLoanPayment > 0 && Math.abs(manualPayment - deletedLoanPayment) < 0.01) {
+        monthCtrl.get('manualLoanPayment')?.setValue(0, { emitEvent: false });
+        monthCtrl.get('loanPayment')?.setValue(
+          Math.max(0, (Number(monthCtrl.get('loanPayment')?.value) || 0) - deletedLoanPayment),
+          { emitEvent: false }
+        );
+      }
+    });
   }
 
   focusField(key: string) {

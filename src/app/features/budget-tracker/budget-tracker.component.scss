@@ -44,30 +44,20 @@
   flex-direction: column;
   height: 100%;
   width: 100%;
-  max-width: 1600px;
+  max-width: 1800px;
   margin: 0 auto;
   padding: 0;
   direction: rtl;
   overflow: hidden;
 
   // Fixed Header Section
-  .budget-header,
-  .alerts-section,
-  .summary-cards,
-  .overall-progress-card {
-    flex-shrink: 0;
-    padding-left: 24px;
-    padding-right: 24px;
-  }
-
   .budget-header {
-    padding-top: 24px;
+    flex-shrink: 0;
+    padding: 24px 24px 16px 24px;
   }
 
   // Header
   .budget-header {
-    margin-bottom: 32px;
-
     .header-top {
       display: flex;
       justify-content: space-between;
@@ -111,11 +101,77 @@
     }
   }
 
+  // Two Column Layout for Desktop
+  .content-layout {
+    display: grid;
+    grid-template-columns: 450px 1fr;
+    gap: 20px;
+    flex: 1;
+    overflow: hidden;
+    padding: 0 24px 24px 24px;
+    min-height: 0;
+  }
+
+  // Left Column: Fixed content (no scroll)
+  .left-column {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 8px;
+
+    // Custom scrollbar styling
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.05);
+      border-radius: 3px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 3px;
+
+      &:hover {
+        background: rgba(0, 0, 0, 0.3);
+      }
+    }
+  }
+
+  // Right Column: Scrollable categories
+  .right-column {
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 8px;
+    min-height: 0;
+
+    // Custom scrollbar styling
+    &::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.05);
+      border-radius: 4px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 4px;
+
+      &:hover {
+        background: rgba(0, 0, 0, 0.3);
+      }
+    }
+  }
+
   // Alerts Section
   .alerts-section {
     display: grid;
     gap: 12px;
-    margin-bottom: 24px;
 
     .alert-card {
       border-right: 4px solid;
@@ -162,28 +218,28 @@
   // Summary Cards
   .summary-cards {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 16px;
-    margin-bottom: 24px;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
 
     .summary-card {
       mat-card-content {
         display: flex;
         align-items: center;
-        gap: 16px;
+        gap: 12px;
 
         .summary-icon {
-          width: 56px;
-          height: 56px;
-          border-radius: 12px;
+          width: 48px;
+          height: 48px;
+          border-radius: 10px;
           display: flex;
           align-items: center;
           justify-content: center;
+          flex-shrink: 0;
 
           mat-icon {
-            font-size: 32px;
-            width: 32px;
-            height: 32px;
+            font-size: 28px;
+            width: 28px;
+            height: 28px;
             color: white;
           }
 
@@ -207,16 +263,21 @@
         .summary-details {
           display: flex;
           flex-direction: column;
-          gap: 4px;
+          gap: 2px;
+          min-width: 0;
+          flex: 1;
 
           .summary-label {
-            font-size: 14px;
+            font-size: 13px;
             opacity: 0.7;
           }
 
           .summary-value {
-            font-size: 24px;
+            font-size: 20px;
             font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
 
             &.negative {
               color: #ef4444;
@@ -229,8 +290,6 @@
 
   // Overall Progress
   .overall-progress-card {
-    margin-bottom: 24px;
-
     mat-card-content {
       .overall-progress-header {
         display: flex;
@@ -257,38 +316,12 @@
     }
   }
 
-  // Scrollable Content Area
-  .scrollable-content {
-    flex: 1;
-    overflow-y: auto;
-    overflow-x: hidden;
-    padding: 8px 24px 24px 24px;
-
-    // Custom scrollbar styling
-    &::-webkit-scrollbar {
-      width: 8px;
-    }
-
-    &::-webkit-scrollbar-track {
-      background: rgba(0, 0, 0, 0.05);
-      border-radius: 4px;
-    }
-
-    &::-webkit-scrollbar-thumb {
-      background: rgba(0, 0, 0, 0.2);
-      border-radius: 4px;
-
-      &:hover {
-        background: rgba(0, 0, 0, 0.3);
-      }
-    }
-  }
-
   // Categories Grid
   .categories-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 20px;
+    padding-bottom: 20px;
 
     .category-card {
       transition: all 0.3s ease;
@@ -485,6 +518,108 @@
 
     mat-progress-bar {
       height: 3px;
+    }
+  }
+}
+
+// ============================================
+// Mobile Responsive
+// ============================================
+@media (max-width: 1024px) {
+  .budget-tracker-container {
+    .content-layout {
+      grid-template-columns: 1fr;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .left-column,
+    .right-column {
+      overflow-y: visible;
+      overflow-x: hidden;
+    }
+
+    .left-column {
+      padding-right: 0;
+    }
+
+    .right-column {
+      padding-right: 0;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .budget-tracker-container {
+    .budget-header {
+      padding: 16px 16px 12px 16px;
+
+      .header-top {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+
+        .page-title {
+          font-size: 24px;
+
+          mat-icon {
+            font-size: 28px;
+            width: 28px;
+            height: 28px;
+          }
+        }
+      }
+
+      .month-navigator {
+        width: 100%;
+        padding: 10px 16px;
+
+        .current-month {
+          font-size: 18px;
+          min-width: 150px;
+        }
+      }
+    }
+
+    .content-layout {
+      padding: 0 16px 16px 16px;
+    }
+
+    .summary-cards {
+      grid-template-columns: 1fr;
+      gap: 10px;
+
+      .summary-card {
+        mat-card-content {
+          gap: 10px;
+
+          .summary-icon {
+            width: 44px;
+            height: 44px;
+
+            mat-icon {
+              font-size: 24px;
+              width: 24px;
+              height: 24px;
+            }
+          }
+
+          .summary-details {
+            .summary-label {
+              font-size: 12px;
+            }
+
+            .summary-value {
+              font-size: 18px;
+            }
+          }
+        }
+      }
+    }
+
+    .categories-grid {
+      grid-template-columns: 1fr;
+      gap: 16px;
     }
   }
 }
@@ -719,7 +854,8 @@
     }
 
     // Scrollbar in dark mode
-    .scrollable-content {
+    .left-column,
+    .right-column {
       &::-webkit-scrollbar-track {
         background: #1e2d45;
       }

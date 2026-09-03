@@ -1,0 +1,51 @@
+<main class="goals-page">
+  <header class="goals-header">
+    <div>
+      <p class="eyebrow">{{ 'GOALS.EYEBROW' | translate }}</p>
+      <h1>{{ 'GOALS.TITLE' | translate }}</h1>
+      <p>{{ 'GOALS.SUBTITLE' | translate }}</p>
+    </div>
+    <button class="refresh-button" type="button" (click)="refresh()" [attr.aria-label]="'GOALS.REFRESH' | translate">↻</button>
+  </header>
+
+  <section class="overview" *ngIf="goalsService.overview() as summary">
+    <div><strong>{{ summary.activeGoals }}</strong><span>{{ 'GOALS.ACTIVE' | translate }}</span></div>
+    <div class="good"><strong>{{ summary.achievableGoals }}</strong><span>{{ 'GOALS.ACHIEVABLE' | translate }}</span></div>
+    <div class="warning"><strong>{{ summary.warningGoals }}</strong><span>{{ 'GOALS.WARNING' | translate }}</span></div>
+    <div class="bad"><strong>{{ summary.notAchievableGoals }}</strong><span>{{ 'GOALS.NOT_ACHIEVABLE' | translate }}</span></div>
+  </section>
+
+  <p class="error" *ngIf="error()">{{ error() | translate }}</p>
+
+  <section class="workspace">
+    <form class="goal-form" [formGroup]="form" (ngSubmit)="addGoal()">
+      <h2>{{ 'GOALS.ADD_TITLE' | translate }}</h2>
+      <label>{{ 'GOALS.NAME' | translate }}<input formControlName="name" type="text"></label>
+      <label>{{ 'GOALS.TYPE' | translate }}<select formControlName="type"><option *ngFor="let type of goalTypes" [value]="type">{{ ('GOALS.TYPES.' + type) | translate }}</option></select></label>
+      <div class="form-row"><label>{{ 'GOALS.AMOUNT' | translate }}<input formControlName="targetAmount" type="number" min="1"></label><label>{{ 'GOALS.DATE' | translate }} <span class="field-hint" *ngIf="form.value.scheduleType === 'milestone'">{{ 'GOALS.DATE_FROM_MILESTONES' | translate }}</span><input formControlName="targetDate" type="month" [required]="form.value.scheduleType !== 'milestone'" [disabled]="form.value.scheduleType === 'milestone'"></label></div>
+      <label>{{ 'GOALS.DESCRIPTION' | translate }}<textarea formControlName="description" rows="2"></textarea></label>
+      <label class="fixed-goal-toggle"><input formControlName="isFixed" type="checkbox">{{ 'GOALS.FIXED_GOAL' | translate }}</label>
+      <label>{{ 'GOALS.SCHEDULE_TYPE' | translate }}<select formControlName="scheduleType"><option *ngFor="let type of scheduleTypes" [value]="type">{{ ('GOALS.SCHEDULES.' + type) | translate }}</option></select></label>
+      <div class="form-row" *ngIf="form.value.scheduleType === 'loan'"><label>{{ 'GOALS.LOAN_AMOUNT' | translate }}<input formControlName="loanAmount" type="number" min="1"></label><label>{{ 'GOALS.DOWN_PAYMENT' | translate }}<input formControlName="downPayment" type="number" min="0"></label><label>{{ 'GOALS.MONTHLY_PAYMENT' | translate }}<input formControlName="monthlyPayment" type="number" min="1"></label><label>{{ 'GOALS.LOAN_MONTHS' | translate }}<input formControlName="loanMonths" type="number" min="1"></label></div>
+      <div class="milestone-editor" *ngIf="form.value.scheduleType === 'milestone'"><div class="milestone-labels"><span>{{ 'GOALS.MILESTONE_DESCRIPTION' | translate }}</span><span>{{ 'GOALS.MILESTONE_AMOUNT' | translate }}</span><span>{{ 'GOALS.PERCENTAGE' | translate }}</span><span>{{ 'GOALS.SINGLE_DATE' | translate }}</span><span></span></div><div class="milestone-row" *ngFor="let milestone of milestones; let i = index"><input [(ngModel)]="milestone.description" [ngModelOptions]="{standalone: true}" [placeholder]="'GOALS.MILESTONE_DESCRIPTION' | translate"><input [(ngModel)]="milestone.amount" [ngModelOptions]="{standalone: true}" type="number" min="0" [placeholder]="'GOALS.MILESTONE_AMOUNT' | translate"><input [(ngModel)]="milestone.percentage" [ngModelOptions]="{standalone: true}" type="number" min="0" max="100" placeholder="%"><input [(ngModel)]="milestone.date" [ngModelOptions]="{standalone: true}" type="month"><button type="button" (click)="removeMilestone(i)">×</button></div><button type="button" class="text-button" (click)="addMilestone()">{{ 'GOALS.ADD_MILESTONE' | translate }}</button></div>
+      <button class="primary-button" type="submit" [disabled]="isSaving()">{{ 'GOALS.ADD' | translate }}</button>
+    </form>
+
+    <section class="goal-list" aria-live="polite">
+      <div class="loading" *ngIf="isLoading()">{{ 'GOALS.LOADING' | translate }}</div>
+      <div class="empty" *ngIf="!isLoading() && goals.length === 0">{{ 'GOALS.EMPTY' | translate }}</div>
+      <article class="goal-card" *ngFor="let goal of goals">
+        <div class="goal-card-header"><div><span class="status-dot" [class]="statusClass(goal)"></span><h3>{{ goal.name }}</h3></div><button class="icon-button" type="button" (click)="removeGoal(goal)" [attr.aria-label]="'GOALS.DELETE' | translate">×</button></div>
+        <p class="goal-meta">{{ ('GOALS.TYPES.' + goal.type) | translate }} · {{ goal.targetDate }}</p>
+        <strong class="amount">{{ goal.targetAmount | number }} ₪</strong>
+        <div class="schedule-badge" *ngIf="goal.schedule">{{ ('GOALS.SCHEDULES.' + goal.schedule.type) | translate }}</div>
+        <div class="loan-details" *ngIf="goal.loanDetails as loan"><strong>{{ 'GOALS.LOAN_DETAILS' | translate }}</strong><span>{{ 'GOALS.LOAN_AMOUNT' | translate }}: {{ loan.loanAmount | number }} ₪</span><span>{{ 'GOALS.DOWN_PAYMENT' | translate }}: {{ loan.downPayment | number }} ₪</span><span>{{ 'GOALS.MONTHLY_PAYMENT' | translate }}: {{ loan.monthlyPayment | number }} × {{ loan.months }}</span></div>
+        <div class="fixed-badge" *ngIf="goal.isFixed">{{ 'GOALS.FIXED_BADGE' | translate }}</div>
+        <div class="analysis" *ngIf="goal.analysis as analysis"><span class="status" [class]="statusClass(goal)">{{ ('GOALS.STATUS.' + analysis.status) | translate }}</span><strong class="status-message">{{ analysis.statusMessage }}</strong>
+          
+          <div class="conflicts" *ngFor="let conflict of analysis.conflicts"><strong>{{ conflict.recommendation }}</strong><span>{{ 'GOALS.SHORTFALL' | translate }}: {{ conflict.shortfall | number }} ₪</span></div><span>{{ 'GOALS.PROJECTED' | translate }}: {{ analysis.projectedBalance | number }} ₪</span><p *ngIf="analysis.suggestedDate">{{ 'GOALS.SUGGESTED' | translate }}: {{ analysis.suggestedDate }}</p></div>
+        <button class="text-button" type="button" (click)="analyzeGoal(goal)">{{ 'GOALS.REANALYZE' | translate }}</button>
+      </article>
+    </section>
+  </section>
+</main>

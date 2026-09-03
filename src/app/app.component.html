@@ -1,4 +1,19 @@
-<nav class="app-navbar px-3 d-flex justify-content-between align-items-center">
+<nav class="app-navbar px-3">
+  <div class="navbar-top d-flex justify-content-end align-items-center">
+    <div class="navbar-actions d-flex align-items-center gap-2">
+      <button class="btn btn-sm navbar-btn" type="button" (click)="lang.toggle()"
+        [title]="'LANG_BUTTON' | translate" [attr.aria-label]="'LANG_BUTTON' | translate">
+        🌐 {{ 'LANG_BUTTON' | translate }}
+      </button>
+      <button class="btn btn-sm navbar-btn theme-toggle-btn" type="button"
+        (click)="theme.toggleTheme()"
+        [title]="theme.isDarkMode() ? 'מצב בהיר' : 'מצב כהה'"
+        [attr.aria-label]="theme.isDarkMode() ? 'מצב בהיר' : 'מצב כהה'">
+        {{ theme.isDarkMode() ? '☀️' : '🌙' }}
+      </button>
+    </div>
+  </div>
+
   <ul class="nav nav-tabs border-0">
     <li class="nav-item">
       <a class="nav-link" routerLink="/cashflow" routerLinkActive="active">
@@ -21,24 +36,16 @@
       </a>
     </li>
     <li class="nav-item">
+      <a class="nav-link" routerLink="/goals" routerLinkActive="active">
+        🧭 {{ 'TABS.GOALS' | translate }}
+      </a>
+    </li>
+    <li class="nav-item">
       <a class="nav-link" routerLink="/ai" routerLinkActive="active">
         🤖 {{ 'TABS.AI' | translate }}
       </a>
     </li>
   </ul>
-
-  <div class="navbar-actions d-flex align-items-center gap-2">
-    <button class="btn btn-sm navbar-btn" type="button" (click)="lang.toggle()"
-      [title]="'LANG_BUTTON' | translate" [attr.aria-label]="'LANG_BUTTON' | translate">
-      🌐 {{ 'LANG_BUTTON' | translate }}
-    </button>
-    <button class="btn btn-sm navbar-btn theme-toggle-btn" type="button"
-      (click)="theme.toggleTheme()"
-      [title]="theme.isDarkMode() ? 'מצב בהיר' : 'מצב כהה'"
-      [attr.aria-label]="theme.isDarkMode() ? 'מצב בהיר' : 'מצב כהה'">
-      {{ theme.isDarkMode() ? '☀️' : '🌙' }}
-    </button>
-  </div>
 </nav>
 
 <div class="tab-content app-content" [class.no-scroll]="noScroll">

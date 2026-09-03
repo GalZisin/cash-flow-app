@@ -27,216 +27,222 @@
     </div>
   </div>
 
-  <!-- Alerts Section -->
-  @if (hasAlerts()) {
-    <div class="alerts-section">
-      @for (alert of alerts(); track alert.category) {
-        <mat-card [class]="'alert-card ' + alert.severity">
-          <mat-card-content>
-            <div class="alert-content">
-              <mat-icon class="alert-icon">
-                {{ alert.severity === 'danger' ? 'error' : 'warning' }}
-              </mat-icon>
-              <div class="alert-text">
-                <strong>{{ getCategoryConfig(alert.category).label }}</strong>
-                @if (alert.severity === 'danger') {
-                  <span>חריגה: {{ formatCurrency(alert.overAmount) }}</span>
-                } @else {
-                  <span>התקרבת לתקרה ({{ alert.percentage | number:'1.0-0' }}%)</span>
-                }
+  <!-- Two Column Layout (Desktop) / Single Column (Mobile) -->
+  <div class="content-layout">
+    <!-- Left Column: Alerts, Summary, Progress -->
+    <div class="left-column">
+      <!-- Alerts Section -->
+      @if (hasAlerts()) {
+        <div class="alerts-section">
+          @for (alert of alerts(); track alert.category) {
+            <mat-card [class]="'alert-card ' + alert.severity">
+              <mat-card-content>
+                <div class="alert-content">
+                  <mat-icon class="alert-icon">
+                    {{ alert.severity === 'danger' ? 'error' : 'warning' }}
+                  </mat-icon>
+                  <div class="alert-text">
+                    <strong>{{ getCategoryConfig(alert.category).label }}</strong>
+                    @if (alert.severity === 'danger') {
+                      <span>חריגה: {{ formatCurrency(alert.overAmount) }}</span>
+                    } @else {
+                      <span>התקרבת לתקרה ({{ alert.percentage | number:'1.0-0' }}%)</span>
+                    }
+                  </div>
+                </div>
+              </mat-card-content>
+            </mat-card>
+          }
+        </div>
+      }
+
+      <!-- Summary Cards -->
+      @if (monthlyBudget(); as budget) {
+        <div class="summary-cards">
+          <mat-card class="summary-card">
+            <mat-card-content>
+              <div class="summary-icon budget-icon">
+                <mat-icon>account_balance</mat-icon>
               </div>
+              <div class="summary-details">
+                <div class="summary-label">סך תקציב</div>
+                <div class="summary-value">{{ formatCurrency(budget.totalBudget) }}</div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <mat-card class="summary-card">
+            <mat-card-content>
+              <div class="summary-icon spent-icon">
+                <mat-icon>payments</mat-icon>
+              </div>
+              <div class="summary-details">
+                <div class="summary-label">הוצאות</div>
+                <div class="summary-value">{{ formatCurrency(budget.totalSpent) }}</div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <mat-card class="summary-card">
+            <mat-card-content>
+              <div class="summary-icon remaining-icon">
+                <mat-icon>savings</mat-icon>
+              </div>
+              <div class="summary-details">
+                <div class="summary-label">נותר</div>
+                <div class="summary-value" [class.negative]="budget.totalRemaining < 0">
+                  {{ formatCurrency(budget.totalRemaining) }}
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <mat-card class="summary-card">
+            <mat-card-content>
+              <div class="summary-icon percentage-icon">
+                <mat-icon>pie_chart</mat-icon>
+              </div>
+              <div class="summary-details">
+                <div class="summary-label">ניצול</div>
+                <div class="summary-value">{{ budget.overallPercentage | number:'1.0-0' }}%</div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+
+        <!-- Overall Progress -->
+        <mat-card class="overall-progress-card">
+          <mat-card-content>
+            <div class="overall-progress-header">
+              <span class="progress-label">התקדמות כללית</span>
+              <span class="progress-percentage">
+                {{ budget.overallPercentage | number:'1.1-1' }}%
+              </span>
             </div>
+            <mat-progress-bar 
+              mode="determinate" 
+              [value]="budget.overallPercentage > 100 ? 100 : budget.overallPercentage"
+              [color]="getProgressBarColor(budget.overallPercentage)">
+            </mat-progress-bar>
           </mat-card-content>
         </mat-card>
       }
     </div>
-  }
 
-  <!-- Summary Cards -->
-  @if (monthlyBudget(); as budget) {
-    <div class="summary-cards">
-      <mat-card class="summary-card">
-        <mat-card-content>
-          <div class="summary-icon budget-icon">
-            <mat-icon>account_balance</mat-icon>
-          </div>
-          <div class="summary-details">
-            <div class="summary-label">סך תקציב</div>
-            <div class="summary-value">{{ formatCurrency(budget.totalBudget) }}</div>
-          </div>
-        </mat-card-content>
-      </mat-card>
-
-      <mat-card class="summary-card">
-        <mat-card-content>
-          <div class="summary-icon spent-icon">
-            <mat-icon>payments</mat-icon>
-          </div>
-          <div class="summary-details">
-            <div class="summary-label">הוצאות</div>
-            <div class="summary-value">{{ formatCurrency(budget.totalSpent) }}</div>
-          </div>
-        </mat-card-content>
-      </mat-card>
-
-      <mat-card class="summary-card">
-        <mat-card-content>
-          <div class="summary-icon remaining-icon">
-            <mat-icon>savings</mat-icon>
-          </div>
-          <div class="summary-details">
-            <div class="summary-label">נותר</div>
-            <div class="summary-value" [class.negative]="budget.totalRemaining < 0">
-              {{ formatCurrency(budget.totalRemaining) }}
-            </div>
-          </div>
-        </mat-card-content>
-      </mat-card>
-
-      <mat-card class="summary-card">
-        <mat-card-content>
-          <div class="summary-icon percentage-icon">
-            <mat-icon>pie_chart</mat-icon>
-          </div>
-          <div class="summary-details">
-            <div class="summary-label">ניצול</div>
-            <div class="summary-value">{{ budget.overallPercentage | number:'1.0-0' }}%</div>
-          </div>
-        </mat-card-content>
-      </mat-card>
-    </div>
-
-    <!-- Overall Progress -->
-    <mat-card class="overall-progress-card">
-      <mat-card-content>
-        <div class="overall-progress-header">
-          <span class="progress-label">התקדמות כללית</span>
-          <span class="progress-percentage">
-            {{ budget.overallPercentage | number:'1.1-1' }}%
-          </span>
-        </div>
-        <mat-progress-bar 
-          mode="determinate" 
-          [value]="budget.overallPercentage > 100 ? 100 : budget.overallPercentage"
-          [color]="getProgressBarColor(budget.overallPercentage)">
-        </mat-progress-bar>
-      </mat-card-content>
-    </mat-card>
-  }
-
-  <!-- Categories Grid -->
-  <div class="scrollable-content">
-    <form [formGroup]="budgetForm">
-      <div class="categories-grid">
-      @if (isEditMode()) {
-        <!-- Edit Mode -->
-        @for (config of categoryConfigs; track config.id) {
-          <mat-card class="category-card edit-mode">
-            <mat-card-content>
-              <div class="category-header">
-                <div class="category-icon-wrapper" [style.background-color]="config.color + '20'">
-                  <mat-icon [style.color]="config.color">{{ config.icon }}</mat-icon>
-                </div>
-                <div class="category-title-section">
-                  <h3>{{ config.label }}</h3>
-                  @if (monthlyBudget()) {
-                    @for (catBudget of monthlyBudget()!.categories; track catBudget.category) {
-                      @if (catBudget.category === config.id && catBudget.spent > 0) {
-                        <span class="spent-info">הוצא: {{ formatCurrency(catBudget.spent) }}</span>
+    <!-- Right Column: Categories Grid (Scrollable) -->
+    <div class="right-column">
+      <form [formGroup]="budgetForm">
+        <div class="categories-grid">
+        @if (isEditMode()) {
+          <!-- Edit Mode -->
+          @for (config of categoryConfigs; track config.id) {
+            <mat-card class="category-card edit-mode">
+              <mat-card-content>
+                <div class="category-header">
+                  <div class="category-icon-wrapper" [style.background-color]="config.color + '20'">
+                    <mat-icon [style.color]="config.color">{{ config.icon }}</mat-icon>
+                  </div>
+                  <div class="category-title-section">
+                    <h3>{{ config.label }}</h3>
+                    @if (monthlyBudget()) {
+                      @for (catBudget of monthlyBudget()!.categories; track catBudget.category) {
+                        @if (catBudget.category === config.id && catBudget.spent > 0) {
+                          <span class="spent-info">הוצא: {{ formatCurrency(catBudget.spent) }}</span>
+                        }
                       }
                     }
+                  </div>
+                </div>
+                
+                <mat-form-field appearance="outline" class="budget-input">
+                  <mat-label>תקציב חודשי</mat-label>
+                  <input matInput 
+                         type="number" 
+                         [formControlName]="config.id"
+                         placeholder="0">
+                  <span matTextSuffix>₪</span>
+                </mat-form-field>
+              </mat-card-content>
+            </mat-card>
+          }
+        } @else {
+          <!-- View Mode -->
+          @for (catBudget of sortedCategories(); track catBudget.category) {
+          <mat-card class="category-card" 
+                    [class.over-budget]="catBudget.isOverBudget"
+                    [class.warning]="catBudget.percentage >= 90 && !catBudget.isOverBudget">
+            <mat-card-content>
+              <div class="category-header">
+                <div class="category-icon-wrapper" 
+                     [style.background-color]="getCategoryConfig(catBudget.category).color + '20'">
+                  <mat-icon [style.color]="getCategoryConfig(catBudget.category).color">
+                    {{ getCategoryConfig(catBudget.category).icon }}
+                  </mat-icon>
+                </div>
+                <div class="category-title-section">
+                  <h3>{{ getCategoryConfig(catBudget.category).label }}</h3>
+                  @if (catBudget.isOverBudget) {
+                    <mat-chip class="status-chip danger">
+                      <mat-icon>arrow_upward</mat-icon>
+                      חריגה
+                    </mat-chip>
+                  } @else if (catBudget.percentage >= 90) {
+                    <mat-chip class="status-chip warning">
+                      <mat-icon>warning</mat-icon>
+                      התראה
+                    </mat-chip>
+                  } @else if (catBudget.percentage < 50) {
+                    <mat-chip class="status-chip success">
+                      <mat-icon>check_circle</mat-icon>
+                      מצוין
+                    </mat-chip>
                   }
                 </div>
               </div>
-              
-              <mat-form-field appearance="outline" class="budget-input">
-                <mat-label>תקציב חודשי</mat-label>
-                <input matInput 
-                       type="number" 
-                       [formControlName]="config.id"
-                       placeholder="0">
-                <span matTextSuffix>₪</span>
-              </mat-form-field>
+
+              <div class="budget-amounts">
+                <div class="amount-row">
+                  <span class="amount-label">תקציב:</span>
+                  <span class="amount-value">{{ formatCurrency(catBudget.monthlyLimit) }}</span>
+                </div>
+                <div class="amount-row">
+                  <span class="amount-label">הוצא:</span>
+                  <span class="amount-value spent">{{ formatCurrency(catBudget.spent) }}</span>
+                </div>
+                <div class="amount-row">
+                  <span class="amount-label">נותר:</span>
+                  <span class="amount-value" [class.negative]="catBudget.remaining < 0">
+                    {{ formatCurrency(catBudget.remaining) }}
+                  </span>
+                </div>
+              </div>
+
+              <div class="progress-section">
+                <div class="progress-header">
+                  <span class="progress-percentage-text">
+                    {{ catBudget.percentage | number:'1.0-0' }}%
+                  </span>
+                </div>
+                <mat-progress-bar 
+                  mode="determinate" 
+                  [value]="catBudget.percentage > 100 ? 100 : catBudget.percentage"
+                  [color]="getProgressBarColor(catBudget.percentage)">
+                </mat-progress-bar>
+              </div>
+
+              @if (catBudget.isOverBudget) {
+                <div class="over-budget-warning">
+                  <mat-icon>info</mat-icon>
+                  <span>חריגה של {{ formatCurrency(catBudget.overBudgetAmount!) }}</span>
+                </div>
+              }
             </mat-card-content>
           </mat-card>
         }
-      } @else {
-        <!-- View Mode -->
-        @for (catBudget of sortedCategories(); track catBudget.category) {
-        <mat-card class="category-card" 
-                  [class.over-budget]="catBudget.isOverBudget"
-                  [class.warning]="catBudget.percentage >= 90 && !catBudget.isOverBudget">
-          <mat-card-content>
-            <div class="category-header">
-              <div class="category-icon-wrapper" 
-                   [style.background-color]="getCategoryConfig(catBudget.category).color + '20'">
-                <mat-icon [style.color]="getCategoryConfig(catBudget.category).color">
-                  {{ getCategoryConfig(catBudget.category).icon }}
-                </mat-icon>
-              </div>
-              <div class="category-title-section">
-                <h3>{{ getCategoryConfig(catBudget.category).label }}</h3>
-                @if (catBudget.isOverBudget) {
-                  <mat-chip class="status-chip danger">
-                    <mat-icon>arrow_upward</mat-icon>
-                    חריגה
-                  </mat-chip>
-                } @else if (catBudget.percentage >= 90) {
-                  <mat-chip class="status-chip warning">
-                    <mat-icon>warning</mat-icon>
-                    התראה
-                  </mat-chip>
-                } @else if (catBudget.percentage < 50) {
-                  <mat-chip class="status-chip success">
-                    <mat-icon>check_circle</mat-icon>
-                    מצוין
-                  </mat-chip>
-                }
-              </div>
-            </div>
-
-            <div class="budget-amounts">
-              <div class="amount-row">
-                <span class="amount-label">תקציב:</span>
-                <span class="amount-value">{{ formatCurrency(catBudget.monthlyLimit) }}</span>
-              </div>
-              <div class="amount-row">
-                <span class="amount-label">הוצא:</span>
-                <span class="amount-value spent">{{ formatCurrency(catBudget.spent) }}</span>
-              </div>
-              <div class="amount-row">
-                <span class="amount-label">נותר:</span>
-                <span class="amount-value" [class.negative]="catBudget.remaining < 0">
-                  {{ formatCurrency(catBudget.remaining) }}
-                </span>
-              </div>
-            </div>
-
-            <div class="progress-section">
-              <div class="progress-header">
-                <span class="progress-percentage-text">
-                  {{ catBudget.percentage | number:'1.0-0' }}%
-                </span>
-              </div>
-              <mat-progress-bar 
-                mode="determinate" 
-                [value]="catBudget.percentage > 100 ? 100 : catBudget.percentage"
-                [color]="getProgressBarColor(catBudget.percentage)">
-              </mat-progress-bar>
-            </div>
-
-            @if (catBudget.isOverBudget) {
-              <div class="over-budget-warning">
-                <mat-icon>info</mat-icon>
-                <span>חריגה של {{ formatCurrency(catBudget.overBudgetAmount!) }}</span>
-              </div>
-            }
-          </mat-card-content>
-        </mat-card>
-      }
-      }
+        }
+      </div>
+      </form>
     </div>
-    </form>
   </div>
 
   <!-- Loading State -->

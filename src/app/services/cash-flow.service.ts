@@ -12,6 +12,7 @@ export interface MonthData {
   income: number;
   mortgagePayment: number;
   loanPayment: number;
+  manualLoanPayment?: number;
   regularExpenses: ExpenseItem[];
   specialExpenses: ExpenseItem[];
   endingBalance: number;

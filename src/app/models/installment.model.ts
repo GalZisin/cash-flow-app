@@ -46,6 +46,9 @@ export interface Installment {
     loanComponents: LoanComponent[]; // רשימת ההלוואות המשויכות
     milestones?: Milestone[];        // פעימות תשלום לפי אחוזים
     milestonePayments?: MilestonePayment[]; // תיעוד תשלומים שבוצעו עבור פעימות
+
+    // קישור ליעד פיננסי
+    linkedGoalId?: string;           // ID של יעד פיננסי קשור
 }
 
 export interface LoanComponentStatus {

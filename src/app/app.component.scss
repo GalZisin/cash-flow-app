@@ -2,12 +2,30 @@
 .app-navbar {
     position: sticky;
     top: 0;
-    z-index: 100;
-    height: 57px;
-    background: #ffffff;
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     border-bottom: 1px solid #e8eaed;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
-    transition: background 0.2s, border-color 0.2s;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+    padding-top: 8px !important;
+    padding-bottom: 0 !important;
+
+    &.scrolled {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+}
+
+.navbar-top {
+    padding-bottom: 8px;
+    margin-bottom: 4px;
+}
+
+.nav-tabs {
+    flex-wrap: wrap;
+    gap: 4px;
+    margin: 0;
 }
 
 // ── Tabs ──────────────────────────────────────────
@@ -62,13 +80,27 @@
     padding: 5px 10px;
 }
 
+// ── Tab content area ──────────────────────────────
+.app-content {
+    position: relative;
+    z-index: 1;
+    min-height: calc(100vh - 90px);
+    background: transparent;
+}
+
 // ── Dark mode overrides ───────────────────────────
 [data-bs-theme="dark"],
 .dark-mode {
     .app-navbar {
-        background: #0d1526 !important;
+        background: rgba(13, 21, 38, 0.95) !important;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
         border-bottom-color: #1e2d45 !important;
-        box-shadow: 0 1px 0 #1e2d45 !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+
+        &.scrolled {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+        }
     }
 
     .nav-link {
@@ -94,5 +126,44 @@
             border-color: #334155;
             color: #e5e7eb;
         }
+    }
+}
+
+// ── Mobile responsive ─────────────────────────────
+@media (max-width: 768px) {
+    .app-navbar {
+        padding-top: 6px !important;
+    }
+
+    .navbar-top {
+        padding-bottom: 6px;
+        margin-bottom: 2px;
+    }
+
+    .nav-tabs {
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+
+    .nav-link {
+        font-size: 0.85rem;
+        padding: 6px 12px;
+    }
+
+    .navbar-btn {
+        font-size: 0.8rem;
+        padding: 4px 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .nav-link {
+        font-size: 0.82rem;
+        padding: 5px 10px;
+    }
+
+    .navbar-btn {
+        padding: 5px 8px;
+        min-width: 32px;
     }
 }
