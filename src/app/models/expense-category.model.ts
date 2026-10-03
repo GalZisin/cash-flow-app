@@ -10,6 +10,10 @@ export enum ExpenseCategory {
   INVESTMENTS = 'INVESTMENTS',
   EDUCATION = 'EDUCATION',
   SHOPPING = 'SHOPPING',
+  DINING_OUT = 'DINING_OUT',
+  HOME_IMPROVEMENT = 'HOME_IMPROVEMENT',
+  FURNITURE = 'FURNITURE',
+  APPLIANCES = 'APPLIANCES',
   OTHER = 'OTHER',
 }
 
@@ -22,8 +26,12 @@ export interface ExpenseCategoryConfig {
 
 export const EXPENSE_CATEGORY_CONFIGS: ExpenseCategoryConfig[] = [
   { id: ExpenseCategory.FOOD, label: 'מזון', icon: 'restaurant', color: '#10B981' },
+  { id: ExpenseCategory.DINING_OUT, label: 'מסעדות', icon: 'restaurant_menu', color: '#FB923C' },
   { id: ExpenseCategory.CAR, label: 'רכב', icon: 'directions_car', color: '#3B82F6' },
   { id: ExpenseCategory.HOME, label: 'בית', icon: 'home', color: '#8B5CF6' },
+  { id: ExpenseCategory.HOME_IMPROVEMENT, label: 'שיפוצים', icon: 'construction', color: '#A855F7' },
+  { id: ExpenseCategory.FURNITURE, label: 'ריהוט', icon: 'chair', color: '#84CC16' },
+  { id: ExpenseCategory.APPLIANCES, label: 'מוצרי חשמל', icon: 'kitchen', color: '#06B6D4' },
   { id: ExpenseCategory.VACATION, label: 'חופשה', icon: 'flight', color: '#F59E0B' },
   { id: ExpenseCategory.ENTERTAINMENT, label: 'בידור', icon: 'local_activity', color: '#EF4444' },
   { id: ExpenseCategory.GIFTS, label: 'מתנות', icon: 'redeem', color: '#EC4899' },

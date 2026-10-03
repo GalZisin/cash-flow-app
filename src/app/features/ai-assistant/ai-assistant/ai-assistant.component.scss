@@ -1,13 +1,20 @@
+// ============================================
+// AI ASSISTANT - MAIN CONTAINER
+// ============================================
 .ai-assistant {
   padding: 1rem;
   height: calc(100vh - 80px);
   display: flex;
   flex-direction: column;
 
-  .nav-tabs { flex-shrink: 0; }
+  .nav-tabs {
+    flex-shrink: 0;
+  }
 }
 
-// ---- Chat Layout ----
+// ============================================
+// CHAT LAYOUT (3-column grid)
+// ============================================
 .chat-layout {
   display: grid;
   grid-template-columns: 180px 1fr 200px;
@@ -16,11 +23,28 @@
   min-height: 0;
 }
 
-// History Sidebar
+// ============================================
+// HISTORY SIDEBAR (Light Mode)
+// ============================================
 .history-sidebar {
   min-height: 0;
   overflow: hidden;
-  .card { border-radius: 10px; font-size: 0.82rem; }
+
+  .card {
+    border-radius: 10px;
+    font-size: 0.82rem;
+    background: #fff;
+    border: 1px solid #dee2e6;
+  }
+
+  .card-header {
+    background: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+  }
+
+  .card-body {
+    background: #fff;
+  }
 
   .conv-item {
     padding: 0.5rem 0.6rem;
@@ -29,8 +53,14 @@
     border-bottom: 1px solid #f0f0f0;
     transition: background 0.15s;
 
-    &:hover { background: #f0f4ff; }
-    &.active { background: #e8f0fe; border-left: 3px solid #0d6efd; }
+    &:hover {
+      background: #f0f4ff;
+    }
+
+    &.active {
+      background: #e8f0fe;
+      border-left: 3px solid #0d6efd;
+    }
 
     .conv-title {
       font-weight: 500;
@@ -42,28 +72,17 @@
   }
 }
 
-.summary-sidebar {
-  min-height: 0;
-  overflow: hidden;
-  .card { border-radius: 10px; }
-  .card-header { font-size: 0.85rem; }
-
-  .summary-item {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.78rem;
-    padding: 2px 0;
-    .label { color: #6c757d; }
-    .value { font-weight: 600; }
-  }
-}
-
+// ============================================
+// CHAT PANEL (Light Mode)
+// ============================================
 .chat-panel {
   min-height: 0;
   border: 1px solid #dee2e6;
   border-radius: 10px;
   overflow: hidden;
   background: #fff;
+  display: flex;
+  flex-direction: column;
 }
 
 .chat-messages {
@@ -71,8 +90,20 @@
   padding: 1rem;
   background: #f8f9fa;
   min-height: 0;
+  flex: 1;
 
-  .empty-chat button { font-size: 0.78rem; }
+  .empty-chat {
+    text-align: center;
+    color: #6c757d;
+
+    p {
+      color: #212529;
+    }
+
+    button {
+      font-size: 0.78rem;
+    }
+  }
 }
 
 .message {
@@ -88,39 +119,80 @@
     line-height: 1.5;
     word-break: break-word;
   }
-  .msg-time { font-size: 0.7rem; margin-top: 2px; }
+
+  .msg-time {
+    font-size: 0.7rem;
+    margin-top: 2px;
+    color: #6c757d;
+  }
 
   &.user-message {
     align-items: flex-end;
-    .bubble { background: #0d6efd; color: #fff; border-bottom-right-radius: 3px; }
-    .msg-time { text-align: right; }
+
+    .bubble {
+      background: #0d6efd;
+      color: #fff;
+      border-bottom-right-radius: 3px;
+    }
+
+    .msg-time {
+      text-align: right;
+    }
   }
 
   &.assistant-message {
     align-items: flex-start;
-    .bubble { background: #fff; border: 1px solid #dee2e6; border-bottom-left-radius: 3px; }
+
+    .bubble {
+      background: #fff;
+      border: 1px solid #dee2e6;
+      border-bottom-left-radius: 3px;
+      color: #212529;
+    }
   }
 }
 
-.bot-icon { font-size: 1rem; }
+.bot-icon {
+  font-size: 1rem;
+}
 
-// Typing indicator
 .typing-indicator {
-  display: inline-flex; align-items: center; gap: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+
   span {
-    width: 7px; height: 7px; border-radius: 50%;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
     background: #adb5bd;
     animation: bounce 1.2s infinite;
-    &:nth-child(2) { animation-delay: 0.2s; }
-    &:nth-child(3) { animation-delay: 0.4s; }
+
+    &:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    &:nth-child(3) {
+      animation-delay: 0.4s;
+    }
   }
 }
+
 @keyframes bounce {
-  0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
-  40% { transform: scale(1.2); opacity: 1; }
+
+  0%,
+  80%,
+  100% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+
+  40% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
 }
 
-// Input bar
 .chat-input-bar {
   display: flex;
   align-items: flex-end;
@@ -129,18 +201,336 @@
   background: #fff;
   flex-shrink: 0;
 
-  textarea { resize: none; font-size: 0.88rem; border-radius: 8px; }
-  button { height: 56px; min-width: 50px; }
+  textarea {
+    resize: none;
+    font-size: 0.88rem;
+    border-radius: 8px;
+  }
+
+  button {
+    height: 56px;
+    min-width: 50px;
+  }
 }
 
-// ---- Analysis Panel ----
-.analysis-panel { overflow-y: auto; flex: 1; }
+// ============================================
+// SUMMARY SIDEBAR (Light Mode)
+// ============================================
+.summary-sidebar {
+  min-height: 0;
+  overflow: hidden;
+
+  .card {
+    border-radius: 10px;
+    background: #fff;
+    border: 1px solid #dee2e6;
+  }
+
+  .card-header {
+    font-size: 0.85rem;
+    background: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+  }
+
+  .card-body {
+    background: #fff;
+  }
+
+  .summary-item {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.78rem;
+    padding: 2px 0;
+
+    .label {
+      color: #6c757d;
+    }
+
+    .value {
+      font-weight: 600;
+    }
+  }
+}
+
+// ============================================
+// DELETE CONFIRMATION POPUP (Light Mode)
+// ============================================
+.cf-overlay {
+  .cf-confirm-card {
+    background: #fff;
+    border: 1px solid #dee2e6;
+  }
+
+  .cf-confirm-title {
+    color: #212529;
+  }
+
+  .cf-confirm-msg {
+    color: #6c757d;
+  }
+}
+
+// ============================================
+// ANALYSIS & SCENARIO PANELS
+// ============================================
+.analysis-panel {
+  overflow-y: auto;
+  flex: 1;
+}
 
 .analysis-text {
   font-size: 0.9rem;
   line-height: 1.7;
-  h4, h5, h6 { color: #0d6efd; }
+
+  h4,
+  h5,
+  h6 {
+    color: #0d6efd;
+  }
 }
 
-// ---- Scenario Panel ----
-.scenario-panel { overflow-y: auto; flex: 1; }
+.scenario-panel {
+  overflow-y: auto;
+  flex: 1;
+}
+
+// ============================================
+// DARK MODE - ALL CHAT TAB STYLES
+// ============================================
+:host-context([data-bs-theme="dark"]),
+:host-context(.dark-mode) {
+
+  // History Sidebar Dark Mode
+  .history-sidebar {
+    .card {
+      background: #0d1526 !important;
+      border-color: #1e2d45 !important;
+      color: #e5e7eb;
+    }
+
+    .card-header {
+      background: #1e293b !important;
+      border-bottom-color: #1e2d45 !important;
+      color: #e5e7eb;
+    }
+
+    .card-body {
+      background: #0d1526 !important;
+    }
+
+    .conv-item {
+      border-bottom-color: #1e2d45;
+      color: #e5e7eb;
+
+      &:hover {
+        background: #111827;
+      }
+
+      &.active {
+        background: #1a2233;
+        border-left-color: #38bdf8;
+        color: #e5e7eb;
+      }
+
+      .conv-title {
+        color: #e5e7eb;
+      }
+
+      small {
+        color: #94a3b8;
+      }
+    }
+  }
+
+  // Chat Panel Dark Mode
+  .chat-panel {
+    background: #0d1526 !important;
+    border-color: #1e2d45 !important;
+  }
+
+  .chat-messages {
+    background: #0f172a !important;
+
+    .empty-chat {
+      color: #94a3b8 !important;
+
+      p {
+        color: #e5e7eb !important;
+      }
+
+      button {
+        background: #1e293b !important;
+        border-color: #334155 !important;
+        color: #cbd5e1 !important;
+
+        &:hover {
+          background: #334155 !important;
+          border-color: #38bdf8 !important;
+          color: #e5e7eb !important;
+        }
+      }
+    }
+  }
+
+  .message {
+    .msg-time {
+      color: #cbd5e1 !important;
+    }
+
+    &.user-message {
+      .bubble {
+        background: #1d4ed8 !important;
+        color: #fff !important;
+      }
+    }
+
+    &.assistant-message {
+      .bubble {
+        background: #1f2937 !important;
+        color: #e5e7eb !important;
+        border-color: #334155 !important;
+      }
+    }
+  }
+
+  .typing-indicator span {
+    background: #64748b !important;
+  }
+
+  .chat-input-bar {
+    background: #0d1526 !important;
+    border-top-color: #1e2d45 !important;
+
+    textarea {
+      background: #1e293b !important;
+      color: #e5e7eb !important;
+      border-color: #334155 !important;
+
+      &::placeholder {
+        color: #64748b !important;
+      }
+
+      &:focus {
+        background: #1e293b !important;
+        color: #e5e7eb !important;
+        border-color: #38bdf8 !important;
+      }
+    }
+
+    button {
+      &:disabled {
+        opacity: 0.5;
+      }
+    }
+  }
+
+  // Summary Sidebar Dark Mode
+  .summary-sidebar {
+    .card {
+      background: #0d1526 !important;
+      border-color: #1e2d45 !important;
+    }
+
+    .card-header {
+      background: #1e293b !important;
+      color: #e5e7eb !important;
+      border-bottom-color: #334155 !important;
+    }
+
+    .card-body {
+      background: #0d1526 !important;
+    }
+
+    .summary-item {
+      .label {
+        color: #94a3b8 !important;
+      }
+
+      .value {
+        color: #e5e7eb !important;
+
+        // Colored values for different types
+        &.text-success {
+          color: #4ade80 !important; // Green for balance/positive savings
+        }
+
+        &.text-danger {
+          color: #f87171 !important; // Red for expenses/negative savings
+        }
+
+        &.text-warning {
+          color: #fbbf24 !important; // Yellow for loans
+        }
+      }
+    }
+  }
+
+  // Delete Confirmation Popup Dark Mode
+  .cf-overlay {
+    .cf-confirm-card {
+      background: #0d1526 !important;
+      border-color: #1e2d45 !important;
+    }
+
+    .cf-confirm-title {
+      color: #e5e7eb !important;
+    }
+
+    .cf-confirm-msg {
+      color: #94a3b8 !important;
+    }
+
+    .btn-light {
+      background: #1e293b !important;
+      border-color: #334155 !important;
+      color: #e5e7eb !important;
+
+      &:hover {
+        background: #334155 !important;
+      }
+    }
+  }
+
+  // Analysis Panel Dark Mode
+  .analysis-text {
+
+    h4,
+    h5,
+    h6 {
+      color: #38bdf8 !important;
+    }
+  }
+}
+
+// ============================================
+// RTL SUPPORT FOR HEBREW
+// ============================================
+.chat-layout.rtl {
+  .message {
+    &.user-message {
+      align-items: flex-start !important;
+
+      .bubble {
+        border-bottom-left-radius: 3px;
+        border-bottom-right-radius: 12px;
+      }
+
+      .msg-time {
+        text-align: left !important;
+      }
+    }
+
+    &.assistant-message {
+      align-items: flex-start !important;
+
+      .bubble {
+        border-bottom-left-radius: 3px;
+        border-bottom-right-radius: 12px;
+      }
+
+      .msg-time {
+        text-align: left !important;
+      }
+    }
+  }
+}

@@ -144,8 +144,12 @@ export class BudgetService {
     getDefaultBudgetSettings(): BudgetSettings {
         return {
             [ExpenseCategory.FOOD]: 3000,
+            [ExpenseCategory.DINING_OUT]: 1200,
             [ExpenseCategory.CAR]: 1500,
             [ExpenseCategory.HOME]: 2000,
+            [ExpenseCategory.HOME_IMPROVEMENT]: 0,
+            [ExpenseCategory.FURNITURE]: 0,
+            [ExpenseCategory.APPLIANCES]: 0,
             [ExpenseCategory.VACATION]: 1000,
             [ExpenseCategory.ENTERTAINMENT]: 800,
             [ExpenseCategory.GIFTS]: 500,

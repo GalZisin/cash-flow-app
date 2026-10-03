@@ -30,8 +30,12 @@ export interface MonthlyBudget {
  */
 export interface BudgetSettings {
     [ExpenseCategory.FOOD]: number;
+    [ExpenseCategory.DINING_OUT]: number;
     [ExpenseCategory.CAR]: number;
     [ExpenseCategory.HOME]: number;
+    [ExpenseCategory.HOME_IMPROVEMENT]: number;
+    [ExpenseCategory.FURNITURE]: number;
+    [ExpenseCategory.APPLIANCES]: number;
     [ExpenseCategory.VACATION]: number;
     [ExpenseCategory.ENTERTAINMENT]: number;
     [ExpenseCategory.GIFTS]: number;
