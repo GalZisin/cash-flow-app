@@ -1,7 +1,14 @@
-const fileStorage = require('../utils/fileStorage');
-const path = require('path');
+const { sql, C, SEL, exec, rows, withTransaction, insertMany, updateRow, getPool } = require('../db/helpers');
+const { reportToRow, assembleReport } = require('../db/mappers');
 
-const DATA_FILE = path.join(__dirname, '../data/ai-reports.json');
+const COLUMNS = [
+    C.id('id'), C.vchar('report_type', 30), C.text('content'), C.text('scenario_details_json'),
+    C.ts('created_at'), C.text('extra_json')
+];
+
+const SELECT_REPORTS = `
+    SELECT id, report_type, content, scenario_details_json, ${SEL.ts('created_at')}, extra_json
+    FROM dbo.ai_reports`;
 
 /**
  * Repository for AI reports data access
@@ -12,16 +19,22 @@ class AiReportsRepository {
      * @returns {Promise<Array>}
      */
     async readAll() {
-        return await fileStorage.readJSON(DATA_FILE, []);
+        const pool = await getPool();
+        const reportRows = await rows(pool, `${SELECT_REPORTS} ORDER BY seq`);
+        return reportRows.map(assembleReport);
     }
 
     /**
-     * Write all AI reports
+     * Replace all AI reports
      * @param {Array} reports
      * @returns {Promise<void>}
      */
     async writeAll(reports) {
-        return await fileStorage.writeJSON(DATA_FILE, reports);
+        const reportRows = reports.map(reportToRow);
+        await withTransaction(async (tx) => {
+            await exec(tx, 'DELETE FROM dbo.ai_reports WITH (TABLOCKX)');
+            await insertMany(tx, 'dbo.ai_reports', COLUMNS, reportRows);
+        });
     }
 
     /**
@@ -30,8 +43,9 @@ class AiReportsRepository {
      * @returns {Promise<Object|null>}
      */
     async findById(id) {
-        const reports = await this.readAll();
-        return reports.find(r => r.id === id) || null;
+        const pool = await getPool();
+        const reportRows = await rows(pool, `${SELECT_REPORTS} WHERE id = @id`, { id: [sql.NVarChar(50), String(id)] });
+        return reportRows.length ? assembleReport(reportRows[0]) : null;
     }
 
     /**
@@ -40,9 +54,8 @@ class AiReportsRepository {
      * @returns {Promise<Object>}
      */
     async create(report) {
-        const reports = await this.readAll();
-        reports.push(report);
-        await this.writeAll(reports);
+        const pool = await getPool();
+        await insertMany(pool, 'dbo.ai_reports', COLUMNS, [reportToRow(report)]);
         return report;
     }
 
@@ -53,16 +66,14 @@ class AiReportsRepository {
      * @returns {Promise<Object|null>}
      */
     async update(id, updates) {
-        const reports = await this.readAll();
-        const index = reports.findIndex(r => r.id === id);
-
-        if (index === -1) {
+        const existing = await this.findById(id);
+        if (!existing) {
             return null;
         }
 
-        reports[index] = { ...reports[index], ...updates };
-        await this.writeAll(reports);
-        return reports[index];
+        const pool = await getPool();
+        await updateRow(pool, 'dbo.ai_reports', COLUMNS, reportToRow({ ...existing, ...updates, id: existing.id }), 'id');
+        return this.findById(id);
     }
 
     /**
@@ -71,15 +82,11 @@ class AiReportsRepository {
      * @returns {Promise<boolean>}
      */
     async delete(id) {
-        const reports = await this.readAll();
-        const filtered = reports.filter(r => r.id !== id);
-
-        if (filtered.length === reports.length) {
-            return false; // Not found
-        }
-
-        await this.writeAll(filtered);
-        return true;
+        const pool = await getPool();
+        const result = await exec(pool, 'DELETE FROM dbo.ai_reports WHERE id = @id', {
+            id: [sql.NVarChar(50), String(id)]
+        });
+        return (result.rowsAffected[0] || 0) > 0;
     }
 }
 

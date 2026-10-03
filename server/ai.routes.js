@@ -1,34 +1,31 @@
 const express = require('express');
 const router = express.Router();
-const fs = require('fs');
-const path = require('path');
 
 const { buildSummary, simulateScenario } = require('./cashflow-engine');
 const { getAnalysis, getChat, getScenario, getChatStream } = require('./ai.service');
 
-// --- File paths ---
-const CASHFLOW_FILE = path.join(__dirname, 'data/cash-flow-data-miluim.json');
-const DEFAULTS_FILE = path.join(__dirname, 'data/cash-flow-defaults.json');
-const INSTALLMENTS_FILE = path.join(__dirname, 'data/installments.json');
-const INVESTMENTS_FILE = path.join(__dirname, 'data/investments.json');
+const cashFlowRepository = require('./repositories/cashFlow.repository');
+const installmentsRepository = require('./repositories/installments.repository');
+const investmentsRepository = require('./repositories/investments.repository');
 
-function loadAllData() {
-  const readJson = (file) => fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : null;
-  return {
-    cashFlow: readJson(CASHFLOW_FILE),
-    defaults: readJson(DEFAULTS_FILE),
-    installments: readJson(INSTALLMENTS_FILE) || [],
-    investments: readJson(INVESTMENTS_FILE) || []
-  };
+// Loads everything the AI summary needs from the database.
+async function loadAllData() {
+  const [cashFlow, defaults, installments, investments] = await Promise.all([
+    cashFlowRepository.read(),
+    cashFlowRepository.readDefaults(),
+    installmentsRepository.findAll(),
+    investmentsRepository.findAll()
+  ]);
+  return { cashFlow, defaults, installments, investments };
 }
 
 /**
  * GET /api/ai/summary
  * Returns the computed financial summary snapshot (no AI).
  */
-router.get('/summary', (req, res) => {
+router.get('/summary', async (req, res) => {
   try {
-    const data = loadAllData();
+    const data = await loadAllData();
     const summary = buildSummary(data);
     res.json(summary);
   } catch (err) {
@@ -42,7 +39,7 @@ router.get('/summary', (req, res) => {
  */
 router.post('/analysis', async (req, res) => {
   try {
-    const data = loadAllData();
+    const data = await loadAllData();
     const summary = buildSummary(data);
     const result = await getAnalysis(summary);
     res.json({ summary, ...result });
@@ -61,7 +58,7 @@ router.post('/chat', async (req, res) => {
   if (!question?.trim()) return res.status(400).json({ error: 'question is required' });
 
   try {
-    const data = loadAllData();
+    const data = await loadAllData();
     const summary = buildSummary(data);
     const result = await getChat(summary, question);
     res.json(result);
@@ -79,7 +76,7 @@ router.post('/chat-stream', async (req, res) => {
   if (!question?.trim()) return res.status(400).json({ error: 'question is required' });
 
   try {
-    const data = loadAllData();
+    const data = await loadAllData();
     const summary = buildSummary(data);
 
     // הגדרת Headers ל-Streaming
@@ -107,7 +104,7 @@ router.post('/scenario', async (req, res) => {
     return res.status(400).json({ error: 'description, amount, and date are required' });
 
   try {
-    const data = loadAllData();
+    const data = await loadAllData();
     const summary = buildSummary(data);
     const simulationResult = simulateScenario({ summary, description, amount: Number(amount), date });
     const aiResult = await getScenario(summary, { description, amount: Number(amount), date }, simulationResult);

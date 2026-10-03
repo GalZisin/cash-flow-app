@@ -1,7 +1,33 @@
-const fileStorage = require('../utils/fileStorage');
-const path = require('path');
+const { sql, C, SEL, exec, rows, withTransaction, insertMany, updateRow, getPool } = require('../db/helpers');
+const { conversationToRows, assembleConversations } = require('../db/mappers');
 
-const DATA_FILE = path.join(__dirname, '../data/conversations.json');
+const PARENT_COLUMNS = [
+    C.id('id'), C.str('title', 500), C.ts('created_at'), C.ts('updated_at'), C.text('extra_json')
+];
+
+const MESSAGE_COLUMNS = [
+    C.id('conversation_id'), C.int('sort_order'), C.vchar('role', 20), C.text('content'), C.ts('sent_at'),
+    C.text('extra_json')
+];
+
+const ID_FILTER = '(@id IS NULL OR {col} = @id)';
+
+async function load(executor, id = null) {
+    const params = { id: [sql.NVarChar(50), id] };
+    const filter = (column) => ID_FILTER.replace('{col}', column);
+
+    const [parents, messages] = await Promise.all([
+        rows(executor, `
+            SELECT id, title, ${SEL.ts('created_at')}, ${SEL.ts('updated_at')}, extra_json
+            FROM dbo.conversations WHERE ${filter('id')} ORDER BY seq`, params),
+        rows(executor, `
+            SELECT conversation_id, sort_order, role, content, ${SEL.ts('sent_at')}, extra_json
+            FROM dbo.conversation_messages WHERE ${filter('conversation_id')}
+            ORDER BY conversation_id, sort_order`, params)
+    ]);
+
+    return assembleConversations(parents, messages);
+}
 
 /**
  * Repository for conversations data access
@@ -12,16 +38,24 @@ class ConversationsRepository {
      * @returns {Promise<Array>}
      */
     async readAll() {
-        return await fileStorage.readJSON(DATA_FILE, []);
+        const pool = await getPool();
+        return load(pool);
     }
 
     /**
-     * Write all conversations
+     * Replace all conversations
      * @param {Array} conversations
      * @returns {Promise<void>}
      */
     async writeAll(conversations) {
-        return await fileStorage.writeJSON(DATA_FILE, conversations);
+        const all = conversations.map(conversationToRows);
+        await withTransaction(async (tx) => {
+            await exec(tx, 'DELETE FROM dbo.conversations WITH (TABLOCKX)'); // messages are removed by cascade
+            for (const parts of all) {
+                await insertMany(tx, 'dbo.conversations', PARENT_COLUMNS, [parts.parent]);
+                await insertMany(tx, 'dbo.conversation_messages', MESSAGE_COLUMNS, parts.messages);
+            }
+        });
     }
 
     /**
@@ -30,8 +64,9 @@ class ConversationsRepository {
      * @returns {Promise<Object|null>}
      */
     async findById(id) {
-        const conversations = await this.readAll();
-        return conversations.find(c => c.id === id) || null;
+        const pool = await getPool();
+        const items = await load(pool, String(id));
+        return items[0] || null;
     }
 
     /**
@@ -40,9 +75,11 @@ class ConversationsRepository {
      * @returns {Promise<Object>}
      */
     async create(conversation) {
-        const conversations = await this.readAll();
-        conversations.push(conversation);
-        await this.writeAll(conversations);
+        const parts = conversationToRows(conversation);
+        await withTransaction(async (tx) => {
+            await insertMany(tx, 'dbo.conversations', PARENT_COLUMNS, [parts.parent]);
+            await insertMany(tx, 'dbo.conversation_messages', MESSAGE_COLUMNS, parts.messages);
+        });
         return conversation;
     }
 
@@ -53,16 +90,21 @@ class ConversationsRepository {
      * @returns {Promise<Object|null>}
      */
     async update(id, updates) {
-        const conversations = await this.readAll();
-        const index = conversations.findIndex(c => c.id === id);
-
-        if (index === -1) {
+        const existing = await this.findById(id);
+        if (!existing) {
             return null;
         }
 
-        conversations[index] = { ...conversations[index], ...updates };
-        await this.writeAll(conversations);
-        return conversations[index];
+        const parts = conversationToRows({ ...existing, ...updates, id: existing.id });
+        await withTransaction(async (tx) => {
+            await updateRow(tx, 'dbo.conversations', PARENT_COLUMNS, parts.parent, 'id');
+            await exec(tx, 'DELETE FROM dbo.conversation_messages WHERE conversation_id = @id', {
+                id: [sql.NVarChar(50), parts.parent.id]
+            });
+            await insertMany(tx, 'dbo.conversation_messages', MESSAGE_COLUMNS, parts.messages);
+        });
+
+        return this.findById(id);
     }
 
     /**
@@ -71,15 +113,11 @@ class ConversationsRepository {
      * @returns {Promise<boolean>}
      */
     async delete(id) {
-        const conversations = await this.readAll();
-        const filtered = conversations.filter(c => c.id !== id);
-
-        if (filtered.length === conversations.length) {
-            return false; // Not found
-        }
-
-        await this.writeAll(filtered);
-        return true;
+        const pool = await getPool();
+        const result = await exec(pool, 'DELETE FROM dbo.conversations WHERE id = @id', {
+            id: [sql.NVarChar(50), String(id)]
+        });
+        return (result.rowsAffected[0] || 0) > 0;
     }
 }
 

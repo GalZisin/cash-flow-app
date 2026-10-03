@@ -1,27 +1,34 @@
-const fileStorage = require('../utils/fileStorage');
-const path = require('path');
+const { C, exec, rows, withTransaction, insertMany, getPool } = require('../db/helpers');
+const { budgetToRows, assembleBudget } = require('../db/mappers');
 
-const SETTINGS_FILE = path.join(__dirname, '../data/budget-settings.json');
+const COLUMNS = [C.vchar('category', 30), C.int('sort_order'), C.money('monthly_limit')];
 
 /**
- * Repository for budget settings data access
+ * Repository for budget settings data access (monthly limit per expense category)
  */
 class BudgetRepository {
     /**
      * Read budget settings
-     * @returns {Promise<Object|null>}
+     * @returns {Promise<Object|null>} { CATEGORY: limit } or null when nothing was saved yet
      */
     async readSettings() {
-        return await fileStorage.readJSON(SETTINGS_FILE, null);
+        const pool = await getPool();
+        const settingsRows = await rows(pool, `
+            SELECT category, monthly_limit FROM dbo.budget_settings ORDER BY sort_order`);
+        return settingsRows.length ? assembleBudget(settingsRows) : null;
     }
 
     /**
-     * Write budget settings
+     * Write budget settings (replaces all categories)
      * @param {Object} settings
      * @returns {Promise<void>}
      */
     async writeSettings(settings) {
-        return await fileStorage.writeJSON(SETTINGS_FILE, settings);
+        const settingsRows = budgetToRows(settings);
+        await withTransaction(async (tx) => {
+            await exec(tx, 'DELETE FROM dbo.budget_settings WITH (TABLOCKX)');
+            await insertMany(tx, 'dbo.budget_settings', COLUMNS, settingsRows);
+        });
     }
 }
 

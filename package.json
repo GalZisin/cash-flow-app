@@ -4,7 +4,9 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve  --port 4300 --open",
+    "client": "ng serve --port 4300",
     "server": "node server/index.js",
+    "backend": "node server/index.js",
     "dev": "concurrently \"npm run start\" \"npm run server\"",
     "dev:ai": "concurrently \"npm run start\" \"npm run server\" \"C:/Users/user/AppData/Local/Programs/Ollama/ollama.exe serve\"",
     "build": "ng build",

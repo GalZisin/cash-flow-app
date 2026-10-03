@@ -1,7 +1,21 @@
-const fileStorage = require('../utils/fileStorage');
-const path = require('path');
+const { sql, C, SEL, exec, rows, withTransaction, insertMany, updateRow, getPool } = require('../db/helpers');
+const { goalToRow, assembleGoal } = require('../db/mappers');
 
-const GOALS_FILE = path.join(__dirname, '../data/financial-goals.json');
+const COLUMNS = [
+    C.id('id'), C.str('name', 200), C.text('description'), C.vchar('goal_type', 20), C.money('target_amount'),
+    C.str('target_date', 30), C.int('priority'), C.bit('completed'), C.bit('is_fixed'),
+    C.id('linked_installment_id'), C.bit('linked_to_special_expense'), C.bit('auto_update_from_cash_flow'),
+    C.text('loan_details_json'), C.text('schedule_json'), C.text('analysis_json'),
+    C.ts('last_analyzed'), C.ts('created_date'), C.ts('updated_date'), C.ts('completed_date'), C.text('extra_json')
+];
+
+const SELECT_GOALS = `
+    SELECT id, name, description, goal_type, target_amount, target_date, priority, completed, is_fixed,
+           linked_installment_id, linked_to_special_expense, auto_update_from_cash_flow,
+           loan_details_json, schedule_json, analysis_json,
+           ${SEL.ts('last_analyzed')}, ${SEL.ts('created_date')}, ${SEL.ts('updated_date')},
+           ${SEL.ts('completed_date')}, extra_json
+    FROM dbo.financial_goals`;
 
 /**
  * Repository for financial goals data access
@@ -12,17 +26,22 @@ class GoalsRepository {
      * @returns {Promise<Array>}
      */
     async read() {
-        const data = await fileStorage.readJSON(GOALS_FILE, { goals: [] });
-        return data.goals || [];
+        const pool = await getPool();
+        const goalRows = await rows(pool, `${SELECT_GOALS} ORDER BY seq`);
+        return goalRows.map(assembleGoal);
     }
 
     /**
-     * Write goals
+     * Replace all goals
      * @param {Array} goals
      * @returns {Promise<void>}
      */
     async write(goals) {
-        return await fileStorage.writeJSON(GOALS_FILE, { goals });
+        const goalRows = goals.map(goalToRow);
+        await withTransaction(async (tx) => {
+            await exec(tx, 'DELETE FROM dbo.financial_goals WITH (TABLOCKX)');
+            await insertMany(tx, 'dbo.financial_goals', COLUMNS, goalRows);
+        });
     }
 
     /**
@@ -31,8 +50,9 @@ class GoalsRepository {
      * @returns {Promise<Object|null>}
      */
     async findById(id) {
-        const goals = await this.read();
-        return goals.find(g => g.id === id) || null;
+        const pool = await getPool();
+        const goalRows = await rows(pool, `${SELECT_GOALS} WHERE id = @id`, { id: [sql.NVarChar(50), String(id)] });
+        return goalRows.length ? assembleGoal(goalRows[0]) : null;
     }
 
     /**
@@ -41,9 +61,8 @@ class GoalsRepository {
      * @returns {Promise<Object>}
      */
     async create(goal) {
-        const goals = await this.read();
-        goals.push(goal);
-        await this.write(goals);
+        const pool = await getPool();
+        await insertMany(pool, 'dbo.financial_goals', COLUMNS, [goalToRow(goal)]);
         return goal;
     }
 
@@ -54,16 +73,15 @@ class GoalsRepository {
      * @returns {Promise<Object|null>}
      */
     async update(id, updates) {
-        const goals = await this.read();
-        const index = goals.findIndex(g => g.id === id);
-
-        if (index === -1) {
+        const existing = await this.findById(id);
+        if (!existing) {
             return null;
         }
 
-        goals[index] = { ...goals[index], ...updates, updatedDate: new Date().toISOString() };
-        await this.write(goals);
-        return goals[index];
+        const merged = { ...existing, ...updates, id: existing.id, updatedDate: new Date().toISOString() };
+        const pool = await getPool();
+        await updateRow(pool, 'dbo.financial_goals', COLUMNS, goalToRow(merged), 'id');
+        return this.findById(id);
     }
 
     /**
@@ -72,15 +90,11 @@ class GoalsRepository {
      * @returns {Promise<boolean>}
      */
     async delete(id) {
-        const goals = await this.read();
-        const filtered = goals.filter(g => g.id !== id);
-
-        if (filtered.length === goals.length) {
-            return false;
-        }
-
-        await this.write(filtered);
-        return true;
+        const pool = await getPool();
+        const result = await exec(pool, 'DELETE FROM dbo.financial_goals WHERE id = @id', {
+            id: [sql.NVarChar(50), String(id)]
+        });
+        return (result.rowsAffected[0] || 0) > 0;
     }
 
     /**
