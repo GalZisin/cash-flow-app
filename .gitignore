@@ -26,6 +26,9 @@ server/backup_old_routes/
 # Legacy data files
 /server/cash-flow-data*.json
 
+# Nested project
+/cash-flow-app-mssql/
+
 dist/
 .angular/
 .env
