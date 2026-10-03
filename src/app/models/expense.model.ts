@@ -4,6 +4,8 @@ export interface ExpenseItem {
   description: string;
   amount: number;
   category: ExpenseCategory;
+  goalRelated?: boolean;  // סימון שההוצאה הזו נוספה מיעד
+  goalId?: string;        // ID של היעד שהוסיף את ההוצאה
 }
 
 export function normalizeExpenseItem(item: Partial<ExpenseItem>): ExpenseItem {

@@ -1,13 +1,17 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, inject } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { FinancialGoal, GoalMilestone, GoalType, GoalScheduleType } from '../../models/goal.model';
 import { GoalsService } from '../../services/goals.service';
+import { CashFlowSimulationService } from '../../services/cash-flow-simulation.service';
+import { CashFlowTableComponent } from '../cash-flow/cash-flow-table/cash-flow-table.component';
 
 @Component({
     selector: 'app-goals', standalone: true,
-    imports: [CommonModule, FormsModule, ReactiveFormsModule, TranslateModule],
+    imports: [CommonModule, FormsModule, ReactiveFormsModule, TranslateModule, MatSnackBarModule, CashFlowTableComponent],
     templateUrl: './goals.component.html', styleUrl: './goals.component.scss'
 })
 export class GoalsComponent implements OnInit {
@@ -15,8 +19,20 @@ export class GoalsComponent implements OnInit {
     readonly isLoading = signal(true);
     readonly isSaving = signal(false);
     readonly error = signal('');
+    readonly activeTab = signal<'goals' | 'simulation'>('goals');
     readonly form: ReturnType<FormBuilder['group']>;
     readonly scheduleTypes: GoalScheduleType[] = ['single', 'loan', 'milestone'];
+
+    private snackBar = inject(MatSnackBar);
+    private translate = inject(TranslateService);
+    private simulationService = inject(CashFlowSimulationService);
+
+    // נתוני הסימולציה
+    readonly simulationMonths = toSignal(this.simulationService.simulationMonths$, { initialValue: [] });
+
+    setActiveTab(tab: 'goals' | 'simulation'): void {
+        this.activeTab.set(tab);
+    }
 
     constructor(public readonly goalsService: GoalsService, private fb: FormBuilder) {
         this.form = this.fb.group({
@@ -27,8 +43,19 @@ export class GoalsComponent implements OnInit {
             loanAmount: [null as number | null], downPayment: [null as number | null],
             monthlyPayment: [null as number | null], loanMonths: [null as number | null], interestRate: [0]
         });
+
+        // איפוס שגיאות כשמשתמש מתחיל להקליד
+        this.form.valueChanges.subscribe(() => {
+            if (this.error()) {
+                this.error.set('');
+            }
+        });
     }
-    ngOnInit(): void { this.refresh(); }
+    ngOnInit(): void {
+        // איפוס שגיאות כשחוזרים לטאב
+        this.error.set('');
+        this.refresh();
+    }
     get goals(): FinancialGoal[] { return [...this.goalsService.goals()].sort((a, b) => a.targetDate.localeCompare(b.targetDate)); }
 
     refresh(): void {
@@ -105,5 +132,46 @@ export class GoalsComponent implements OnInit {
         }
         if (type === 'milestone') return { type, milestones: this.milestonesFromForm() };
         return { type, amount: Number(this.form.value.targetAmount) || 0, date: this.form.value.targetDate || '' };
+    }
+
+    /**
+     * רענון טבלת הסימולציה מהתזרים המקורי
+     * פעולה זו מאפסת את כל השינויים בסימולציה וכל היעדים
+     */
+    refreshSimulationFromOriginal(): void {
+        const confirmMsg = this.translate.instant('GOALS.REFRESH_SIMULATION_CONFIRM');
+        if (!confirm(confirmMsg)) {
+            return;
+        }
+
+        // מחיקת כל היעדים
+        const allGoals = [...this.goalsService.goals()];
+
+        if (allGoals.length > 0) {
+            // מחיקה של כל היעדים אחד אחרי השני
+            let deleteCount = 0;
+            allGoals.forEach(goal => {
+                this.goalsService.remove(goal.id).subscribe({
+                    next: () => {
+                        deleteCount++;
+                        if (deleteCount === allGoals.length) {
+                            // לאחר מחיקת כל היעדים, רענן את הסימולציה
+                            this.simulationService.refreshFromOriginal();
+                            this.translate.get('GOALS.REFRESH_SUCCESS')
+                                .subscribe(msg => this.snackBar.open(msg, '', { duration: 3000, panelClass: 'snack-success' }));
+                        }
+                    },
+                    error: () => {
+                        this.translate.get('GOALS.REFRESH_ERROR')
+                            .subscribe(msg => this.snackBar.open(msg, '', { duration: 3000, panelClass: 'snack-error' }));
+                    }
+                });
+            });
+        } else {
+            // אין יעדים - רק רענן את הסימולציה
+            this.simulationService.refreshFromOriginal();
+            this.translate.get('GOALS.REFRESH_SUCCESS')
+                .subscribe(msg => this.snackBar.open(msg, '', { duration: 3000, panelClass: 'snack-success' }));
+        }
     }
 }

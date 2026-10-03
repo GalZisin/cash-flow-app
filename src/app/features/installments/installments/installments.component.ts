@@ -170,27 +170,36 @@ export class InstallmentsComponent implements OnInit {
         }
     }
 
-    /**
-     * Resets form fields that are specific to other payment types when the payment type changes.
-     * This prevents data from one type (e.g., loan components) from persisting when switching to another (e.g., milestones).
-     */
     onPaymentTypeChange() {
-        this.form.update(currentForm => {
-            const newForm = { ...currentForm };
-            if (newForm.paymentType === 'manual') {
-                newForm.loanComponents = [];
-                newForm.milestones = [];
-                newForm.milestonePayments = [];
-            } else if (newForm.paymentType === 'loan') {
-                newForm.payments = [];
-                newForm.milestones = [];
-                newForm.milestonePayments = [];
-            } else if (newForm.paymentType === 'milestone') {
-                newForm.payments = [];
-                newForm.loanComponents = [];
-            }
-            return newForm;
-        });
+        // this.form.update(currentForm => {
+        //     const newForm = { ...currentForm };
+        //     if (newForm.paymentType === 'manual') {
+        //         if (newForm.loanComponents && newForm.loanComponents.length === 0) {
+        //             newForm.loanComponents = [];
+        //         }
+        //         if (newForm.milestones && newForm.milestones.length === 0) {
+        //             newForm.milestones = [];
+        //         }
+        //         if (newForm.milestonePayments && newForm.milestonePayments.length === 0) {
+        //             newForm.milestonePayments = [];
+        //         }
+
+        //     } else if (newForm.paymentType === 'loan') {
+        //         if (newForm.payments && newForm.payments.length === 0) {
+        //             newForm.payments = [];
+        //         }
+        //         // לא מוחקים milestones ו-milestonePayments — שמור אותם למעבר עתידי
+        //     } else if (newForm.paymentType === 'milestone') {
+        //         if (newForm.payments && newForm.payments.length === 0) {
+        //             newForm.payments = [];
+        //         }
+        //         if (newForm.loanComponents && newForm.loanComponents.length === 0) {
+        //             newForm.loanComponents = [];
+        //         }
+
+        //     }
+        //     return newForm;
+        // });
         this.updateTotalsFromLoans();
     }
 

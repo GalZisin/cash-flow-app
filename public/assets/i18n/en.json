@@ -71,7 +71,16 @@
       "ACHIEVABLE": "Achievable",
       "WARNING": "At risk",
       "NOT_ACHIEVABLE": "Not achievable"
-    }
+    },
+    "SIMULATION_TITLE": "Cash Flow - Simulation",
+    "SIMULATION_DESC": "This table displays the original cash flow along with all added goals. Changes here do not affect the original cash flow in the Cash Flow tab.",
+    "APPLY_SIMULATION": "Apply to Original Cash Flow",
+    "APPLY_CONFIRM": "Are you sure you want to apply these changes to the original cash flow?",
+    "APPLY_SUCCESS": "Data copied to original cash flow successfully",
+    "APPLY_ERROR": "Error copying data to original cash flow",
+    "TAB_GOALS": "Goals Management",
+    "TAB_SIMULATION": "Goal Testing Cash Flow",
+    "TOGGLE_SIMULATION": "🔍 View Simulation Flow"
   },
   "CASH_FLOW": {
     "ADD_MONTH": "Add Month",

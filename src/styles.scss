@@ -488,6 +488,24 @@ app-cash-flow-table .actions {
     background-color: var(--bs-body-bg) !important;
     color: var(--bs-body-color) !important;
 
+    // Global navbar button overrides for Bootstrap
+    .navbar-btn.btn,
+    button.navbar-btn,
+    .btn.navbar-btn {
+        background-color: #1e293b !important;
+        border-color: #334155 !important;
+        color: #cbd5e1 !important;
+
+        &:hover,
+        &:focus,
+        &:active,
+        &.active {
+            background-color: #334155 !important;
+            border-color: #475569 !important;
+            color: #f1f5f9 !important;
+        }
+    }
+
     .card {
         background-color: var(--bs-tertiary-bg);
         border-color: var(--bs-border-color);

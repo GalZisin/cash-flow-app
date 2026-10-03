@@ -38,12 +38,18 @@
       {{ 'CASH_FLOW.DEFAULTS_BTN' | translate }}
     </button>
     <span class="spacer"></span>
-    <button mat-raised-button color="warn" (click)="save()" [title]="'CASH_FLOW.SAVE' | translate" [attr.aria-label]="'CASH_FLOW.SAVE' | translate">
+    <button mat-raised-button color="warn" (click)="save()" [title]="'CASH_FLOW.SAVE' | translate" [attr.aria-label]="'CASH_FLOW.SAVE' | translate" *ngIf="!isSimulation">
       {{ 'CASH_FLOW.SAVE' | translate }}
     </button>
     <button mat-raised-button color="accent" (click)="print()" [title]="'CASH_FLOW.EXPORT_PDF' | translate" [attr.aria-label]="'CASH_FLOW.EXPORT_PDF' | translate">
       {{ 'CASH_FLOW.EXPORT_PDF' | translate }}
     </button>
+  </div>
+  
+  <!-- הודעה למצב סימולציה -->
+  <div class="simulation-banner" *ngIf="isSimulation">
+    <mat-icon>science</mat-icon>
+    <span>מצב סימולציה - ניתן לערוך ולראות את ההשפעה לפני החלה על התזרים המקורי</span>
   </div>
 
   <div class="table-container" #tableContainer>

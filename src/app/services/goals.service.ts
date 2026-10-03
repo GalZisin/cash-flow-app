@@ -26,6 +26,14 @@ export class GoalsService {
         );
     }
 
+    update(id: string, goal: Partial<FinancialGoal>): Observable<FinancialGoal> {
+        return this.http.put<FinancialGoal>(`${this.apiUrl}/${id}`, goal).pipe(
+            tap(updatedGoal => this.goals.update(goals =>
+                goals.map(g => g.id === id ? updatedGoal : g)
+            ))
+        );
+    }
+
     remove(id: string): Observable<{ success: boolean }> {
         return this.http.delete<{ success: boolean }>(`${this.apiUrl}/${id}`).pipe(
             tap(() => this.goals.update(goals => goals.filter(goal => goal.id !== id)))

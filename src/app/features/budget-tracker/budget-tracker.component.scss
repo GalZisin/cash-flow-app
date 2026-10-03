@@ -120,6 +120,7 @@
     overflow-y: auto;
     overflow-x: hidden;
     padding-right: 8px;
+    padding-top: 10px;
 
     // Custom scrollbar styling
     &::-webkit-scrollbar {
@@ -322,6 +323,7 @@
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 20px;
     padding-bottom: 20px;
+    padding-top: 10px;
 
     .category-card {
       transition: all 0.3s ease;

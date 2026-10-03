@@ -1,14 +1,50 @@
-<main class="goals-page">
+<main class="goals-page" [class.simulation-mode]="activeTab() === 'simulation'">
   <header class="goals-header">
     <div>
-      <p class="eyebrow">{{ 'GOALS.EYEBROW' | translate }}</p>
-      <h1>{{ 'GOALS.TITLE' | translate }}</h1>
-      <p>{{ 'GOALS.SUBTITLE' | translate }}</p>
+      <div class="top-switch-bar">
+        <div class="segmented-toggle">
+          <button 
+            type="button" 
+            class="toggle-btn" 
+            [class.active]="activeTab() === 'goals'" 
+            (click)="setActiveTab('goals')">
+            📋 {{ 'GOALS.TAB_GOALS' | translate }}
+          </button>
+          <button 
+            type="button" 
+            class="toggle-btn simulation-tab-btn" 
+            [class.active]="activeTab() === 'simulation'" 
+            (click)="setActiveTab('simulation')">
+            🔍 {{ 'GOALS.TAB_SIMULATION' | translate }}
+          </button>
+        </div>
+      </div>
+
+      <p class="eyebrow" *ngIf="activeTab() === 'goals'">{{ 'GOALS.EYEBROW' | translate }}</p>
+      <h1>{{ (activeTab() === 'goals' ? 'GOALS.TITLE' : 'GOALS.SIMULATION_TITLE') | translate }}</h1>
+      <p>{{ (activeTab() === 'goals' ? 'GOALS.SUBTITLE' : 'GOALS.SIMULATION_DESC') | translate }}</p>
     </div>
-    <button class="refresh-button" type="button" (click)="refresh()" [attr.aria-label]="'GOALS.REFRESH' | translate">↻</button>
+
+    <div class="header-actions">
+      <button 
+        *ngIf="activeTab() === 'simulation'"
+        class="refresh-from-original-button" 
+        type="button" 
+        (click)="refreshSimulationFromOriginal()"
+        [attr.aria-label]="'GOALS.REFRESH_FROM_ORIGINAL' | translate">
+        <span class="refresh-icon">🔄</span> {{ 'GOALS.REFRESH_FROM_ORIGINAL' | translate }}
+      </button>
+      <button 
+        *ngIf="activeTab() === 'goals'"
+        class="refresh-button" 
+        type="button" 
+        (click)="refresh()" 
+        [attr.aria-label]="'GOALS.REFRESH' | translate">↻</button>
+    </div>
   </header>
 
-  <section class="overview" *ngIf="goalsService.overview() as summary">
+  <!-- סיכום יעדים (רק במסך ניהול יעדים) -->
+  <section class="overview" *ngIf="activeTab() === 'goals' && goalsService.overview() as summary">
     <div><strong>{{ summary.activeGoals }}</strong><span>{{ 'GOALS.ACTIVE' | translate }}</span></div>
     <div class="good"><strong>{{ summary.achievableGoals }}</strong><span>{{ 'GOALS.ACHIEVABLE' | translate }}</span></div>
     <div class="warning"><strong>{{ summary.warningGoals }}</strong><span>{{ 'GOALS.WARNING' | translate }}</span></div>
@@ -17,7 +53,8 @@
 
   <p class="error" *ngIf="error()">{{ error() | translate }}</p>
 
-  <section class="workspace">
+  <!-- מסך 1: ניהול יעדים -->
+  <section class="workspace" *ngIf="activeTab() === 'goals'">
     <form class="goal-form" [formGroup]="form" (ngSubmit)="addGoal()">
       <h2>{{ 'GOALS.ADD_TITLE' | translate }}</h2>
       <label>{{ 'GOALS.NAME' | translate }}<input formControlName="name" type="text"></label>
@@ -47,5 +84,16 @@
         <button class="text-button" type="button" (click)="analyzeGoal(goal)">{{ 'GOALS.REANALYZE' | translate }}</button>
       </article>
     </section>
+  </section>
+
+  <!-- מסך 2: טבלת סימולציה - תזרים מזומנים לבדיקות (מסך מלא) -->
+  <section class="simulation-section full-page-simulation" *ngIf="activeTab() === 'simulation'">
+    <div class="simulation-table-wrapper">
+      <app-cash-flow-table
+        [isSimulation]="true"
+        [simulationData]="simulationMonths()"
+        [readonly]="true">
+      </app-cash-flow-table>
+    </div>
   </section>
 </main>

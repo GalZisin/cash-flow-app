@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef, inject, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, inject, AfterViewInit, ViewChild, ElementRef, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { FormBuilder, FormGroup, FormArray, ReactiveFormsModule, FormControl, AbstractControl } from '@angular/forms';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
@@ -47,8 +47,14 @@ registerLocaleData(localeHe);
   templateUrl: './cash-flow-table.component.html',
   styleUrl: './cash-flow-table.component.scss'
 })
-export class CashFlowTableComponent implements OnInit, AfterViewInit {
+export class CashFlowTableComponent implements OnInit, AfterViewInit, OnChanges {
   @ViewChild('tableContainer') tableContainer!: ElementRef;
+
+  // מצב סימולציה - קלט חיצוני
+  @Input() isSimulation = false;
+  @Input() simulationData: any[] | null = null;
+  @Input() readonly = false;
+
   private fb = inject(FormBuilder);
   private cashFlowService = inject(CashFlowService);
   private snackBar = inject(MatSnackBar);
@@ -162,6 +168,15 @@ export class CashFlowTableComponent implements OnInit, AfterViewInit {
     });
   }
 
+  ngOnChanges(changes: SimpleChanges): void {
+    if (this.isSimulation && changes['simulationData']) {
+      const data = changes['simulationData'].currentValue;
+      if (data && Array.isArray(data)) {
+        this.loadSimulationData(data);
+      }
+    }
+  }
+
   ngOnInit(): void {
     this.loadingStartedAt = Date.now();
     this.isLoading = true;
@@ -181,6 +196,17 @@ export class CashFlowTableComponent implements OnInit, AfterViewInit {
     this.cashFlowForm = this.fb.group({
       months: this.fb.array([]),
     });
+
+    // אם זה מצב סימולציה עם נתונים חיצוניים - טען אותם ישירות
+    if (this.isSimulation) {
+      if (this.simulationData && Array.isArray(this.simulationData)) {
+        this.loadSimulationData(this.simulationData);
+      } else {
+        this.isLoading = false;
+        this.isInitialized = true;
+      }
+      return;
+    }
 
     // האזנה לשינויים בפריסות - עדכון התצוגה ושמירה אוטומטית לקובץ ה-JSON
     this.installmentItems$.subscribe(() => {
@@ -275,14 +301,16 @@ export class CashFlowTableComponent implements OnInit, AfterViewInit {
   }
 
   private scheduleDataLoaderOverlay(): void {
-    if (this.loaderScheduled) {
+    if (this.isSimulation || this.loaderScheduled || this.isInitialized) {
       return;
     }
 
     this.loaderScheduled = true;
     window.setTimeout(() => {
-      this.isLoading = true;
-      this.cdr.detectChanges();
+      if (!this.isInitialized && !this.isSimulation) {
+        this.isLoading = true;
+        this.cdr.detectChanges();
+      }
     }, this.loaderRevealDelayMs);
   }
 
@@ -830,6 +858,81 @@ export class CashFlowTableComponent implements OnInit, AfterViewInit {
   }
 
   blurField(key: string) { this.focusedField[key] = false; }
+
+  /**
+   * טעינת נתוני סימולציה מקלט חיצוני
+   */
+  private loadSimulationData(data: any[]): void {
+    if (!this.cashFlowForm) {
+      this.cashFlowForm = this.fb.group({
+        months: this.fb.array([]),
+      });
+    }
+    this.months.clear();
+
+    if (!data || data.length === 0) {
+      this.refreshDataSource();
+      this.isInitialized = true;
+      this.isLoading = false;
+      this.cdr.detectChanges();
+      return;
+    }
+
+    data.forEach((m: any) => {
+      const rawDate = new Date(m.month);
+      const monthDate = new Date(rawDate.getUTCFullYear(), rawDate.getUTCMonth(), 1);
+      const monthGroup = this.createMonth(monthDate, m.startingBalance ?? 0);
+
+      monthGroup.patchValue({
+        income: m.income ?? 0,
+        mortgagePayment: m.mortgagePayment ?? 0,
+        loanPayment: m.loanPayment ?? 0,
+        manualLoanPayment: m.manualLoanPayment ?? 0,
+        installmentsPayment: 0,
+        endingBalance: m.endingBalance ?? 0,
+        rowColor: m.rowColor ?? null
+      }, { emitEvent: false });
+
+      // הוספת הכנסות נוספות
+      m.additionalIncomes?.forEach((e: any) =>
+        (monthGroup.get('additionalIncomes') as FormArray).push(
+          this.fb.group({
+            description: [e.description ?? ''],
+            amount: [e.amount ?? 0]
+          })
+        )
+      );
+
+      // הוספת הוצאות רגילות
+      m.regularExpenses?.forEach((e: Partial<ExpenseItem>) =>
+        (monthGroup.get('regularExpenses') as FormArray).push(this.createExpenseGroup(e))
+      );
+
+      // הוצאות מיוחדות (כולל אלו שנוספו מיעדים)
+      m.specialExpenses?.forEach((e: Partial<ExpenseItem>) => {
+        const expenseGroup = this.createExpenseGroup(e);
+        if (e.goalRelated) {
+          expenseGroup.addControl('goalRelated', this.fb.control(true));
+          expenseGroup.addControl('goalId', this.fb.control(e.goalId));
+        }
+        (monthGroup.get('specialExpenses') as FormArray).push(expenseGroup);
+      });
+
+      // מצב התרחבות - צמצום אוטומטי של שורות מסומנות בירוק
+      const isGreen = m.rowColor === '#dcfce7';
+      monthGroup.get('expanded')?.setValue(!isGreen && (m.regularExpenses?.length || 0) > 0, { emitEvent: false });
+      monthGroup.get('expandedSpecial')?.setValue(!isGreen && (m.specialExpenses?.length || 0) > 0, { emitEvent: false });
+      monthGroup.get('expandedAdditionalIncomes')?.setValue(!isGreen && (m.additionalIncomes?.length || 0) > 0, { emitEvent: false });
+
+      this.months.push(monthGroup);
+    });
+
+    // רענון חד-פעמי בסוף הטעינה
+    this.dataSource.data = [...this.months.controls];
+    this.isInitialized = true;
+    this.isLoading = false;
+    this.cdr.detectChanges();
+  }
 
   print() {
     window.print();

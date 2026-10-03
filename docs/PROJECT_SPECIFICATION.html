@@ -1,0 +1,1610 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>אפיון מערכת תזרים מזומנים - Cash Flow Application</title>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #7c3aed;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --dark-bg: #1e293b;
+            --card-bg: #ffffff;
+            --border-color: #e2e8f0;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: var(--shadow-xl);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+
+        header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .meta-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            padding: 2rem;
+            background: #f8fafc;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .meta-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .meta-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .meta-value {
+            font-size: 1rem;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        nav {
+            position: sticky;
+            top: 0;
+            background: white;
+            border-bottom: 2px solid var(--border-color);
+            padding: 1rem 2rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            z-index: 100;
+            box-shadow: var(--shadow-sm);
+        }
+
+        nav a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        nav a:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .content {
+            padding: 2rem;
+        }
+
+        section {
+            margin-bottom: 3rem;
+            scroll-margin-top: 80px;
+        }
+
+        h2 {
+            color: var(--primary-color);
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 3px solid var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        h3 {
+            color: var(--secondary-color);
+            font-size: 1.5rem;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        h4 {
+            color: var(--text-primary);
+            font-size: 1.2rem;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        p {
+            margin-bottom: 1rem;
+            line-height: 1.8;
+        }
+
+        .card {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
+        }
+
+        .card-header {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .tech-stack {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .tech-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .flow-diagram {
+            background: #f8fafc;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 2rem 0;
+            overflow-x: auto;
+        }
+
+        .flow-box {
+            background: white;
+            border: 2px solid var(--primary-color);
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 0.5rem 0;
+            text-align: center;
+            font-weight: 500;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .flow-arrow {
+            text-align: center;
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            margin: 0.5rem 0;
+        }
+
+        .api-endpoint {
+            background: #f8fafc;
+            border-left: 4px solid var(--primary-color);
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+        }
+
+        .api-method {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-weight: 700;
+            font-size: 0.875rem;
+            margin-left: 0.5rem;
+        }
+
+        .method-get { background: var(--success-color); color: white; }
+        .method-post { background: var(--primary-color); color: white; }
+        .method-put { background: var(--warning-color); color: white; }
+        .method-delete { background: var(--danger-color); color: white; }
+
+        code {
+            background: #f1f5f9;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            color: var(--secondary-color);
+            font-size: 0.9em;
+        }
+
+        pre {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 1.5rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1rem 0;
+            box-shadow: var(--shadow-md);
+        }
+
+        pre code {
+            background: transparent;
+            color: inherit;
+            padding: 0;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            margin: 1.5rem 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            box-shadow: var(--shadow-sm);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        thead {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+        }
+
+        th, td {
+            padding: 1rem;
+            text-align: right;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.875rem;
+            letter-spacing: 0.5px;
+        }
+
+        tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .feature-list li {
+            padding: 0.75rem 0;
+            padding-right: 2rem;
+            position: relative;
+        }
+
+        .feature-list li::before {
+            content: "✓";
+            position: absolute;
+            right: 0;
+            color: var(--success-color);
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .status-active { background: #dcfce7; color: #166534; }
+        .status-simulation { background: #fef3c7; color: #92400e; }
+        .status-readonly { background: #f3e8ff; color: #6b21a8; }
+
+        .icon {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            vertical-align: middle;
+        }
+
+        footer {
+            background: #f8fafc;
+            padding: 2rem;
+            text-align: center;
+            color: var(--text-secondary);
+            border-top: 2px solid var(--border-color);
+        }
+
+        .highlight-box {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border-right: 4px solid var(--warning-color);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 1.5rem 0;
+        }
+
+        .highlight-box strong {
+            color: var(--warning-color);
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            header h1 {
+                font-size: 1.75rem;
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            nav {
+                justify-content: center;
+            }
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .container {
+                box-shadow: none;
+            }
+
+            nav {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📊 אפיון מערכת תזרים מזומנים</h1>
+            <p>Cash Flow Application - Technical Specification Document</p>
+        </header>
+
+        <div class="meta-info">
+            <div class="meta-item">
+                <span class="meta-label">גרסה / Version</span>
+                <span class="meta-value">2.1.0</span>
+            </div>
+            <div class="meta-item">
+                <span class="meta-label">תאריך עדכון / Last Updated</span>
+                <span class="meta-value">ספטמבר 2026 / September 2026</span>
+            </div>
+            <div class="meta-item">
+                <span class="meta-label">מצב / Status</span>
+                <span class="meta-value">🟢 פעיל / Active</span>
+            </div>
+            <div class="meta-item">
+                <span class="meta-label">סביבה / Environment</span>
+                <span class="meta-value">Development & Production</span>
+            </div>
+        </div>
+
+        <nav>
+            <a href="#overview">סקירה כללית</a>
+            <a href="#architecture">ארכיטקטורה</a>
+            <a href="#tech-stack">טכנולוגיות</a>
+            <a href="#data-models">מודלים</a>
+            <a href="#features">פיצ'רים</a>
+            <a href="#api">API</a>
+            <a href="#components">קומפוננטות</a>
+            <a href="#services">שירותים</a>
+            <a href="#flow">תהליכים</a>
+        </nav>
+
+        <div class="content">
+            <!-- Overview Section -->
+            <section id="overview">
+                <h2>📋 סקירה כללית - Overview</h2>
+                
+                <div class="card">
+                    <div class="card-header">🎯 מטרת המערכת</div>
+                    <p>מערכת לניהול תזרים מזומנים אישי/משפחתי בעברית, המאפשרת מעקב אחר הכנסות, הוצאות, השקעות, פריסות תשלומים ויעדים פיננסיים. המערכת כוללת סימולציה מתקדמת לבדיקת השפעת יעדים על תזרים המזומנים לפני יישומם.</p>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">👥 משתמשי קצה</div>
+                    <ul class="feature-list">
+                        <li>משתמשים פרטיים המנהלים תקציב אישי</li>
+                        <li>משפחות המתכננות רכישות גדולות</li>
+                        <li>אנשים המעוניינים בתכנון פיננסי מתקדם</li>
+                        <li>משתמשים דוברי עברית (ממשק RTL מלא)</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">✨ יכולות מרכזיות</div>
+                    <ul class="feature-list">
+                        <li>ניהול תזרים מזומנים חודשי עם תצוגה טבלאית</li>
+                        <li>מעקב אחר פריסות תשלומים והשקעות</li>
+                        <li>ניהול יעדים פיננסיים עם ניתוח היתכנות</li>
+                        <li>סימולציה של תזרים מזומנים לבדיקת יעדים</li>
+                        <li>ויזואליזציות גרפיות (D3, Charts)</li>
+                        <li>אנימציות חכמות (GSAP)</li>
+                        <li>דוחות AI וצ'אט עם בינה מלאכותית</li>
+                        <li>ממשק רספונסיבי בעברית</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Architecture Section -->
+            <section id="architecture">
+                <h2>🏗️ ארכיטקטורה - Architecture</h2>
+                
+                <div class="card">
+                    <div class="card-header">📐 מבנה האפליקציה</div>
+                    <p><strong>Client-Server Architecture</strong> עם הפרדה מלאה בין Frontend ו-Backend:</p>
+                </div>
+
+                <div class="grid">
+                    <div class="card">
+                        <div class="card-header">🎨 Frontend (Angular)</div>
+                        <ul class="feature-list">
+                            <li>Angular 21 Standalone Components</li>
+                            <li>Lazy Loading לכל המודולים</li>
+                            <li>Signal-based State Management</li>
+                            <li>RxJS לניהול אסינכרוני</li>
+                            <li>Angular Material UI Components</li>
+                            <li>Bootstrap 5 לסטיילינג</li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">⚙️ Backend (Node.js)</div>
+                        <ul class="feature-list">
+                            <li>Express.js REST API</li>
+                            <li>File-based Data Storage (JSON)</li>
+                            <li>Repository Pattern</li>
+                            <li>Centralized Error Handling</li>
+                            <li>Logging System (Winston)</li>
+                            <li>CORS Support</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="flow-diagram">
+                    <h3>🔄 תרשים זרימת מידע - Data Flow Diagram</h3>
+                    <div class="flow-box" style="background: #dbeafe; border-color: var(--primary-color);">
+                        <strong>User Interface (Browser)</strong><br>
+                        Angular Components + Material UI
+                    </div>
+                    <div class="flow-arrow">⬇️ HTTP Requests</div>
+                    <div class="flow-box" style="background: #fef3c7; border-color: var(--warning-color);">
+                        <strong>Angular Services</strong><br>
+                        CashFlowService, GoalsService, SimulationService, etc.
+                    </div>
+                    <div class="flow-arrow">⬇️ HTTP Client (RxJS Observables)</div>
+                    <div class="flow-box" style="background: #dcfce7; border-color: var(--success-color);">
+                        <strong>HTTP Interceptors</strong><br>
+                        Error Handling, Logging
+                    </div>
+                    <div class="flow-arrow">⬇️ REST API Calls</div>
+                    <div class="flow-box" style="background: #fce7f3; border-color: var(--secondary-color);">
+                        <strong>Express.js Server (Port 3000)</strong><br>
+                        Routes + Middleware + Error Handler
+                    </div>
+                    <div class="flow-arrow">⬇️ Business Logic</div>
+                    <div class="flow-box" style="background: #e0e7ff; border-color: var(--primary-color);">
+                        <strong>Services Layer</strong><br>
+                        CashFlowService, InstallmentService, etc.
+                    </div>
+                    <div class="flow-arrow">⬇️ Data Access</div>
+                    <div class="flow-box" style="background: #f3e8ff; border-color: var(--secondary-color);">
+                        <strong>Repository Layer</strong><br>
+                        File I/O Operations
+                    </div>
+                    <div class="flow-arrow">⬇️ Persistence</div>
+                    <div class="flow-box" style="background: #fef3c7; border-color: var(--warning-color);">
+                        <strong>JSON Files (Data Storage)</strong><br>
+                        /server/data/*.json
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tech Stack Section -->
+            <section id="tech-stack">
+                <h2>🛠️ סטאק טכנולוגי - Technology Stack</h2>
+
+                <div class="card">
+                    <div class="card-header">Frontend Technologies</div>
+                    <div class="tech-stack">
+                        <span class="tech-badge">🅰️ Angular 21.2.17</span>
+                        <span class="tech-badge">🎨 Angular Material 21.2.14</span>
+                        <span class="tech-badge">💅 Bootstrap 5.3.8</span>
+                        <span class="tech-badge">📊 D3.js 7.9.0</span>
+                        <span class="tech-badge">🎬 GSAP 3.15.0</span>
+                        <span class="tech-badge">🔄 RxJS 7.8.0</span>
+                        <span class="tech-badge">🌐 ngx-translate 17.0.0</span>
+                        <span class="tech-badge">📄 jsPDF 4.2.1</span>
+                        <span class="tech-badge">📑 TypeScript 5.9.3</span>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">Backend Technologies</div>
+                    <div class="tech-stack">
+                        <span class="tech-badge">🟢 Node.js</span>
+                        <span class="tech-badge">🚂 Express.js</span>
+                        <span class="tech-badge">📝 Winston (Logging)</span>
+                        <span class="tech-badge">🔄 CORS</span>
+                        <span class="tech-badge">📦 JSON File Storage</span>
+                        <span class="tech-badge">🤖 Ollama AI Integration</span>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">Development Tools</div>
+                    <div class="tech-stack">
+                        <span class="tech-badge">🔧 Angular CLI</span>
+                        <span class="tech-badge">🧪 Jasmine + Karma</span>
+                        <span class="tech-badge">🔁 Concurrently</span>
+                        <span class="tech-badge">📦 NPM</span>
+                        <span class="tech-badge">🔍 Chrome DevTools</span>
+                    </div>
+                </div>
+
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>טכנולוגיה</th>
+                                <th>גרסה</th>
+                                <th>תפקיד</th>
+                                <th>סיבת בחירה</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Angular 21</td>
+                                <td>21.2.17</td>
+                                <td>Framework Frontend</td>
+                                <td>Standalone Components, Signals, Performance</td>
+                            </tr>
+                            <tr>
+                                <td>Angular Material</td>
+                                <td>21.2.14</td>
+                                <td>UI Components</td>
+                                <td>RTL Support, Accessibility, Modern Design</td>
+                            </tr>
+                            <tr>
+                                <td>D3.js</td>
+                                <td>7.9.0</td>
+                                <td>Data Visualization</td>
+                                <td>Flexible Charts, Sankey Diagrams</td>
+                            </tr>
+                            <tr>
+                                <td>GSAP</td>
+                                <td>3.15.0</td>
+                                <td>Animations</td>
+                                <td>Smooth UI Transitions, Performance</td>
+                            </tr>
+                            <tr>
+                                <td>Express.js</td>
+                                <td>Latest</td>
+                                <td>Backend Framework</td>
+                                <td>Simple, Fast, Popular</td>
+                            </tr>
+                            <tr>
+                                <td>RxJS</td>
+                                <td>7.8.0</td>
+                                <td>Reactive Programming</td>
+                                <td>Built-in with Angular, Stream Management</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Data Models Section -->
+            <section id="data-models">
+                <h2>📊 מודלי נתונים - Data Models</h2>
+
+                <div class="card">
+                    <div class="card-header">💰 MonthData - נתוני חודש בתזרים</div>
+                    <pre><code>interface MonthData {
+  month: string;                 // תאריך החודש (ISO)
+  startingBalance: number;       // יתרת פתיחה
+  income: number;                // הכנסות
+  mortgagePayment?: number;      // תשלום משכנתא
+  loanPayment?: number;          // תשלום הלוואה
+  installmentsPayment?: number;  // סך פריסות
+  additionalIncomes?: {          // הכנסות נוספות
+    description: string;
+    amount: number;
+  }[];
+  regularExpenses?: ExpenseItem[]; // הוצאות קבועות
+  specialExpenses?: ExpenseItem[]; // הוצאות חד-פעמיות
+  endingBalance: number;         // יתרת סגירה
+  savings?: number;              // חיסכון מצטבר
+  rowColor?: string;             // צבע שורה (UI)
+}</code></pre>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">🎯 FinancialGoal - יעד פיננסי</div>
+                    <pre><code>interface FinancialGoal {
+  id: string;
+  name: string;
+  description?: string;
+  type: GoalType;               // PURCHASE | LOAN_PAYOFF | SAVINGS | PROJECT
+  targetAmount: number;         // סכום יעד
+  targetDate: string;           // תאריך יעד (YYYY-MM)
+  loanDetails?: LoanDetails;    // פרטי הלוואה (אם רלוונטי)
+  schedule?: GoalSchedule;      // סוג לוח תשלומים
+  priority: number;             // עדיפות (1 = הכי חשוב)
+  analysis?: GoalAnalysis;      // ניתוח היתכנות
+  completed: boolean;
+  createdDate: string;
+  updatedDate: string;
+}</code></pre>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">📅 GoalSchedule - לוח תשלומים ליעד</div>
+                    <pre><code>type GoalScheduleType = 'single' | 'loan' | 'milestone';
+
+interface GoalSchedule {
+  type: GoalScheduleType;
+  amount?: number;              // תשלום חד-פעמי
+  date?: string;                // תאריך תשלום
+  loan?: LoanDetails;           // פרטי הלוואה
+  milestones?: GoalMilestone[]; // אבני דרך
+}
+
+interface GoalMilestone {
+  id: string;
+  description: string;
+  percentage: number;           // אחוז מהסכום הכולל
+  amount: number;               // סכום
+  date: string;                 // תאריך
+}</code></pre>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">💳 Installment - פריסת תשלומים</div>
+                    <pre><code>interface Installment {
+  id: string;
+  name: string;
+  totalAmount: number;
+  downPayment: number;
+  monthlyPayment: number;
+  installmentsCount: number;
+  startDate: string;
+  color: string;
+  notes?: string;
+  manualPaidCount?: number;
+  paymentType: 'manual' | 'loan' | 'milestone';
+  loanComponents?: any[];
+  milestones?: any[];
+  payments?: any[];
+}</code></pre>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">📈 Investment - השקעה</div>
+                    <pre><code>interface Investment {
+  id: string;
+  name: string;
+  initialAmount: number;
+  currentAmount: number;
+  currency: string;             // ILS, USD, EUR
+  type: string;                 // savings, stocks, crypto, etc.
+  startDate: string;
+  notes?: string;
+}</code></pre>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">🏷️ ExpenseItem - פריט הוצאה</div>
+                    <pre><code>interface ExpenseItem {
+  description: string;
+  amount: number;
+  category: ExpenseCategory;    // housing, food, transportation, etc.
+  goalRelated?: boolean;        // סימון שההוצאה מיעד
+  goalId?: string;              // ID של היעד
+}
+
+enum ExpenseCategory {
+  HOUSING = 'housing',
+  FOOD = 'food',
+  TRANSPORTATION = 'transportation',
+  HEALTH = 'health',
+  EDUCATION = 'education',
+  ENTERTAINMENT = 'entertainment',
+  INSURANCE = 'insurance',
+  SAVINGS = 'savings',
+  OTHER = 'other'
+}</code></pre>
+                </div>
+            </section>
+
+            <!-- Features Section -->
+            <section id="features">
+                <h2>🎯 פיצ'רים - Features</h2>
+
+                <div class="grid">
+                    <div class="card">
+                        <div class="card-header">💰 תזרים מזומנים (Cash Flow)</div>
+                        <ul class="feature-list">
+                            <li>טבלה חודשית עם חישובים אוטומטיים</li>
+                            <li>הוספה/עריכה/מחיקה של הוצאות והכנסות</li>
+                            <li>ברירות מחדל להעתקה לחודשים חדשים</li>
+                            <li>צביעת שורות לפי מצב היתרה</li>
+                            <li>ייצוא לקובץ PDF</li>
+                            <li>עריכה inline בטבלה</li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">🎯 יעדים פיננסיים (Goals)</div>
+                        <ul class="feature-list">
+                            <li>יצירת יעדים עם סוגי תשלום שונים</li>
+                            <li>תשלום חד-פעמי / הלוואה / אבני דרך</li>
+                            <li>ניתוח אוטומטי של היתכנות</li>
+                            <li>תצוגת סטטוס (ירוק/כתום/אדום)</li>
+                            <li>עדיפויות ליעדים</li>
+                            <li>המלצות לשיפור</li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">🔄 סימולציה (Simulation)</div>
+                        <ul class="feature-list">
+                            <li>טבלת תזרים מזומנים נפרדת לסימולציה</li>
+                            <li>יעדים משפיעים **רק** על הסימולציה, לא על התזרים המקורי</li>
+                            <li>עריכה חופשית של נתוני הסימולציה</li>
+                            <li>כפתור רענון - מעדכן את הסימולציה מהתזרים המקורי</li>
+                            <li>רענון מאפס את כל היעדים (דורש אישור)</li>
+                            <li>הסימולציה לעולם לא משנה את התזרים המקורי</li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">💳 פריסות תשלומים (Installments)</div>
+                        <ul class="feature-list">
+                            <li>ניהול פריסות עם תשלומים חודשיים</li>
+                            <li>מעקב אחר תשלומים שבוצעו</li>
+                            <li>שלושה סוגי פריסות: ידני/הלוואה/אבני דרך</li>
+                            <li>אינטגרציה אוטומטית לתזרים המזומנים</li>
+                            <li>גרפים ותצוגות חזותיות</li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">📈 השקעות (Investments)</div>
+                        <ul class="feature-list">
+                            <li>מעקב אחר השקעות מרובות</li>
+                            <li>תמיכה במטבעות שונים</li>
+                            <li>גרף Sankey של זרימת כספים</li>
+                            <li>חישוב תשואות</li>
+                            <li>סוגי השקעות שונים</li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">🤖 עוזר AI</div>
+                        <ul class="feature-list">
+                            <li>צ'אט עם בינה מלאכותית (Ollama)</li>
+                            <li>ניתוח נתונים פיננסיים</li>
+                            <li>המלצות והצעות</li>
+                            <li>יצירת דוחות אוטומטית</li>
+                            <li>שמירת שיחות</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="highlight-box">
+                    <strong>🆕 פיצ'ר מיוחד: מערכת סימולציה</strong>
+                    <p>המערכת כוללת מנגנון ייחודי של סימולציה המאפשר למשתמשים לבדוק את ההשפעה של יעדים פיננסיים על תזרים המזומנים בטבלה נפרדת. <strong>חשוב:</strong> היעדים משפיעים רק על טבלת הסימולציה, ולא על התזרים המקורי. כפתור "רענן מהתזרים המקורי" מאפס את כל הסימולציה והיעדים, ומעתיק מחדש את הנתונים מהטבלה המקורית.</p>
+                </div>
+            </section>
+
+            <!-- API Section -->
+            <section id="api">
+                <h2>🔌 API Endpoints</h2>
+
+                <div class="card">
+                    <div class="card-header">🌐 Base URL</div>
+                    <code>http://localhost:3000/api</code>
+                </div>
+
+                <h3>💰 Cash Flow Endpoints</h3>
+
+                <div class="api-endpoint">
+                    <span class="api-method method-get">GET</span>
+                    <strong>/api/cash-flow</strong>
+                    <p>קבלת כל נתוני תזרים המזומנים</p>
+                    <p><strong>Response:</strong> <code>{ months: MonthData[] }</code></p>
+                </div>
+
+                <div class="api-endpoint">
+                    <span class="api-method method-post">POST</span>
+                    <strong>/api/cash-flow</strong>
+                    <p>שמירת נתוני תזרים מזומנים</p>
+                    <p><strong>Body:</strong> <code>{ months: MonthData[] }</code></p>
+                    <p><strong>Response:</strong> <code>{ success: true }</code></p>
+                </div>
+
+                <div class="api-endpoint">
+                    <span class="api-method method-get">GET</span>
+                    <strong>/api/cash-flow-defaults</strong>
+                    <p>קבלת ברירות מחדל</p>
+                </div>
+
+                <div class="api-endpoint">
+                    <span class="api-method method-post">POST</span>
+                    <strong>/api/cash-flow-defaults</strong>
+                    <p>שמירת ברירות מחדל</p>
+                </div>
+
+                <h3>🎯 Goals Endpoints</h3>
+
+                <div class="api-endpoint">
+                    <span class="api-method method-get">GET</span>
+                    <strong>/api/goals</strong>
+                    <p>קבלת כל היעדים</p>
+                </div>
+
+                <div class="api-endpoint">
+                    <span class="api-method method-get">GET</span>
+                    <strong>/api/goals/:id</strong>
+                    <p>קבלת יעד לפי ID</p>
+                </div>
+
+                <div class="api-endpoint">
+                    <span class="api-method method-post">POST</span>
+                    <strong>/api/goals</strong>
+                    <p>יצירת יעד חדש</p>
+                </div>
+
+                <div class="api-endpoint">
+                    <span class="api-method method-put">PUT</span>
+                    <strong>/api/goals/:id</strong>
+                    <p>עדכון יעד קיים</p>
+                </div>
+
+                <div class="api-endpoint">
+                    <span class="api-method method-delete">DELETE</span>
+                    <strong>/api/goals/:id</strong>
+                    <p>מחיקת יעד</p>
+                </div>
+
+                <h3>💳 Installments Endpoints</h3>
+
+                <div class="api-endpoint">
+                    <span class="api-method method-get">GET</span>
+                    <strong>/api/installments</strong>
+                    <p>קבלת כל הפריסות</p>
+                </div>
+
+                <div class="api-endpoint">
+                    <span class="api-method method-post">POST</span>
+                    <strong>/api/installments</strong>
+                    <p>יצירת פריסה חדשה</p>
+                </div>
+
+                <div class="api-endpoint">
+                    <span class="api-method method-put">PUT</span>
+                    <strong>/api/installments/:id</strong>
+                    <p>עדכון פריסה</p>
+                </div>
+
+                <div class="api-endpoint">
+                    <span class="api-method method-delete">DELETE</span>
+                    <strong>/api/installments/:id</strong>
+                    <p>מחיקת פריסה</p>
+                </div>
+
+                <h3>📈 Investments Endpoints</h3>
+
+                <div class="api-endpoint">
+                    <span class="api-method method-get">GET</span>
+                    <strong>/api/investments</strong>
+                    <p>קבלת כל ההשקעות</p>
+                </div>
+
+                <div class="api-endpoint">
+                    <span class="api-method method-post">POST</span>
+                    <strong>/api/investments</strong>
+                    <p>יצירת השקעה חדשה</p>
+                </div>
+
+                <div class="api-endpoint">
+                    <span class="api-method method-put">PUT</span>
+                    <strong>/api/investments/:id</strong>
+                    <p>עדכון השקעה</p>
+                </div>
+
+                <div class="api-endpoint">
+                    <span class="api-method method-delete">DELETE</span>
+                    <strong>/api/investments/:id</strong>
+                    <p>מחיקת השקעה</p>
+                </div>
+
+                <h3>🤖 AI Endpoints</h3>
+
+                <div class="api-endpoint">
+                    <span class="api-method method-post">POST</span>
+                    <strong>/api/ai/chat</strong>
+                    <p>שליחת הודעה לצ'אט AI</p>
+                </div>
+
+                <div class="api-endpoint">
+                    <span class="api-method method-get">GET</span>
+                    <strong>/api/conversations</strong>
+                    <p>קבלת כל השיחות</p>
+                </div>
+
+                <div class="api-endpoint">
+                    <span class="api-method method-post">POST</span>
+                    <strong>/api/ai-reports/generate</strong>
+                    <p>יצירת דוח AI</p>
+                </div>
+            </section>
+
+            <!-- Components Section -->
+            <section id="components">
+                <h2>🧩 קומפוננטות - Components</h2>
+
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>קומפוננטה</th>
+                                <th>נתיב</th>
+                                <th>תפקיד</th>
+                                <th>Standalone</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>AppComponent</strong></td>
+                                <td>app/app.component.ts</td>
+                                <td>קומפוננטת שורש, ניווט ראשי</td>
+                                <td>✅</td>
+                            </tr>
+                            <tr>
+                                <td><strong>CashFlowTableComponent</strong></td>
+                                <td>features/cash-flow/cash-flow-table</td>
+                                <td>טבלת תזרים מזומנים + סימולציה</td>
+                                <td>✅</td>
+                            </tr>
+                            <tr>
+                                <td><strong>GoalsComponent</strong></td>
+                                <td>features/goals</td>
+                                <td>ניהול יעדים פיננסיים</td>
+                                <td>✅</td>
+                            </tr>
+                            <tr>
+                                <td><strong>InstallmentsComponent</strong></td>
+                                <td>features/installments</td>
+                                <td>ניהול פריסות תשלומים</td>
+                                <td>✅</td>
+                            </tr>
+                            <tr>
+                                <td><strong>InvestmentDashboardComponent</strong></td>
+                                <td>features/investments/investment-dashboard</td>
+                                <td>דשבורד השקעות</td>
+                                <td>✅</td>
+                            </tr>
+                            <tr>
+                                <td><strong>BudgetTrackerComponent</strong></td>
+                                <td>features/budget-tracker</td>
+                                <td>מעקב תקציב</td>
+                                <td>✅</td>
+                            </tr>
+                            <tr>
+                                <td><strong>AiAssistantComponent</strong></td>
+                                <td>features/ai-assistant</td>
+                                <td>צ'אט עם AI</td>
+                                <td>✅</td>
+                            </tr>
+                            <tr>
+                                <td><strong>ExpenseCategorySelectorComponent</strong></td>
+                                <td>features/cash-flow/expense-category-selector</td>
+                                <td>בחירת קטגוריית הוצאה</td>
+                                <td>✅</td>
+                            </tr>
+                            <tr>
+                                <td><strong>ExpensePieChartComponent</strong></td>
+                                <td>features/cash-flow/expense-pie-chart</td>
+                                <td>גרף עוגה של הוצאות</td>
+                                <td>✅</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3>🔄 תקשורת בין קומפוננטות</h3>
+
+                <div class="card">
+                    <p><strong>GoalsComponent ↔ CashFlowTableComponent</strong></p>
+                    <ul class="feature-list">
+                        <li>GoalsComponent שולח נתונים דרך @Input isSimulation</li>
+                        <li>GoalsComponent מעביר נתוני סימולציה דרך @Input simulationData</li>
+                        <li>CashFlowTableComponent מציג את הנתונים בהתאם למצב</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <p><strong>Services ← Components</strong></p>
+                    <ul class="feature-list">
+                        <li>כל קומפוננטה עובדת עם שירות ייעודי (Dependency Injection)</li>
+                        <li>השירותים מחזירים RxJS Observables</li>
+                        <li>הקומפוננטות מאזינות לשינויים דרך async pipe או subscribe</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Services Section -->
+            <section id="services">
+                <h2>⚙️ שירותים - Services</h2>
+
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>שירות</th>
+                                <th>תפקיד</th>
+                                <th>מתודות עיקריות</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>CashFlowService</strong></td>
+                                <td>ניהול תזרים מזומנים</td>
+                                <td>getCashFlow(), saveCashFlow(), getDefaults(), saveDefaults()</td>
+                            </tr>
+                            <tr>
+                                <td><strong>CashFlowSimulationService</strong></td>
+                                <td>ניהול סימולציית תזרים</td>
+                                <td>getSimulationData(), applyGoalToSimulation(), resetSimulation()</td>
+                            </tr>
+                            <tr>
+                                <td><strong>CashFlowCalculationService</strong></td>
+                                <td>חישובי תזרים</td>
+                                <td>calculateEndingBalance(), getTotalExpenses(), getTotalIncome()</td>
+                            </tr>
+                            <tr>
+                                <td><strong>GoalsService</strong></td>
+                                <td>ניהול יעדים פיננסיים</td>
+                                <td>getGoals(), createGoal(), updateGoal(), deleteGoal(), analyzeGoal()</td>
+                            </tr>
+                            <tr>
+                                <td><strong>InstallmentService</strong></td>
+                                <td>ניהול פריסות</td>
+                                <td>getInstallments(), createInstallment(), updateInstallment(), deleteInstallment()</td>
+                            </tr>
+                            <tr>
+                                <td><strong>InvestmentService</strong></td>
+                                <td>ניהול השקעות</td>
+                                <td>getInvestments(), createInvestment(), updateInvestment(), deleteInvestment()</td>
+                            </tr>
+                            <tr>
+                                <td><strong>AiService</strong></td>
+                                <td>תקשורת עם AI</td>
+                                <td>sendMessage(), getConversations(), createReport()</td>
+                            </tr>
+                            <tr>
+                                <td><strong>LanguageService</strong></td>
+                                <td>ניהול שפה</td>
+                                <td>setLanguage(), getCurrentLanguage(), translate()</td>
+                            </tr>
+                            <tr>
+                                <td><strong>ThemeService</strong></td>
+                                <td>ניהול ערכת נושא</td>
+                                <td>toggleTheme(), setTheme(), getCurrentTheme()</td>
+                            </tr>
+                            <tr>
+                                <td><strong>BudgetService</strong></td>
+                                <td>ניהול תקציבים</td>
+                                <td>getBudget(), updateBudget(), compareToBudget()</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3>🔄 תהליך עבודה טיפוסי של שירות</h3>
+
+                <div class="card">
+                    <div class="card-header">דוגמה: CashFlowService.getCashFlow()</div>
+                    <pre><code>// 1. קומפוננטה מבקשת נתונים
+this.cashFlowService.getCashFlow()
+  .subscribe(data => this.months = data.months);
+
+// 2. השירות שולח HTTP Request
+this.http.get&lt;{months: MonthData[]}&gt;('http://localhost:3000/api/cash-flow')
+
+// 3. השרת מעבד את הבקשה
+app.get('/api/cash-flow', cashFlowRoutes);
+
+// 4. Repository קורא את הקובץ
+const data = await fs.readFile('data/cash-flow.json');
+
+// 5. Response חוזר דרך כל השכבות
+return { months: JSON.parse(data) };</code></pre>
+                </div>
+
+                <div class="highlight-box">
+                    <strong>🎯 מיוחד: CashFlowSimulationService</strong>
+                    <p>שירות זה מנהל מצב סימולציה נפרד המאפשר:</p>
+                    <ul class="feature-list">
+                        <li>שכפול נתוני תזרים מקוריים</li>
+                        <li>יישום יעדים על הסימולציה בלבד</li>
+                        <li>שמירת השינויים רק כשהמשתמש מחליט</li>
+                        <li>איפוס הסימולציה בכל עת</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Flow Section -->
+            <section id="flow">
+                <h2>🔄 תהליכים - Process Flows</h2>
+
+                <h3>📝 תהליך יצירת יעד חדש</h3>
+                <div class="flow-diagram">
+                    <div class="flow-box" style="background: #dbeafe;">
+                        <strong>1. משתמש מלא טופס יעד חדש</strong><br>
+                        GoalsComponent - Form Validation
+                    </div>
+                    <div class="flow-arrow">⬇️</div>
+                    <div class="flow-box" style="background: #fef3c7;">
+                        <strong>2. שליחת יעד חדש לשירות</strong><br>
+                        GoalsService.createGoal(newGoal)
+                    </div>
+                    <div class="flow-arrow">⬇️</div>
+                    <div class="flow-box" style="background: #dcfce7;">
+                        <strong>3. HTTP POST Request</strong><br>
+                        POST /api/goals + Body: FinancialGoal
+                    </div>
+                    <div class="flow-arrow">⬇️</div>
+                    <div class="flow-box" style="background: #fce7f3;">
+                        <strong>4. שרת מאמת ושומר</strong><br>
+                        goals.routes.js → GoalService → Repository
+                    </div>
+                    <div class="flow-arrow">⬇️</div>
+                    <div class="flow-box" style="background: #e0e7ff;">
+                        <strong>5. Response עם היעד החדש</strong><br>
+                        Status 201 + Created Goal Object
+                    </div>
+                    <div class="flow-arrow">⬇️</div>
+                    <div class="flow-box" style="background: #f3e8ff;">
+                        <strong>6. עדכון UI</strong><br>
+                        GoalsComponent מציג את היעד החדש + Toast הצלחה
+                    </div>
+                </div>
+
+                <h3>🎯 תהליך עבודה עם סימולציה ויעדים</h3>
+                <div class="flow-diagram">
+                    <div class="flow-box" style="background: #dbeafe;">
+                        <strong>1. משתמש יוצר יעדים חדשים</strong><br>
+                        GoalsComponent - טופס יעדים
+                    </div>
+                    <div class="flow-arrow">⬇️</div>
+                    <div class="flow-box" style="background: #fef3c7;">
+                        <strong>2. יעדים נשמרים ב-GoalsService</strong><br>
+                        POST /api/goals
+                    </div>
+                    <div class="flow-arrow">⬇️</div>
+                    <div class="flow-box" style="background: #dcfce7;">
+                        <strong>3. CashFlowSimulationService מעדכן אוטומטית</strong><br>
+                        combineLatest מאזין לשינויים ביעדים
+                    </div>
+                    <div class="flow-arrow">⬇️</div>
+                    <div class="flow-box" style="background: #fce7f3;">
+                        <strong>4. הסימולציה מתעדכנת</strong><br>
+                        updateSimulation() - שכפול תזרים + הוספת יעדים
+                    </div>
+                    <div class="flow-arrow">⬇️</div>
+                    <div class="flow-box" style="background: #e0e7ff;">
+                        <strong>5. טבלת הסימולציה מציגה את התוצאה</strong><br>
+                        CashFlowTableComponent (isSimulation=true)
+                    </div>
+                    <div class="flow-arrow">⬇️</div>
+                    <div class="flow-box" style="background: #f3e8ff;">
+                        <strong>6. "רענן מתזרים מקורי" - איפוס הכל</strong><br>
+                        מחיקת יעדים + טעינה מחדש מהמקור
+                    </div>
+                </div>
+
+                <div class="highlight-box">
+                    <strong>⚠️ הערה חשובה:</strong>
+                    <p>התזרים המקורי <strong>אף פעם לא משתנה</strong> מהיעדים. רק הסימולציה מושפעת. כדי לעדכן את התזרים המקורי, משתמשים צריכים לערוך אותו ידנית בטאב "תזרים מזומנים".</p>
+                </div>
+
+                <h3>💾 תהליך שמירת נתונים</h3>
+                <div class="flow-diagram">
+                    <div class="flow-box" style="background: #dbeafe;">
+                        <strong>1. משתמש מסיים עריכה ולוחץ "שמור"</strong><br>
+                        Any Component
+                    </div>
+                    <div class="flow-arrow">⬇️</div>
+                    <div class="flow-box" style="background: #fef3c7;">
+                        <strong>2. אימות נתונים בצד לקוח</strong><br>
+                        Form Validation + TypeScript Types
+                    </div>
+                    <div class="flow-arrow">⬇️</div>
+                    <div class="flow-box" style="background: #dcfce7;">
+                        <strong>3. שליחת PUT/POST Request</strong><br>
+                        Service → HttpClient → Server
+                    </div>
+                    <div class="flow-arrow">⬇️</div>
+                    <div class="flow-box" style="background: #fce7f3;">
+                        <strong>4. אימות נתונים בשרת</strong><br>
+                        Express Middleware + Service Validation
+                    </div>
+                    <div class="flow-arrow">⬇️</div>
+                    <div class="flow-box" style="background: #e0e7ff;">
+                        <strong>5. שמירה בקובץ JSON</strong><br>
+                        Repository → fs.writeFile
+                    </div>
+                    <div class="flow-arrow">⬇️</div>
+                    <div class="flow-box" style="background: #f3e8ff;">
+                        <strong>6. Response + עדכון UI</strong><br>
+                        Success Message + Data Refresh
+                    </div>
+                </div>
+
+                <h3>📊 תהליך חישוב יתרת סגירה</h3>
+                <div class="card">
+                    <div class="card-header">CashFlowCalculationService</div>
+                    <pre><code>endingBalance = startingBalance 
+              + totalIncome 
+              - mortgagePayment 
+              - loanPayment 
+              - installmentsPayment 
+              - totalRegularExpenses 
+              - totalSpecialExpenses
+
+// התוצאה קובעת את צבע השורה:
+// > 50,000 ₪    → ירוק (#dcfce7)
+// > 10,000 ₪    → כתום (#fef3c7)
+// <= 10,000 ₪   → אדום (#fee2e2)</code></pre>
+                </div>
+            </section>
+
+            <!-- Project Structure -->
+            <section id="structure">
+                <h2>📁 מבנה הפרויקט - Project Structure</h2>
+
+                <div class="card">
+                    <pre><code>cash-flow-app/
+├── src/
+│   ├── app/
+│   │   ├── features/              # Feature modules
+│   │   │   ├── cash-flow/
+│   │   │   │   ├── cash-flow-table/
+│   │   │   │   ├── cash-flow-cards/
+│   │   │   │   ├── expense-category-selector/
+│   │   │   │   ├── expense-pie-chart/
+│   │   │   │   └── defaults-dialog/
+│   │   │   ├── goals/             # יעדים פיננסיים
+│   │   │   ├── installments/      # פריסות תשלומים
+│   │   │   ├── investments/       # השקעות
+│   │   │   ├── budget-tracker/    # מעקב תקציב
+│   │   │   └── ai-assistant/      # עוזר AI
+│   │   ├── services/              # Angular Services
+│   │   │   ├── cash-flow.service.ts
+│   │   │   ├── cash-flow-simulation.service.ts
+│   │   │   ├── cash-flow-calculation.service.ts
+│   │   │   ├── goals.service.ts
+│   │   │   ├── installment.service.ts
+│   │   │   ├── investment.service.ts
+│   │   │   ├── ai.service.ts
+│   │   │   ├── language.service.ts
+│   │   │   └── theme.service.ts
+│   │   ├── models/                # TypeScript Interfaces
+│   │   │   ├── cash-flow.model.ts
+│   │   │   ├── goal.model.ts
+│   │   │   ├── expense.model.ts
+│   │   │   ├── installment.model.ts
+│   │   │   └── investment.model.ts
+│   │   ├── interceptors/          # HTTP Interceptors
+│   │   ├── directives/            # Custom Directives
+│   │   ├── utils/                 # Utility Functions
+│   │   ├── app.routes.ts          # Routing
+│   │   └── app.component.ts       # Root Component
+│   ├── assets/                    # Static Assets
+│   │   ├── i18n/                  # Translation Files
+│   │   └── images/
+│   └── styles.scss                # Global Styles
+│
+├── server/                        # Node.js Backend
+│   ├── routes/                    # API Routes
+│   │   ├── cashFlow.routes.js
+│   │   ├── goals.routes.js
+│   │   ├── installments.routes.js
+│   │   ├── investments.routes.js
+│   │   └── index.js
+│   ├── services/                  # Business Logic
+│   ├── repositories/              # Data Access Layer
+│   ├── middleware/                # Express Middleware
+│   ├── models/                    # Data Models
+│   ├── data/                      # JSON Data Files
+│   │   ├── cash-flow.json
+│   │   ├── goals.json
+│   │   ├── installments.json
+│   │   └── investments.json
+│   ├── utils/                     # Utility Functions
+│   ├── logs/                      # Log Files
+│   └── index.js                   # Server Entry Point
+│
+├── docs/                          # Documentation
+│   ├── PROJECT_SPECIFICATION.html # ⭐ This File
+│   └── archive/
+│
+├── angular.json                   # Angular Configuration
+├── package.json                   # Dependencies
+└── tsconfig.json                  # TypeScript Config</code></pre>
+                </div>
+            </section>
+
+            <!-- Development Section -->
+            <section id="development">
+                <h2>🛠️ פיתוח והפעלה - Development</h2>
+
+                <div class="grid">
+                    <div class="card">
+                        <div class="card-header">🚀 הפעלת הפרויקט</div>
+                        <pre><code># הרצה מלאה (Frontend + Backend)
+npm run dev
+
+# רק Frontend (Port 4300)
+npm start
+
+# רק Backend (Port 3000)
+npm run server
+
+# הכול כולל Ollama AI
+npm run dev:ai</code></pre>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">📦 התקנה</div>
+                        <pre><code># התקנת תלויות Frontend
+npm install
+
+# התקנת תלויות Backend
+cd server
+npm install</code></pre>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">🔨 Build</div>
+                        <pre><code># Build לפרודקשן
+npm run build
+
+# Build עם watch mode
+npm run watch</code></pre>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">🧪 Testing</div>
+                        <pre><code># הרצת טסטים
+npm test
+
+# Test coverage
+npm run test:coverage</code></pre>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">🌐 URLs</div>
+                    <ul class="feature-list">
+                        <li><strong>Frontend:</strong> http://localhost:4300</li>
+                        <li><strong>Backend API:</strong> http://localhost:3000/api</li>
+                        <li><strong>Health Check:</strong> http://localhost:3000/health</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Security Section -->
+            <section id="security">
+                <h2>🔒 אבטחה - Security</h2>
+
+                <div class="grid">
+                    <div class="card">
+                        <div class="card-header">🛡️ אמצעי אבטחה נוכחיים</div>
+                        <ul class="feature-list">
+                            <li>CORS מוגדר לבקשות מהאפליקציה בלבד</li>
+                            <li>Validation של נתונים בשרת</li>
+                            <li>TypeScript Type Safety</li>
+                            <li>Error Handling מרכזי</li>
+                            <li>Logging של כל הבקשות</li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">⚠️ שיפורי אבטחה מומלצים</div>
+                        <ul class="feature-list">
+                            <li>הוספת Authentication (JWT)</li>
+                            <li>Rate Limiting על ה-API</li>
+                            <li>Input Sanitization מתקדם</li>
+                            <li>HTTPS בפרודקשן</li>
+                            <li>Database במקום File Storage</li>
+                            <li>Encryption של נתונים רגישים</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Future Section -->
+            <section id="future">
+                <h2>🚀 תכונות עתידיות - Future Features</h2>
+
+                <div class="grid">
+                    <div class="card">
+                        <div class="card-header">🎯 בתכנון</div>
+                        <ul class="feature-list">
+                            <li>מצב multi-user עם אימות</li>
+                            <li>סנכרון ענן (Cloud Sync)</li>
+                            <li>אפליקציית מובייל (PWA/Native)</li>
+                            <li>תמיכה בקריפטו ומטבעות זרים</li>
+                            <li>התראות אוטומטיות (Notifications)</li>
+                            <li>אינטגרציה עם בנקים (Open Banking)</li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">💡 רעיונות</div>
+                        <ul class="feature-list">
+                            <li>שיתוף פעולה משפחתי (Shared Budgets)</li>
+                            <li>יבוא/יצוא CSV, Excel</li>
+                            <li>דוחות מתקדמים ו-BI</li>
+                            <li>תחזיות AI מתקדמות</li>
+                            <li>תמיכה בשפות נוספות</li>
+                            <li>גיבוי אוטומטי (Automated Backups)</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Changelog Section -->
+            <section id="changelog">
+                <h2>📝 שינויים אחרונים - Recent Changes</h2>
+
+                <div class="card">
+                    <h3>גרסה 2.1.0 (ספטמבר 2026)</h3>
+                    <ul class="feature-list">
+                        <li>🔄 שינוי ארכיטקטורת הסימולציה - יעדים משפיעים רק על הסימולציה</li>
+                        <li>🗑️ הסרת כפתור "החל על תזרים מקורי"</li>
+                        <li>✨ הוספת כפתור "רענן מתזרים מקורי" עם מחיקת יעדים</li>
+                        <li>⚠️ הודעת אישור לפני איפוס הסימולציה</li>
+                        <li>📋 עדכון מסמך אפיון מלא</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h3>גרסה 2.0.0 (ספטמבר 2026)</h3>
+                    <ul class="feature-list">
+                        <li>✨ הוספת מערכת סימולציה מלאה לתזרים מזומנים</li>
+                        <li>🔧 תיקון תצוגת שדות באבני דרך (Milestones)</li>
+                        <li>🐛 תיקון הודעות ולידציה שלא נעלמו</li>
+                        <li>🎨 שיפור UI בטבלת תזרים מזומנים</li>
+                        <li>📊 שיפור ניתוח יעדים פיננסיים</li>
+                        <li>🔄 עדכון לAngular 21</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h3>גרסה 1.5.0 (יולי 2026)</h3>
+                    <ul class="feature-list">
+                        <li>🎯 הוספת מערכת יעדים פיננסיים</li>
+                        <li>💳 שיפור ניהול פריסות תשלומים</li>
+                        <li>🤖 אינטגרציה עם Ollama AI</li>
+                        <li>📈 הוספת דשבורד השקעות</li>
+                    </ul>
+                </div>
+            </section>
+        </div>
+
+        <footer>
+            <p><strong>Cash Flow Application</strong> - מערכת ניהול תזרים מזומנים</p>
+            <p>נוצר עם ❤️ בעברית | Created with Angular 21 + Node.js</p>
+            <p>📄 מסמך זה מתעדכן אוטומטית עם שינויים במערכת</p>
+            <p style="margin-top: 1rem; color: var(--text-secondary);">
+                תאריך יצירה: ספטמבר 2026 | Last Updated: September 3, 2026
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        // Smooth scroll for navigation links
+        document.querySelectorAll('nav a').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+        });
+
+        // Highlight current section in navigation
+        const sections = document.querySelectorAll('section');
+        const navLinks = document.querySelectorAll('nav a');
+
+        window.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                if (scrollY >= sectionTop - 100) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.style.background = '';
+                link.style.color = '';
+                if (link.getAttribute('href') === `#${current}`) {
+                    link.style.background = 'var(--primary-color)';
+                    link.style.color = 'white';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

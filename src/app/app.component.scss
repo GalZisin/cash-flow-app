@@ -92,14 +92,14 @@
 [data-bs-theme="dark"],
 .dark-mode {
     .app-navbar {
-        background: rgba(13, 21, 38, 0.95) !important;
+        background: rgba(15, 23, 42, 0.95) !important;
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
-        border-bottom-color: #1e2d45 !important;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+        border-bottom-color: #1e293b !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
 
         &.scrolled {
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
         }
     }
 
@@ -118,13 +118,55 @@
     }
 
     .navbar-btn {
-        border-color: #1e2d45;
-        color: #94a3b8;
+        background: #1e293b !important;
+        border-color: #334155 !important;
+        color: #cbd5e1 !important;
 
         &:hover {
-            background: rgba(255, 255, 255, 0.06);
-            border-color: #334155;
-            color: #e5e7eb;
+            background: #334155 !important;
+            border-color: #475569 !important;
+            color: #f1f5f9 !important;
+        }
+    }
+
+    // Override Bootstrap .btn classes specifically
+    .btn.navbar-btn,
+    .navbar-btn.btn-sm,
+    button.navbar-btn {
+        background-color: #1e293b !important;
+        border-color: #334155 !important;
+        color: #cbd5e1 !important;
+        box-shadow: none !important;
+
+        &:hover,
+        &:focus,
+        &:active,
+        &:focus-visible {
+            background-color: #334155 !important;
+            border-color: #475569 !important;
+            color: #f1f5f9 !important;
+            box-shadow: 0 0 0 0.15rem rgba(56, 189, 248, 0.15) !important;
+        }
+    }
+
+    .theme-toggle-btn {
+        background: #1e293b !important;
+
+        &:hover {
+            background: #334155 !important;
+        }
+    }
+
+    // Extra specificity for Bootstrap button overrides
+    button.btn.theme-toggle-btn,
+    .btn-sm.theme-toggle-btn {
+        background-color: #1e293b !important;
+
+        &:hover,
+        &:focus,
+        &:active {
+            background-color: #334155 !important;
+            border-color: #475569 !important;
         }
     }
 }
