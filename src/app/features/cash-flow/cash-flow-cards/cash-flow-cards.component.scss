@@ -1,3 +1,5 @@
+@use '../cash-flow-status' as status;
+
 .mobile-cards-container {
     display: flex;
     flex-direction: column;
@@ -110,12 +112,9 @@
             transition: width 0.3s;
         }
 
-        .income-bar {
-            background: var(--cf-success-solid);
-        }
-
-        .expense-bar {
-            background: var(--cf-danger-solid);
-        }
+        @include status.summary-bars;
     }
+
+    @include status.status-pills;
+    @include status.negative-amount;
 }

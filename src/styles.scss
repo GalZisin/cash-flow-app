@@ -252,6 +252,11 @@ app-cash-flow-table .actions {
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
     display: inline-block;
 
+    // Same status tokens the colored table rows use
+    &[data-row-color='green'] { background: var(--cf-success-solid); }
+    &[data-row-color='yellow'] { background: var(--cf-warning-solid); }
+    &[data-row-color='red'] { background: var(--cf-danger-solid); }
+
     &.active {
         border-color: $accent-color !important;
         box-shadow: 0 0 0 2px $accent-glow !important;

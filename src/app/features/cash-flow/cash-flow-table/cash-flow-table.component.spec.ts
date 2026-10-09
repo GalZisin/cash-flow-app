@@ -22,6 +22,14 @@ describe('CashFlowTableComponent', () => {
     expect(component).toBeTruthy();
   });
 
+  it('maps the stored row color hex to a display key', () => {
+    expect(component.rowColorKey('#dcfce7')).toBe('green');
+    expect(component.rowColorKey('#fef9c3')).toBe('yellow');
+    expect(component.rowColorKey('#fee2e2')).toBe('red');
+    expect(component.rowColorKey('#123456')).toBeNull();
+    expect(component.rowColorKey(null)).toBeNull();
+  });
+
   it('should show the loading state while data is not ready', () => {
     component.isLoading = true;
     fixture.detectChanges();

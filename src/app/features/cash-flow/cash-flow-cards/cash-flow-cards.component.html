@@ -30,7 +30,7 @@
 
         <div class="data-item">
           <label [for]="'endingBalance_' + i" class="visually-hidden">{{ 'CASH_FLOW.ENDING_BALANCE' | translate }}</label>
-          <div class="val fw-bold">{{ monthCtrl.get('endingBalance')?.value | number:'1.0-0' }} ₪</div>
+          <div class="val fw-bold" [class.negative]="(monthCtrl.get('endingBalance')?.value ?? 0) < 0">{{ monthCtrl.get('endingBalance')?.value | number:'1.0-0' }} ₪</div>
         </div>
 
         <div class="data-item">
@@ -153,7 +153,7 @@
         <div class="expansion-item">
           <div class="expansion-trigger" (click)="monthCtrl.get('expandedSpecial')?.setValue(!monthCtrl.get('expandedSpecial')?.value)">
             <span class="label">{{ 'CASH_FLOW.SPECIAL_EXPENSES' | translate }}</span>
-            <span class="badge bg-warning text-dark" *ngIf="getSpecialExpenses(i).length > 0">{{ getSum(getSpecialExpenses(i)) | number:'1.0-0' }} ₪</span>
+            <span class="badge bg-warning" *ngIf="getSpecialExpenses(i).length > 0">{{ getSum(getSpecialExpenses(i)) | number:'1.0-0' }} ₪</span>
             <mat-icon>{{ monthCtrl.get('expandedSpecial')?.value ? 'expand_less' : 'expand_more' }}</mat-icon>
           </div>
           <div *ngIf="monthCtrl.get('expandedSpecial')?.value" class="expansion-content">
@@ -190,7 +190,7 @@
       <div class="card-footer mt-3">
         <div class="visual-summary-container mb-2">
           <div class="mini-bar income-bar" [style.width.%]="getBarWidth(getTotalIncome(i), i)"></div>
-          <div class="mini-bar expense-bar" [style.width.%]="getBarWidth(getTotalExpenses(i), i)"></div>
+          <div class="mini-bar expense-bar" [class.over]="getTotalExpenses(i) > getTotalIncome(i)" [style.width.%]="getBarWidth(getTotalExpenses(i), i)"></div>
         </div>
         <div class="d-flex justify-content-end">
           <button mat-stroked-button (click)="duplicate.emit(i)">

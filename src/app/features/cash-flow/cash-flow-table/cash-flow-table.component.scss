@@ -1,3 +1,5 @@
+@use '../cash-flow-status' as status;
+
 $primary: var(--cf-primary);
 $primary-light: var(--cf-primary-soft);
 $accent: var(--cf-accent);
@@ -260,117 +262,48 @@ $white: var(--cf-surface);
 }
 
 // ── Colored rows (red / yellow / green) ──────────────────────
-// --row-color is resolved by resolveRowColor() in TS — light pastels in light mode,
-// deep darks in dark mode. Text color is forced to full readable value always.
-.mat-mdc-row[style*='--row-color'] {
-  background: var(--row-color) !important;
-  box-shadow: inset 4px 0 0 0 var(--row-color) !important; // משתמש ב-box-shadow במקום border
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
-
-  // ── Light mode text ─────────────────────────────────────
-  .mat-mdc-cell {
-    color: var(--cf-text) !important;
-    border-bottom-color: var(--cf-border) !important;
-
-    input[type='number'],
-    input[type='text'],
-    input:not([type]) {
-      color: var(--cf-text) !important;
-    }
-  }
-
-  td:last-child {
-    color: var(--cf-text) !important;
-    font-weight: 700 !important;
-  }
-
-  .amount-display {
-    color: var(--cf-text) !important;
-  }
+// The stored value stays a hex (ROW_COLORS); rowColorKey() maps it to
+// data-row-color="red|yellow|green". Colors come from the theme's status tokens:
+// a translucent tint over the surface, a solid stripe on the start edge and a
+// dot next to the month. Text keeps its normal color in both modes.
+.mat-mdc-row[data-row-color] {
+  --row-tint: 0.12;
+  background: rgba(var(--row-rgb), var(--row-tint)) !important;
+  box-shadow: inset -3px 0 0 0 var(--row-stripe) !important;
 
   &:hover {
-    filter: brightness(0.95) !important;
+    --row-tint: 0.18;
+  }
+
+  .row-dot {
+    display: inline-block;
   }
 }
 
-// ── Dark mode colored rows with sleek glass effect ──
-:host-context([data-bs-theme="dark"]) .mat-mdc-row[style*='--row-color'],
-:host-context(.dark-mode) .mat-mdc-row[style*='--row-color'] {
-  background: var(--row-color) !important;
+.mat-mdc-row[data-row-color='green'] { --row-rgb: var(--cf-success-rgb); --row-stripe: var(--cf-success-solid); }
+.mat-mdc-row[data-row-color='yellow'] { --row-rgb: var(--cf-warning-rgb); --row-stripe: var(--cf-warning-solid); }
+.mat-mdc-row[data-row-color='red'] { --row-rgb: var(--cf-danger-rgb); --row-stripe: var(--cf-danger-solid); }
 
-  // Fallback for older browsers
-  box-shadow: inset 4px 0 0 0 rgba(var(--cf-accent-rgb), 0.7),
-    0 2px 10px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
-
-  // Modern browsers with color-mix support
-  @supports (background: color-mix(in srgb, red 50%, blue)) {
-    box-shadow: inset 4px 0 0 0 color-mix(in srgb, var(--row-color) 70%, #60a5fa),
-      0 2px 10px rgba(0, 0, 0, 0.2),
-      inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
-  }
-
-  -webkit-backdrop-filter: blur(12px) saturate(1.8);
-  backdrop-filter: blur(12px) saturate(1.8);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-
-  .mat-mdc-cell {
-    color: var(--cf-text-strong) !important;
-    border-bottom-color: rgba(255, 255, 255, 0.08) !important;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-
-    input[type='number'],
-    input[type='text'],
-    input:not([type]) {
-      color: var(--cf-text-strong) !important;
-      background: rgba(0, 0, 0, 0.15) !important;
-      border: 1px solid rgba(255, 255, 255, 0.1) !important;
-      transition: all 0.2s ease;
-
-      &:focus {
-        background: rgba(0, 0, 0, 0.25) !important;
-        border-color: rgba(var(--cf-accent-rgb), 0.5) !important;
-        box-shadow: 0 0 0 3px rgba(var(--cf-accent-rgb), 0.1);
-      }
-    }
-  }
-
-  td:last-child {
-    color: var(--cf-primary-text) !important;
-    font-weight: 700 !important;
-    text-shadow: 0 0 10px rgba(var(--cf-accent-rgb), 0.3);
-  }
-
-  .amount-display {
-    color: var(--cf-text-strong) !important;
-    transition: all 0.2s ease;
-
-    &:hover {
-      background: rgba(255, 255, 255, 0.12) !important;
-      border-color: rgba(255, 255, 255, 0.2) !important;
-      transform: scale(1.02);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    }
-  }
+:host-context([data-bs-theme="dark"]) .mat-mdc-row[data-row-color],
+:host-context(.dark-mode) .mat-mdc-row[data-row-color] {
+  --row-tint: 0.14;
 
   &:hover {
-    filter: brightness(1.15) !important;
-
-    // Fallback for older browsers
-    box-shadow: inset 4px 0 0 0 rgba(var(--cf-accent-rgb), 0.7),
-      0 4px 20px rgba(0, 0, 0, 0.3),
-      0 0 30px rgba(var(--cf-accent-rgb), 0.3),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
-
-    // Modern browsers with color-mix support
-    @supports (background: color-mix(in srgb, red 50%, blue)) {
-      box-shadow: inset 4px 0 0 0 color-mix(in srgb, var(--row-color) 70%, #60a5fa),
-        0 4px 20px rgba(0, 0, 0, 0.3),
-        0 0 30px color-mix(in srgb, var(--row-color) 30%, transparent),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
-    }
+    --row-tint: 0.2;
   }
 }
+
+.row-dot {
+  display: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--row-stripe);
+  margin-inline-end: 6px;
+  vertical-align: middle;
+}
+
+@include status.negative-amount;
 
 .dots-btn {
   opacity: 0.3;
@@ -530,53 +463,26 @@ $white: var(--cf-surface);
   transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.income-bar {
-  background-color: var(--cf-success-solid);
-}
-
-// Success green
-.expense-bar {
-  background-color: var(--cf-danger-solid);
-}
+@include status.summary-bars;
 
 .savings-bar {
-  background-color: #60a5fa;
+  background: var(--cf-accent);
   height: 3px;
   margin-top: 1px;
   border-radius: 1px;
   opacity: 0.8;
 }
 
-// Danger red
-
-// ── Dark mode mini-charts with glow ──
+// ── Dark mode mini-chart container ──
 :host-context([data-bs-theme="dark"]),
 :host-context(.dark-mode) {
   .mini-chart-container {
     background: rgba(0, 0, 0, 0.3);
     border: 1px solid rgba(var(--cf-primary-rgb), 0.2);
-    -webkit-backdrop-filter: blur(5px);
-    backdrop-filter: blur(5px);
 
     &:hover {
-      box-shadow: 0 0 15px rgba(var(--cf-primary-rgb), 0.3);
       border-color: rgba(var(--cf-primary-rgb), 0.4);
     }
-  }
-
-  .income-bar {
-    background: linear-gradient(90deg, var(--cf-success-solid) 0%, rgba(var(--cf-success-rgb), 0.7) 100%);
-    box-shadow: 0 0 10px rgba(var(--cf-success-rgb), 0.4);
-  }
-
-  .expense-bar {
-    background: linear-gradient(90deg, var(--cf-danger-solid) 0%, rgba(var(--cf-danger-rgb), 0.7) 100%);
-    box-shadow: 0 0 10px rgba(var(--cf-danger-rgb), 0.4);
-  }
-
-  .savings-bar {
-    background: linear-gradient(90deg, var(--cf-accent) 0%, rgba(var(--cf-accent-rgb), 0.6) 100%);
-    box-shadow: 0 0 8px rgba(var(--cf-accent-rgb), 0.5);
   }
 }
 
@@ -586,69 +492,22 @@ $white: var(--cf-surface);
   letter-spacing: 0 !important;
 }
 
-// ── Badge styling ──
+// ── Badge styling: flat tinted pills, same recipe in both modes ──
 .badge {
-  transition: all 0.2s ease;
+  transition: transform 0.2s ease;
 
   &.expense-count-badge {
     font-size: 0.7rem;
     font-weight: 600;
     padding: 4px 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 
     &:hover {
       transform: scale(1.05);
     }
   }
-
-  &.bg-success {
-    background: linear-gradient(135deg, var(--cf-success-solid) 0%, #34d399 100%) !important;
-    box-shadow: 0 2px 8px rgba(var(--cf-success-rgb), 0.3);
-  }
-
-  &.bg-primary {
-    background: linear-gradient(135deg, var(--cf-primary) 0%, var(--cf-primary) 100%) !important;
-    box-shadow: 0 2px 8px rgba(var(--cf-primary-rgb), 0.3);
-  }
-
-  &.bg-warning {
-    background: linear-gradient(135deg, var(--cf-warning-solid) 0%, #fbbf24 100%) !important;
-    box-shadow: 0 2px 8px rgba(var(--cf-warning-rgb), 0.3);
-  }
 }
 
-// ── Dark mode badges with glow ──
-:host-context([data-bs-theme="dark"]),
-:host-context(.dark-mode) {
-  .badge {
-    &.expense-count-badge {
-      -webkit-backdrop-filter: blur(10px);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    &.bg-success {
-      background: linear-gradient(135deg, rgba(var(--cf-success-rgb), 0.3) 0%, rgba(52, 211, 153, 0.3) 100%) !important;
-      box-shadow: 0 0 15px rgba(var(--cf-success-rgb), 0.4);
-      color: var(--cf-success) !important;
-      border-color: rgba(var(--cf-success-rgb), 0.4);
-    }
-
-    &.bg-primary {
-      background: linear-gradient(135deg, rgba(var(--cf-primary-rgb), 0.3) 0%, rgba(var(--cf-primary-rgb), 0.3) 100%) !important;
-      box-shadow: 0 0 15px rgba(var(--cf-primary-rgb), 0.4);
-      color: var(--cf-primary-text) !important;
-      border-color: rgba(var(--cf-primary-rgb), 0.4);
-    }
-
-    &.bg-warning {
-      background: linear-gradient(135deg, rgba(var(--cf-warning-rgb), 0.3) 0%, rgba(var(--cf-warning-rgb), 0.3) 100%) !important;
-      box-shadow: 0 0 15px rgba(var(--cf-warning-rgb), 0.4);
-      color: var(--cf-warning) !important;
-      border-color: rgba(var(--cf-warning-rgb), 0.4);
-    }
-  }
-}
+@include status.status-pills;
 
 .print-only {
   display: none;

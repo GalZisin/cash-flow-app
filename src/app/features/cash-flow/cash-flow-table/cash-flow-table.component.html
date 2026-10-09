@@ -49,7 +49,7 @@
       <ng-container matColumnDef="month">
         <th mat-header-cell *matHeaderCellDef> {{ 'CASH_FLOW.MONTH' | translate }} </th>
         <td mat-cell *matCellDef="let monthCtrl; let i = index">
-          {{ monthCtrl.get('month')?.value | date:'MMMM yyyy':'':'he' }}
+          <span class="row-dot" aria-hidden="true"></span>{{ monthCtrl.get('month')?.value | date:'MMMM yyyy':'':'he' }}
         </td>
       </ng-container>
 
@@ -277,7 +277,7 @@
               <mat-icon>{{ monthCtrl.get('expandedSpecial')?.value ? 'expand_less' : 'expand_more' }}</mat-icon>
             </button>
             @if (!monthCtrl.get('expandedSpecial')?.value && getSpecialExpenses(i).length > 0) {
-              <span class="no-print badge rounded-pill bg-warning text-dark ms-1 expense-count-badge" [matTooltip]="'CASH_FLOW.SPECIAL_EXPENSES_TOTAL' | translate">
+              <span class="no-print badge rounded-pill bg-warning ms-1 expense-count-badge" [matTooltip]="'CASH_FLOW.SPECIAL_EXPENSES_TOTAL' | translate">
                 {{ getSpecialExpenses(i).length }} | {{ getSpecialExpensesSum(i) | number:'1.0-0' }} ₪
               </span>
             }
@@ -335,32 +335,32 @@
                            ('CASH_FLOW.EXPENSES' | translate) + ': ' + (getTotalExpenses(i) | number:'1.0-0') + ' ₪\n' +
                            ('CASH_FLOW.SAVINGS' | translate) + ': ' + (getSavings(i) | number:'1.0-0') + ' ₪'">
                 <div class="mini-bar income-bar" [appAnimateProgress]="getBarWidth(getTotalIncome(i), i)" [duration]="animationsEnabled ? 0.8 : 0"></div>
-                <div class="mini-bar expense-bar" [appAnimateProgress]="getBarWidth(getTotalExpenses(i), i)" [duration]="animationsEnabled ? 0.8 : 0"></div>
+                <div class="mini-bar expense-bar" [class.over]="getTotalExpenses(i) > getTotalIncome(i)" [appAnimateProgress]="getBarWidth(getTotalExpenses(i), i)" [duration]="animationsEnabled ? 0.8 : 0"></div>
                 @if (getSavings(i) > 0) {
                   <div class="mini-bar savings-bar" [appAnimateProgress]="getBarWidth(getSavings(i), i)" [duration]="animationsEnabled ? 0.8 : 0"></div>
                 }
               </div>
             </td>
-          </ng-container>אדום
+          </ng-container>
 
           <!-- Ending Balance -->
           <ng-container matColumnDef="endingBalance">
             <th mat-header-cell *matHeaderCellDef> {{ 'CASH_FLOW.ENDING_BALANCE' | translate }} </th>
             <td mat-cell *matCellDef="let monthCtrl">
-              <span [appAnimateNumber]="monthCtrl.get('endingBalance')?.value" [duration]="animationsEnabled ? 0.8 : 0" [decimals]="0"></span> ₪
+              <span [class.negative]="(monthCtrl.get('endingBalance')?.value ?? 0) < 0" [appAnimateNumber]="monthCtrl.get('endingBalance')?.value" [duration]="animationsEnabled ? 0.8 : 0" [decimals]="0"></span> ₪
             </td>
           </ng-container>
 
           <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
           <tr mat-row *matRowDef="let row; columns: displayedColumns;"
-          [style]="row.get('rowColor')?.value ? '--row-color: ' + resolveRowColor(row.get('rowColor')?.value) : ''"></tr>
+          [attr.data-row-color]="rowColorKey(row.get('rowColor')?.value)"></tr>
         </table>
     </div>
 
     <mat-menu #colorMenu="matMenu" class="color-menu">
       @for (c of ROW_COLORS; track c) {
         <button mat-menu-item (click)="setRowColor(activeRowCtrl, c.value)" class="color-menu-item">
-          <span class="color-swatch" [style.background]="c.value"
+          <span class="color-swatch" [attr.data-row-color]="rowColorKey(c.value)"
           [class.active]="activeRowCtrl?.get('rowColor')?.value === c.value"></span>
           <span>{{ c.labelKey | translate }}</span>
           @if (activeRowCtrl?.get('rowColor')?.value === c.value) {

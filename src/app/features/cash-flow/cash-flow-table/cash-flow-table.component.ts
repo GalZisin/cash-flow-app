@@ -18,7 +18,6 @@ import { TranslateModule, TranslateService, LangChangeEvent } from '@ngx-transla
 import { CashFlowService } from '../../../services/cash-flow.service';
 import { CashFlowCalculationService, MonthValues } from '../../../services/cash-flow-calculation.service';
 import { InstallmentService } from '../../../services/installment.service';
-import { ThemeService } from '../../../services/theme.service';
 import { ExpenseCategorySelectorComponent } from '../expense-category-selector/expense-category-selector.component';
 import { CashFlowDefaultsDialogComponent } from '../cash-flow-defaults-dialog/cash-flow-defaults-dialog.component';
 import { CashFlowTableSkeletonComponent } from '../cash-flow-table-skeleton/cash-flow-table-skeleton.component';
@@ -32,6 +31,15 @@ import { AnimateProgressDirective } from '../../../directives/animate-progress.d
 import gsap from 'gsap';
 
 registerLocaleData(localeHe);
+
+type RowColorKey = 'red' | 'yellow' | 'green';
+
+/** Stored hex -> display key. The hex values are what older saved data holds. */
+const ROW_COLOR_KEYS: Record<string, RowColorKey> = {
+  '#fee2e2': 'red',
+  '#fef9c3': 'yellow',
+  '#dcfce7': 'green',
+};
 
 @Component({
   selector: 'app-cash-flow-table',
@@ -67,23 +75,11 @@ export class CashFlowTableComponent implements OnInit, AfterViewInit, OnChanges 
   private translate = inject(TranslateService);
   private installmentService = inject(InstallmentService);
   private decimalPipe = inject(DecimalPipe);
-  private themeService = inject(ThemeService);
   private calc = inject(CashFlowCalculationService);
-  resolveRowColor(hexColor: string | null): string | null {
-    if (!hexColor) return null;
-
-    // Map light hex → { light, dark } pair
-    // Dark values: sleek, modern dark tones with subtle glow effect
-    const colorMap: Record<string, { light: string; dark: string }> = {
-      '#fee2e2': { light: '#fee2e2', dark: '#4a1a1a' }, // red — deep crimson with glow
-      '#fef9c3': { light: '#fef9c3', dark: '#3d3418' }, // yellow — warm dark gold
-      '#dcfce7': { light: '#dcfce7', dark: '#0d3320' }, // green — deep forest emerald
-    };
-
-    const entry = colorMap[hexColor];
-    if (!entry) return hexColor;
-
-    return this.themeService.isDarkMode() ? entry.dark : entry.light;
+  /** Maps the stored row color (a hex kept for backwards compatibility) to the
+   *  data-row-color key the SCSS styles through the theme's status tokens. */
+  rowColorKey(hexColor: string | null | undefined): RowColorKey | null {
+    return hexColor ? ROW_COLOR_KEYS[hexColor] ?? null : null;
   }
 
   cashFlowForm!: FormGroup;
@@ -123,8 +119,6 @@ export class CashFlowTableComponent implements OnInit, AfterViewInit, OnChanges 
     { labelKey: 'CASH_FLOW.COLOR_GREEN', value: '#dcfce7' },
   ];
 
-  // Dark-mode equivalents — no longer needed, handled by resolveRowColor()
-  // readonly ROW_COLORS_DARK: Record<string, string> = { ... };
 
   getExpenseAmount(monthIndex: number, expenseIndex: number): FormControl<number> {
     const control = this.getRegularExpenses(monthIndex)
