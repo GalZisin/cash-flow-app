@@ -33,6 +33,8 @@ nvm use 24
 **בלי AI:** כל האפליקציה עובדת כרגיל. לשונית ה-AI מחזירה הודעה ברורה "AI service is not running" (HTTP 503) במקום שגיאת חיבור.
 
 **עם AI:** הסקריפט `scripts/start-ollama.js` מחפש את Ollama ב-PATH או בתיקיית ההתקנה הרגילה ומריץ `ollama serve`. אם Ollama כבר רץ, הוא לא מופעל פעמיים. אם Ollama לא מותקן, מודפסת הודעה והשרת והלקוח ממשיכים לרוץ בלי AI.
+
+**AI בלי להעמיס על המחשב:** אפשר להפנות את השרת ל-Ollama על מחשב אחר ברשת, או לספק API חינמי (Groq, OpenRouter, Gemini, Mistral) דרך `server/.env`. אז מספיק `run-all.bat` / `npm run dev`, ו-`dev:ai` מזהה לבד שלא צריך להפעיל Ollama מקומי. פירוט: [../ai/AI_PROVIDERS.md](../ai/AI_PROVIDERS.md).
 דרישות ל-AI: [Ollama](https://ollama.com) מותקן ומודל מורד (`ollama pull qwen3:8b`). בחירת מודל אחר: משתנה סביבה `AI_MODEL`.
 
 ### הרצת כל צד בנפרד

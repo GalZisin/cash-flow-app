@@ -6,7 +6,7 @@
 
 ## System Context
 
-You are an expert Angular 19 developer helping build **cash-flow-app**, a financial management application written in TypeScript with RxJS, Angular Material, Bootstrap 5, and i18n support.
+You are an expert Angular 21 / Node.js 24 developer helping build **cash-flow-app**, a personal finance application: Angular 21 client (TypeScript, signals, RxJS, Angular Material, Bootstrap 5, ngx-translate) and an Express 5 server with a layered architecture on SQL Server. Full project guidance for assistants: `CLAUDE.md`; architecture: `docs/architecture/ARCHITECTURE.md`.
 
 ### Key Constraints
 1. **All components must be standalone** — no modules, no shared NgModule pattern
@@ -15,22 +15,27 @@ You are an expert Angular 19 developer helping build **cash-flow-app**, a financ
 4. **i18n required** — all visible text extracted to `assets/i18n/{en,he}.json`
 5. **No mutations** — inputs and domain models are immutable; derive computed state
 6. **Observable pattern** — Observable properties end with `$`, services expose `items$` + `.value` getter
-7. **Hebrew + English** — full bidirectional support (RTL not yet implemented but keep in mind)
+7. **Hebrew + English** — full bidirectional support. RTL is implemented (`LanguageService` switches `dir` and the Bootstrap rtl/ltr bundle); new layouts must work in both directions
+8. **Server layering** — routes validate, services hold logic, repositories hold SQL; errors are thrown as typed errors (`utils/errors.js`) and answered as `{ success:false, error:{ name, message, code } }`
+9. **Tests** — server logic gets a `node:test` file under `server/test/`, Angular logic gets a `.spec.ts`
 
 ### Tech Stack
 ```json
 {
-  "angular": "^19.0.0",
-  "typescript": "^5.6.2",
-  "rxjs": "^7.8.0",
-  "@angular/material": "^19.2.19",
+  "angular": "^21.2.17",
+  "typescript": "~5.9.3",
+  "rxjs": "~7.8.0",
+  "@angular/material": "^21.2.14",
   "bootstrap": "^5.3.8",
-  "@ngx-translate/core": "^17.0.0"
+  "@ngx-translate/core": "^17.0.0",
+  "gsap": "^3.15.0",
+  "d3-selection / d3-shape / d3-sankey": "charts",
+  "server": "express ^5.2, mssql ^12.7, uuid ^14, node >= 24"
 }
 ```
 
 ### State Management (NEW)
-- **Signals** (Angular 19+) for reactive state: `signal()`, `computed()`, `effect()`
+- **Signals** for reactive state: `signal()`, `computed()`, `effect()`
 - **ReactiveForms** for form handling (MANDATORY — no Template-driven forms)
 - **toSignal() / toObservable()** to bridge Signals ↔ RxJS
 - **No NgRx** — Signals are the state layer
@@ -197,7 +202,7 @@ onSubmit() {
 ```typescript
 import { signal, computed, effect } from '@angular/core';
 
-// ✅ Signal-based service (modern approach for Angular 19)
+// ✅ Signal-based service (the standard in this codebase)
 @Injectable({ providedIn: 'root' })
 export class InstallmentService {
   private _items = signal<Installment[]>([]);
@@ -380,32 +385,24 @@ interface InstallmentStatus {
 
 ```
 src/app/
-├── components/
-│   ├── installments/
-│   ├── installments-table/
-│   ├── installment-card/
-│   ├── installment-form/
-│   ├── cash-flow-table/
-│   ├── investment-dashboard/
-│   └── ai-assistant/
-├── services/
-│   ├── installment.service.ts
-│   ├── cash-flow.service.ts
-│   ├── language.service.ts
-│   ├── theme.service.ts
-│   └── ai.service.ts
-├── models/
-│   ├── installment.model.ts
-│   └── investment.model.ts
-├── interceptors/
-│   └── http.interceptor.ts
-├── app.config.ts
-├── app.routes.ts
-└── app.component.ts
+├── features/
+│   ├── cash-flow/           cash-flow-table, cash-flow-cards, expense-list, expense-pie-chart, cash-flow-defaults-dialog, ...
+│   ├── installments/        installments, installments-table, installment-card, installment-form, dialogs
+│   ├── investments/         investment-dashboard, investment-list, investment-detail, investment-simulation
+│   ├── budget-tracker/
+│   ├── goals/
+│   └── ai-assistant/        ai-assistant, ai-sankey-diagram
+├── services/                one data service per domain + language, theme, calculation, simulation
+├── models/                  cash-flow, expense, expense-category, installment, investment, budget, goal
+├── directives/              GSAP animation directives
+├── interceptors/http.interceptor.ts
+├── app.config.ts / app.routes.ts / app.component.ts
 
-assets/i18n/
-├── en.json
-└── he.json
+public/assets/i18n/he.json, en.json
+
+server/
+├── app.js, index.js
+├── routes/ services/ repositories/ db/ middleware/ utils/ test/ tools/
 ```
 
 ---

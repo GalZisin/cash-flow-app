@@ -11,7 +11,7 @@
 ### 1. הגדרת תקציב לכל קטגוריה
 - מזון, רכב, בית, חופשה, בידור, מתנות, בריאות, וכו'
 - ערוך את התקציב בלחיצת כפתור "ערוך תקציב"
-- שמור אוטומטית ב-`server/data/budget-settings.json`
+- נשמר ב-SQL Server, טבלה `budget_settings`
 
 ### 2. ויזואליזציה מתקדמת
 - **כרטיסי סיכום**: תקציב כולל, הוצאות, יתרה, אחוז ניצול
@@ -182,10 +182,8 @@ server/
 │   └── budget.routes.js                 # API routes
 ├── services/
 │   └── budget.service.js                # Business logic
-├── repositories/
-│   └── budget.repository.js             # Data access
-└── data/
-    └── budget-settings.json             # הגדרות משתמש
+└── repositories/
+    └── budget.repository.js             # Data access (טבלת budget_settings ב-SQL Server)
 ```
 
 ---
@@ -199,8 +197,8 @@ server/
 כרגע התקציב זהה לכל החודשים. אפשר להוסיף תכונה זו בעתיד.
 
 ### 3. איפה הנתונים נשמרים?
-- הגדרות תקציב: `server/data/budget-settings.json`
-- הוצאות בפועל: מחושב מ-`cash-flow-data-miluim.json`
+- הגדרות תקציב: טבלת `budget_settings` ב-SQL Server
+- הוצאות בפועל: מחושבות מטבלאות התזרים (`cash_flow_months`, `cash_flow_items`) לפי `category`
 
 ### 4. איך מוסיפים קטגוריה חדשה?
 עדכן את `ExpenseCategory` ב-`expense-category.model.ts`
@@ -219,5 +217,4 @@ server/
 
 ---
 
-**נוצר**: 22 אוגוסט 2026  
-**סטטוס**: ✅ פעיל ועובד!
+**נוצר**: 2026-08-22, **עודכן**: 2026-10-09 (מעבר ל-SQL Server)

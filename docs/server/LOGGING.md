@@ -1,4 +1,6 @@
-# 📝 מדריך Logging - מערכת Cash Flow
+# לוגים
+
+השרת כותב ל-console ולקבצים דרך `server/utils/logger.js`. אין `console.*` ישיר ב-routes/services/repositories.
 
 ## 📂 מיקום קבצי Log
 
@@ -41,14 +43,13 @@ server/
 
 #### פעולות מוצלחות
 ```javascript
-[2026-08-07T07:37:00.400Z] [INFO] File written successfully: data/cash-flow-data.json
-[2026-08-07T07:37:00.450Z] [INFO] Installment created: מטבח חדש
+[2026-10-09T10:58:21.519Z] [INFO] 🗄️  Connected to SQL Server (database: CashFlowDB)
+[2026-10-09T10:58:21.600Z] [INFO] 🌐 Serving client from ...distcash-flow-approwser
 ```
 
 **מתי?**
-- שמירת נתונים לקובץ
-- יצירת/עדכון/מחיקה של פריסה, השקעה
-- פעולות CRUD מוצלחות
+- חיבור ל-SQL Server בעלייה
+- הגשת הלקוח הבנוי בפרודקשן
 
 ---
 
@@ -80,25 +81,23 @@ server/
 
 #### שגיאות קריאה/כתיבה
 ```javascript
-[2026-08-07T07:39:00.500Z] [ERROR] Error reading file data/cash-flow-data.json: {"code":"ENOENT"}
-[2026-08-07T07:39:00.600Z] [ERROR] Failed to write file: Permission denied
+[2026-10-09T10:58:21.521Z] [ERROR] ❌ Could not connect to SQL Server: DB_CONNECTION_STRING is not set. Copy server/.env.example to server/.env and fill it in.
+[2026-10-09T11:02:10.004Z] [ERROR] Error getting related installments: Invalid column name
 ```
 
 **מתי?**
-- כשלון בקריאת קובץ JSON
-- כשלון בשמירת נתונים
-- בעיות הרשאות
+- כשלון בחיבור ל-SQL Server או שאילתה שנכשלה
+- כל שגיאה עם סטטוס 500 (ה-errorHandler כותב גם את ה-stack)
 
-#### שגיאות Validation
+#### שגיאות לקוח (4xx) נכתבות כ-WARN, לא כ-ERROR
 ```javascript
-[2026-08-07T07:40:00.100Z] [ERROR] ValidationError: description is required
-[2026-08-07T07:40:00.200Z] [ERROR] ValidationError: Invalid cash flow data structure
+[2026-10-09T11:05:00.100Z] [WARN] question is required {"name":"ValidationError","path":"/api/ai/chat","method":"POST"}
+[2026-10-09T11:05:00.200Z] [WARN] Too many AI requests, please wait a minute. {"name":"TooManyRequestsError","path":"/api/ai/summary","method":"GET"}
 ```
 
 **מתי?**
-- נתונים לא תקינים מהפרונטנד
-- חסרים שדות חובה
-- פורמט שגוי
+- נתונים לא תקינים מהלקוח (400), ישות לא קיימת (404), rate limit (429)
+- ספק ה-AI לא זמין: 503 נרשם כ-ERROR עם `code: AI_UNAVAILABLE`
 
 #### שגיאות כלליות
 ```javascript
@@ -126,9 +125,7 @@ LOG_LEVEL=DEBUG node index.js
 
 **דוגמאות:**
 ```javascript
-[2026-08-07T07:42:00.100Z] [DEBUG] Reading file: data/installments.json
-[2026-08-07T07:42:00.150Z] [DEBUG] Parsed 3 installments
-[2026-08-07T07:42:00.200Z] [DEBUG] Calculating summary for 62 months
+[2026-10-09T10:58:21.400Z] [DEBUG] All /api routes mounted
 ```
 
 **מתי?**
@@ -143,7 +140,7 @@ LOG_LEVEL=DEBUG node index.js
 ### דוגמאות שימוש:
 
 ```javascript
-const logger = require('./utils/logger');
+const logger = require('../utils/logger'); // מתוך routes/ services/ repositories/
 
 // INFO - פעולות רגילות
 logger.info('User logged in', { userId: 123 });
@@ -254,5 +251,4 @@ logs/
 
 ---
 
-**עודכן**: 8 יולי 2026  
-**גרסה**: 1.0
+**עודכן**: 2026-10-09
