@@ -38,7 +38,7 @@
 
 | קובץ | מה יש בו |
 | --- | --- |
-| [AI_PROVIDERS.md](ai/AI_PROVIDERS.md) | חיבור למודל: Ollama מקומי, Ollama על מכונה אחרת, ספקי API חינמיים (Groq, OpenRouter, Gemini, Mistral), הגדרות `.env`, השוואה |
+| [AI_PROVIDERS.md](ai/AI_PROVIDERS.md), [../AI_OPTIONS.html](../AI_OPTIONS.html) (עמוד ויזואלי) | חיבור למודל: Ollama מקומי, Ollama על מכונה אחרת, ספקי API חינמיים (Groq, OpenRouter, Gemini, Mistral), הגדרות `.env`, השוואה |
 | [AI_DEVELOPMENT_PROMPT.md](ai/AI_DEVELOPMENT_PROMPT.md) | system prompt לעוזרי AI שעוזרים לפתח את הפרויקט (קונבנציות, מודלים, דפוסים) |
 | [../CLAUDE.md](../CLAUDE.md) | הנחיות ל-Claude Code: פקודות, ארכיטקטורה, קונבנציות, כללי git |
 
@@ -56,4 +56,4 @@
 
 - כל קובץ md חדש נכנס לאחת התיקיות למעלה ומקבל שורה בטבלה המתאימה.
 - כשמתנהגות משתנה (נתיב API, משתנה סביבה, פקודת הרצה) מעדכנים את הקובץ הרלוונטי באותו commit.
-- קבצים בשורש הפרויקט: `README.md` ו-`CLAUDE.md` בלבד.
+- קבצים בשורש הפרויקט: `README.md`, `CLAUDE.md` ושני עמודי ה-HTML העצמאיים (`ARCHITECTURE_DIAGRAM.html`, `AI_OPTIONS.html`).

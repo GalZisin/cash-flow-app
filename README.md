@@ -44,7 +44,7 @@ npm test --prefix server   # שרת (node:test, ללא צורך ב-DB או ב-AI
 | ייעולים שבוצעו ומה נשאר | [docs/architecture/OPTIMIZATIONS.md](docs/architecture/OPTIMIZATIONS.md) |
 | תיעוד API מלא | [docs/server/API.md](docs/server/API.md) |
 | לוגים | [docs/server/LOGGING.md](docs/server/LOGGING.md) |
-| חיבור למודל AI: Ollama מקומי / מרוחק / ספקי API חינמיים | [docs/ai/AI_PROVIDERS.md](docs/ai/AI_PROVIDERS.md) |
+| חיבור למודל AI: Ollama מקומי / מרוחק / ספקי API חינמיים | [docs/ai/AI_PROVIDERS.md](docs/ai/AI_PROVIDERS.md), [AI_OPTIONS.html](AI_OPTIONS.html) (עמוד ויזואלי עם תרשים לכל אפשרות) |
 | מדריכי פיצ'רים (תקציב, יעדים, אנימציות) | [docs/frontend/](docs/README.md#frontend) |
 | הנחיות לעבודה עם Claude Code / עוזרי AI | [CLAUDE.md](CLAUDE.md), [docs/ai/AI_DEVELOPMENT_PROMPT.md](docs/ai/AI_DEVELOPMENT_PROMPT.md) |
 
