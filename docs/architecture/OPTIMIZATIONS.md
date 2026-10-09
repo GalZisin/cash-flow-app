@@ -40,7 +40,7 @@
 
 ## מה נשאר
 
-- `budget-tracker.component.scss` (28kB) חורג מתקציב ה-SCSS המקורי (25kB). הסף הועלה ל-32kB כדי שה-build יעבור; הפתרון הנכון הוא לפצל את הקובץ.
+- ~~`budget-tracker.component.scss` חורג מתקציב ה-SCSS~~: פוצל ל-`budget-summary` ו-`budget-category-card`; גם ה-skeleton של טבלת התזרים הוצא ל-`cash-flow-table-skeleton`. ה-build עובר בלי אזהרות תקציב.
 - אימות שמירת התזרים הדיפרנציאלית מול SQL Server אמיתי (הלוגיקה נבדקה ביחידה, לא מול DB).
 - `InvestmentService` עדיין על BehaviorSubject.
 - טבלת התזרים עדיין 849 שורות: אפשר להוציא גם את דיאלוג מחיקת ההוצאה ואת לוגיקת ה-loanPayment.

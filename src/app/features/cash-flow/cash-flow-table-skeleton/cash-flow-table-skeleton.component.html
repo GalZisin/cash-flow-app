@@ -1,0 +1,16 @@
+<div class="table-loading-skeleton" data-testid="cash-flow-table-loader" aria-live="polite">
+  <div class="skeleton-table">
+    <div class="skeleton-header"></div>
+    @for (row of rows; track $index) {
+      <div class="skeleton-row">
+        <div class="skeleton-cell skeleton-cell-small"></div>
+        <div class="skeleton-cell skeleton-cell-medium"></div>
+        <div class="skeleton-cell skeleton-cell-large"></div>
+        <div class="skeleton-cell skeleton-cell-medium"></div>
+        <div class="skeleton-cell skeleton-cell-medium"></div>
+        <div class="skeleton-cell skeleton-cell-large"></div>
+        <div class="skeleton-cell skeleton-cell-medium"></div>
+      </div>
+    }
+  </div>
+</div>

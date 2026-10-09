@@ -170,9 +170,12 @@ src/app/
 │   └── budget.service.ts                # שירות
 └── features/
     └── budget-tracker/
-        ├── budget-tracker.component.ts
+        ├── budget-tracker.component.ts      # עמוד: כותרת, ניווט חודשים, טופס התקציב, פריסה
         ├── budget-tracker.component.html
-        └── budget-tracker.component.scss
+        ├── budget-tracker.component.scss
+        ├── budget-format.ts                 # formatBudgetCurrency, budgetProgressColor (משותף)
+        ├── budget-summary/                  # עמודה שמאלית: התראות, כרטיסי סיכום, התקדמות כללית
+        └── budget-category-card/            # כרטיס קטגוריה (תצוגה / עריכה כש-control מועבר)
 ```
 
 ### Backend

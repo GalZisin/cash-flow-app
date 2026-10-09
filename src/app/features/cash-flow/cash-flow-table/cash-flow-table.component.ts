@@ -21,6 +21,7 @@ import { InstallmentService } from '../../../services/installment.service';
 import { ThemeService } from '../../../services/theme.service';
 import { ExpenseCategorySelectorComponent } from '../expense-category-selector/expense-category-selector.component';
 import { CashFlowDefaultsDialogComponent } from '../cash-flow-defaults-dialog/cash-flow-defaults-dialog.component';
+import { CashFlowTableSkeletonComponent } from '../cash-flow-table-skeleton/cash-flow-table-skeleton.component';
 import { ExpenseCategory } from '../../../models/expense-category.model';
 import { ExpenseItem, normalizeExpenseItem } from '../../../models/expense.model';
 import { Installment } from '../../../models/installment.model';
@@ -41,6 +42,7 @@ registerLocaleData(localeHe);
     MatDividerModule, MatDialogModule, MatTooltipModule,
     ExpenseCategorySelectorComponent,
     CashFlowDefaultsDialogComponent,
+    CashFlowTableSkeletonComponent,
     // GSAP Directives
     AnimateNumberDirective,
     StaggerFadeInDirective,
@@ -67,7 +69,6 @@ export class CashFlowTableComponent implements OnInit, AfterViewInit, OnChanges 
   private decimalPipe = inject(DecimalPipe);
   private themeService = inject(ThemeService);
   private calc = inject(CashFlowCalculationService);
-  readonly skeletonRows = Array.from({ length: 50 });
   resolveRowColor(hexColor: string | null): string | null {
     if (!hexColor) return null;
 
@@ -91,8 +92,6 @@ export class CashFlowTableComponent implements OnInit, AfterViewInit, OnChanges 
   activeRowIndex = 0;
   focusedField: Record<string, boolean> = {};
   isLoading = false;
-  loadingTitle = 'טוען נתוני התזרים';
-  loadingSubtitle = 'אנחנו מכינים את הטבלה בשבילך...';
   animationsEnabled = false;
   lastSavedAt: string | null = null;
   private isInitialized = false;
@@ -185,17 +184,6 @@ export class CashFlowTableComponent implements OnInit, AfterViewInit, OnChanges 
     this.loadingStartedAt = Date.now();
     this.isLoading = true;
     this.loaderScheduled = false;
-
-    this.translate.get(['CASH_FLOW.LOADING', 'CASH_FLOW.LOADING_SUBTITLE']).subscribe({
-      next: translations => {
-        this.loadingTitle = translations['CASH_FLOW.LOADING'] || this.loadingTitle;
-        this.loadingSubtitle = translations['CASH_FLOW.LOADING_SUBTITLE'] || this.loadingSubtitle;
-      },
-      error: () => {
-        this.loadingTitle = 'טוען נתוני התזרים';
-        this.loadingSubtitle = 'אנחנו מכינים את הטבלה בשבילך...';
-      }
-    });
 
     this.cashFlowForm = this.fb.group({
       months: this.fb.array([]),

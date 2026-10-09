@@ -1,20 +1,18 @@
 import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatCardModule } from '@angular/material/card';
+import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslateModule } from '@ngx-translate/core';
 
 import { BudgetService } from '../../services/budget.service';
 import { MonthlyBudget, CategoryBudget, BudgetSettings } from '../../models/budget.model';
 import { ExpenseCategory, getExpenseCategoryConfig, EXPENSE_CATEGORY_CONFIGS } from '../../models/expense-category.model';
+import { BudgetSummaryComponent } from './budget-summary/budget-summary.component';
+import { BudgetCategoryCardComponent } from './budget-category-card/budget-category-card.component';
 
 @Component({
   selector: 'app-budget-tracker',
@@ -22,16 +20,14 @@ import { ExpenseCategory, getExpenseCategoryConfig, EXPENSE_CATEGORY_CONFIGS } f
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    MatCardModule,
     MatButtonModule,
     MatIconModule,
     MatProgressBarModule,
-    MatFormFieldModule,
-    MatInputModule,
     MatSelectModule,
-    MatChipsModule,
     MatTooltipModule,
-    TranslateModule
+    TranslateModule,
+    BudgetSummaryComponent,
+    BudgetCategoryCardComponent
   ],
   templateUrl: './budget-tracker.component.html',
   styleUrl: './budget-tracker.component.scss'
@@ -49,7 +45,6 @@ export class BudgetTrackerComponent implements OnInit {
 
   // Computed
   alerts = computed(() => this.budgetService.alerts());
-  hasAlerts = computed(() => this.alerts().length > 0);
 
   sortedCategories = computed(() => {
     const budget = this.monthlyBudget();
@@ -59,7 +54,12 @@ export class BudgetTrackerComponent implements OnInit {
     return [...budget.categories].sort((a, b) => b.percentage - a.percentage);
   });
 
+  // Edit mode shows every category; the spent amount comes from the month's budget when present
+  categoryBudgetById = computed(() =>
+    new Map((this.monthlyBudget()?.categories ?? []).map(c => [c.category, c] as const)));
+
   categoryConfigs = EXPENSE_CATEGORY_CONFIGS;
+  readonly categoryConfig = getExpenseCategoryConfig;
 
   constructor(
     private budgetService: BudgetService,
@@ -142,14 +142,8 @@ export class BudgetTrackerComponent implements OnInit {
     }
   }
 
-  getCategoryConfig(category: ExpenseCategory) {
-    return getExpenseCategoryConfig(category);
-  }
-
-  getProgressBarColor(percentage: number): string {
-    if (percentage >= 100) return 'warn';
-    if (percentage >= 90) return 'accent';
-    return 'primary';
+  limitControl(category: ExpenseCategory): FormControl<number> {
+    return this.budgetForm.get(category) as FormControl<number>;
   }
 
   getChipColor(percentage: number): string {
@@ -157,15 +151,6 @@ export class BudgetTrackerComponent implements OnInit {
     if (percentage >= 90) return 'accent';
     if (percentage >= 75) return '';
     return 'primary';
-  }
-
-  formatCurrency(amount: number): string {
-    return new Intl.NumberFormat('he-IL', {
-      style: 'currency',
-      currency: 'ILS',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(amount);
   }
 
   private getCurrentMonth(): string {

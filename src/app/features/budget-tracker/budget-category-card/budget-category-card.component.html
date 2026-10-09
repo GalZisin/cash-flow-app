@@ -1,0 +1,101 @@
+@if (control(); as control) {
+  <!-- Edit Mode -->
+  <mat-card class="category-card edit-mode">
+    <mat-card-content>
+      <div class="category-header">
+        <div class="category-icon-wrapper" [style.background-color]="config().color + '20'">
+          <mat-icon [style.color]="config().color">{{ config().icon }}</mat-icon>
+        </div>
+        <div class="category-title-section">
+          <h3>{{ config().label }}</h3>
+          @if (budget(); as catBudget) {
+            @if (catBudget.spent > 0) {
+              <span class="spent-info">הוצא: {{ formatCurrency(catBudget.spent) }}</span>
+            }
+          }
+        </div>
+      </div>
+
+      <mat-form-field appearance="outline" class="budget-input">
+        <mat-label>תקציב חודשי</mat-label>
+        <input matInput
+               type="number"
+               [formControl]="control"
+               placeholder="0">
+        <span matTextSuffix>₪</span>
+      </mat-form-field>
+    </mat-card-content>
+  </mat-card>
+} @else if (budget(); as catBudget) {
+  <!-- View Mode -->
+  <mat-card class="category-card"
+            [class.over-budget]="catBudget.isOverBudget"
+            [class.warning]="catBudget.percentage >= 90 && !catBudget.isOverBudget">
+    <mat-card-content>
+      <div class="category-header">
+        <div class="category-icon-wrapper"
+             [style.background-color]="config().color + '20'">
+          <mat-icon [style.color]="config().color">
+            {{ config().icon }}
+          </mat-icon>
+        </div>
+        <div class="category-title-section">
+          <h3>{{ config().label }}</h3>
+          @if (catBudget.isOverBudget) {
+            <mat-chip class="status-chip danger">
+              <mat-icon>arrow_upward</mat-icon>
+              חריגה
+            </mat-chip>
+          } @else if (catBudget.percentage >= 90) {
+            <mat-chip class="status-chip warning">
+              <mat-icon>warning</mat-icon>
+              התראה
+            </mat-chip>
+          } @else if (catBudget.percentage < 50) {
+            <mat-chip class="status-chip success">
+              <mat-icon>check_circle</mat-icon>
+              מצוין
+            </mat-chip>
+          }
+        </div>
+      </div>
+
+      <div class="budget-amounts">
+        <div class="amount-row">
+          <span class="amount-label">תקציב:</span>
+          <span class="amount-value">{{ formatCurrency(catBudget.monthlyLimit) }}</span>
+        </div>
+        <div class="amount-row">
+          <span class="amount-label">הוצא:</span>
+          <span class="amount-value spent">{{ formatCurrency(catBudget.spent) }}</span>
+        </div>
+        <div class="amount-row">
+          <span class="amount-label">נותר:</span>
+          <span class="amount-value" [class.negative]="catBudget.remaining < 0">
+            {{ formatCurrency(catBudget.remaining) }}
+          </span>
+        </div>
+      </div>
+
+      <div class="progress-section">
+        <div class="progress-header">
+          <span class="progress-percentage-text">
+            {{ catBudget.percentage | number:'1.0-0' }}%
+          </span>
+        </div>
+        <mat-progress-bar
+          mode="determinate"
+          [value]="catBudget.percentage > 100 ? 100 : catBudget.percentage"
+          [color]="progressColor(catBudget.percentage)">
+        </mat-progress-bar>
+      </div>
+
+      @if (catBudget.isOverBudget) {
+        <div class="over-budget-warning">
+          <mat-icon>info</mat-icon>
+          <span>חריגה של {{ formatCurrency(catBudget.overBudgetAmount!) }}</span>
+        </div>
+      }
+    </mat-card-content>
+  </mat-card>
+}

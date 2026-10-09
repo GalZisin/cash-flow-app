@@ -96,7 +96,7 @@ GSAP הותקן בהצלחה בפרויקט. עכשיו אפשר להשתמש ב
 ---
 
 ### 4️⃣ **Skeleton Loading** - אפקט טעינה מודרני
-מקום: `src/app/components/cash-flow-table/cash-flow-table.component.html/scss`
+מקום: `src/app/features/cash-flow/cash-flow-table-skeleton/` (קומפוננטה `app-cash-flow-table-skeleton`, 50 שורות דמה), מוצגת מ-`cash-flow-table` כש-`isLoading`
 
 **מה זה:**
 אפקט טעינה יפה עם shimmer animation שמציג placeholder בצורת שורות בזמן שהנתונים נטענים.
