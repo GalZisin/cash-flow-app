@@ -42,10 +42,11 @@ npm install
 npm install --prefix server
 ```
 
-להפעלת הממשק והשרת יחד:
+להפעלת הממשק והשרת יחד (גירסת Node אחת, 24 ומעלה, לשני הצדדים):
 
 ```bash
-npm run dev
+npm run dev        # שרת + לקוח, בלי AI       (או לחיצה כפולה על run-all.bat)
+npm run dev:ai     # Ollama + שרת + לקוח, עם AI (או לחיצה כפולה על run-all-ai.bat)
 ```
 
 לאחר ההפעלה:
@@ -58,6 +59,13 @@ npm run dev
 ```bash
 npm start       # ממשק Angular בפורט 4300
 npm run server  # שרת Express בפורט 3000
+```
+
+בדיקות:
+
+```bash
+npm test                  # בדיקות Angular (Karma, Chrome headless)
+npm test --prefix server  # בדיקות שרת (node:test, ללא צורך ב-DB)
 ```
 
 ## הפעלת AI מקומי (אופציונלי)
@@ -76,7 +84,8 @@ $env:AI_MODEL = 'qwen3:8b'
 npm run server
 ```
 
-ללא Ollama, שאר האפליקציה פועלת כרגיל; רק פעולות לשונית ה־AI יחזירו שגיאה מהשרת.
+`npm run dev:ai` (או `run-all-ai.bat`) מפעיל את Ollama אוטומטית יחד עם השרת והלקוח, דרך `scripts/start-ollama.js`.
+ללא Ollama, שאר האפליקציה פועלת כרגיל; לשונית ה־AI מחזירה הודעה ברורה (HTTP 503, `AI_UNAVAILABLE`).
 
 ## מבנה הפרויקט
 

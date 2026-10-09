@@ -15,10 +15,12 @@ import localeHe from '@angular/common/locales/he'; // Import Hebrew locale data
 import { combineLatest } from 'rxjs';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { TranslateModule, TranslateService, LangChangeEvent } from '@ngx-translate/core';
-import { CashFlowService, CashFlowDefaults } from '../../../services/cash-flow.service';
+import { CashFlowService } from '../../../services/cash-flow.service';
+import { CashFlowCalculationService, MonthValues } from '../../../services/cash-flow-calculation.service';
 import { InstallmentService } from '../../../services/installment.service';
 import { ThemeService } from '../../../services/theme.service';
 import { ExpenseCategorySelectorComponent } from '../expense-category-selector/expense-category-selector.component';
+import { CashFlowDefaultsDialogComponent } from '../cash-flow-defaults-dialog/cash-flow-defaults-dialog.component';
 import { ExpenseCategory } from '../../../models/expense-category.model';
 import { ExpenseItem, normalizeExpenseItem } from '../../../models/expense.model';
 import { Installment } from '../../../models/installment.model';
@@ -38,6 +40,7 @@ registerLocaleData(localeHe);
     MatInputModule, MatSnackBarModule, MatMenuModule,
     MatDividerModule, MatDialogModule, MatTooltipModule,
     ExpenseCategorySelectorComponent,
+    CashFlowDefaultsDialogComponent,
     // GSAP Directives
     AnimateNumberDirective,
     StaggerFadeInDirective,
@@ -63,6 +66,7 @@ export class CashFlowTableComponent implements OnInit, AfterViewInit, OnChanges 
   private installmentService = inject(InstallmentService);
   private decimalPipe = inject(DecimalPipe);
   private themeService = inject(ThemeService);
+  private calc = inject(CashFlowCalculationService);
   readonly skeletonRows = Array.from({ length: 50 });
   resolveRowColor(hexColor: string | null): string | null {
     if (!hexColor) return null;
@@ -378,49 +382,18 @@ export class CashFlowTableComponent implements OnInit, AfterViewInit, OnChanges 
     return this.months.at(monthIndex).get('additionalIncomes') as FormArray;
   }
 
-  getAdditionalIncomesSum(index: number): number {
-    return this.getAdditionalIncomes(index).controls.reduce((sum, control) => {
-      return sum + (Number(control.get('amount')?.value) || 0);
-    }, 0);
-  }
+  // --- Per-month totals (arithmetic lives in CashFlowCalculationService) ---
+  private monthValues(index: number): MonthValues { return this.months.at(index).value as MonthValues; }
 
-  getRegularExpensesSum(index: number): number {
-    return this.getRegularExpenses(index).controls.reduce((sum, control) => {
-      return sum + (Number(control.get('amount')?.value) || 0);
-    }, 0);
-  }
-
-  getSpecialExpenses(monthIndex: number): FormArray {
-    return this.months.at(monthIndex).get('specialExpenses') as FormArray;
-  }
-
-  getSpecialExpensesSum(index: number): number {
-    return this.getSpecialExpenses(index).controls.reduce((sum, control) => {
-      return sum + (Number(control.get('amount')?.value) || 0);
-    }, 0);
-  }
-
-  getTotalIncome(index: number): number {
-    const month = this.months.at(index);
-    return (Number(month.get('income')?.value) || 0) + this.getAdditionalIncomesSum(index);
-  }
-
-  getTotalExpenses(index: number): number {
-    const month = this.months.at(index);
-    return (Number(month.get('mortgagePayment')?.value) || 0) +
-      (Number(month.get('loanPayment')?.value) || 0) +
-      (Number(month.get('installmentsPayment')?.value) || 0) +
-      this.getRegularExpensesSum(index) +
-      this.getSpecialExpensesSum(index);
-  }
-
-  getSavings(index: number): number {
-    return this.getTotalIncome(index) - this.getTotalExpenses(index);
-  }
-
+  getAdditionalIncomesSum(index: number): number { return this.calc.sumAmounts(this.getAdditionalIncomes(index).value); }
+  getRegularExpensesSum(index: number): number { return this.calc.sumAmounts(this.getRegularExpenses(index).value); }
+  getSpecialExpenses(monthIndex: number): FormArray { return this.months.at(monthIndex).get('specialExpenses') as FormArray; }
+  getSpecialExpensesSum(index: number): number { return this.calc.sumAmounts(this.getSpecialExpenses(index).value); }
+  getTotalIncome(index: number): number { return this.calc.totalIncome(this.monthValues(index)); }
+  getTotalExpenses(index: number): number { return this.calc.totalExpenses(this.monthValues(index)); }
+  getSavings(index: number): number { return this.getTotalIncome(index) - this.getTotalExpenses(index); }
   getBarWidth(value: number, index: number): number {
-    const max = Math.max(this.getTotalIncome(index), this.getTotalExpenses(index), 1);
-    return (value / max) * 100;
+    return this.calc.calculateBarWidth(value, Math.max(this.getTotalIncome(index), this.getTotalExpenses(index), 1));
   }
 
   addRegularExpense(monthIndex: number) {
@@ -439,58 +412,10 @@ export class CashFlowTableComponent implements OnInit, AfterViewInit, OnChanges 
 
   pendingDeleteExpense: { monthIndex: number; expenseIndex: number; type: 'regular' | 'special' | 'additionalIncome' } | null = null;
 
-  // --- Defaults dialog ---
+  // --- Defaults dialog (CashFlowDefaultsDialogComponent loads, edits and saves the defaults itself) ---
   showDefaultsDialog = false;
-  defaultsForm!: FormGroup;
-
-  openDefaultsDialog() {
-    this.cashFlowService.loadDefaults().subscribe(defaults => {
-      this.defaultsForm = this.fb.group({
-        income: [defaults.income],
-        mortgagePayment: [defaults.mortgagePayment],
-        loanPayment: [defaults.loanPayment],
-        additionalIncomes: this.fb.array(
-          (defaults as any).additionalIncomes?.map((e: any) => this.fb.group({ description: [e.description], amount: [e.amount] })) || []
-        ),
-        regularExpenses: this.fb.array(
-          defaults.regularExpenses.map(e => this.createExpenseGroup(e))
-        ),
-        specialExpenses: this.fb.array(
-          defaults.specialExpenses.map(e => this.createExpenseGroup(e))
-        )
-      });
-      this.showDefaultsDialog = true;
-    });
-  }
-
+  openDefaultsDialog() { this.showDefaultsDialog = true; }
   closeDefaultsDialog() { this.showDefaultsDialog = false; }
-
-  get defaultsAdditionalIncomes(): FormArray { return this.defaultsForm.get('additionalIncomes') as FormArray; }
-  get defaultsRegularExpenses(): FormArray { return this.defaultsForm.get('regularExpenses') as FormArray; }
-  get defaultsSpecialExpenses(): FormArray { return this.defaultsForm.get('specialExpenses') as FormArray; }
-
-  addDefaultRegularExpense() {
-    this.defaultsRegularExpenses.push(this.createExpenseGroup());
-  }
-  removeDefaultRegularExpense(i: number) { this.defaultsRegularExpenses.removeAt(i); }
-  addDefaultAdditionalIncome() {
-    this.defaultsAdditionalIncomes.push(this.fb.group({ description: [''], amount: [0] }));
-  }
-  removeDefaultAdditionalIncome(i: number) { this.defaultsAdditionalIncomes.removeAt(i); }
-  addDefaultSpecialExpense() {
-    this.defaultsSpecialExpenses.push(this.createExpenseGroup());
-  }
-  removeDefaultSpecialExpense(i: number) { this.defaultsSpecialExpenses.removeAt(i); }
-
-  saveDefaults() {
-    const val = this.defaultsForm.value as CashFlowDefaults;
-    this.cashFlowService.saveDefaults(val).subscribe(() => {
-      this.translate.get('CASH_FLOW.DEFAULTS_SAVED').subscribe(msg =>
-        this.snackBar.open(msg, '', { duration: 2500, panelClass: 'snack-success' })
-      );
-      this.showDefaultsDialog = false;
-    });
-  }
 
   // --- Duplicate month ---
   duplicateMonth(monthIndex: number) {
@@ -632,22 +557,8 @@ export class CashFlowTableComponent implements OnInit, AfterViewInit, OnChanges 
       }
 
       const startingBalance = Number(monthCtrl.get('startingBalance')?.value) || 0;
-      const income = Number(monthCtrl.get('income')?.value) || 0;
-      const mortgage = Number(monthCtrl.get('mortgagePayment')?.value) || 0;
-      const loanPayment = Number(monthCtrl.get('loanPayment')?.value) || 0;
-      const currentInstallments = Number(monthCtrl.get('installmentsPayment')?.value) || 0;
-      const additionalIncomes = (monthCtrl.get('additionalIncomes')?.value || []).reduce(
-        (sum: number, r: any) => sum + (Number(r.amount) || 0), 0
-      );
-      const specialExpenses = (monthCtrl.get('specialExpenses')?.value || []).reduce(
-        (sum: number, r: any) => sum + (Number(r.amount) || 0), 0
-      );
-      const regularExpenses = (monthCtrl.get('regularExpenses')?.value || []).reduce(
-        (sum: number, r: any) => sum + (Number(r.amount) || 0), 0
-      );
-
       const totalStarting = i === 0 ? startingBalance : prevEndingBalance;
-      const endingBalance = totalStarting + income + additionalIncomes - mortgage - loanPayment - currentInstallments - specialExpenses - regularExpenses;
+      const endingBalance = this.calc.endingBalance(totalStarting, monthCtrl.value as MonthValues);
 
       if (updateStartingBalances && i > 0) {
         monthCtrl.get('startingBalance')?.setValue(prevEndingBalance, { emitEvent: false });
@@ -746,10 +657,7 @@ export class CashFlowTableComponent implements OnInit, AfterViewInit, OnChanges 
     }, 50);
   }
 
-  toMonthString(date: Date): string {
-    const d = new Date(date);
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01T00:00:00.000Z`;
-  }
+  toMonthString(date: Date): string { return this.calc.toMonthString(date); }
 
   save(silent: boolean = false) {
     // הגנה מפני שמירה של מערך ריק במקרה של תקלה בטעינה או מרוץ תהליכים

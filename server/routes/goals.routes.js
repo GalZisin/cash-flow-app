@@ -1,14 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const goalsService = require('../services/goals.service');
+const goalsIntegrationService = require('../services/goals-integration.service');
 const asyncHandler = require('../utils/asyncHandler');
-
-console.log('✅ Goals routes loaded');
-
-// Test route
-router.get('/test', (req, res) => {
-    res.json({ message: 'Goals route is working!' });
-});
 
 /**
  * GET /api/goals
@@ -96,7 +90,6 @@ router.post('/:id/analyze', asyncHandler(async (req, res) => {
  * קבלת מידע משולב על קישורים לתזרים ופריסות
  */
 router.get('/:id/integration', asyncHandler(async (req, res) => {
-    const goalsIntegrationService = require('../services/goals-integration.service');
     const goal = await goalsService.getGoalById(req.params.id);
 
     const [cashFlowExpenses, installments, commitments] = await Promise.all([

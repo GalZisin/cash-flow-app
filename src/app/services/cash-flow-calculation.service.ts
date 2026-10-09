@@ -1,6 +1,20 @@
 import { Injectable } from '@angular/core';
 import { FormArray, AbstractControl } from '@angular/forms';
 
+/** ערכי חודש כפי שמגיעים מ-FormGroup.value או מהשרת (כל השדות אופציונליים). */
+export interface MonthValues {
+    startingBalance?: number | string | null;
+    income?: number | string | null;
+    mortgagePayment?: number | string | null;
+    loanPayment?: number | string | null;
+    installmentsPayment?: number | string | null;
+    additionalIncomes?: { amount?: number | string | null }[] | null;
+    regularExpenses?: { amount?: number | string | null }[] | null;
+    specialExpenses?: { amount?: number | string | null }[] | null;
+}
+
+const num = (v: unknown): number => Number(v) || 0;
+
 /**
  * שירות לחישובים בטבלת תזרים
  */
@@ -8,6 +22,31 @@ import { FormArray, AbstractControl } from '@angular/forms';
     providedIn: 'root'
 })
 export class CashFlowCalculationService {
+
+    // ---- חישובים על ערכים (ללא תלות ב-Reactive Forms, ניתנים לבדיקה ישירה) ----
+
+    /** סכום השדה amount של רשימת שורות (הוצאות / הכנסות נוספות). */
+    sumAmounts(rows: { amount?: number | string | null }[] | null | undefined): number {
+        return (rows ?? []).reduce((sum, r) => sum + num(r?.amount), 0);
+    }
+
+    /** הכנסה + הכנסות נוספות. */
+    totalIncome(m: MonthValues): number {
+        return num(m.income) + this.sumAmounts(m.additionalIncomes);
+    }
+
+    /** משכנתה + הלוואות + פריסות + הוצאות שוטפות + הוצאות מיוחדות. */
+    totalExpenses(m: MonthValues): number {
+        return num(m.mortgagePayment) + num(m.loanPayment) + num(m.installmentsPayment)
+            + this.sumAmounts(m.regularExpenses) + this.sumAmounts(m.specialExpenses);
+    }
+
+    /** יתרת סוף חודש: יתרת פתיחה + הכנסות - הוצאות. */
+    endingBalance(startingBalance: number, m: MonthValues): number {
+        return startingBalance + this.totalIncome(m) - this.totalExpenses(m);
+    }
+
+    // ---- חישובים על FormArray (API קיים) ----
 
     /**
      * חישוב סכום הכנסות נוספות

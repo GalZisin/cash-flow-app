@@ -1,0 +1,506 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cash Flow App - תרשים ארכיטקטורה</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --panel: #111c33;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --shell: #6366f1;
+    --feature: #3b82f6;
+    --ngsvc: #06b6d4;
+    --http: #f59e0b;
+    --entry: #f97316;
+    --route: #fb923c;
+    --service: #22c55e;
+    --repo: #a855f7;
+    --db: #ec4899;
+    --sql: #ef4444;
+    --ext: #94a3b8;
+    --cross: #f43f5e;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Heebo", "Segoe UI", Arial, sans-serif;
+    background: radial-gradient(1200px 600px at 80% -10%, #1e293b 0%, var(--bg) 60%);
+    color: var(--text);
+  }
+  header {
+    padding: 28px 32px 12px;
+    display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; justify-content: space-between;
+  }
+  h1 { margin: 0; font-size: 28px; font-weight: 700; }
+  h1 small { display: block; font-size: 14px; color: var(--muted); font-weight: 400; margin-top: 4px; }
+  .stats { display: flex; gap: 10px; flex-wrap: wrap; }
+  .stat {
+    background: var(--panel); border: 1px solid #1e293b; border-radius: 10px;
+    padding: 8px 14px; font-size: 13px; color: var(--muted);
+  }
+  .stat b { display: block; font-size: 20px; color: var(--text); }
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 8px 18px; padding: 8px 32px 14px; font-size: 13px; color: var(--muted);
+  }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend i { width: 14px; height: 14px; border-radius: 4px; display: inline-block; }
+  .legend .line { width: 28px; height: 0; border-top: 3px solid; border-radius: 0; }
+  .legend .line.dashed { border-top-style: dashed; }
+  .hint { padding: 0 32px 10px; font-size: 13px; color: var(--muted); }
+  .canvas {
+    margin: 0 24px 24px; overflow: auto; background: var(--panel); border: 1px solid #1e293b; border-radius: 14px;
+    direction: ltr;
+  }
+  svg { display: block; width: 1800px; min-width: 1800px; height: auto; }
+
+  /* nodes */
+  .node { cursor: pointer; transition: opacity .15s; }
+  .node rect.box { stroke-width: 2; rx: 12; ry: 12; }
+  .node text { pointer-events: none; }
+  .node .title { font-size: 15px; font-weight: 700; fill: #f8fafc; direction: rtl; }
+  .node .file { font-size: 11px; fill: #cbd5e1; direction: ltr; font-family: Consolas, "Courier New", monospace; }
+  .node .sub { font-size: 11px; fill: #e2e8f0; direction: rtl; }
+  .node.dim { opacity: .18; }
+  .node.hi rect.box { stroke: #fff; stroke-width: 3; filter: drop-shadow(0 0 8px rgba(255,255,255,.6)); }
+
+  /* bands */
+  .band rect { fill-opacity: .07; stroke-opacity: .35; stroke-width: 1.5; stroke-dasharray: 6 5; rx: 18; }
+  .band text { font-size: 18px; font-weight: 700; direction: rtl; }
+  .band .port { font-size: 12px; font-weight: 400; direction: ltr; font-family: Consolas, monospace; }
+
+  /* edges */
+  .edge { fill: none; stroke-width: 2; opacity: .85; transition: opacity .15s, stroke-width .15s; }
+  .edge.dim { opacity: .06; }
+  .edge.hi { opacity: 1; stroke-width: 3.5; }
+  .edge.http { stroke-dasharray: 7 5; }
+  .edge.ai { stroke-dasharray: 4 4; }
+  .edge.cross { stroke-dasharray: 2 4; }
+  .edge-label { font-size: 11px; fill: #cbd5e1; font-family: Consolas, monospace; direction: ltr; pointer-events: none; }
+  .edge-label.dim { opacity: .1; }
+
+  /* info panel */
+  #info {
+    position: fixed; left: 20px; bottom: 20px; width: 380px; max-height: 60vh; overflow: auto;
+    background: #0b1222; border: 1px solid #334155; border-radius: 14px; padding: 16px 18px;
+    box-shadow: 0 20px 50px rgba(0,0,0,.5); display: none; z-index: 10; font-size: 14px;
+  }
+  #info.open { display: block; }
+  #info h3 { margin: 0 0 4px; font-size: 18px; }
+  #info .file { font-family: Consolas, monospace; font-size: 12px; color: #93c5fd; direction: ltr; text-align: left; word-break: break-all; }
+  #info p { color: var(--muted); line-height: 1.5; margin: 10px 0; }
+  #info ul { margin: 6px 0 0; padding-inline-start: 18px; color: var(--text); }
+  #info li { margin: 3px 0; }
+  #info .close { position: absolute; left: 12px; top: 10px; cursor: pointer; color: var(--muted); font-size: 18px; }
+  #info .tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; margin-bottom: 6px; color: #fff; }
+
+  /* flows */
+  section.flows { padding: 8px 32px 40px; }
+  section.flows h2 { font-size: 22px; margin: 10px 0 14px; }
+  .flow { background: var(--panel); border: 1px solid #1e293b; border-radius: 14px; padding: 14px 18px; margin-bottom: 14px; }
+  .flow h4 { margin: 0 0 10px; font-size: 16px; }
+  .steps { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .step { padding: 6px 12px; border-radius: 999px; font-size: 13px; color: #fff; white-space: nowrap; }
+  .arrow { color: var(--muted); font-size: 16px; }
+  .note { font-size: 13px; color: var(--muted); margin-top: 8px; }
+  footer { padding: 0 32px 30px; font-size: 12px; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Cash Flow App - תרשים ארכיטקטורה וזרימה
+    <small>Angular 21 (לקוח) ← REST/JSON → Express 5 (שרת) → SQL Server (CashFlowDB) | AI דרך Ollama</small>
+  </h1>
+  <div class="stats" id="stats"></div>
+</header>
+
+<div class="legend" id="legend"></div>
+<div class="hint">ריחוף על קופסה מדגיש את כל מי שפונה אליה ואת כל מי שהיא פונה אליו. לחיצה פותחת פרטים על הרכיב. גלילה אופקית בתרשים במסכים צרים.</div>
+
+<div class="canvas"><svg id="svg" xmlns="http://www.w3.org/2000/svg"></svg></div>
+
+<div id="info"><span class="close" onclick="closeInfo()">✕</span><div id="infoBody"></div></div>
+
+<section class="flows">
+  <h2>שלוש זרימות לדוגמה</h2>
+  <div id="flows"></div>
+</section>
+
+<footer>נוצר אוטומטית מתוך סריקת הקוד בתאריך 2026-10-09, עודכן אחרי יישום הצעות הייעול. קובץ עצמאי ללא תלויות חיצוניות, ניתן לפתוח ישירות בדפדפן.</footer>
+
+<script>
+// ---------------------------------------------------------------- colors
+const COLORS = {
+  shell: '#6366f1', feature: '#3b82f6', ngsvc: '#06b6d4', http: '#f59e0b', entry: '#f97316',
+  route: '#fb923c', service: '#22c55e', repo: '#a855f7', db: '#ec4899', sql: '#ef4444', ext: '#64748b'
+};
+const EDGE_COLORS = {
+  ui: '#60a5fa', state: '#22d3ee', http: '#fbbf24', call: '#4ade80', data: '#c084fc',
+  sql: '#f472b6', ai: '#cbd5e1', cross: '#fb7185'
+};
+const LAYER_NAMES = {
+  shell: 'תשתית לקוח', feature: 'קומפוננטת מסך (Angular)', ngsvc: 'שירות Angular', http: 'שכבת HTTP',
+  entry: 'כניסת שרת', route: 'Route (Express)', service: 'Service (לוגיקה עסקית)', repo: 'Repository (גישה לנתונים)',
+  db: 'שכבת DB', sql: 'SQL Server', ext: 'שירות חיצוני'
+};
+
+// ---------------------------------------------------------------- nodes
+// x,y,w,h on a 1800x1720 canvas
+const N = [];
+function node(id, layer, x, y, w, h, title, file, sub, desc) { N.push({ id, layer, x, y, w, h, title, file, sub, desc }); }
+
+// --- Client: shell row
+node('shell',   'shell', 60,  110, 330, 60, 'App Shell: ניווט, ערכת נושא, שפה', 'src/app/app.component.ts', 'RouterOutlet + ThemeService + LanguageService', 'המעטפת של האפליקציה: סרגל ניווט, החלפת מצב כהה/בהיר, החלפת עברית/אנגלית (RTL/LTR).');
+node('routes',  'shell', 420, 110, 300, 60, 'ניתוב עצל (Lazy Routes)', 'src/app/app.routes.ts', '6 מסכים, כל אחד נטען לפי דרישה', 'כל מסך נטען כ-chunk נפרד רק כשנכנסים אליו.');
+node('config',  'shell', 750, 110, 330, 60, 'הגדרות אפליקציה (Providers)', 'src/app/app.config.ts', 'HttpClient + Interceptor, Router, Animations, i18n', 'רישום הספקים הגלובליים: HttpClient עם interceptor, ngx-translate, Material defaults.');
+node('shared',  'shell', 1110, 110, 300, 60, 'Directives + Models + Utils', 'src/app/directives, models, utils', 'אנימציות GSAP, מודלים, אנליטיקת הוצאות', 'דירקטיבות אנימציה (מונה, התקדמות, skeleton), מודלים משותפים ופונקציות עזר.');
+node('i18n',    'shell', 1440, 110, 300, 60, 'תרגומים', 'public/assets/i18n/he.json, en.json', 'ngx-translate HTTP loader', 'קובצי תרגום שנטענים דרך HTTP בעת עליית האפליקציה.');
+
+// --- Client: feature components
+const FY = 250, FH = 110, FW = 250, FS = 280;
+node('f_cash',  'feature', 60,           FY, FW, FH, 'תזרים מזומנים', 'features/cash-flow/', 'CashFlowTable + Cards, PieChart, ExpenseList, CategorySelector', 'טבלת התזרים החודשי: הכנסות, משכנתה, הלוואות, הוצאות קבועות ומיוחדות, חישוב יתרות, ברירות מחדל, הדפסה ל-PDF. 941 שורות TS.');
+node('f_inst',  'feature', 60+FS,        FY, FW, FH, 'פריסות תשלומים', 'features/installments/', 'Installments + Form, Card, Table, Header, EmptyState, Dialogs', 'ניהול עסקאות בתשלומים, מקדמות, אבני דרך ורכיבי הלוואה. 713 שורות TS.');
+node('f_inv',   'feature', 60+FS*2,      FY, FW, FH, 'השקעות', 'features/investments/', 'Dashboard + List, Detail, Simulation', 'ניהול השקעות, עסקאות, צילומי שווי וחוקי סימולציה.');
+node('f_bud',   'feature', 60+FS*3,      FY, FW, FH, 'מעקב תקציב', 'features/budget-tracker/', 'BudgetTracker', 'תקציב חודשי לפי קטגוריות הוצאה והתראות חריגה.');
+node('f_goals', 'feature', 60+FS*4,      FY, FW, FH, 'יעדים פיננסיים', 'features/goals/', 'Goals', 'יצירת יעדים, ניתוח היתכנות וסימולציה של השפעתם על התזרים.');
+node('f_ai',    'feature', 60+FS*5,      FY, FW, FH, 'עוזר AI', 'features/ai-assistant/', 'AiAssistant + SankeyDiagram (D3)', 'צ׳אט פיננסי עם streaming, ניתוח מלא, סימולציית רכישה, ארכיון דוחות ושיחות, דיאגרמת Sankey. 507 שורות TS.');
+
+// --- Client: Angular services
+const SY = 450, SH = 70, SW = 172, SS = 190;
+node('s_cash', 'ngsvc', 60,        SY, SW, SH, 'CashFlowService', 'services/cash-flow.service.ts', 'BehaviorSubject', 'טעינה ושמירה של התזרים וברירות המחדל. מחזיק state ב-BehaviorSubject.');
+node('s_inst', 'ngsvc', 60+SS,     SY, SW, SH, 'InstallmentService', 'services/installment.service.ts', 'signals, 583 שורות', 'CRUD לפריסות + חישובי תשלום חודשי. מסנכרן עם CashFlowService.');
+node('s_inv',  'ngsvc', 60+SS*2,   SY, SW, SH, 'InvestmentService', 'services/investment.service.ts', 'signals', 'CRUD להשקעות, עסקאות וסימולציות.');
+node('s_bud',  'ngsvc', 60+SS*3,   SY, SW, SH, 'BudgetService', 'services/budget.service.ts', 'signals + computed', 'הגדרות תקציב, תקציב חודשי מחושב והתראות.');
+node('s_goal', 'ngsvc', 60+SS*4,   SY, SW, SH, 'GoalsService', 'services/goals.service.ts', 'signals', 'CRUD ליעדים וניתוח מחדש.');
+node('s_sim',  'ngsvc', 60+SS*5,   SY, SW, SH, 'CashFlowSimulation', 'services/cash-flow-simulation.service.ts', 'לקוח בלבד, ללא HTTP', 'משכפל את התזרים ומוסיף את השפעת היעדים. מאזין ל-CashFlowService ו-GoalsService. טוען תזרים כבר בבנאי.');
+node('s_ai',   'ngsvc', 60+SS*6,   SY, SW, SH, 'AiService', 'services/ai.service.ts', 'HttpClient + fetch stream', 'סיכום, ניתוח, צ׳אט, צ׳אט ב-streaming (fetch) וסימולציית תרחיש.');
+node('s_conv', 'ngsvc', 60+SS*7,   SY, SW, SH, 'ConversationService', 'services/conversation.service.ts', 'BehaviorSubject', 'שמירה וטעינה של היסטוריית שיחות עם ה-AI.');
+node('s_rep',  'ngsvc', 60+SS*8,   SY, SW, SH, 'AiReportService', 'services/ai-report.service.ts', 'HttpClient', 'ארכיון דוחות AI (ניתוח, תובנות, תרחישים).');
+
+// --- HTTP band
+node('http', 'http', 60, 610, 1680, 56, 'HTTP REST / JSON  -  http://localhost:3000/api', 'src/app/interceptors/http.interceptor.ts', 'httpInterceptor: לוג בקשות במצב פיתוח + הצגת שגיאות ב-Snackbar. ‎/ai/chat-stream עובר ב-fetch ישיר (chunked text)', 'כל התקשורת בין הלקוח לשרת. CORS פתוח לכל מקור בצד השרת.');
+
+// --- Server entry
+node('index',  'entry', 60,  740, 760, 64, 'Express App', 'server/app.js + index.js', 'cors(origin) → json(limit) → log → /health → /api → static client → 404 → errorHandler', 'app.js בונה את האפליקציה (CORS מוגבל, גבול גוף בקשה, הגשת dist בפרודקשן). index.js מתחבר ל-SQL Server לפני ההאזנה וסוגר מסודר ב-SIGINT/SIGTERM.');
+node('router', 'entry', 860, 740, 880, 64, 'Router ראשי', 'server/routes/index.js', 'מרכיב את כל ה-routes תחת /api', 'מרכיב את כל מודולי ה-routes, כולל routes/ai.routes.js.');
+
+// --- Server routes (8 columns)
+const CX = i => 60 + i * 215, CW = 195;
+const RY = 860, RH = 76;
+node('r_cash', 'route', CX(0), RY, CW, RH, 'cashFlow.routes', 'routes/cashFlow.routes.js', 'GET/POST /cash-flow, /cash-flow-defaults', 'קריאה ושמירה של התזרים. אחרי POST מריץ analyzeAllGoals.');
+node('r_inst', 'route', CX(1), RY, CW, RH, 'installments.routes', 'routes/installments.routes.js', 'CRUD /installments', 'CRUD לפריסות.');
+node('r_inv',  'route', CX(2), RY, CW, RH, 'investments.routes', 'routes/investments.routes.js', 'CRUD /investments', 'CRUD להשקעות.');
+node('r_bud',  'route', CX(3), RY, CW, RH, 'budget.routes', 'routes/budget.routes.js', '/budget/settings, /monthly/:m, /alerts/:m', 'הגדרות תקציב ותקציב חודשי מחושב.');
+node('r_goal', 'route', CX(4), RY, CW, RH, 'goals.routes', 'routes/goals.routes.js', 'CRUD /goals, /overview, /timeline, /:id/analyze, /:id/integration', 'יעדים, סקירה, ציר זמן, ניתוח ואינטגרציה עם תזרים ופריסות.');
+node('r_conv', 'route', CX(5), RY, CW, RH, 'conversations.routes', 'routes/conversations.routes.js', 'CRUD /conversations', 'שיחות AI שמורות.');
+node('r_rep',  'route', CX(6), RY, CW, RH, 'aiReports.routes', 'routes/aiReports.routes.js', 'CRUD /ai-reports', 'ארכיון דוחות AI.');
+node('r_ai',   'route', CX(7), RY, CW, RH, 'ai.routes', 'routes/ai.routes.js', '/ai/summary, /analysis, /chat, /chat-stream, /scenario + rate limit', 'נתיבי AI במבנה השכבות: asyncHandler, ולידציה, rate limit. מקבלים את הסיכום הפיננסי משירות עם cache.');
+
+// --- Server services
+const VY = 1010, VH = 70;
+node('v_cash', 'service', CX(0), VY, CW, VH, 'cashFlow.service', 'services/cashFlow.service.js', 'ולידציה + נורמליזציה', 'ולידציה של מבנה החודשים ונורמליזציה של ברירות מחדל.');
+node('v_inst', 'service', CX(1), VY, CW, VH, 'installments.service', 'services/installments.service.js', 'נורמליזציה, id = Date.now()', 'CRUD + נורמליזציה של פריסה.');
+node('v_inv',  'service', CX(2), VY, CW, VH, 'investments.service', 'services/investments.service.js', '', 'CRUD להשקעות.');
+node('v_bud',  'service', CX(3), VY, CW, VH, 'budget.service', 'services/budget.service.js', 'מחשב תקציב חודשי מהתזרים', 'מחשב תקציב חודשי לפי קטגוריות מתוך נתוני התזרים.');
+node('v_goal', 'service', CX(4), VY, CW, VH, 'goals.service', 'services/goals.service.js', 'CRUD + analyzeAllGoals', 'CRUD ליעדים. כל שינוי מריץ ניתוח מחדש של כל היעדים.');
+node('v_conv', 'service', CX(5), VY, CW, VH, 'conversations.service', 'services/conversations.service.js', '', 'שיחות AI.');
+node('v_rep',  'service', CX(6), VY, CW, VH, 'aiReports.service', 'services/aiReports.service.js', 'id = Date.now()', 'דוחות AI. יצירה קוראת readAll ואז writeAll.');
+node('v_ai',   'service', CX(7), VY, CW, VH, 'ai.service', 'services/ai.service.js', 'AI_BASE_URL, AI_MODEL, timeout 60s', 'בונה את ה-prompts (persona + סיכום JSON), שולח למודל ב-HTTP (מקומי או מרוחק לפי AI_BASE_URL), מסנן בלוקי think, תומך ב-streaming. שגיאת חיבור הופכת ל-503 ברור.');
+
+node('v_analyzer',    'service', CX(4),      1120, CW, 64, 'goals-analyzer', 'services/goals-analyzer.service.js', 'היתכנות יעד מול תחזית תזרים (טהור)', 'מחשב האם יעד בר השגה: תחזית יתרה, מרווח ביטחון, התנגשויות. analyzeGoalSync הוא חישוב טהור על הקשר שנטען פעם אחת.');
+node('v_integration', 'service', CX(5),      1120, CW, 64, 'goals-integration', 'services/goals-integration.service.js', 'קישור יעד להוצאות ופריסות', 'מאתר הוצאות ופריסות שקשורות ליעד ומחשב התחייבויות עתידיות.');
+node('v_engine',      'service', CX(7),      1120, CW, 64, 'financialSummary + engine', 'services/financialSummary.service.js, cashflow-engine.js', 'סיכום פיננסי עם cache 60s, חישובים ללא AI', 'financialSummary טוען תזרים, פריסות והשקעות פעם אחת ושומר את הסיכום ב-cache קצר (מתאפס בכל שינוי נתונים). cashflow-engine בונה את הסיכום ומדמה תרחיש רכישה.');
+
+// --- Repositories
+const PY = 1240, PH = 70;
+node('p_cash', 'repo', CX(0), PY, CW, PH, 'cashFlow.repository', 'repositories/cashFlow.repository.js', 'שמירה דיפרנציאלית (db/cashFlowDiff.js)', 'קורא חודשים ופריטים. שמירה משווה למצב הקיים וכותבת רק חודשים שהשתנו, בטרנזקציה אחת.');
+node('p_inst', 'repo', CX(1), PY, CW, PH, 'installments.repository', 'repositories/installments.repository.js', 'טבלת אב + 5 טבלאות בנות', 'פריסות עם רכיבי הלוואה, אבני דרך ותשלומים.');
+node('p_inv',  'repo', CX(2), PY, CW, PH, 'investments.repository', 'repositories/investments.repository.js', 'טבלת אב + 3 טבלאות בנות', 'השקעות, עסקאות, צילומי שווי, חוקי סימולציה.');
+node('p_bud',  'repo', CX(3), PY, CW, PH, 'budget.repository', 'repositories/budget.repository.js', 'שורה אחת של הגדרות', 'הגדרות תקציב.');
+node('p_goal', 'repo', CX(4), PY, CW, PH, 'goals.repository', 'repositories/goals.repository.js', 'findById, getActive, update', 'יעדים פיננסיים כולל ניתוח שמור כ-JSON.');
+node('p_conv', 'repo', CX(5), PY, CW, PH, 'conversations.repository', 'repositories/conversations.repository.js', 'שיחות + הודעות', 'שיחות והודעות.');
+node('p_rep',  'repo', CX(6), PY, CW, PH, 'aiReports.repository', 'repositories/aiReports.repository.js', '', 'דוחות AI.');
+
+// --- DB layer
+node('helpers', 'db', 60,  1370, 1000, 60, 'db/helpers.js + db/mappers.js', 'server/db/helpers.js, mappers.js', 'פרמטרים מוקלדים, טרנזקציות, insertMany בחלקים, המרת שורות ↔ אובייקטים', 'שכבת עזר מעל חבילת mssql: טיפוסי עמודות מפורשים, טרנזקציות, הכנסה מרובת שורות, מיפוי בין אובייקטי האפליקציה לשורות SQL.');
+node('pool',    'db', 1100, 1370, 400, 60, 'Connection Pool', 'server/db/connection.js', 'DB_CONNECTION_STRING מ-.env, mssql או msnodesqlv8', 'pool יחיד משותף. בוחר דרייבר לפי מחרוזת החיבור (SQL login או Windows Authentication).');
+
+// --- SQL Server
+node('sql', 'sql', 60, 1522, 1440, 140, 'SQL Server - CashFlowDB (19 טבלאות)', 'server/db/schema.sql', '', 'מסד הנתונים. כל טבלאות הבנות עם ON DELETE CASCADE.');
+const TY = 1567, TH = 92;
+const tables = [
+  ['t_cash', 'תזרים', 'cash_flow_months, cash_flow_items, cash_flow_defaults, cash_flow_default_items'],
+  ['t_inst', 'פריסות', 'installments, loan_components, loan_payments, milestones, milestone_payments, payments'],
+  ['t_inv',  'השקעות', 'investments, investment_transactions, investment_snapshots, investment_simulation_rules'],
+  ['t_bud',  'תקציב', 'budget_settings'],
+  ['t_goal', 'יעדים', 'financial_goals'],
+  ['t_conv', 'שיחות', 'conversations, conversation_messages'],
+  ['t_rep',  'דוחות AI', 'ai_reports']
+];
+tables.forEach((t, i) => node(t[0], 'sql', 80 + i * 203, TY, 190, TH, t[1], t[2], '', 'טבלאות: ' + t[2]));
+
+// --- External
+node('ollama', 'ext', 1530, 1522, 210, 140, 'מודל AI (חיצוני)', 'AI_BASE_URL  /api/generate', 'Ollama מקומי או שרת מרוחק, מודל לפי AI_MODEL', 'שרת המודל. הכתובת מגיעה מ-.env ולכן יכול לרוץ על מכונה אחרת. מופעל רק במצב run-all-ai / npm run dev:ai.');
+
+// ---------------------------------------------------------------- edges
+const E = [];
+function edge(from, to, type, label) { E.push({ from, to, type, label }); }
+
+// components → services
+edge('f_cash','s_cash','ui'); edge('f_cash','s_inst','ui');
+edge('f_inst','s_inst','ui'); edge('f_inst','s_cash','ui');
+edge('f_inv','s_inv','ui');
+edge('f_bud','s_bud','ui');
+edge('f_goals','s_goal','ui'); edge('f_goals','s_sim','ui');
+edge('f_ai','s_ai','ui'); edge('f_ai','s_conv','ui'); edge('f_ai','s_rep','ui');
+edge('f_ai','s_cash','ui'); edge('f_ai','s_inst','ui'); edge('f_ai','s_inv','ui');
+// service ↔ service (client state)
+edge('s_inst','s_cash','state'); edge('s_sim','s_cash','state'); edge('s_sim','s_goal','state');
+// services → http
+edge('s_cash','http','http','/cash-flow, /cash-flow-defaults');
+edge('s_inst','http','http','/installments');
+edge('s_inv','http','http','/investments');
+edge('s_bud','http','http','/budget/*');
+edge('s_goal','http','http','/goals/*');
+edge('s_ai','http','http','/ai/*');
+edge('s_conv','http','http','/conversations');
+edge('s_rep','http','http','/ai-reports');
+// http → server
+edge('http','index','http'); edge('index','router','call');
+['r_cash','r_inst','r_inv','r_bud','r_goal','r_conv','r_rep','r_ai'].forEach(r => edge('router', r, 'call'));
+// routes → services
+edge('r_cash','v_cash','call'); edge('r_cash','v_goal','cross','analyzeAllGoals אחרי שמירה (קריאה אחת, כתיבה אחת)');
+edge('r_inst','v_inst','call'); edge('r_inv','v_inv','call'); edge('r_bud','v_bud','call');
+edge('r_goal','v_goal','call'); edge('r_goal','v_integration','call');
+edge('r_conv','v_conv','call'); edge('r_rep','v_rep','call');
+edge('r_ai','v_ai','call'); edge('r_ai','v_engine','call');
+edge('v_engine','p_cash','data'); edge('v_engine','p_inst','data'); edge('v_engine','p_inv','data');
+// services → repos
+edge('v_cash','p_cash','data'); edge('v_inst','p_inst','data'); edge('v_inv','p_inv','data');
+edge('v_bud','p_bud','data'); edge('v_bud','p_cash','cross');
+edge('v_goal','p_goal','data'); edge('v_goal','v_analyzer','call');
+edge('v_analyzer','p_cash','cross'); edge('v_analyzer','p_goal','data');
+edge('v_integration','p_cash','cross'); edge('v_integration','v_inst','cross');
+edge('v_conv','p_conv','data'); edge('v_rep','p_rep','data');
+edge('v_ai','ollama','ai','HTTP POST, stream');
+// repos → db
+['p_cash','p_inst','p_inv','p_bud','p_goal','p_conv','p_rep'].forEach(p => edge(p, 'helpers', 'sql'));
+edge('helpers','pool','sql'); edge('pool','sql','sql','T-SQL');
+edge('index','pool','cross');
+
+// ---------------------------------------------------------------- render
+const svg = document.getElementById('svg');
+const NS = 'http://www.w3.org/2000/svg';
+const byId = Object.fromEntries(N.map(n => [n.id, n]));
+svg.setAttribute('viewBox', '0 0 1800 1720');
+svg.setAttribute('width', '1800'); svg.setAttribute('height', '1720');
+
+function wrap(text, maxChars) {
+  if (!text) return [];
+  // split on spaces; break words with no spaces (file paths) after '/' or '.'
+  const words = [];
+  text.split(' ').forEach(w => {
+    if (w.length <= maxChars) { words.push(w); return; }
+    let piece = '';
+    for (const ch of w) {
+      piece += ch;
+      if ((ch === '/' || ch === '.') && piece.length >= maxChars * 0.5) { words.push(piece); piece = ''; }
+    }
+    if (piece) words.push(piece);
+  });
+  const lines = []; let cur = '';
+  words.forEach(w => {
+    const joiner = (cur && /[\/.]$/.test(cur)) ? '' : ' ';
+    if (cur && (cur + joiner + w).length > maxChars) { lines.push(cur); cur = w; }
+    else cur = cur ? cur + joiner + w : w;
+  });
+  if (cur) lines.push(cur);
+  return lines;
+}
+function el(tag, attrs, parent) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  (parent || svg).appendChild(e);
+  return e;
+}
+
+// markers
+const defs = el('defs', {});
+for (const t in EDGE_COLORS) {
+  const m = el('marker', { id: 'arrow-' + t, viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 7, markerHeight: 7, orient: 'auto-start-reverse' }, defs);
+  el('path', { d: 'M0,0 L10,5 L0,10 z', fill: EDGE_COLORS[t] }, m);
+}
+
+// bands
+const bands = [
+  { y: 70,   h: 480, color: COLORS.feature, title: 'צד לקוח: דפדפן + Angular 21', port: 'http://localhost:4300  (ng serve)' },
+  { y: 590,  h: 96,  color: COLORS.http,    title: '', port: '' },
+  { y: 710,  h: 740, color: COLORS.service, title: 'צד שרת: Node.js + Express 5', port: 'http://localhost:3000  (node server/index.js)' },
+  { y: 1480, h: 205, color: COLORS.sql,     title: 'אחסון ושירותים חיצוניים', port: 'SQL Server :1433   |   Ollama :11434' }
+];
+bands.forEach(b => {
+  const g = el('g', { class: 'band' });
+  el('rect', { x: 30, y: b.y, width: 1740, height: b.h, fill: b.color, stroke: b.color }, g);
+  if (b.title) {
+    const t = el('text', { x: 1755, y: b.y + 24, 'text-anchor': 'start', fill: b.color }, g); t.textContent = b.title;
+    const p = el('text', { x: 45, y: b.y + 24, class: 'port', 'text-anchor': 'start', fill: b.color }, g); p.textContent = b.port;
+  }
+});
+
+// edges (drawn before nodes so nodes sit on top)
+const edgeLayer = el('g', { id: 'edges' });
+const labelLayer = el('g', { id: 'labels' });
+
+// distribute ports: group edges by (source, direction) and (target, direction)
+function center(n) { return { cx: n.x + n.w / 2, cy: n.y + n.h / 2 }; }
+function dirOf(e) {
+  const a = byId[e.from], b = byId[e.to];
+  if (b.y >= a.y + a.h) return 'down';
+  if (a.y >= b.y + b.h) return 'up';
+  return (b.x > a.x) ? 'right' : 'left';
+}
+E.forEach(e => e.dir = dirOf(e));
+function spread(list, keyFn, posFn) {
+  const groups = {};
+  list.forEach(e => { const k = keyFn(e); (groups[k] = groups[k] || []).push(e); });
+  Object.values(groups).forEach(g => {
+    g.sort((a, b) => posFn(a) - posFn(b));
+    g.forEach((e, i) => { e._i = i; e._n = g.length; });
+  });
+}
+const portX = (n, i, k) => n.x + n.w * (i + 1) / (k + 1);
+const portY = (n, i, k) => n.y + n.h * (i + 1) / (k + 1);
+
+// source ports
+spread(E.filter(e => e.dir === 'down' || e.dir === 'up'), e => e.from + e.dir, e => center(byId[e.to]).cx);
+E.forEach(e => { if (e.dir === 'down' || e.dir === 'up') { e.sx = portX(byId[e.from], e._i, e._n); e.sy = e.dir === 'down' ? byId[e.from].y + byId[e.from].h : byId[e.from].y; } });
+spread(E.filter(e => e.dir === 'left' || e.dir === 'right'), e => e.from + e.dir, e => center(byId[e.to]).cy);
+E.forEach(e => { if (e.dir === 'left' || e.dir === 'right') { const a = byId[e.from]; e.sy = portY(a, e._i, e._n); e.sx = e.dir === 'right' ? a.x + a.w : a.x; } });
+// target ports
+spread(E.filter(e => e.dir === 'down' || e.dir === 'up'), e => e.to + e.dir, e => center(byId[e.from]).cx);
+E.forEach(e => { if (e.dir === 'down' || e.dir === 'up') { const b = byId[e.to]; e.tx = portX(b, e._i, e._n); e.ty = e.dir === 'down' ? b.y : b.y + b.h; } });
+spread(E.filter(e => e.dir === 'left' || e.dir === 'right'), e => e.to + e.dir, e => center(byId[e.from]).cy);
+E.forEach(e => { if (e.dir === 'left' || e.dir === 'right') { const b = byId[e.to]; e.ty = portY(b, e._i, e._n); e.tx = e.dir === 'right' ? b.x : b.x + b.w; } });
+
+E.forEach((e, idx) => {
+  let d;
+  if (e.dir === 'down' || e.dir === 'up') {
+    const dy = (e.ty - e.sy) * 0.5;
+    d = `M${e.sx},${e.sy} C${e.sx},${e.sy + dy} ${e.tx},${e.ty - dy} ${e.tx},${e.ty}`;
+  } else {
+    const dx = (e.tx - e.sx) * 0.5;
+    d = `M${e.sx},${e.sy} C${e.sx + dx},${e.sy} ${e.tx - dx},${e.ty} ${e.tx},${e.ty}`;
+  }
+  e.el = el('path', { d, class: 'edge ' + e.type, stroke: EDGE_COLORS[e.type], 'marker-end': `url(#arrow-${e.type})`, 'data-from': e.from, 'data-to': e.to }, edgeLayer);
+  if (e.label) {
+    const mx = (e.sx + e.tx) / 2, my = (e.sy + e.ty) / 2;
+    const t = el('text', { x: mx, y: my - 4, class: 'edge-label', 'text-anchor': 'middle' }, labelLayer);
+    t.textContent = e.label; e.labelEl = t;
+  }
+});
+
+// nodes
+const nodeLayer = el('g', { id: 'nodes' });
+N.forEach(n => {
+  const g = el('g', { class: 'node', 'data-id': n.id }, nodeLayer);
+  const c = COLORS[n.layer];
+  const isSql = n.layer === 'sql' && n.id === 'sql';
+  el('rect', { class: 'box', x: n.x, y: n.y, width: n.w, height: n.h, fill: isSql ? 'transparent' : c, 'fill-opacity': isSql ? 0 : (n.layer === 'ext' ? .35 : .85), stroke: c, 'stroke-dasharray': n.layer === 'ext' ? '8 5' : 'none' }, g);
+  const cx = n.x + n.w / 2;
+  // wrap long file/sub lines to the box width
+  const fileLines = wrap(n.file, Math.floor((n.w - 16) / 6.8));
+  const subLines = wrap(n.sub, Math.floor((n.w - 16) / 5.9));
+  const lineH = 14;
+  const total = 16 + (fileLines.length + subLines.length) * lineH;
+  let y = isSql ? n.y + 22 : n.y + (n.h - total) / 2 + 13;
+  if (isSql) {
+    const t = el('text', { x: cx, y, class: 'title', 'text-anchor': 'middle' }, g); t.textContent = n.title;
+    const f = el('text', { x: cx, y: y + 16, class: 'file', 'text-anchor': 'middle' }, g); f.textContent = n.file;
+    return;
+  }
+  const t = el('text', { x: cx, y, class: 'title', 'text-anchor': 'middle' }, g); t.textContent = n.title; y += 16;
+  fileLines.forEach(l => { const f = el('text', { x: cx, y, class: 'file', 'text-anchor': 'middle' }, g); f.textContent = l; y += lineH; });
+  subLines.forEach(l => { const s = el('text', { x: cx, y, class: 'sub', 'text-anchor': 'middle' }, g); s.textContent = l; y += lineH; });
+
+  g.addEventListener('mouseenter', () => highlight(n.id));
+  g.addEventListener('mouseleave', () => { if (!pinned) clear(); else highlight(pinned); });
+  g.addEventListener('click', (ev) => { ev.stopPropagation(); pinned = n.id; highlight(n.id); showInfo(n); });
+});
+svg.addEventListener('click', () => { pinned = null; clear(); closeInfo(); });
+
+let pinned = null;
+const nodeEls = [...document.querySelectorAll('.node')];
+function highlight(id) {
+  const related = new Set([id]);
+  E.forEach(e => { if (e.from === id || e.to === id) { related.add(e.from); related.add(e.to); } });
+  nodeEls.forEach(g => { const nid = g.dataset.id; g.classList.toggle('dim', !related.has(nid)); g.classList.toggle('hi', nid === id); });
+  E.forEach(e => {
+    const on = e.from === id || e.to === id;
+    e.el.classList.toggle('hi', on); e.el.classList.toggle('dim', !on);
+    if (e.labelEl) e.labelEl.classList.toggle('dim', !on);
+  });
+}
+function clear() {
+  nodeEls.forEach(g => g.classList.remove('dim', 'hi'));
+  E.forEach(e => { e.el.classList.remove('hi', 'dim'); if (e.labelEl) e.labelEl.classList.remove('dim'); });
+}
+
+// info panel
+function showInfo(n) {
+  const out = E.filter(e => e.from === n.id).map(e => byId[e.to].title + (e.label ? ` (${e.label})` : ''));
+  const inn = E.filter(e => e.to === n.id).map(e => byId[e.from].title);
+  document.getElementById('infoBody').innerHTML = `
+    <span class="tag" style="background:${COLORS[n.layer]}">${LAYER_NAMES[n.layer]}</span>
+    <h3>${n.title}</h3>
+    <div class="file">${n.file || ''}</div>
+    <p>${n.desc || ''}</p>
+    ${out.length ? `<b>פונה אל (${out.length}):</b><ul>${out.map(x => `<li>${x}</li>`).join('')}</ul>` : ''}
+    ${inn.length ? `<b style="display:block;margin-top:8px">מי פונה אליו (${inn.length}):</b><ul>${inn.map(x => `<li>${x}</li>`).join('')}</ul>` : ''}`;
+  document.getElementById('info').classList.add('open');
+}
+function closeInfo() { document.getElementById('info').classList.remove('open'); }
+
+// legend
+const legend = document.getElementById('legend');
+Object.entries(LAYER_NAMES).forEach(([k, v]) => { legend.insertAdjacentHTML('beforeend', `<span><i style="background:${COLORS[k]}"></i>${v}</span>`); });
+const EDGE_NAMES = { ui: 'קומפוננטה → שירות', state: 'שירות ↔ שירות (state בלקוח)', http: 'קריאת HTTP', call: 'קריאת פונקציה', data: 'service → repository', sql: 'גישה ל-DB', ai: 'קריאה למודל AI', cross: 'קריאה חוצת שכבות (לתשומת לב)' };
+Object.entries(EDGE_NAMES).forEach(([k, v]) => { legend.insertAdjacentHTML('beforeend', `<span><i class="line ${['http','ai','cross'].includes(k) ? 'dashed' : ''}" style="border-color:${EDGE_COLORS[k]}"></i>${v}</span>`); });
+
+// stats
+const stats = [
+  ['6', 'מסכים (lazy)'], ['21', 'קומפוננטות'], ['13', 'שירותי Angular'], ['8', 'מודולי Routes'],
+  ['12', 'שירותי שרת'], ['7', 'Repositories'], ['19', 'טבלאות SQL'], [String(E.length), 'חיבורים בתרשים']
+];
+document.getElementById('stats').innerHTML = stats.map(s => `<div class="stat"><b>${s[0]}</b>${s[1]}</div>`).join('');
+
+// example flows
+const flows = [
+  { title: '1. שמירת תזרים מזומנים', steps: [
+    ['feature', 'משתמש עורך תא בטבלה'], ['feature', 'CashFlowTable.save()'], ['ngsvc', 'CashFlowService.save()'],
+    ['http', 'POST /api/cash-flow'], ['entry', 'index.js → router'], ['route', 'cashFlow.routes'], ['service', 'cashFlow.service.saveCashFlow()'],
+    ['repo', 'cashFlow.repository.write()'], ['sql', 'DELETE + INSERT בטרנזקציה'], ['service', 'goals.service.analyzeAllGoals()'],
+    ['service', 'goals-analyzer לכל יעד'], ['repo', 'goals.repository.update()'], ['http', '{ success: true }'] ],
+    note: 'שימו לב: אחרי כל שמירה רץ ניתוח של כל היעדים, וכל ניתוח טוען את התזרים מחדש.' },
+  { title: '2. שאלה לעוזר ה-AI (streaming)', steps: [
+    ['feature', 'AiAssistant.sendMessage()'], ['ngsvc', 'AiService.chatStream() עם fetch'], ['http', 'POST /api/ai/chat-stream'],
+    ['route', 'ai.routes'], ['repo', 'cashFlow + installments + investments repositories (במקביל)'], ['service', 'cashflow-engine.buildSummary()'],
+    ['service', 'ai.service.getChatStream()'], ['ext', 'Ollama /api/generate (stream)'], ['service', 'סינון <think>, token אחרי token'],
+    ['http', 'chunked text'], ['feature', 'הודעה מתעדכנת במסך'], ['ngsvc', 'ConversationService.update()'], ['http', 'PUT /api/conversations/:id'] ],
+    note: 'רק סיכום פיננסי קומפקטי נשלח למודל, לא הנתונים הגולמיים. זו הנקודה שתוחלף ב-API מרוחק במשימה 5.' },
+  { title: '3. יצירת יעד פיננסי', steps: [
+    ['feature', 'Goals: טופס יעד חדש'], ['ngsvc', 'GoalsService.create()'], ['http', 'POST /api/goals'], ['route', 'goals.routes'],
+    ['service', 'goals.service.createGoal()'], ['service', 'goals-analyzer.analyzeGoal()'], ['repo', 'cashFlow.repository.read()'],
+    ['repo', 'goals.repository.create()'], ['service', 'analyzeAllGoals()'], ['http', '201 + יעד עם analysis'],
+    ['ngsvc', 'goals signal מתעדכן'], ['ngsvc', 'CashFlowSimulation מחשב תזרים מדומה'], ['feature', 'תצוגת היתכנות + סימולציה'] ],
+    note: 'הסימולציה של השפעת היעדים על התזרים רצה בצד הלקוח בלבד.' }
+];
+document.getElementById('flows').innerHTML = flows.map(f => `
+  <div class="flow"><h4>${f.title}</h4><div class="steps">${f.steps.map((s, i) =>
+    `<span class="step" style="background:${COLORS[s[0]]}">${s[1]}</span>${i < f.steps.length - 1 ? '<span class="arrow">←</span>' : ''}`).join('')}</div>
+    <div class="note">${f.note}</div></div>`).join('');
+</script>
+</body>
+</html>

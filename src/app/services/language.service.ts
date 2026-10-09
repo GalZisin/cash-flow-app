@@ -29,9 +29,8 @@ export class LanguageService {
     this.document.documentElement.lang = next;
     const link = this.document.getElementById('bootstrap-css') as HTMLLinkElement | null;
     if (link) {
-      link.href = isRtl
-        ? 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css'
-        : 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css';
+      // Both files are built from node_modules as named style bundles (angular.json), so this works offline.
+      link.href = isRtl ? 'bootstrap-rtl.css' : 'bootstrap-ltr.css';
     }
   }
 }

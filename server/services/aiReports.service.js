@@ -1,5 +1,6 @@
 const aiReportsRepository = require('../repositories/aiReports.repository');
 const { ValidationError, NotFoundError } = require('../utils/errors');
+const { v4: uuidv4 } = require('uuid');
 
 /**
  * Service for AI reports business logic
@@ -11,12 +12,8 @@ class AiReportsService {
      */
     async getAllReports() {
         const reports = await aiReportsRepository.readAll();
-        // Sort by ID (timestamp) descending - newest first
-        return reports.sort((a, b) => {
-            const idA = parseInt(a.id) || 0;
-            const idB = parseInt(b.id) || 0;
-            return idB - idA;
-        });
+        // Newest first (createdAt is an ISO string, so a string compare is a correct time order)
+        return reports.sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
     }
 
     /**
@@ -46,7 +43,7 @@ class AiReportsService {
         }
 
         const report = {
-            id: Date.now().toString(),
+            id: uuidv4(),
             ...data,
             createdAt: data.createdAt || new Date().toISOString()
         };

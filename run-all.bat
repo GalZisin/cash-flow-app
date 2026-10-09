@@ -1,48 +1,57 @@
 @echo off
+setlocal
 cd /d "%~dp0"
 
-if not defined NVM_HOME set "NVM_HOME=%APPDATA%\nvm"
-set "NODE24=%NVM_HOME%\v24.11.0"
-set "NODE20=%NVM_HOME%\v20.19.0"
+REM ============================================================
+REM   Cash Flow App - run EVERYTHING (server + client) WITHOUT AI
+REM   One Node.js version (24 or newer) for both parts.
+REM   For the version with the local AI model use: run-all-ai.bat
+REM ============================================================
+call :check_node || goto :fail
 
-if not exist "%NODE24%\node.exe" (
-    echo Node 24.11.0 not found in %NODE24%
-    echo Run: nvm install 24.11.0
-    pause
+if not exist "server\.env" (
+    echo WARNING: server\.env not found. Copy server\.env.example to server\.env and fill in DB_CONNECTION_STRING.
+    echo.
+)
+if not exist "node_modules\" (
+    echo node_modules not found - running npm install for the client...
+    call npm install || goto :fail
+)
+if not exist "server\node_modules\" (
+    echo server\node_modules not found - running npm install for the server...
+    call npm install --prefix server || goto :fail
+)
+
+echo ========================================
+echo   Cash Flow App  (without AI)
+echo ========================================
+echo   Backend : http://localhost:3000
+echo   Frontend: http://localhost:4300  (browser opens when ready)
+echo   Press Ctrl+C to stop both.
+echo ========================================
+echo.
+call npm run dev
+exit /b %ERRORLEVEL%
+
+:check_node
+set "NODE_MAJOR="
+for /f "tokens=1 delims=." %%v in ('node -v 2^>nul') do set "NODE_MAJOR=%%v"
+if not defined NODE_MAJOR (
+    echo ERROR: Node.js was not found in PATH. Install Node.js 24 LTS from https://nodejs.org
     exit /b 1
 )
-if not exist "%NODE20%\node.exe" (
-    echo Node 20.19.0 not found in %NODE20%
-    echo Run: nvm install 20.19.0
-    pause
+set "NODE_MAJOR=%NODE_MAJOR:v=%"
+if %NODE_MAJOR% LSS 24 (
+    echo ERROR: Node.js 24 or newer is required, found:
+    node -v
+    echo If you use nvm:  nvm install 24  ^&^&  nvm use 24
     exit /b 1
 )
-
-echo ========================================
-echo   Starting Cash Flow App
-echo ========================================
+echo Using Node.js:
+node -v
 echo.
-echo Opening 2 terminal windows:
-echo   1. Backend Server (Node 24)
-echo   2. Angular Client (Node 20) - browser opens automatically
-echo.
+exit /b 0
 
-REM Backend - Node 24 (only for this window)
-start "Backend Server (Node 24)" /d "%~dp0server" cmd /k "set PATH=%NODE24%;%PATH%&& node -v && node index.js"
-
-REM Wait 3 seconds for the server to start
-timeout /t 3 /nobreak > nul
-
-REM Frontend - Node 20 (only for this window), opens the browser when the build is ready
-start "Angular Client (Node 20)" /d "%~dp0" cmd /k "set PATH=%NODE20%;%PATH%&& node -v && npx ng serve --port 4300 --open"
-
-echo.
-echo ========================================
-echo   Both services are starting!
-echo ========================================
-echo.
-echo Backend:  http://localhost:3000
-echo Frontend: http://localhost:4300
-echo.
-echo Press any key to close this window...
-pause > nul
+:fail
+pause
+exit /b 1

@@ -34,8 +34,13 @@ export class CashFlowSimulationService {
         ]).subscribe(([months, goals]) => {
             this.updateSimulation(months, goals);
         });
+    }
 
-        // טעינה ראשונית של התזרים המקורי
+    /**
+     * טעינת התזרים המקורי מהשרת. נקרא מהמסך שמשתמש בסימולציה (יעדים),
+     * ולא מהבנאי, כדי שהזרקת השירות לא תפעיל בקשת רשת במסכים שלא צריכים אותה.
+     */
+    loadOriginal(): void {
         this.cashFlowService.load().subscribe();
     }
 

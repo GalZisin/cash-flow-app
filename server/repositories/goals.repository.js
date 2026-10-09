@@ -85,6 +85,24 @@ class GoalsRepository {
     }
 
     /**
+     * Update several goals in ONE transaction (used after re-analysing all goals).
+     * Each entry is a full goal object (already merged with its new fields).
+     * @param {Array<Object>} goals
+     * @returns {Promise<number>} rows updated
+     */
+    async updateMany(goals) {
+        if (!goals.length) return 0;
+        const stamp = new Date().toISOString();
+        return withTransaction(async (tx) => {
+            let updated = 0;
+            for (const goal of goals) {
+                updated += await updateRow(tx, 'dbo.financial_goals', COLUMNS, goalToRow({ ...goal, updatedDate: stamp }), 'id');
+            }
+            return updated;
+        });
+    }
+
+    /**
      * Delete goal
      * @param {string} id
      * @returns {Promise<boolean>}

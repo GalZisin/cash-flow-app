@@ -43,12 +43,8 @@ class GoalsService {
             updatedDate: now
         };
 
-        // ניתוח אוטומטי
-        const analysis = await goalsAnalyzer.analyzeGoal(goal);
-        goal.analysis = analysis;
-        goal.lastAnalyzed = now;
-
         await goalsRepository.create(goal);
+        // One analysis pass covers the new goal and the effect it has on the others.
         await this.analyzeAllGoals();
         return await goalsRepository.findById(goal.id);
     }
@@ -64,16 +60,9 @@ class GoalsService {
             this.validateGoalData({ ...existingGoal, ...updates });
         }
 
-        const updated = await goalsRepository.update(id, updates);
+        await goalsRepository.update(id, updates);
 
-        // ניתוח מחדש אם השתנו פרמטרים משמעותיים
-        if (updates.targetAmount || updates.targetDate || updates.loanDetails) {
-            const analysis = await goalsAnalyzer.analyzeGoal(updated);
-            updated.analysis = analysis;
-            updated.lastAnalyzed = new Date().toISOString();
-            await goalsRepository.update(id, { analysis: updated.analysis, lastAnalyzed: updated.lastAnalyzed });
-        }
-
+        // One analysis pass re-analyses the updated goal (if active) and every goal it affects.
         await this.analyzeAllGoals();
 
         return await goalsRepository.findById(id);
@@ -113,16 +102,19 @@ class GoalsService {
      * ניתוח כל היעדים מחדש
      */
     async analyzeAllGoals() {
-        const goals = await goalsRepository.getActive();
+        // Cash flow + goals are read ONCE, every goal is analysed in memory,
+        // and all results are written in ONE transaction (was: 2 reads + 1 update per goal).
+        const context = await goalsAnalyzer.loadContext();
+        const goals = context.allGoals;
+        const lastAnalyzed = new Date().toISOString();
 
-        for (const goal of goals) {
-            const analysis = await goalsAnalyzer.analyzeGoal(goal);
-            await goalsRepository.update(goal.id, {
-                analysis,
-                lastAnalyzed: new Date().toISOString()
-            });
-        }
+        const analyzed = goals.map(goal => ({
+            ...goal,
+            analysis: goalsAnalyzer.analyzeGoalSync(goal, context.cashFlowData, goals),
+            lastAnalyzed
+        }));
 
+        await goalsRepository.updateMany(analyzed);
         return { analyzed: goals.length };
     }
 

@@ -6,13 +6,17 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node --test \"test/**/*.test.js\"",
     "db:migrate": "node db/migrate-json-to-sql.js",
-    "test:mappers": "node db/test-mappers.js"
+    "test:mappers": "node db/test-mappers.js",
+    "test:db": "node tools/test-connection.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "engines": {
+    "node": ">=24.0.0"
+  },
   "type": "commonjs",
   "dependencies": {
     "cors": "^2.8.6",

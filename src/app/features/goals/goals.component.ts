@@ -60,6 +60,7 @@ export class GoalsComponent implements OnInit {
 
     refresh(): void {
         this.isLoading.set(true); this.error.set('');
+        this.simulationService.loadOriginal();
         this.goalsService.load().subscribe({
             next: () => this.goalsService.loadOverview().subscribe(),
             error: () => this.error.set('GOALS.LOAD_ERROR'),

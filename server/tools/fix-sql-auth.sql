@@ -1,5 +1,5 @@
 -- Enable SQL Server Authentication Mode and fix login
--- Run with: sqlcmd -S . -E -i fix-sql-auth.sql
+-- Run with: sqlcmd -S . -E -i tools/fix-sql-auth.sql
 
 USE master;
 GO
@@ -56,5 +56,5 @@ PRINT '';
 PRINT '========================================';
 PRINT 'Setup completed!';
 PRINT 'IMPORTANT: Restart SQL Server for authentication mode change to take effect';
-PRINT 'Then test with: node test-connection.js';
+PRINT 'Then test with: node tools/test-connection.js';
 PRINT '========================================';

@@ -1,9 +1,10 @@
-import { Component, Output, EventEmitter } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Output, EventEmitter } from '@angular/core';
 
 import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-installments-empty-state',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [TranslateModule],
   templateUrl: './installments-empty-state.component.html',

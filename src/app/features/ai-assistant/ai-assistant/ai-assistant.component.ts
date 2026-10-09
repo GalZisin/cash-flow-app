@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { extractServerMessage } from '../../../interceptors/http.interceptor';
 import { AiService, ChatMessage, FinancialSummary, ScenarioRequest, ScenarioResult } from '../../../services/ai.service';
 import { ConversationService, Conversation } from '../../../services/conversation.service';
 import { LanguageService } from '../../../services/language.service';
@@ -94,7 +95,7 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
   private shouldScroll = false; // Moved here to be consistent
 
   // Convert Observables to Signals
-  conversationsSignal = toSignal(this.convService.items$, { initialValue: [] });
+  conversationsSignal = this.convService.items;
   cashFlowMonthsSignal = toSignal(this.cashFlowService.cashFlowMonths$, { initialValue: [] });
   investmentsSignal = toSignal(this.investmentService.investments$, { initialValue: [] as any[] });
 
@@ -411,7 +412,7 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
         this.chatLoading.set(false);
         this.chatControl.enable(); // Re-enable on error
         // Ensure assistantMsg is initialized if error occurs before first token, and update messages signal
-        const errorMessage = this.translate.instant('AI.PARTIAL_RESPONSE_ERROR', { error: err.message || 'Failed to get response' });
+        const errorMessage = this.translate.instant('AI.PARTIAL_RESPONSE_ERROR', { error: extractServerMessage(err) || 'Failed to get response' });
 
         if (!assistantMsg) {
           assistantMsg = { role: 'assistant', content: '', timestamp: new Date() };
@@ -461,7 +462,7 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
           error: err => console.error('Failed to archive analysis:', err)
         });
       },
-      error: err => { this.analysisText.set(`Error: ${err.error?.error || 'Failed'}`); this.analysisLoading.set(false); }
+      error: err => { this.analysisText.set(`Error: ${extractServerMessage(err) || 'Failed'}`); this.analysisLoading.set(false); }
     });
   }
 

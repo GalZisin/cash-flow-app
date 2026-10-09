@@ -1,9 +1,9 @@
 /**
  * Test database connection script
- * Run: node test-connection.js
+ * Run: node tools/test-connection.js (from the server folder)
  */
 const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '.env') });
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
 async function testConnection() {
     console.log('🔍 Testing database connection...\n');

@@ -120,7 +120,9 @@ function buildSummary({ cashFlow, installments = [], investments = [], defaults 
     forecastDate.setMonth(forecastDate.getMonth() + 1);
     projectedBalance += avgMonthlySavings;
     forecast.push({
-      month: forecastDate.toISOString().substring(0, 7),
+      // Local date parts, not toISOString(): in a UTC+ timezone the ISO string of a local
+      // "1st of month 00:00" is still the previous month, which mislabelled every forecast month.
+      month: `${forecastDate.getFullYear()}-${String(forecastDate.getMonth() + 1).padStart(2, '0')}`,
       projectedBalance: Math.round(projectedBalance)
     });
   }
@@ -168,40 +170,33 @@ function buildSummary({ cashFlow, installments = [], investments = [], defaults 
  * Simulate adding a one-time expense (e.g. buying a car).
  */
 function simulateScenario({ summary, description, amount, date }) {
-  const impactMonths = [];
-  let balance = summary.currentBalance;
-  const startDate = new Date(date);
+  // Compare month keys (YYYY-MM): a purchase on the 15th hits that month, not the next one.
+  const purchaseMonth = String(date).slice(0, 7);
+  const forecast = summary.forecast || [];
+  const impactIndex = forecast.findIndex(f => f.month >= purchaseMonth);
 
-  for (const f of summary.forecast) {
-    const fDate = new Date(f.month + '-01');
-    const isImpactMonth = fDate >= startDate && impactMonths.length === 0;
-    const deduction = isImpactMonth ? amount : 0;
-    balance = f.projectedBalance - (isImpactMonth ? amount : 0);
-
-    impactMonths.push({
-      month: f.month,
-      projectedBalance: Math.round(balance),
-      note: isImpactMonth ? `Purchase: ${description} (−${amount.toLocaleString()})` : null
-    });
-
-    if (isImpactMonth) {
-      // re-project from this point with updated balance
-      let adj = balance;
-      for (let i = impactMonths.length; i < summary.forecast.length; i++) {
-        adj += summary.monthlySavingsAvg;
-        impactMonths.push({
-          month: summary.forecast[i].month,
-          projectedBalance: Math.round(adj),
-          note: null
-        });
-      }
-      break;
+  // Months before the purchase keep the original projection; from the purchase month on,
+  // the amount is deducted once and the balance keeps growing by the average monthly savings.
+  const impactMonths = forecast.map((f, i) => {
+    if (impactIndex === -1 || i < impactIndex) {
+      return { month: f.month, projectedBalance: f.projectedBalance, note: null };
     }
-  }
+    const afterPurchase = forecast[impactIndex].projectedBalance - amount;
+    const projectedBalance = afterPurchase + (i - impactIndex) * summary.monthlySavingsAvg;
+    return {
+      month: f.month,
+      projectedBalance: Math.round(projectedBalance),
+      note: i === impactIndex ? `Purchase: ${description} (−${amount.toLocaleString()})` : null
+    };
+  });
+
+  const balanceAfterPurchase = impactIndex === -1
+    ? summary.currentBalance - amount                       // purchase is beyond the forecast window
+    : impactMonths[impactIndex].projectedBalance;
 
   return {
     scenario: { description, amount, date },
-    balanceAfterPurchase: impactMonths[0]?.projectedBalance ?? summary.currentBalance - amount,
+    balanceAfterPurchase,
     forecast: impactMonths
   };
 }

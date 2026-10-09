@@ -76,7 +76,7 @@ if ($LASTEXITCODE -eq 0) {
     Write-Host "DB_CONNECTION_STRING=Server=localhost,1433;Database=CashFlowDB;User Id=cashflow_app;Password=$password;Encrypt=false;TrustServerCertificate=true;" -ForegroundColor Yellow
     
     # Optionally update .env automatically
-    $envPath = "$PSScriptRoot\.env"
+    $envPath = "$PSScriptRoot\..\.env"
     if (Test-Path $envPath) {
         $envContent = Get-Content $envPath
         $newContent = $envContent -replace '^DB_CONNECTION_STRING=.*', "DB_CONNECTION_STRING=Server=localhost,1433;Database=CashFlowDB;User Id=cashflow_app;Password=$password;Encrypt=false;TrustServerCertificate=true;"

@@ -5,9 +5,29 @@ class GoalsAnalyzerService {
     static SAFETY_BUFFER = 65000;
     static MINIMUM_SAFETY_BUFFER = 61200;
 
-    async analyzeGoal(goal) {
-        const cashFlowData = await cashFlowRepository.read();
-        const allGoals = await goalsRepository.getActive();
+    /**
+     * Loads everything one analysis run needs, once. Pass the result to analyzeGoal() when
+     * analysing several goals so the cash flow and goals are not re-read from the DB per goal.
+     */
+    async loadContext() {
+        const [cashFlowData, allGoals] = await Promise.all([
+            cashFlowRepository.read(),
+            goalsRepository.getActive()
+        ]);
+        return { cashFlowData, allGoals };
+    }
+
+    /**
+     * Pure analysis of one goal. `context` is { cashFlowData, allGoals } from loadContext();
+     * when omitted it is loaded here (single-goal use).
+     */
+    async analyzeGoal(goal, context = null) {
+        const { cashFlowData, allGoals } = context || await this.loadContext();
+        return this.analyzeGoalSync(goal, cashFlowData, allGoals);
+    }
+
+    /** Synchronous, side-effect-free analysis (unit-testable without a database). */
+    analyzeGoalSync(goal, cashFlowData, allGoals = []) {
         if (!cashFlowData?.months?.length) return this.getEmptyAnalysis('אין נתוני תזרים מזומנים');
 
         const currentBalance = this.getCurrentBalance(cashFlowData);
@@ -187,7 +207,6 @@ class GoalsAnalyzerService {
 
         return [...laterConflicts, ...fixedEarlierConflicts];
     }
-    getEmptyAnalysis(reason) { return { achievable: false, projectedBalance: 0, currentBalance: 0, requiredAtTarget: 0, safetyBuffer: GoalsAnalyzerService.SAFETY_BUFFER, minimumSafetyBuffer: GoalsAnalyzerService.MINIMUM_SAFETY_BUFFER, monthsUntilGoal: 0, monthlySavingsNeeded: 0, reasons: [reason], recommendations: ['הוסף נתוני תזרים מזומנים'], impactOnOtherGoals: [], conflicts: [], statusMessage: reason, status: 'NOT_ACHIEVABLE' }; }
     getEmptyAnalysis(reason) { return { achievable: false, projectedBalance: 0, currentBalance: 0, requiredAtTarget: 0, safetyBuffer: GoalsAnalyzerService.SAFETY_BUFFER, minimumSafetyBuffer: GoalsAnalyzerService.MINIMUM_SAFETY_BUFFER, monthsUntilGoal: 0, monthlySavingsNeeded: 0, reasons: [reason], recommendations: ['הוסף נתוני תזרים מזומנים'], impactOnOtherGoals: [], conflicts: [], statusMessage: reason, status: 'NOT_ACHIEVABLE' }; }
 }
 

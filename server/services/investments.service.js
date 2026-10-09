@@ -1,5 +1,6 @@
 const investmentsRepository = require('../repositories/investments.repository');
 const { NotFoundError, ValidationError } = require('../utils/errors');
+const { v4: uuidv4 } = require('uuid');
 
 class InvestmentsService {
     async getAll() {
@@ -20,7 +21,7 @@ class InvestmentsService {
         }
 
         const investment = {
-            id: Date.now().toString(),
+            id: uuidv4(),
             name: data.name,
             initialAmount: Number(data.initialAmount) || 0,
             currentAmount: Number(data.currentAmount) || 0,

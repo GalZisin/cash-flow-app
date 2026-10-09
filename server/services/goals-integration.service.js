@@ -1,5 +1,6 @@
 const cashFlowRepository = require('../repositories/cashFlow.repository');
 const installmentsService = require('./installments.service');
+const logger = require('../utils/logger');
 
 /**
  * שירות לאינטגרציה מלאה בין תזרים מזומנים, פריסות תשלומים ויעדים פיננסיים
@@ -63,7 +64,7 @@ class GoalsIntegrationService {
 
             return relatedExpenses.sort((a, b) => a.month.localeCompare(b.month));
         } catch (error) {
-            console.error('Error getting related cash flow expenses:', error);
+            logger.error(`Error getting related cash flow expenses: ${error.message}`);
             return [];
         }
     }
@@ -117,7 +118,7 @@ class GoalsIntegrationService {
 
             return relatedInstallments.sort((a, b) => b.impactOnGoal - a.impactOnGoal);
         } catch (error) {
-            console.error('Error getting related installments:', error);
+            logger.error(`Error getting related installments: ${error.message}`);
             return [];
         }
     }

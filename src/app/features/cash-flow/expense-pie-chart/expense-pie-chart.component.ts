@@ -6,7 +6,9 @@ import {
 import { FormsModule } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { MatIconModule } from '@angular/material/icon';
-import * as d3 from 'd3';
+import { select } from 'd3-selection';
+import { arc as d3Arc, pie as d3Pie, PieArcDatum } from 'd3-shape';
+import 'd3-transition'; // adds .transition() to selections
 import { MonthData } from '../../../models/cash-flow.model';
 import { ThemeService } from '../../../services/theme.service';
 import { LanguageService } from '../../../services/language.service';
@@ -86,18 +88,18 @@ export class ExpensePieChartComponent implements OnChanges, AfterViewInit {
     const radius = size / 2 - 8;
     const innerRadius = radius * 0.58;
 
-    const svg = d3.select(container)
+    const svg = select(container)
       .append('svg')
       .attr('width', size)
       .attr('height', size);
 
-    const pie = d3.pie<typeof data[0]>().sort(null).value(d => d.total);
-    const arc = d3.arc<d3.PieArcDatum<typeof data[0]>>()
+    const pie = d3Pie<typeof data[0]>().sort(null).value(d => d.total);
+    const arc = d3Arc<PieArcDatum<typeof data[0]>>()
       .innerRadius(innerRadius).outerRadius(radius);
-    const arcHover = d3.arc<d3.PieArcDatum<typeof data[0]>>()
+    const arcHover = d3Arc<PieArcDatum<typeof data[0]>>()
       .innerRadius(innerRadius).outerRadius(radius + 8);
 
-    const tooltip = d3.select(this.tooltipEl.nativeElement);
+    const tooltip = select(this.tooltipEl.nativeElement);
     const g = svg.append('g').attr('transform', `translate(${size / 2},${size / 2})`);
     const total = data.reduce((s, d) => s + d.total, 0);
 
@@ -110,7 +112,7 @@ export class ExpensePieChartComponent implements OnChanges, AfterViewInit {
       .attr('stroke-width', 2.5)
       .style('cursor', 'pointer')
       .on('mouseover', (event, d) => {
-        d3.select(event.currentTarget).transition().duration(150).attr('d', arcHover as any);
+        select(event.currentTarget as Element).transition().duration(150).attr('d', arcHover as any);
         const label = this.translate.instant(d.data.labelKey);
         tooltip.style('opacity', 1).html(
           `<span class="tip-label">${label}</span>
@@ -122,7 +124,7 @@ export class ExpensePieChartComponent implements OnChanges, AfterViewInit {
         tooltip.style('left', (event.clientX + 14) + 'px').style('top', (event.clientY - 36) + 'px');
       })
       .on('mouseout', (event) => {
-        d3.select(event.currentTarget).transition().duration(150).attr('d', arc as any);
+        select(event.currentTarget as Element).transition().duration(150).attr('d', arc as any);
         tooltip.style('opacity', 0);
       });
 

@@ -1,5 +1,6 @@
 const installmentsRepository = require('../repositories/installments.repository');
 const { NotFoundError, ValidationError } = require('../utils/errors');
+const { v4: uuidv4 } = require('uuid');
 
 class InstallmentsService {
     async getAll() {
@@ -22,7 +23,7 @@ class InstallmentsService {
 
         // Normalize and create
         const installment = this.normalizeInstallment(data);
-        installment.id = Date.now().toString();
+        installment.id = uuidv4();
 
         return await installmentsRepository.create(installment);
     }

@@ -1,146 +1,131 @@
 ﻿# 🚀 איך להריץ את הפרויקט - Cash Flow App
 
-## ⚠️ חשוב לדעת!
-הפרויקט הזה דורש **שתי גרסאות שונות** של Node.js:
-- **השרת (Backend)**: Node.js 24.11.0
-- **הלקוח (Angular)**: Node.js 20.19.0
+## ✅ גירסת Node אחת לכל הפרויקט
+השרת (Express) והלקוח (Angular 21) רצים על **אותה גירסת Node.js: 24 ומעלה**.
+אין יותר צורך להחליף גירסאות עם nvm בין השרת ללקוח.
 
-הקבצים המוכנים עושים את ההחלפה אוטומטית!
+- Angular 21.2 תומך ב-Node `^20.19 || ^22.12 || >=24`
+- כל תלויות השרת (Express 5, mssql 12, msnodesqlv8) דורשות Node 18 ומעלה
+- הגירסה הנדרשת מוגדרת ב-`package.json` (שדה `engines`) וב-`.nvmrc`
 
----
-
-## 🎯 שיטת הרצה מומלצת (הכי פשוטה!)
-
-### שלב 1: הרץ את השרת
-לחץ פעמיים על הקובץ:
-```
-run-server.bat
-```
-או מטרמינל:
+בדיקה שהגירסה נכונה:
 ```cmd
-run-server.bat
+node -v
 ```
-
-**מה זה עושה:**
-- עובר ל-Node.js 24
-- מריץ את השרת על http://localhost:3000
-- מתחבר ל-SQL Server (CashFlowDB)
-
----
-
-### שלב 2: הרץ את הלקוח
-**בטרמינל נפרד** או לחץ פעמיים על:
-```
-run-client.bat
-```
-או מטרמינל:
+אמור להציג `v24.x.x` או גבוה יותר. אם לא, התקן Node 24 LTS מ-https://nodejs.org, או עם nvm:
 ```cmd
-run-client.bat
+nvm install 24
+nvm use 24
 ```
-
-**מה זה עושה:**
-- עובר ל-Node.js 20
-- מריץ את Angular על http://localhost:4300
-- פותח את הדפדפן אוטומטית
 
 ---
 
-## 📊 מה אמור לקרות:
+## 🎯 הרצה בקובץ אחד: עם AI או בלי AI
 
-✅ **טרמינל 1 - שרת:**
+| מצב | קובץ bat (לחיצה כפולה) | פקודת npm | מה רץ |
+| --- | --- | --- | --- |
+| **בלי AI** | `run-all.bat` | `npm run dev` | שרת + לקוח |
+| **עם AI מקומי (Ollama)** | `run-all-ai.bat` | `npm run dev:ai` | Ollama + שרת + לקוח |
+
+שני המצבים רצים בחלון אחד (דרך `concurrently`), כל תהליך עם צבע ושם משלו. `Ctrl+C` עוצר את כולם.
+קובצי ה-bat גם מתקינים `node_modules` אוטומטית אם חסר.
+
+**בלי AI:** כל האפליקציה עובדת כרגיל. לשונית ה-AI מחזירה הודעה ברורה "AI service is not running" (HTTP 503) במקום שגיאת חיבור.
+
+**עם AI:** הסקריפט `scripts/start-ollama.js` מחפש את Ollama ב-PATH או בתיקיית ההתקנה הרגילה ומריץ `ollama serve`. אם Ollama כבר רץ, הוא לא מופעל פעמיים. אם Ollama לא מותקן, מודפסת הודעה והשרת והלקוח ממשיכים לרוץ בלי AI.
+דרישות ל-AI: [Ollama](https://ollama.com) מותקן ומודל מורד (`ollama pull qwen3:8b`). בחירת מודל אחר: משתנה סביבה `AI_MODEL`.
+
+### הרצת כל צד בנפרד
+```cmd
+run-server.bat     ← טרמינל 1: שרת
+run-client.bat     ← טרמינל 2: לקוח
 ```
-Switching to Node.js 24 for Backend...
-Now using node v24.11.0 (64-bit)
-Starting Backend Server...
+או ב-PowerShell:
+```powershell
+.\run-server.ps1
+.\run-client.ps1
+```
+
+כל הסקריפטים בודקים שגירסת Node היא 24 ומעלה ומציגים הודעת שגיאה ברורה אם לא.
+
+---
+
+## ⚙️ לפני ההרצה הראשונה
+
+1. התקנת תלויות (פעם אחת):
+   ```cmd
+   npm install
+   npm install --prefix server
+   ```
+2. קובץ סביבה לשרת: העתק את `server\.env.example` ל-`server\.env` ומלא את `DB_CONNECTION_STRING`.
+3. ודא ש-SQL Server פועל ושמסד הנתונים `CashFlowDB` קיים (`server\db\schema.sql`).
+
+---
+
+## 📊 מה אמור לקרות
+
+✅ **שרת:**
+```
+Using Node.js: v24.x.x
 🗄️  Connected to SQL Server (database: CashFlowDB)
 ║   Running on http://localhost:3000    ║
 ```
 
-✅ **טרמינל 2 - לקוח:**
+✅ **לקוח:**
 ```
-Switching to Node.js 20 for Angular...
-Now using node v20.19.0 (64-bit)
-Starting Angular Client...
+Using Node.js: v24.x.x
 Application bundle generation complete.
 ➜  Local:   http://localhost:4300/
 ```
 
 ---
 
-## 🌐 פתיחת האפליקציה:
-
-לאחר שני השירותים רצים, פתח דפדפן וגש ל:
+## 🌐 פתיחת האפליקציה
 ```
 http://localhost:4300
 ```
 
----
-
-## 🛑 איך לעצור:
-
-לחץ `Ctrl+C` בכל טרמינל כדי לעצור את התהליך.
+## 🛑 עצירה
+`Ctrl+C` בכל טרמינל.
 
 ---
 
-## 🔧 אפשרויות נוספות:
+## ❓ פתרון בעיות
 
-### דרך PowerShell:
-```powershell
-# טרמינל 1 - שרת
-.\run-server.ps1
+### השרת לא עולה
+1. `server\.env` חסר או `DB_CONNECTION_STRING` לא מוגדר (הסקריפטים מזהירים על זה)
+2. SQL Server לא פועל או מסד הנתונים לא קיים
+3. פורט 3000 תפוס
 
-# טרמינל 2 - לקוח
-.\run-client.ps1
-```
+### Angular לא עולה
+1. נקה cache: `Remove-Item -Recurse .angular`
+2. התקן מחדש: `npm install`
+3. פורט 4300 תפוס
 
----
-
-## ❓ פתרון בעיות:
-
-### השרת לא עולה:
-1. בדוק ש-SQL Server פועל
-2. בדוק את הקובץ `server\.env`
-3. ודא ש-Node.js 24 מותקן: `nvm list`
-
-### Angular לא עולה:
-1. ודא ש-Node.js 20.19 מותקן: `nvm list`
-2. נקה cache: `Remove-Item -Recurse .angular`
-3. התקן מחדש: `npm install`
-
-### אם יש בעיה עם NVM:
-בדוק שגרסאות Node מותקנות:
-```cmd
-nvm list
-```
-
-אם חסרות גרסאות:
-```cmd
-nvm install 24.11.0
-nvm install 20.19.0
-```
+### הודעת "Node.js 24 or newer is required"
+הותקנה גירסת Node ישנה. התקן Node 24 LTS, או `nvm install 24` ואז `nvm use 24`.
 
 ---
 
-## 📝 מבנה הפרויקט:
-
+## 📝 מבנה הפרויקט
 ```
 cash-flow-app/
-├── server/              ← Backend (Node 24)
+├── server/              ← Backend (Express + SQL Server)
 │   ├── index.js
-│   └── .env
-├── src/                 ← Angular Frontend (Node 20)
-├── run-server.bat       ← הרץ שרת
-├── run-client.bat       ← הרץ לקוח
+│   └── .env             ← לא ב-git, ליצור מ-.env.example
+├── src/                 ← Frontend (Angular 21)
+├── scripts/
+│   └── start-ollama.js  ← מפעיל Ollama (למצב עם AI)
+├── .nvmrc               ← גירסת Node לפרויקט (24)
+├── run-all.bat          ← הכל בלי AI (npm run dev)
+├── run-all-ai.bat       ← הכל עם AI מקומי (npm run dev:ai)
+├── run-server.bat       ← שרת בלבד
+├── run-client.bat       ← לקוח בלבד
 ├── run-server.ps1       ← גרסת PowerShell - שרת
 └── run-client.ps1       ← גרסת PowerShell - לקוח
 ```
 
----
-
-## ✅ סיכום מהיר:
-
-1. **פתח טרמינל ראשון** → הרץ `run-server.bat`
-2. **פתח טרמינל שני** → הרץ `run-client.bat`  
-3. **פתח דפדפן** → גש ל-http://localhost:4300
-
-**זהו! האפליקציה אמורה לרוץ! 🎉**
+## ✅ סיכום מהיר
+1. `node -v` → 24 ומעלה
+2. בלי AI: `run-all.bat` (או `npm run dev`). עם AI: `run-all-ai.bat` (או `npm run dev:ai`)
+3. דפדפן → http://localhost:4300

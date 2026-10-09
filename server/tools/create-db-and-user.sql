@@ -1,5 +1,5 @@
 -- Create CashFlowDB database and user
--- Run this with: sqlcmd -S localhost,1433 -E -i create-db-and-user.sql
+-- Run this with: sqlcmd -S localhost,1433 -E -i tools/create-db-and-user.sql
 
 USE master;
 GO
