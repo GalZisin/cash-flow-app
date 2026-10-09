@@ -49,7 +49,7 @@
       <ng-container matColumnDef="month">
         <th mat-header-cell *matHeaderCellDef> {{ 'CASH_FLOW.MONTH' | translate }} </th>
         <td mat-cell *matCellDef="let monthCtrl; let i = index">
-          <span class="row-dot" aria-hidden="true"></span>{{ monthCtrl.get('month')?.value | date:'MMMM yyyy':'':'he' }}
+          {{ monthCtrl.get('month')?.value | date:'MMMM yyyy':'':'he' }}
         </td>
       </ng-container>
 

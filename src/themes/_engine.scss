@@ -32,7 +32,7 @@ $token-keys: (
 );
 
 // Tokens that also get an "r, g, b" triplet (--cf-<token>-rgb) for rgba(var(--cf-x-rgb), alpha).
-$rgb-keys: (bg, surface, text, primary, accent, success, danger, warning);
+$rgb-keys: (bg, surface, text, primary, accent, success, danger, warning, success-solid, danger-solid, warning-solid);
 
 @function _rgb($c) {
   // one unquoted string ("r, g, b"), so it prints on a single line in every build

@@ -263,44 +263,32 @@ $white: var(--cf-surface);
 
 // ── Colored rows (red / yellow / green) ──────────────────────
 // The stored value stays a hex (ROW_COLORS); rowColorKey() maps it to
-// data-row-color="red|yellow|green". Colors come from the theme's status tokens:
-// a translucent tint over the surface, a solid stripe on the start edge and a
-// dot next to the month. Text keeps its normal color in both modes.
+// data-row-color="red|yellow|green". The whole row gets a translucent tint of
+// the theme's solid status color (softer than an opaque pastel, adapts to every
+// palette and to dark mode) plus a thin stripe on the start edge. Text keeps
+// its normal color. !important: the zebra/hover rules above use it too.
 .mat-mdc-row[data-row-color] {
-  --row-tint: 0.12;
-  background: rgba(var(--row-rgb), var(--row-tint)) !important;
-  box-shadow: inset -3px 0 0 0 var(--row-stripe) !important;
-
-  &:hover {
-    --row-tint: 0.18;
-  }
-
-  .row-dot {
-    display: inline-block;
-  }
-}
-
-.mat-mdc-row[data-row-color='green'] { --row-rgb: var(--cf-success-rgb); --row-stripe: var(--cf-success-solid); }
-.mat-mdc-row[data-row-color='yellow'] { --row-rgb: var(--cf-warning-rgb); --row-stripe: var(--cf-warning-solid); }
-.mat-mdc-row[data-row-color='red'] { --row-rgb: var(--cf-danger-rgb); --row-stripe: var(--cf-danger-solid); }
-
-:host-context([data-bs-theme="dark"]) .mat-mdc-row[data-row-color],
-:host-context(.dark-mode) .mat-mdc-row[data-row-color] {
   --row-tint: 0.14;
+  background: rgba(var(--row-rgb), var(--row-tint)) !important;
+  box-shadow: inset -3px 0 0 0 rgb(var(--row-rgb)) !important;
 
   &:hover {
     --row-tint: 0.2;
   }
 }
 
-.row-dot {
-  display: none;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--row-stripe);
-  margin-inline-end: 6px;
-  vertical-align: middle;
+.mat-mdc-row[data-row-color='green'] { --row-rgb: var(--cf-success-solid-rgb); }
+.mat-mdc-row[data-row-color='yellow'] { --row-rgb: var(--cf-warning-solid-rgb); }
+.mat-mdc-row[data-row-color='red'] { --row-rgb: var(--cf-danger-solid-rgb); }
+
+:host-context([data-bs-theme="dark"]) .mat-mdc-row[data-row-color],
+:host-context(.dark-mode) .mat-mdc-row[data-row-color] {
+  --row-tint: 0.2;
+  background: rgba(var(--row-rgb), var(--row-tint)) !important;
+
+  &:hover {
+    --row-tint: 0.26;
+  }
 }
 
 @include status.negative-amount;

@@ -36,7 +36,7 @@ src/themes/
 | סטטוס | `success*`, `danger*`, `warning*` (רגיל / `-soft` רקע / `-solid` מילוי) | הכנסות, הוצאות, התראות |
 | שונות | `tooltip-bg` | רקע tooltip |
 
-ל-`bg`, `surface`, `text`, `primary`, `accent`, `success`, `danger`, `warning` יש גם `--cf-<token>-rgb` לשקיפות:
+ל-`bg`, `surface`, `text`, `primary`, `accent`, `success`, `danger`, `warning` וגם ל-`success-solid`, `danger-solid`, `warning-solid` יש `--cf-<token>-rgb` לשקיפות:
 
 ```scss
 .card { background: var(--cf-surface); border: 1px solid var(--cf-border); color: var(--cf-text); }
