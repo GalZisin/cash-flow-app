@@ -13,12 +13,12 @@
 }
 
 .inst-empty-text {
-    color: #94a3b8;
+    color: var(--cf-text-4);
     font-size: 0.95rem;
 }
 
 .inst-add-btn {
-    background: #4f6ef7;
+    background: var(--cf-primary);
     color: #fff;
     border: none;
     border-radius: 8px;
@@ -30,7 +30,7 @@
     transition: background 0.15s;
 
     &:hover {
-        background: #3b5bdb;
+        background: var(--cf-primary-strong);
     }
 }
 
@@ -40,18 +40,18 @@
 :host-context([data-bs-theme="dark"]),
 :host-context(.dark-mode) {
     .inst-empty-icon {
-        color: #64748b !important;
+        color: var(--cf-text-4) !important;
     }
 
     .inst-empty-text {
-        color: #94a3b8 !important;
+        color: var(--cf-text-3) !important;
     }
 
     .inst-add-btn {
-        background: #6366f1 !important;
+        background: var(--cf-primary) !important;
 
         &:hover {
-            background: #4f46e5 !important;
+            background: var(--cf-primary-strong) !important;
         }
     }
 }

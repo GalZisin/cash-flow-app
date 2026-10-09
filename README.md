@@ -46,6 +46,7 @@ npm test --prefix server   # שרת (node:test, ללא צורך ב-DB או ב-AI
 | לוגים | [docs/server/LOGGING.md](docs/server/LOGGING.md) |
 | חיבור למודל AI: Ollama מקומי / מרוחק / ספקי API חינמיים | [docs/ai/AI_PROVIDERS.md](docs/ai/AI_PROVIDERS.md), [AI_OPTIONS.html](AI_OPTIONS.html) (עמוד ויזואלי עם תרשים לכל אפשרות) |
 | מדריכי פיצ'רים (תקציב, יעדים, אנימציות) | [docs/frontend/](docs/README.md#frontend) |
+| ערכות צבע (6 ערכות, בהיר וכהה) והוספת ערכה | [src/themes/README.md](src/themes/README.md) |
 | הנחיות לעבודה עם Claude Code / עוזרי AI | [CLAUDE.md](CLAUDE.md), [docs/ai/AI_DEVELOPMENT_PROMPT.md](docs/ai/AI_DEVELOPMENT_PROMPT.md) |
 
 ## מבנה הפרויקט

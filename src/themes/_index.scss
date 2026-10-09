@@ -1,0 +1,21 @@
+// =============================================================================
+// All themes. Imported once from src/styles.scss.
+// To add a theme: create palettes/_<id>.scss, @use it here, add one `@include engine.theme(...)`
+// line, and register it in theme.registry.ts (see README.md).
+// =============================================================================
+@use 'engine';
+@use 'palettes/classic' as classic-theme;
+@use 'palettes/ocean' as ocean-theme;
+@use 'palettes/emerald' as emerald-theme;
+@use 'palettes/violet' as violet-theme;
+@use 'palettes/sunset' as sunset-theme;
+@use 'palettes/graphite' as graphite-theme;
+
+@include engine.theme('classic', classic-theme.$palette, $is-default: true);
+@include engine.theme('ocean', ocean-theme.$palette);
+@include engine.theme('emerald', emerald-theme.$palette);
+@include engine.theme('violet', violet-theme.$palette);
+@include engine.theme('sunset', sunset-theme.$palette);
+@include engine.theme('graphite', graphite-theme.$palette);
+
+@include engine.framework-bridges;

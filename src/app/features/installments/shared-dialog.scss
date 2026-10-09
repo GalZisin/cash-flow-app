@@ -6,7 +6,7 @@
 
 // ── Dialog ─────────────────────────────────────────
 .inst-dialog {
-    background: #fff;
+    background: var(--cf-surface);
     border-radius: 16px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
     width: 480px;
@@ -22,28 +22,28 @@
     justify-content: space-between;
     align-items: center;
     padding: 16px 20px;
-    border-bottom: 1px solid #f0f2f5;
+    border-bottom: 1px solid var(--cf-border);
     flex-shrink: 0;
 }
 
 .inst-dialog-title {
     font-weight: 700;
     font-size: 1rem;
-    color: #1e293b;
+    color: var(--cf-text);
 }
 
 .inst-close-btn {
     background: transparent;
     border: none;
     font-size: 1rem;
-    color: #94a3b8;
+    color: var(--cf-text-4);
     cursor: pointer;
     padding: 2px 6px;
     border-radius: 4px;
 
     &:hover {
-        background: #f1f5f9;
-        color: #475569;
+        background: var(--cf-surface-3);
+        color: var(--cf-text-2);
     }
 }
 
@@ -55,8 +55,8 @@
 
 .inst-dialog-footer {
     padding: 12px 20px;
-    border-top: 1px solid #f0f2f5;
-    background: #f8f9fb;
+    border-top: 1px solid var(--cf-border);
+    background: var(--cf-surface-2);
     display: flex;
     justify-content: flex-end;
     gap: 8px;
@@ -67,7 +67,7 @@
     display: block;
     font-size: 0.75rem;
     font-weight: 600;
-    color: #64748b;
+    color: var(--cf-text-3);
     text-transform: uppercase;
     letter-spacing: 0.4px;
     margin-bottom: 4px;
@@ -75,7 +75,7 @@
 
 // ── Buttons ────────────────────────────────────────
 .inst-btn-save {
-    background: #4f6ef7;
+    background: var(--cf-primary);
     color: #fff;
     border: none;
     border-radius: 8px;
@@ -86,7 +86,7 @@
     cursor: pointer;
 
     &:hover {
-        background: #3b5bdb;
+        background: var(--cf-primary-strong);
     }
 
     &:disabled {
@@ -96,8 +96,8 @@
 }
 
 .inst-btn-cancel {
-    background: #f1f5f9;
-    color: #475569;
+    background: var(--cf-surface-3);
+    color: var(--cf-text-2);
     border: none;
     border-radius: 8px;
     padding: 7px 20px;
@@ -107,7 +107,7 @@
     cursor: pointer;
 
     &:hover {
-        background: #e2e8f0;
+        background: var(--cf-surface-4);
     }
 }
 
@@ -117,57 +117,57 @@
 :host-context([data-bs-theme="dark"]),
 :host-context(.dark-mode) {
     .inst-overlay {
-        background: rgba(2, 6, 23, 0.75) !important;
+        background: rgba(var(--cf-bg-rgb), 0.75) !important;
     }
 
     .inst-dialog {
-        background: #1f2937 !important;
-        border: 1px solid #334155 !important;
+        background: var(--cf-surface-3) !important;
+        border: 1px solid var(--cf-border-strong) !important;
         box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6) !important;
     }
 
     .inst-dialog-header {
-        border-bottom-color: #334155 !important;
+        border-bottom-color: var(--cf-border-strong) !important;
     }
 
     .inst-dialog-title {
-        color: #e5e7eb !important;
+        color: var(--cf-text) !important;
     }
 
     .inst-close-btn {
-        color: #64748b !important;
+        color: var(--cf-text-4) !important;
 
         &:hover {
             background: rgba(255, 255, 255, 0.06) !important;
-            color: #94a3b8 !important;
+            color: var(--cf-text-3) !important;
         }
     }
 
     .inst-dialog-footer {
-        background: #111827 !important;
-        border-top-color: #334155 !important;
+        background: var(--cf-surface) !important;
+        border-top-color: var(--cf-border-strong) !important;
     }
 
     .inst-label {
-        color: #94a3b8 !important;
+        color: var(--cf-text-3) !important;
     }
 
     // Buttons
     .inst-btn-cancel {
         background: rgba(255, 255, 255, 0.07) !important;
-        color: #94a3b8 !important;
+        color: var(--cf-text-3) !important;
 
         &:hover {
             background: rgba(255, 255, 255, 0.12) !important;
-            color: #e5e7eb !important;
+            color: var(--cf-text) !important;
         }
     }
 
     .inst-btn-save {
-        background: #6366f1 !important;
+        background: var(--cf-primary) !important;
 
         &:hover {
-            background: #4f46e5 !important;
+            background: var(--cf-primary-strong) !important;
         }
 
         &:disabled {

@@ -1,0 +1,25 @@
+// Sunset - warm terracotta orange with a rose accent, on warm "paper" neutrals.
+$palette: (
+  light: (
+    bg: #faf7f4, surface: #ffffff, surface-2: #fcfaf8, surface-3: #f5f0ea, surface-4: #e9e0d6, header: #fcfaf8,
+    border: #ebe3da, border-strong: #d6c9bb,
+    text-strong: #1c140d, text: #2a2018, text-2: #57493d, text-3: #6f6054, text-4: #9a8a7d,
+    primary: #c2410c, primary-strong: #9a3412, primary-text: #9a3412, primary-soft: #fdeee4, primary-border: #f6c9ac, on-primary: #ffffff,
+    accent: #be185d,
+    success: #166534, success-soft: #e7f5ea, success-solid: #16a34a,
+    danger: #b91c1c, danger-soft: #fde8e8, danger-solid: #dc2626,
+    warning: #8a5a00, warning-soft: #fdf2d8, warning-solid: #d97706,
+    tooltip-bg: #2a2018,
+  ),
+  dark: (
+    bg: #120e0b, surface: #1a1511, surface-2: #211b16, surface-3: #28211b, surface-4: #3a3028, header: #15110d,
+    border: #2c241d, border-strong: #44382d,
+    text-strong: #fffaf5, text: #f0e8e0, text-2: #d6cabd, text-3: #a69585, text-4: #7d6e61,
+    primary: #c2410c, primary-strong: #9a3412, primary-text: #fdba74, primary-soft: #3a2014, primary-border: #6b3418, on-primary: #ffffff,
+    accent: #fb7185,
+    success: #86efac, success-soft: #11291a, success-solid: #16a34a,
+    danger: #fca5a5, danger-soft: #3a1618, danger-solid: #dc2626,
+    warning: #fcd34d, warning-soft: #33270b, warning-solid: #d97706,
+    tooltip-bg: #28211b,
+  ),
+);

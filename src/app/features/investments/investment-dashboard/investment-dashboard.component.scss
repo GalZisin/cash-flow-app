@@ -1,5 +1,5 @@
     .dash-wrap {
-        background: #f8f9fb;
+        background: var(--cf-surface-2);
         height: 100%;
         display: flex;
         flex-direction: column;
@@ -9,15 +9,15 @@
     .page-title {
         font-size: 1.25rem;
         font-weight: 600;
-        color: #1e293b;
+        color: var(--cf-text);
         letter-spacing: -0.3px;
     }
 
     .sticky-header {
         flex-shrink: 0;
-        background: #f8f9fb;
+        background: var(--cf-surface-2);
         padding: 16px 24px 12px;
-        border-bottom: 1px solid #e8eaed;
+        border-bottom: 1px solid var(--cf-border);
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     }
 
@@ -58,13 +58,13 @@
     }
 
     .stat-blue {
-        background: #e8eeff;
-        color: #2d4fd6;
+        background: var(--cf-primary-soft);
+        color: var(--cf-primary-text);
     }
 
     .stat-green {
-        background: #e6f7f0;
-        color: #1a7a52;
+        background: var(--cf-success-soft);
+        color: var(--cf-success);
     }
 
     .stat-violet {
@@ -73,8 +73,8 @@
     }
 
     .stat-amber {
-        background: #fff4e0;
-        color: #a05c00;
+        background: var(--cf-warning-soft);
+        color: var(--cf-warning);
     }
 
     // Master-detail: two independent scroll columns filling the available height
@@ -111,26 +111,26 @@
         .dash-wrap,
         .sticky-header,
         .scroll-body {
-            background: #0f172a !important;
+            background: var(--cf-bg) !important;
         }
 
         .sticky-header {
-            border-bottom-color: #1e2d45 !important;
+            border-bottom-color: var(--cf-border) !important;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
         }
 
         .page-title {
-            color: #e5e7eb !important;
+            color: var(--cf-text) !important;
         }
 
         .stat-blue {
-            background: rgba(45, 79, 214, 0.18);
-            color: #93c5fd;
+            background: rgba(var(--cf-primary-rgb), 0.18);
+            color: var(--cf-primary-text);
         }
 
         .stat-green {
-            background: rgba(26, 122, 82, 0.18);
-            color: #6ee7b7;
+            background: rgba(var(--cf-success-rgb), 0.18);
+            color: var(--cf-success);
         }
 
         .stat-violet {
@@ -139,8 +139,8 @@
         }
 
         .stat-amber {
-            background: rgba(160, 92, 0, 0.18);
-            color: #fcd34d;
+            background: rgba(var(--cf-warning-rgb), 0.18);
+            color: var(--cf-warning);
         }
 
         .stat-card .label {

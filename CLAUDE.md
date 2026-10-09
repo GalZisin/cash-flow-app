@@ -37,6 +37,7 @@ Node 24+ for both parts (`engines`, `.nvmrc`). Do not reintroduce separate Node 
 - Hebrew is fine in comments, UI strings and docs. UI text goes through ngx-translate (`public/assets/i18n/he.json`, `en.json`); do not hardcode visible strings in templates.
 - Angular: standalone components, `@if/@for` control flow, signals for state (`signal/computed`, `toObservable` only where an rxjs consumer still exists), `inject()` for DI, `ChangeDetectionStrategy.OnPush` on presentational components, Reactive Forms only.
 - Server: CommonJS (`require`), one exported singleton per service/repository (`module.exports = new X()`), ids are `uuid` v4, timestamps ISO strings, all SQL parameters typed through `db/helpers.js` column specs.
+- Colors: never hardcode colors in SCSS. Use theme tokens `var(--cf-<token>)` / `rgba(var(--cf-<token>-rgb), a)` from `src/themes/` (see `src/themes/README.md`). New themes go in `src/themes/palettes/` + `theme.registry.ts`; run `npm run themes:check`.
 - Logging through `utils/logger.js` (never `console.*` in routes/services/repositories).
 - New server logic gets a `node:test` file under `server/test/` (stub repositories with `t.mock.method`, see existing tests). New Angular logic gets a `.spec.ts` next to it.
 - Bundle budgets are enforced in `angular.json` production config (`anyComponentStyle` 20kB warn / 32kB error). Do not raise them again; split SCSS instead.

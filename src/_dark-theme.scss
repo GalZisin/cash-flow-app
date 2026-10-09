@@ -5,25 +5,25 @@
 // =============================================================
 
 // ── Design tokens ────────────────────────────────────────────
-$dk-bg: #0f172a; // page background
-$dk-surface: #111827; // cards / table rows
-$dk-surface-alt: #1a2233; // zebra / slightly lighter surface
-$dk-surface-high: #1f2937; // elevated surfaces, modals
-$dk-border: #1e2d45; // subtle borders
-$dk-border-mid: #334155; // visible borders
+$dk-bg: var(--cf-bg); // page background
+$dk-surface: var(--cf-surface); // cards / table rows
+$dk-surface-alt: var(--cf-surface-2); // zebra / slightly lighter surface
+$dk-surface-high: var(--cf-surface-3); // elevated surfaces, modals
+$dk-border: var(--cf-border); // subtle borders
+$dk-border-mid: var(--cf-border-strong); // visible borders
 
-$dk-text: #e5e7eb; // primary text
-$dk-text-muted: #94a3b8; // secondary text
-$dk-text-faint: #64748b; // disabled / placeholder
+$dk-text: var(--cf-text); // primary text
+$dk-text-muted: var(--cf-text-3); // secondary text
+$dk-text-faint: var(--cf-text-4); // disabled / placeholder
 
-$dk-accent: #38bdf8; // cyan — balance / savings
-$dk-income: #4ade80; // soft green — income
-$dk-expense: #f87171; // soft red — expense
-$dk-primary: #6366f1; // indigo — primary action
+$dk-accent: var(--cf-accent); // cyan — balance / savings
+$dk-income: var(--cf-success); // soft green — income
+$dk-expense: var(--cf-danger); // soft red — expense
+$dk-primary: var(--cf-primary); // indigo — primary action
 
-$dk-header-bg: #0d1526; // table header
-$dk-row-hover: rgba(99, 102, 241, 0.08);
-$dk-focus-ring: rgba(56, 189, 248, 0.35);
+$dk-header-bg: var(--cf-header); // table header
+$dk-row-hover: rgba(var(--cf-primary-rgb), 0.08);
+$dk-focus-ring: rgba(var(--cf-accent-rgb), 0.35);
 
 // ── Mixin helpers ─────────────────────────────────────────────
 @mixin dark {
@@ -166,7 +166,7 @@ $dk-focus-ring: rgba(56, 189, 248, 0.35);
 
           // Modern browsers with color-mix support
           @supports (background: color-mix(in srgb, red 50%, blue)) {
-            background: color-mix(in srgb, #1f2937 98%, black) !important;
+            background: color-mix(in srgb, var(--cf-surface-3) 98%, black) !important;
           }
 
           box-shadow: 0 0 0 3px $dk-focus-ring !important;
@@ -202,18 +202,18 @@ $dk-focus-ring: rgba(56, 189, 248, 0.35);
     // ── Expand / collapse badge ─────────────────────────────
     .expense-count-badge {
       &.bg-primary {
-        background: rgba(99, 102, 241, 0.25) !important;
-        color: #a5b4fc !important;
+        background: rgba(var(--cf-primary-rgb), 0.25) !important;
+        color: var(--cf-primary-text) !important;
       }
 
       &.bg-success {
-        background: rgba(74, 222, 128, 0.18) !important;
-        color: #86efac !important;
+        background: rgba(var(--cf-success-rgb), 0.18) !important;
+        color: var(--cf-success) !important;
       }
 
       &.bg-warning {
-        background: rgba(251, 191, 36, 0.18) !important;
-        color: #fcd34d !important;
+        background: rgba(var(--cf-warning-rgb), 0.18) !important;
+        color: var(--cf-warning) !important;
         color: $dk-text !important;
       }
     }
@@ -261,38 +261,38 @@ $dk-focus-ring: rgba(56, 189, 248, 0.35);
 
       // Primary — Save
       button[color="warn"] {
-        background: linear-gradient(135deg, #7c3aed, #6366f1) !important;
-        color: #fff !important;
-        box-shadow: 0 0 12px rgba(99, 102, 241, 0.35) !important;
+        background: linear-gradient(135deg, var(--cf-primary-strong), var(--cf-primary)) !important;
+        color: var(--cf-on-primary) !important;
+        box-shadow: 0 0 12px rgba(var(--cf-primary-rgb), 0.35) !important;
 
         &:hover {
-          box-shadow: 0 0 20px rgba(99, 102, 241, 0.55) !important;
+          box-shadow: 0 0 20px rgba(var(--cf-primary-rgb), 0.55) !important;
           filter: brightness(1.1);
         }
       }
 
       // Accent — Export PDF
       button[color="accent"] {
-        background: rgba(56, 189, 248, 0.12) !important;
+        background: rgba(var(--cf-accent-rgb), 0.12) !important;
         color: $dk-accent !important;
-        border: 1px solid rgba(56, 189, 248, 0.3) !important;
+        border: 1px solid rgba(var(--cf-accent-rgb), 0.3) !important;
         box-shadow: none !important;
 
         &:hover {
-          background: rgba(56, 189, 248, 0.2) !important;
-          box-shadow: 0 0 12px rgba(56, 189, 248, 0.2) !important;
+          background: rgba(var(--cf-accent-rgb), 0.2) !important;
+          box-shadow: 0 0 12px rgba(var(--cf-accent-rgb), 0.2) !important;
         }
       }
 
       // Primary — Add Month
       button[color="primary"] {
-        background: rgba(99, 102, 241, 0.15) !important;
-        color: #a5b4fc !important;
-        border: 1px solid rgba(99, 102, 241, 0.35) !important;
+        background: rgba(var(--cf-primary-rgb), 0.15) !important;
+        color: var(--cf-primary-text) !important;
+        border: 1px solid rgba(var(--cf-primary-rgb), 0.35) !important;
         box-shadow: none !important;
 
         &:hover {
-          background: rgba(99, 102, 241, 0.25) !important;
+          background: rgba(var(--cf-primary-rgb), 0.25) !important;
         }
       }
 
@@ -311,7 +311,7 @@ $dk-focus-ring: rgba(56, 189, 248, 0.35);
 
     // ── Confirmation overlay ────────────────────────────────
     .cf-overlay {
-      background: rgba(2, 6, 23, 0.75) !important;
+      background: rgba(var(--cf-bg-rgb), 0.75) !important;
       -webkit-backdrop-filter: blur(4px);
       backdrop-filter: blur(4px);
     }
@@ -393,9 +393,9 @@ $dk-focus-ring: rgba(56, 189, 248, 0.35);
 
       &:hover {
         // Fallback for older browsers
-        background: rgba(99, 102, 241, 0.12) !important;
-        border-color: rgba(99, 102, 241, 0.4) !important;
-        box-shadow: 0 4px 14px rgba(99, 102, 241, 0.2) !important;
+        background: rgba(var(--cf-primary-rgb), 0.12) !important;
+        border-color: rgba(var(--cf-primary-rgb), 0.4) !important;
+        box-shadow: 0 4px 14px rgba(var(--cf-primary-rgb), 0.2) !important;
 
         // Modern browsers with color-mix support
         @supports (background: color-mix(in srgb, red 50%, blue)) {
@@ -407,9 +407,9 @@ $dk-focus-ring: rgba(56, 189, 248, 0.35);
 
       &.selected {
         // Fallback for older browsers
-        background: rgba(99, 102, 241, 0.18) !important;
+        background: rgba(var(--cf-primary-rgb), 0.18) !important;
         border-color: var(--category-color) !important;
-        box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.3), 0 4px 16px rgba(99, 102, 241, 0.25) !important;
+        box-shadow: 0 0 0 1px rgba(var(--cf-primary-rgb), 0.3), 0 4px 16px rgba(var(--cf-primary-rgb), 0.25) !important;
 
         // Modern browsers with color-mix support
         @supports (background: color-mix(in srgb, red 50%, blue)) {
@@ -422,7 +422,7 @@ $dk-focus-ring: rgba(56, 189, 248, 0.35);
 
       .color-indicator {
         // Fallback for older browsers
-        box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25) !important;
+        box-shadow: 0 0 0 2px rgba(var(--cf-primary-rgb), 0.25) !important;
 
         // Modern browsers with color-mix support
         @supports (background: color-mix(in srgb, red 50%, blue)) {

@@ -1,0 +1,156 @@
+// =============================================================================
+// Theme engine
+//
+// Every color in the app reads a CSS custom property  --cf-<token>.
+// A theme is a Sass map  (light: (...tokens), dark: (...tokens))  in palettes/.
+// `theme($id, $palette, $is-default)` emits:
+//     :root[data-theme='<id>']             light tokens
+//     :root[data-theme='<id>'].dark-mode   dark tokens
+// ThemeService sets data-theme on <html>; the existing .dark-mode class picks the mode.
+// =============================================================================
+@use 'sass:map';
+@use 'sass:color';
+@use 'sass:list';
+@use 'sass:meta';
+@use 'sass:string';
+
+// The full token contract. Every palette must define every key, in both modes.
+$token-keys: (
+  // neutrals
+  bg, surface, surface-2, surface-3, surface-4, header,
+  border, border-strong,
+  text-strong, text, text-2, text-3, text-4,
+  // brand
+  primary, primary-strong, primary-text, primary-soft, primary-border, on-primary,
+  accent,
+  // status
+  success, success-soft, success-solid,
+  danger, danger-soft, danger-solid,
+  warning, warning-soft, warning-solid,
+  // misc
+  tooltip-bg
+);
+
+// Tokens that also get an "r, g, b" triplet (--cf-<token>-rgb) for rgba(var(--cf-x-rgb), alpha).
+$rgb-keys: (bg, surface, text, primary, accent, success, danger, warning);
+
+@function _rgb($c) {
+  // one unquoted string ("r, g, b"), so it prints on a single line in every build
+  @return string.unquote('#{color.channel($c, 'red', $space: rgb)}, #{color.channel($c, 'green', $space: rgb)}, #{color.channel($c, 'blue', $space: rgb)}');
+}
+
+@mixin _tokens($id, $mode, $tokens) {
+  @each $key in $token-keys {
+    @if not map.has-key($tokens, $key) {
+      @error 'Theme "#{$id}" (#{$mode}) is missing token "#{$key}".';
+    }
+    $value: map.get($tokens, $key);
+    @if meta.type-of($value) != 'color' {
+      @error 'Theme "#{$id}" (#{$mode}) token "#{$key}" must be a color, got #{$value}.';
+    }
+    --cf-#{$key}: #{$value};
+  }
+  @each $key in $rgb-keys {
+    --cf-#{$key}-rgb: #{_rgb(map.get($tokens, $key))};
+  }
+  color-scheme: #{$mode};
+}
+
+/// Emits one theme. The default theme also applies when <html> has no data-theme yet.
+@mixin theme($id, $palette, $is-default: false) {
+  @if $is-default {
+    :root,
+    :root[data-theme='#{$id}'] { @include _tokens($id, light, map.get($palette, light)); }
+    :root.dark-mode,
+    :root[data-theme='#{$id}'].dark-mode { @include _tokens($id, dark, map.get($palette, dark)); }
+  } @else {
+    :root[data-theme='#{$id}'] { @include _tokens($id, light, map.get($palette, light)); }
+    :root[data-theme='#{$id}'].dark-mode { @include _tokens($id, dark, map.get($palette, dark)); }
+  }
+}
+
+/// Points Bootstrap and Angular Material at the theme tokens, so their components follow the theme.
+@mixin framework-bridges {
+  html:root {
+    // Bootstrap 5.3
+    --bs-body-bg: var(--cf-bg);
+    --bs-body-color: var(--cf-text);
+    --bs-emphasis-color: var(--cf-text-strong);
+    --bs-secondary-color: var(--cf-text-3);
+    --bs-secondary-bg: var(--cf-surface-2);
+    --bs-tertiary-bg: var(--cf-surface-3);
+    --bs-border-color: var(--cf-border);
+    --bs-primary: var(--cf-primary);
+    --bs-primary-rgb: var(--cf-primary-rgb);
+    --bs-link-color: var(--cf-primary-text);
+    --bs-link-hover-color: var(--cf-primary-strong);
+    --bs-success: var(--cf-success-solid);
+    --bs-danger: var(--cf-danger-solid);
+    --bs-warning: var(--cf-warning-solid);
+
+    // Angular Material 3 system tokens (prebuilt azure-blue defines them on `html`)
+    --mat-sys-primary: var(--cf-primary);
+    --mat-sys-on-primary: var(--cf-on-primary);
+    --mat-sys-primary-container: var(--cf-primary-soft);
+    --mat-sys-on-primary-container: var(--cf-primary-text);
+    --mat-sys-background: var(--cf-bg);
+    --mat-sys-on-background: var(--cf-text);
+    --mat-sys-surface: var(--cf-surface);
+    --mat-sys-on-surface: var(--cf-text);
+    --mat-sys-on-surface-variant: var(--cf-text-2);
+    --mat-sys-surface-container: var(--cf-surface-2);
+    --mat-sys-surface-container-low: var(--cf-surface);
+    --mat-sys-surface-container-high: var(--cf-surface-3);
+    --mat-sys-surface-container-highest: var(--cf-surface-4);
+    --mat-sys-outline: var(--cf-border-strong);
+    --mat-sys-outline-variant: var(--cf-border);
+    --mat-sys-error: var(--cf-danger);
+    --mat-sys-inverse-surface: var(--cf-tooltip-bg);
+  }
+
+  // Bootstrap components that hardcode their colors per class (not via --bs-primary)
+  .btn-primary {
+    --bs-btn-color: var(--cf-on-primary);
+    --bs-btn-bg: var(--cf-primary);
+    --bs-btn-border-color: var(--cf-primary);
+    --bs-btn-hover-color: var(--cf-on-primary);
+    --bs-btn-hover-bg: var(--cf-primary-strong);
+    --bs-btn-hover-border-color: var(--cf-primary-strong);
+    --bs-btn-active-color: var(--cf-on-primary);
+    --bs-btn-active-bg: var(--cf-primary-strong);
+    --bs-btn-active-border-color: var(--cf-primary-strong);
+    --bs-btn-disabled-color: var(--cf-on-primary);
+    --bs-btn-disabled-bg: var(--cf-primary);
+    --bs-btn-disabled-border-color: var(--cf-primary);
+    --bs-btn-focus-shadow-rgb: var(--cf-primary-rgb);
+  }
+
+  .btn-outline-primary {
+    --bs-btn-color: var(--cf-primary-text);
+    --bs-btn-border-color: var(--cf-primary);
+    --bs-btn-hover-color: var(--cf-on-primary);
+    --bs-btn-hover-bg: var(--cf-primary);
+    --bs-btn-hover-border-color: var(--cf-primary);
+    --bs-btn-active-color: var(--cf-on-primary);
+    --bs-btn-active-bg: var(--cf-primary-strong);
+    --bs-btn-active-border-color: var(--cf-primary-strong);
+    --bs-btn-focus-shadow-rgb: var(--cf-primary-rgb);
+  }
+
+  .form-control:focus,
+  .form-select:focus {
+    border-color: rgba(var(--cf-primary-rgb), 0.5);
+    box-shadow: 0 0 0 0.25rem rgba(var(--cf-primary-rgb), 0.2);
+  }
+
+  .form-check-input:checked {
+    background-color: var(--cf-primary);
+    border-color: var(--cf-primary);
+  }
+
+  body {
+    background-color: var(--cf-bg);
+    color: var(--cf-text);
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+}

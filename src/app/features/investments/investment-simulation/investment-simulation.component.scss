@@ -1,7 +1,7 @@
     .sim-card {
         border-radius: 14px;
-        border: 1px solid #e8eaed;
-        background: #fff;
+        border: 1px solid var(--cf-border);
+        background: var(--cf-surface);
         overflow: hidden;
     }
 
@@ -9,8 +9,8 @@
         padding: 14px 16px;
         font-weight: 600;
         font-size: 0.9rem;
-        color: #1e293b;
-        border-bottom: 1px solid #f0f2f5;
+        color: var(--cf-text);
+        border-bottom: 1px solid var(--cf-border);
     }
 
     .sim-body {
@@ -20,7 +20,7 @@
     .sim-label {
         font-size: 0.78rem;
         font-weight: 600;
-        color: #64748b;
+        color: var(--cf-text-3);
         margin-bottom: 4px;
         text-transform: uppercase;
         letter-spacing: 0.4px;
@@ -40,7 +40,7 @@
 
     .result-item .rl {
         font-size: 0.72rem;
-        color: #64748b;
+        color: var(--cf-text-3);
         font-weight: 500;
         text-transform: uppercase;
         letter-spacing: 0.4px;
@@ -49,16 +49,16 @@
     .result-item .rv {
         font-size: 1rem;
         font-weight: 700;
-        color: #1e293b;
+        color: var(--cf-text);
     }
 
     .rv-main {
         font-size: 1.3rem;
-        color: #1a7a52;
+        color: var(--cf-success);
     }
 
     .chart-wrap {
-        background: #f8f9fb;
+        background: var(--cf-surface-2);
         border-radius: 10px;
         padding: 8px 4px 4px;
         margin-top: 14px;
@@ -67,7 +67,7 @@
 
     .legend {
         font-size: 0.75rem;
-        color: #94a3b8;
+        color: var(--cf-text-4);
         margin-top: 6px;
     }
 
@@ -82,7 +82,7 @@
     .rv-gain {
         font-size: 1rem;
         font-weight: 700;
-        color: #2d4fd6;
+        color: var(--cf-primary-text);
     }
 
     .sim-chart-svg {
@@ -92,11 +92,11 @@
     }
 
     .legend-proj {
-        color: #4f6ef7;
+        color: var(--cf-primary-text);
     }
 
     .legend-dep {
-        color: #cbd5e1;
+        color: var(--cf-text-4);
     }
 
     // ════════════════════════════════════════════════════════════
@@ -105,53 +105,53 @@
     :host-context([data-bs-theme="dark"]),
     :host-context(.dark-mode) {
         .sim-card {
-            background: #111827 !important;
-            border-color: #1e2d45 !important;
+            background: var(--cf-surface) !important;
+            border-color: var(--cf-border) !important;
         }
 
         .sim-header {
-            color: #e5e7eb !important;
-            border-bottom-color: #1e2d45 !important;
+            color: var(--cf-text) !important;
+            border-bottom-color: var(--cf-border) !important;
         }
 
         .sim-label {
-            color: #64748b !important;
+            color: var(--cf-text-4) !important;
         }
 
         .result-bar {
-            background: rgba(26, 122, 82, 0.1) !important;
-            border-color: rgba(26, 122, 82, 0.25) !important;
+            background: rgba(var(--cf-success-rgb), 0.1) !important;
+            border-color: rgba(var(--cf-success-rgb), 0.25) !important;
         }
 
         .result-item .rl {
-            color: #64748b !important;
+            color: var(--cf-text-4) !important;
         }
 
         .result-item .rv {
-            color: #e5e7eb !important;
+            color: var(--cf-text) !important;
         }
 
         .rv-main {
-            color: #6ee7b7 !important;
+            color: var(--cf-success) !important;
         }
 
         .rv-gain {
-            color: #93c5fd !important;
+            color: var(--cf-primary-text) !important;
         }
 
         .chart-wrap {
-            background: #0d1526 !important;
+            background: var(--cf-header) !important;
         }
 
         .legend {
-            color: #64748b !important;
+            color: var(--cf-text-4) !important;
         }
 
         .legend-proj {
-            color: #a5b4fc !important;
+            color: var(--cf-primary-text) !important;
         }
 
         .legend-dep {
-            color: #475569 !important;
+            color: var(--cf-text-4) !important;
         }
     }

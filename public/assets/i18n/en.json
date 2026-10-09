@@ -338,5 +338,12 @@
     "WARNING_MESSAGE": "Adding/updating this installment may cause cash flow discrepancies in the following months:",
     "WARNING_PROCEED_QUESTION": "Do you wish to proceed despite the warnings?",
     "WARNING_PROCEED_BUTTON": "Yes, proceed"
+  },
+  "THEME": {
+    "BUTTON": "Color themes",
+    "TITLE": "Color theme",
+    "MODE": "Display mode",
+    "LIGHT": "Light",
+    "DARK": "Dark"
   }
 }

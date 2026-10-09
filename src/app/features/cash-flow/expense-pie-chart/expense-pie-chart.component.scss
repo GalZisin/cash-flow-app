@@ -18,7 +18,7 @@
 
 .pie-label {
   font-size: 0.85rem;
-  color: #64748b;
+  color: var(--cf-text-3);
   white-space: nowrap;
 }
 
@@ -29,15 +29,15 @@
 .pie-title {
   font-size: 1rem;
   font-weight: 600;
-  color: #334155;
+  color: var(--cf-text-2);
   padding-bottom: 0.25rem;
-  border-bottom: 2px solid #e2e8f0;
+  border-bottom: 2px solid var(--cf-border);
 }
 
 .pie-no-data {
   text-align: center;
   padding: 3rem;
-  color: #94a3b8;
+  color: var(--cf-text-4);
   font-size: 0.95rem;
 }
 
@@ -79,12 +79,12 @@
   gap: 0.65rem;
   padding: 0.45rem 0.6rem;
   border-radius: 10px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: var(--cf-surface-2);
+  border: 1px solid var(--cf-border);
   transition: background 0.15s, box-shadow 0.15s;
 
   &:hover {
-    background: #f1f5f9;
+    background: var(--cf-surface-3);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   }
 }
@@ -116,7 +116,7 @@
 .legend-name {
   font-size: 0.82rem;
   font-weight: 600;
-  color: #334155;
+  color: var(--cf-text-2);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -131,7 +131,7 @@
 .legend-amount {
   font-size: 0.88rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--cf-text);
 }
 
 .legend-pct {
@@ -146,7 +146,7 @@
 .legend-bar-track {
   width: 60px;
   height: 4px;
-  background: #e2e8f0;
+  background: var(--cf-surface-4);
   border-radius: 4px;
   flex-shrink: 0;
   overflow: hidden;
@@ -188,7 +188,7 @@
 
   .tip-pct {
     display: block;
-    color: #94a3b8;
+    color: var(--cf-text-4);
     font-size: 0.75rem;
   }
 }
@@ -197,8 +197,8 @@
 :host-context([data-bs-theme="dark"]),
 :host-context(.dark-mode) {
   .pie-title {
-    color: #cccccc;
-    border-bottom-color: #2b2b2b;
+    color: var(--cf-text-2);
+    border-bottom-color: var(--cf-border);
   }
 
   .pie-label {
@@ -206,9 +206,9 @@
   }
 
   .pie-select {
-    background-color: #252526;
-    border-color: #2b2b2b;
-    color: #cccccc;
+    background-color: var(--cf-surface-3);
+    border-color: var(--cf-border);
+    color: var(--cf-text-2);
   }
 
   .pie-no-data {
@@ -216,8 +216,8 @@
   }
 
   .legend-row {
-    background: #252526;
-    border-color: #2b2b2b;
+    background: var(--cf-surface-3);
+    border-color: var(--cf-border);
 
     &:hover {
       background: #2a2d2e;
@@ -225,7 +225,7 @@
   }
 
   .legend-name {
-    color: #cccccc;
+    color: var(--cf-text-2);
   }
 
   .legend-amount {

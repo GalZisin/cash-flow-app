@@ -43,7 +43,7 @@
   position: fixed;
   pointer-events: none;
   background: white;
-  color: #333;
+  color: var(--cf-text);
   padding: 10px 15px;
   border-radius: 10px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
@@ -55,7 +55,7 @@
 
   [data-bs-theme="dark"] &, .dark-mode & {
     background: #2d2d30;
-    color: #cccccc;
+    color: var(--cf-text-2);
     border-color: #444;
   }
 }

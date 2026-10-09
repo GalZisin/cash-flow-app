@@ -33,6 +33,7 @@
 | [GOALS_INTEGRATION.md](frontend/GOALS_INTEGRATION.md) | אינטגרציה בין יעדים, תזרים ופריסות |
 | [GOALS_INTEGRATION_EXAMPLE.md](frontend/GOALS_INTEGRATION_EXAMPLE.md) | דוגמה מעשית צעד אחר צעד |
 | [GSAP_ANIMATIONS.md](frontend/GSAP_ANIMATIONS.md) | שלוש דירקטיבות האנימציה ואיך משתמשים בהן |
+| [../src/themes/README.md](../src/themes/README.md) | ערכות צבע: מבנה התיקייה, ה-tokens, הוספת ערכה, בדיקת ניגודיות |
 
 ## AI (ai)
 

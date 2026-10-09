@@ -89,20 +89,9 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
   public themeService = inject(ThemeService); // Keep public for template access
   private destroyRef = inject(DestroyRef);
 
-  // Assuming InvestmentService.items is a Signal<Investment[]>
-  constructor() { }
-
-  private shouldScroll = false; // Moved here to be consistent
-
-  // Convert Observables to Signals
-  conversationsSignal = this.convService.items;
-  cashFlowMonthsSignal = toSignal(this.cashFlowService.cashFlowMonths$, { initialValue: [] });
-  investmentsSignal = toSignal(this.investmentService.investments$, { initialValue: [] as any[] });
-
-  ngOnInit() {
-    this.loadSummary();
-    this.convService.load().subscribe();
-
+  // effect() must run in an injection context (constructor / field initializer), not in ngOnInit (NG0203).
+  // Field initializers (the signals below) run before the constructor body, so they are ready here.
+  constructor() {
     // Update realCurrentBalance based on cashFlowMonthsSignal
     // Using effect to react to signal changes
     effect(() => {
@@ -130,6 +119,18 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
         return sum + (snaps[snaps.length - 1]?.value ?? 0);
       }, 0)); // Ensure initial value is 0 for reduce
     });
+  }
+
+  private shouldScroll = false; // Moved here to be consistent
+
+  // Convert Observables to Signals
+  conversationsSignal = this.convService.items;
+  cashFlowMonthsSignal = toSignal(this.cashFlowService.cashFlowMonths$, { initialValue: [] });
+  investmentsSignal = toSignal(this.investmentService.investments$, { initialValue: [] as any[] });
+
+  ngOnInit() {
+    this.loadSummary();
+    this.convService.load().subscribe();
 
     this.loadDashboardData(); // Initial load for dashboard data
   }

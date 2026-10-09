@@ -1,0 +1,54 @@
+<button class="btn btn-sm navbar-btn theme-picker-btn" type="button"
+  (click)="toggle()"
+  aria-haspopup="menu"
+  [attr.aria-expanded]="open()"
+  aria-controls="theme-menu"
+  [title]="'THEME.BUTTON' | translate"
+  [attr.aria-label]="'THEME.BUTTON' | translate">
+  <span class="theme-dot" aria-hidden="true"
+    [style.background]="theme.isDarkMode() ? theme.currentTheme().preview.dark.primary : theme.currentTheme().preview.light.primary"></span>
+  🎨
+</button>
+
+@if (open()) {
+  <div class="theme-menu" id="theme-menu" role="menu" [attr.aria-label]="'THEME.TITLE' | translate"
+    (keydown)="onMenuKeydown($event)" data-testid="theme-menu">
+
+    <div class="theme-menu-header">
+      <span class="theme-menu-title">{{ 'THEME.TITLE' | translate }}</span>
+      <div class="mode-switch" role="group" [attr.aria-label]="'THEME.MODE' | translate">
+        <button type="button" class="mode-btn" [class.active]="!theme.isDarkMode()" [attr.aria-pressed]="!theme.isDarkMode()"
+          (click)="setMode('light')" data-testid="mode-light">☀️ {{ 'THEME.LIGHT' | translate }}</button>
+        <button type="button" class="mode-btn" [class.active]="theme.isDarkMode()" [attr.aria-pressed]="theme.isDarkMode()"
+          (click)="setMode('dark')" data-testid="mode-dark">🌙 {{ 'THEME.DARK' | translate }}</button>
+      </div>
+    </div>
+
+    <div class="theme-list">
+      @for (t of theme.themes; track t.id) {
+        <button #option type="button" class="theme-option" role="menuitemradio"
+          [attr.aria-checked]="t.id === theme.themeId()"
+          [class.selected]="t.id === theme.themeId()"
+          [attr.data-theme-id]="t.id"
+          (click)="select(t)">
+          <span class="previews" aria-hidden="true">
+            @for (m of ['light', 'dark']; track m) {
+              <span class="preview" [style.background]="m === 'light' ? t.preview.light.bg : t.preview.dark.bg">
+                <span class="preview-card" [style.background]="m === 'light' ? t.preview.light.surface : t.preview.dark.surface">
+                  <span class="preview-bar" [style.background]="m === 'light' ? t.preview.light.primary : t.preview.dark.primary"></span>
+                  <span class="preview-line" [style.background]="m === 'light' ? t.preview.light.text : t.preview.dark.text"></span>
+                  <span class="preview-chip" [style.background]="m === 'light' ? t.preview.light.accent : t.preview.dark.accent"></span>
+                </span>
+              </span>
+            }
+          </span>
+          <span class="theme-text">
+            <span class="theme-name">{{ name(t) }}</span>
+            <span class="theme-desc">{{ description(t) }}</span>
+          </span>
+          <span class="check" aria-hidden="true">{{ t.id === theme.themeId() ? '✓' : '' }}</span>
+        </button>
+      }
+    </div>
+  </div>
+}
