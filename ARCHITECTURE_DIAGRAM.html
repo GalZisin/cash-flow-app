@@ -83,7 +83,9 @@
   .edge-label { font-size: 11px; fill: #cbd5e1; font-family: Consolas, monospace; direction: ltr; pointer-events: none; paint-order: stroke; stroke: var(--panel); stroke-width: 4px; }
   .edge-label.big { font-size: 13px; font-family: "Heebo", "Segoe UI", sans-serif; }
   .edge-label.rtl { direction: rtl; font-family: "Heebo", "Segoe UI", sans-serif; }
-  .edge-label.dim { opacity: .1; }
+  .edge-label.dim, .label-pill.dim { opacity: .1; }
+  .label-pill { fill: #0b1222; stroke-width: 1; stroke-opacity: .8; }
+  .edge-label { stroke: none; paint-order: normal; }
 
   /* info panel */
   #info {
@@ -169,6 +171,30 @@ function el(tag, attrs, parent) {
   return e;
 }
 
+const boxOverlap = (a, b, pad = 0) => a.x < b.x + b.w + pad && a.x + a.w + pad > b.x && a.y < b.y + b.h + pad && a.y + a.h + pad > b.y;
+window.__layoutIssues = [];
+
+/** Verifies: card text inside its card, no label over a card, no overlapping labels or cards, nothing off-canvas. */
+function checkLayout(svg, N, labels, cfg, bandBoxes = []) {
+  const issue = (m) => window.__layoutIssues.push(svg.id + ': ' + m);
+  const solid = N.filter(n => !n.container);
+  svg.querySelectorAll('g.node').forEach(g => {
+    const n = N.find(x => x.id === g.dataset.id);
+    g.querySelectorAll('text').forEach(t => {
+      const b = t.getBBox();
+      if (b.x < n.x + 2 || b.x + b.width > n.x + n.w - 2 || b.y < n.y || b.y + b.height > n.y + n.h) issue('text "' + t.textContent + '" overflows card ' + n.id);
+    });
+  });
+  solid.forEach((a, i) => solid.slice(i + 1).forEach(b => { if (boxOverlap(a, b)) issue('cards ' + a.id + ' and ' + b.id + ' overlap'); }));
+  bandBoxes.forEach((b, k) => solid.forEach(n => { if (boxOverlap(b, n)) issue('band title #' + k + ' overlaps card ' + n.id); }));
+  labels.forEach((l, i) => {
+    solid.forEach(n => { if (boxOverlap(l, n)) issue('arrow label #' + i + ' covers card ' + n.id); });
+    bandBoxes.forEach((b, k) => { if (boxOverlap(l, b)) issue('arrow label #' + i + ' covers band title #' + k); });
+    labels.slice(i + 1).forEach((o, j) => { if (boxOverlap(l, o)) issue('arrow labels #' + i + ' and #' + (i + j + 1) + ' overlap'); });
+  });
+  [...N, ...labels].forEach(r => { if (r.x < 0 || r.y < 0 || r.x + r.w > cfg.width || r.y + r.h > cfg.height) issue('element off canvas at ' + Math.round(r.x) + ',' + Math.round(r.y)); });
+}
+
 /** Measures text width in the given svg with the given class (exact, font-aware). */
 function makeMeasurer(svg) {
   const probe = el('text', { x: -9999, y: -9999, visibility: 'hidden' }, svg);
@@ -225,16 +251,23 @@ function renderDiagram(cfg) {
   }
 
   // bands
+  const bandTexts = []; // band titles / ports are obstacles for arrow labels
   (cfg.bands || []).forEach(b => {
     const g = el('g', { class: 'band' }, svg);
-    el('rect', { x: b.x ?? 30, y: b.y, width: b.w ?? cfg.width - 60, height: b.h, fill: b.color, stroke: b.color }, g);
+    const bx = b.x ?? 30, bw = b.w ?? cfg.width - 60;
+    el('rect', { x: bx, y: b.y, width: bw, height: b.h, fill: b.color, stroke: b.color }, g);
     if (b.title) {
-      const t = el('text', { x: (b.x ?? 30) + (b.w ?? cfg.width - 60) - 15, y: b.y + 24, 'text-anchor': 'start', fill: b.color }, g); t.textContent = b.title;
+      // titleLeft: title on the left side (above the port text) when the right side is busy
+      const t = b.titleLeft
+        ? el('text', { x: bx + 15, y: b.y + 24, 'text-anchor': 'end', fill: b.color }, g)
+        : el('text', { x: bx + bw - 15, y: b.y + 24, 'text-anchor': 'start', fill: b.color }, g);
+      t.textContent = b.title; bandTexts.push(t);
     }
     if (b.port) {
-      const p = el('text', { x: (b.x ?? 30) + 15, y: b.y + 24, class: 'port', 'text-anchor': 'start', fill: b.color }, g); p.textContent = b.port;
+      const p = el('text', { x: bx + 15, y: b.y + (b.titleLeft ? 46 : 24), class: 'port', 'text-anchor': 'start', fill: b.color }, g); p.textContent = b.port; bandTexts.push(p);
     }
   });
+  const bandBoxes = bandTexts.map(t => { const r = t.getBBox(); return { x: r.x - 4, y: r.y - 2, w: r.width + 8, h: r.height + 4 }; });
 
   // ---- pass 1: fit text into every node (may grow the box height)
   const titleCls = big ? 'title big' : 'title', subCls = big ? 'sub big' : 'sub';
@@ -247,6 +280,7 @@ function renderDiagram(cfg) {
     if (need > n.h) n.h = need; // grow downwards instead of overflowing
   });
 
+  const labelLayer = el('g', {});
   // ---- pass 2: edges (ports spread along the box edge, sorted by target position)
   const center = n => ({ cx: n.x + n.w / 2, cy: n.y + n.h / 2 });
   E.forEach(e => {
@@ -265,21 +299,41 @@ function renderDiagram(cfg) {
   spread(horiz, e => e.from + e.dir, e => center(byId[e.to]).cy, (e, i, k) => { const a = byId[e.from]; e.sy = a.y + a.h * (i + 1) / (k + 1); e.sx = e.dir === 'right' ? a.x + a.w : a.x; });
   spread(horiz, e => e.to + e.dir, e => center(byId[e.from]).cy, (e, i, k) => { const b = byId[e.to]; e.ty = b.y + b.h * (i + 1) / (k + 1); e.tx = e.dir === 'right' ? b.x : b.x + b.w; });
 
-  const edgeLayer = el('g', {}, svg), labelLayer = el('g', {}, svg);
+  const edgeLayer = el('g', {}, svg);
+  const labels = [];
   E.forEach(e => {
     let d;
     if (e.dir === 'down' || e.dir === 'up') { const dy = (e.ty - e.sy) * 0.5; d = `M${e.sx},${e.sy} C${e.sx},${e.sy + dy} ${e.tx},${e.ty - dy} ${e.tx},${e.ty}`; }
     else { const dx = (e.tx - e.sx) * 0.5; d = `M${e.sx},${e.sy} C${e.sx + dx},${e.sy} ${e.tx - dx},${e.ty} ${e.tx},${e.ty}`; }
     e.el = el('path', { d, class: 'edge ' + e.type + (big ? ' thick' : ''), stroke: EDGE_COLORS[e.type], 'marker-end': `url(#${svg.id}-arrow-${e.type})` }, edgeLayer);
     if (e.label) {
-      const rtl = /[֐-׿]/.test(e.label);
-      const t = el('text', { x: (e.sx + e.tx) / 2, y: (e.sy + e.ty) / 2 - 6, class: 'edge-label' + (big ? ' big' : '') + (rtl ? ' rtl' : ''), 'text-anchor': 'middle' }, labelLayer);
-      t.textContent = e.label; e.labelEl = t;
+      const rtl = /[\u0590-\u05FF]/.test(e.label);
+      const cls = 'edge-label' + (big ? ' big' : '') + (rtl ? ' rtl' : '');
+      const w = measure(e.label, cls) + 14, h = big ? 22 : 18;
+      const mx = (e.sx + e.tx) / 2, my = (e.sy + e.ty) / 2;
+      const solid = [...N.filter(n => !n.container), ...bandBoxes];
+      let box = null;
+      // slide along the arrow and sideways until the pill covers no card and no other label
+      outer: for (const t of [0.5, 0.4, 0.6, 0.3, 0.7, 0.2, 0.8]) {
+        const px = e.sx + (e.tx - e.sx) * t, py = e.sy + (e.ty - e.sy) * t;
+        for (const [dx, dy] of [[0, 0], [0, -14], [0, 14], [-60, 0], [60, 0], [0, -28], [0, 28], [-120, 0], [120, 0]]) {
+          const c = { x: px - w / 2 + dx, y: py - h / 2 + dy, w, h };
+          if (c.x < 2 || c.x + w > cfg.width - 2 || c.y < 2 || c.y + h > cfg.height - 2) continue;
+          if (solid.some(n => boxOverlap(c, n, 3)) || labels.some(l => boxOverlap(c, l, 3))) continue;
+          box = c; break outer;
+        }
+      }
+      if (!box) box = { x: mx - w / 2, y: my - h / 2, w, h };
+      labels.push(box);
+      const bg = el('rect', { x: box.x, y: box.y, width: w, height: h, rx: h / 2, class: 'label-pill', stroke: EDGE_COLORS[e.type] }, labelLayer);
+      const t = el('text', { x: box.x + w / 2, y: box.y + h / 2 + (big ? 5 : 4), class: cls, 'text-anchor': 'middle' }, labelLayer);
+      t.textContent = e.label; e.labelEl = t; e.labelBg = bg;
     }
   });
 
   // ---- pass 3: nodes
   const nodeLayer = el('g', {}, svg);
+  svg.appendChild(labelLayer); // labels above cards
   const nodeEls = [];
   let pinned = null;
   N.forEach(n => {
@@ -313,12 +367,13 @@ function renderDiagram(cfg) {
     const related = new Set([id]);
     E.forEach(e => { if (e.from === id || e.to === id) { related.add(e.from); related.add(e.to); } });
     nodeEls.forEach(g => { const nid = g.dataset.id; g.classList.toggle('dim', !related.has(nid)); g.classList.toggle('hi', nid === id); });
-    E.forEach(e => { const on = e.from === id || e.to === id; e.el.classList.toggle('hi', on); e.el.classList.toggle('dim', !on); if (e.labelEl) e.labelEl.classList.toggle('dim', !on); });
+    E.forEach(e => { const on = e.from === id || e.to === id; e.el.classList.toggle('hi', on); e.el.classList.toggle('dim', !on); if (e.labelEl) { e.labelEl.classList.toggle('dim', !on); e.labelBg.classList.toggle('dim', !on); } });
   }
   function clear() {
     nodeEls.forEach(g => g.classList.remove('dim', 'hi'));
-    E.forEach(e => { e.el.classList.remove('hi', 'dim'); if (e.labelEl) e.labelEl.classList.remove('dim'); });
+    E.forEach(e => { e.el.classList.remove('hi', 'dim'); if (e.labelEl) { e.labelEl.classList.remove('dim'); e.labelBg.classList.remove('dim'); } });
   }
+  checkLayout(svg, N, labels, cfg, bandBoxes);
   return E.length;
 }
 
@@ -352,7 +407,7 @@ onode('o_repo',  'repo',    830,  430, 330, 120, 'Repositories', 'server/reposit
 onode('o_ai',    'service', 1210, 430, 320, 120, 'מודול AI', 'routes/ai.routes.js, services/ai.service.js', 'בונה סיכום פיננסי קומפקטי (עם cache), מרכיב prompt ושולח למודל. ללא AI האפליקציה עובדת כרגיל.', 'ענף ה-AI: הסיכום בלבד נשלח למודל, לא הנתונים הגולמיים.');
 
 onode('o_sql',   'sql',     450,  640, 710, 90, 'SQL Server · CashFlowDB', 'server/db/schema.sql', '19 טבלאות: תזרים, פריסות, השקעות, תקציב, יעדים, שיחות, דוחות AI', 'מסד הנתונים. חיבור דרך DB_CONNECTION_STRING ב-server/.env.');
-onode('o_model', 'ext',     1210, 640, 320, 90, 'מודל שפה', 'AI_BASE_URL (ברירת מחדל localhost:11434)', 'Ollama מקומי (run-all-ai.bat) או שרת מודל מרוחק', 'שרת המודל. הכתובת בקובץ .env, ולכן יכול לרוץ על מכונה אחרת.');
+onode('o_model', 'ext',     1210, 640, 320, 90, 'מודל שפה', 'AI_PROVIDER + AI_BASE_URL', 'Ollama מקומי, Ollama ברשת, או API מרוחק (Groq ועוד)', 'שרת המודל. הכתובת בקובץ .env, ולכן יכול לרוץ על מכונה אחרת.');
 
 const OE = [
   { from: 'o_ui', to: 'o_svc', type: 'ui' },
@@ -370,8 +425,8 @@ renderDiagram({
   svg: document.getElementById('svgOverview'), width: 1600, height: 780, big: true,
   bands: [
     { y: 50, h: 210, color: COLORS.feature, title: 'דפדפן · Angular 21', port: 'http://localhost:4300' },
-    { y: 380, h: 200, color: COLORS.service, title: 'שרת · Node.js 24 + Express 5', port: 'http://localhost:3000' },
-    { y: 610, h: 150, color: COLORS.sql, title: 'אחסון ושירותים חיצוניים', port: 'SQL Server :1433  |  AI model' }
+    { y: 366, h: 214, color: COLORS.service, title: 'שרת · Node.js 24 + Express 5', port: 'http://localhost:3000', titleLeft: true },
+    { y: 610, h: 150, color: COLORS.sql, title: 'אחסון ושירותים חיצוניים', port: 'SQL Server :1433  |  AI model', titleLeft: true }
   ],
   nodes: O, edges: OE
 });
@@ -412,8 +467,8 @@ node('s_rep',  'ngsvc', 60+SS*8,   SY, SW, SH, 'AiReportService', 'services/ai-r
 node('http', 'http', 60, 612, 1680, 60, 'HTTP REST / JSON  ·  http://localhost:3000/api', 'src/app/interceptors/http.interceptor.ts', 'httpInterceptor: לוג במצב פיתוח + הצגת שגיאות שרת ב-Snackbar. ‎/ai/chat-stream עובר ב-fetch ישיר (chunked text)', 'כל התקשורת בין הלקוח לשרת. CORS מוגבל ל-localhost:4300 כברירת מחדל (CORS_ORIGIN).');
 
 // --- Server entry
-node('index',  'entry', 60,  740, 760, 68, 'Express App', 'server/app.js + index.js', 'cors(origin) → json(limit) → log → /health → /api → static client → 404 → errorHandler', 'app.js בונה את האפליקציה (CORS מוגבל, גבול גוף בקשה, הגשת dist בפרודקשן). index.js מתחבר ל-SQL Server לפני ההאזנה וסוגר מסודר ב-SIGINT/SIGTERM.');
-node('router', 'entry', 860, 740, 880, 68, 'Router ראשי', 'server/routes/index.js', 'מרכיב את כל ה-routes תחת /api', 'מרכיב את כל מודולי ה-routes, כולל routes/ai.routes.js.');
+node('index',  'entry', 60,  758, 760, 64, 'Express App', 'server/app.js + index.js', 'cors(origin) → json(limit) → log → /health → /api → static client → 404 → errorHandler', 'app.js בונה את האפליקציה (CORS מוגבל, גבול גוף בקשה, הגשת dist בפרודקשן). index.js מתחבר ל-SQL Server לפני ההאזנה וסוגר מסודר ב-SIGINT/SIGTERM.');
+node('router', 'entry', 860, 758, 880, 64, 'Router ראשי', 'server/routes/index.js', 'מרכיב את כל ה-routes תחת /api', 'מרכיב את כל מודולי ה-routes, כולל routes/ai.routes.js.');
 
 // --- Server routes (8 columns)
 const CX = i => 60 + i * 215, CW = 195;
@@ -565,6 +620,12 @@ document.getElementById('flows').innerHTML = flows.map(f => `
   <div class="flow"><h4>${f.title}</h4><div class="steps">${f.steps.map((s, i) =>
     `<span class="step" style="background:${COLORS[s[0]]}">${s[1]}</span>${i < f.steps.length - 1 ? '<span class="arrow">←</span>' : ''}`).join('')}</div>
     <div class="note">${f.note}</div></div>`).join('');
+
+const report = document.createElement('pre');
+report.id = 'layout-check'; report.hidden = true;
+report.textContent = window.__layoutIssues.length ? 'LAYOUT ISSUES: ' + window.__layoutIssues.join(' | ') : 'LAYOUT OK';
+document.body.appendChild(report);
+if (window.__layoutIssues.length) console.warn(report.textContent);
 </script>
 </body>
 </html>

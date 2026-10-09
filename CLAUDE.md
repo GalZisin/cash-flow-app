@@ -56,4 +56,10 @@ Node 24+ for both parts (`engines`, `.nvmrc`). Do not reintroduce separate Node 
 
 `docs/README.md` is the index. Update the relevant doc when behaviour changes:
 getting-started (run, database), architecture (overview, optimizations), server (API, logging), frontend (feature guides), ai (providers, dev prompt), archive (history, do not edit).
-`ARCHITECTURE_DIAGRAM.html` is a self-contained interactive diagram; its node/edge data lives in the file's `<script>`.
+`ARCHITECTURE_DIAGRAM.html` and `AI_OPTIONS.html` are self-contained pages; their node/edge data lives in each file's `<script>`.
+
+**Diagram layout rule**: both pages run a built-in layout check after rendering (text inside every card, no arrow label over a card, band title or another label, no overlapping cards, nothing off-canvas) and write the result to a hidden `<pre id="layout-check">`. After any diagram edit, run it and require `LAYOUT OK`, then look at a screenshot:
+
+```bash
+"/c/Program Files/Google/Chrome/Application/chrome.exe" --headless=new --disable-gpu --virtual-time-budget=3000 --dump-dom "file:///C:/dev-gal/cash-flow-app/ARCHITECTURE_DIAGRAM.html" | grep -o '<pre id="layout-check"[^<]*'
+```

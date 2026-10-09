@@ -121,25 +121,79 @@ const NS = 'http://www.w3.org/2000/svg';
 const C = { app: '#3b82f6', server: '#22c55e', model: '#a855f7', cloud: '#f59e0b', lan: '#06b6d4', bad: '#ef4444', muted: '#64748b' };
 function el(tag, attrs, parent) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
 
-/** Small diagram renderer: nodes {id,x,y,w,h,color,title,sub[],dashed}, edges {from,to,label,color,dashed}, groups {x,y,w,h,color,label}. */
+/** Small diagram renderer: nodes {id,x,y,w,h,color,title,sub[],dashed}, edges {from,to,label,color,dashed}, groups {x,y,w,h,color,label}.
+ *  - text is measured and wrapped to the card width; a card grows taller if needed
+ *  - arrow labels get a background pill and are moved until they do not cover any card
+ *  - checkLayout() records any remaining overlap in window.__layoutIssues */
+const RTL = (t) => /[\u0590-\u05FF]/.test(t);
+const FONT_UI = 'Heebo, Segoe UI, sans-serif', FONT_MONO = 'Consolas, Courier New, monospace';
+window.__layoutIssues = [];
+
+function measurer(svgEl) {
+  const probe = el('text', { x: -9999, y: -9999, visibility: 'hidden' }, svgEl);
+  return (text, size, weight, family) => {
+    probe.setAttribute('font-size', size); probe.setAttribute('font-weight', weight); probe.setAttribute('font-family', family);
+    probe.textContent = text; return probe.getComputedTextLength();
+  };
+}
+function wrapText(text, maxW, size, weight, family, measure) {
+  const fits = (t) => measure(t, size, weight, family) <= maxW;
+  const words = [];
+  text.split(' ').forEach((w) => {
+    if (fits(w)) { words.push({ t: w, glue: false }); return; }
+    let cur = '', first = true;                                   // break a long token (url / path)
+    for (const ch of w) {
+      if (fits(cur + ch)) { cur += ch; continue; }
+      const m = cur.match(/^(.*[\/.\-_])(.+)$/);
+      if (m) { words.push({ t: m[1], glue: !first }); cur = m[2] + ch; } else { words.push({ t: cur, glue: !first }); cur = ch; }
+      first = false;
+    }
+    if (cur) words.push({ t: cur, glue: !first });
+  });
+  const lines = []; let line = '';
+  for (const { t, glue } of words) {
+    const cand = line ? line + (glue ? '' : ' ') + t : t;
+    if (fits(cand)) line = cand; else { if (line) lines.push(line); line = t; }
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+const overlaps = (a, b, pad = 0) => a.x < b.x + b.w + pad && a.x + a.w + pad > b.x && a.y < b.y + b.h + pad && a.y + a.h + pad > b.y;
+
 function draw(svgEl, W, H, { groups = [], nodes, edges }) {
   svgEl.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  const measure = measurer(svgEl);
   const defs = el('defs', {}, svgEl);
-  const colors = new Set([...edges.map(e => e.color || C.muted)]);
-  colors.forEach(c => {
+  new Set(edges.map(e => e.color || C.muted)).forEach(c => {
     const m = el('marker', { id: `${svgEl.id}-a-${c.slice(1)}`, viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 7, markerHeight: 7, orient: 'auto-start-reverse' }, defs);
     el('path', { d: 'M0,0 L10,5 L0,10 z', fill: c }, m);
   });
   groups.forEach(g => {
     el('rect', { x: g.x, y: g.y, width: g.w, height: g.h, rx: 14, fill: g.color, 'fill-opacity': .07, stroke: g.color, 'stroke-opacity': .4, 'stroke-dasharray': '6 5' }, svgEl);
-    const t = el('text', { x: g.x + g.w - 12, y: g.y + 20, 'text-anchor': 'start', fill: g.color, 'font-size': 13, 'font-weight': 700, style: 'direction:rtl' }, svgEl); t.textContent = g.label;
+    const t = el('text', { x: g.x + g.w - 12, y: g.y + 20, 'text-anchor': 'start', fill: g.color, 'font-size': 13, 'font-weight': 700, 'font-family': FONT_UI, style: 'direction:rtl' }, svgEl);
+    t.textContent = g.label;
+  });
+
+  // 1) fit the text of every card (wrap, grow height)
+  nodes.forEach(n => {
+    const maxW = n.w - 20;
+    n.lines = [];
+    wrapText(n.title, maxW, 14, 700, FONT_UI, measure).forEach(t => n.lines.push({ t, size: 14, weight: 700, family: FONT_UI, lh: 18 }));
+    (n.sub || []).forEach(sub => wrapText(sub, maxW, 11.5, 400, RTL(sub) ? FONT_UI : FONT_MONO, measure)
+      .forEach(t => n.lines.push({ t, size: 11.5, weight: 400, family: RTL(t) ? FONT_UI : FONT_MONO, lh: 15 })));
+    const need = n.lines.reduce((a, l) => a + l.lh, 0) + 16;
+    if (need > n.h) { n.y -= (need - n.h) / 2; n.h = need; }
   });
   const byId = Object.fromEntries(nodes.map(n => [n.id, n]));
+
+  // 2) arrows
+  const edgeLayer = el('g', {}, svgEl), labelLayer = el('g', {}, svgEl), nodeLayer = el('g', {}, svgEl);
+  const placedLabels = [];
   edges.forEach(e => {
     const a = byId[e.from], b = byId[e.to];
-    const horiz = Math.abs((a.y + a.h / 2) - (b.y + b.h / 2)) < Math.max(a.h, b.h);
+    const horiz = Math.abs((a.y + a.h / 2) - (b.y + b.h / 2)) < Math.max(a.h, b.h) * 0.6 || b.x >= a.x + a.w || a.x >= b.x + b.w && Math.abs((a.y + a.h / 2) - (b.y + b.h / 2)) < Math.max(a.h, b.h);
     let sx, sy, tx, ty, d;
-    if (horiz) {
+    if (horiz && (b.x >= a.x + a.w || a.x >= b.x + b.w)) {
       const right = b.x > a.x;
       sx = right ? a.x + a.w : a.x; sy = a.y + a.h / 2; tx = right ? b.x : b.x + b.w; ty = b.y + b.h / 2;
       const dx = (tx - sx) * .5; d = `M${sx},${sy} C${sx + dx},${sy} ${tx - dx},${ty} ${tx},${ty}`;
@@ -149,37 +203,72 @@ function draw(svgEl, W, H, { groups = [], nodes, edges }) {
       const dy = (ty - sy) * .5; d = `M${sx},${sy} C${sx},${sy + dy} ${tx},${ty - dy} ${tx},${ty}`;
     }
     const color = e.color || C.muted;
-    el('path', { d, fill: 'none', stroke: color, 'stroke-width': 2.5, 'stroke-dasharray': e.dashed ? '7 5' : 'none', 'marker-end': `url(#${svgEl.id}-a-${color.slice(1)})` }, svgEl);
-    if (e.label) {
-      const rtl = /[֐-׿]/.test(e.label);
-      const t = el('text', { x: (sx + tx) / 2, y: (sy + ty) / 2 - 7, 'text-anchor': 'middle', fill: '#cbd5e1', 'font-size': 12, style: `paint-order:stroke;stroke:#0b1222;stroke-width:4px;direction:${rtl ? 'rtl' : 'ltr'}`, 'font-family': rtl ? 'Heebo, Segoe UI, sans-serif' : 'Consolas, monospace' }, svgEl);
-      t.textContent = e.label;
+    el('path', { d, fill: 'none', stroke: color, 'stroke-width': 2.5, 'stroke-dasharray': e.dashed ? '7 5' : 'none', 'marker-end': `url(#${svgEl.id}-a-${color.slice(1)})` }, edgeLayer);
+    if (!e.label) return;
+
+    // label pill: start at the middle of the arrow, then slide until it covers no card and no other label
+    const family = RTL(e.label) ? FONT_UI : FONT_MONO;
+    const w = measure(e.label, 12, 600, family) + 14, h = 20;
+    const mx = (sx + tx) / 2, my = (sy + ty) / 2;
+    const candidates = [0, -16, 16, -30, 30, -44, 44, -58, 58];
+    let box = null;
+    for (const off of candidates) {
+      const c = { x: mx - w / 2, y: my - h / 2 + off, w, h };
+      if (c.x < 2 || c.x + c.w > W - 2 || c.y < 2 || c.y + c.h > H - 2) continue;
+      if (nodes.some(n => overlaps(c, n, 3)) || placedLabels.some(l => overlaps(c, l, 3))) continue;
+      box = c; break;
     }
+    if (!box) { box = { x: mx - w / 2, y: my - h / 2, w, h }; }
+    placedLabels.push(box);
+    el('rect', { x: box.x, y: box.y, width: box.w, height: box.h, rx: 10, fill: '#0b1222', stroke: color, 'stroke-opacity': .7 }, labelLayer);
+    const t = el('text', { x: box.x + box.w / 2, y: box.y + 14, 'text-anchor': 'middle', fill: '#e2e8f0', 'font-size': 12, 'font-weight': 600, 'font-family': family, style: `direction:${RTL(e.label) ? 'rtl' : 'ltr'}` }, labelLayer);
+    t.textContent = e.label;
+    t.dataset.check = 'label';
   });
+
+  // 3) cards on top
   nodes.forEach(n => {
-    el('rect', { x: n.x, y: n.y, width: n.w, height: n.h, rx: 12, fill: n.color, 'fill-opacity': n.dashed ? .25 : .85, stroke: n.color, 'stroke-width': 2, 'stroke-dasharray': n.dashed ? '8 5' : 'none' }, svgEl);
-    const lines = [n.title, ...(n.sub || [])];
-    const lh = 15, total = 18 + (lines.length - 1) * lh;
-    let y = n.y + (n.h - total) / 2 + 14;
-    lines.forEach((l, i) => {
-      const rtl = /[֐-׿]/.test(l);
-      const t = el('text', { x: n.x + n.w / 2, y, 'text-anchor': 'middle', fill: '#f8fafc', 'font-size': i === 0 ? 14 : 11.5, 'font-weight': i === 0 ? 700 : 400,
-        'font-family': rtl || i === 0 ? 'Heebo, Segoe UI, sans-serif' : 'Consolas, monospace', style: `direction:${rtl ? 'rtl' : 'ltr'}` }, svgEl);
-      t.textContent = l; y += i === 0 ? 18 : lh;
+    const g = el('g', { 'data-node': n.id }, nodeLayer);
+    el('rect', { x: n.x, y: n.y, width: n.w, height: n.h, rx: 12, fill: n.color, 'fill-opacity': n.dashed ? .25 : .9, stroke: n.color, 'stroke-width': 2, 'stroke-dasharray': n.dashed ? '8 5' : 'none' }, g);
+    const total = n.lines.reduce((a, l) => a + l.lh, 0);
+    let y = n.y + (n.h - total) / 2 + 13;
+    n.lines.forEach(l => {
+      const t = el('text', { x: n.x + n.w / 2, y, 'text-anchor': 'middle', fill: '#f8fafc', 'font-size': l.size, 'font-weight': l.weight, 'font-family': l.family, style: `direction:${RTL(l.t) ? 'rtl' : 'ltr'}` }, g);
+      t.textContent = l.t; y += l.lh;
     });
   });
+  checkLayout(svgEl, nodes, placedLabels);
+}
+
+/** Verifies: every card text inside its card, no label over a card, no two labels overlapping, nothing outside the canvas. */
+function checkLayout(svgEl, nodes, labels) {
+  const vb = svgEl.viewBox.baseVal;
+  const issue = (m) => window.__layoutIssues.push(`${svgEl.id}: ${m}`);
+  svgEl.querySelectorAll('g[data-node]').forEach(g => {
+    const n = nodes.find(x => x.id === g.dataset.node);
+    g.querySelectorAll('text').forEach(t => {
+      const b = t.getBBox();
+      if (b.x < n.x + 2 || b.x + b.width > n.x + n.w - 2 || b.y < n.y + 1 || b.y + b.height > n.y + n.h - 1) issue(`text "${t.textContent}" overflows card ${n.id}`);
+    });
+  });
+  nodes.forEach((a, i) => nodes.slice(i + 1).forEach(b => { if (overlaps(a, b)) issue(`cards ${a.id} and ${b.id} overlap`); }));
+  labels.forEach((l, i) => {
+    nodes.forEach(n => { if (overlaps(l, n)) issue(`arrow label #${i} covers card ${n.id}`); });
+    labels.slice(i + 1).forEach((o, j) => { if (overlaps(l, o)) issue(`arrow labels #${i} and #${i + j + 1} overlap`); });
+  });
+  [...nodes, ...labels].forEach(r => { if (r.x < 0 || r.y < 0 || r.x + r.w > vb.width || r.y + r.h > vb.height) issue(`element outside canvas at ${Math.round(r.x)},${Math.round(r.y)}`); });
 }
 
 // ---------------------------------------------------------------- general flow
-draw(document.getElementById('flow'), 1400, 230, {
-  groups: [{ x: 20, y: 20, w: 300, h: 190, color: C.app, label: 'דפדפן' }, { x: 350, y: 20, w: 560, h: 190, color: C.server, label: 'שרת Express (המחשב שלך)' }, { x: 940, y: 20, w: 440, h: 190, color: C.model, label: 'מודל שפה (אחד מהאפשרויות למטה)' }],
+draw(document.getElementById('flow'), 1560, 300, {
+  groups: [{ x: 20, y: 20, w: 300, h: 260, color: C.app, label: 'דפדפן' }, { x: 350, y: 20, w: 640, h: 260, color: C.server, label: 'שרת Express (המחשב שלך)' }, { x: 1020, y: 20, w: 520, h: 260, color: C.model, label: 'מודל שפה (אחת מהאפשרויות למטה)' }],
   nodes: [
-    { id: 'ui', x: 50, y: 80, w: 240, h: 80, color: C.app, title: 'לשונית עוזר AI', sub: ['AiService → /api/ai/*'] },
-    { id: 'sum', x: 380, y: 80, w: 230, h: 80, color: C.server, title: 'סיכום פיננסי', sub: ['financialSummary.service', 'cache 60s'] },
-    { id: 'ai', x: 650, y: 80, w: 230, h: 80, color: C.server, title: 'ai.service', sub: ['AI_PROVIDER / AI_BASE_URL', 'AI_MODEL / AI_API_KEY'] },
-    { id: 'm1', x: 970, y: 45, w: 180, h: 60, color: C.model, title: 'Ollama', sub: ['/api/generate'] },
-    { id: 'm2', x: 970, y: 125, w: 180, h: 60, color: C.cloud, title: 'API תואם OpenAI', sub: ['/chat/completions'] },
-    { id: 'm3', x: 1180, y: 85, w: 180, h: 60, color: C.model, title: 'המודל', sub: ['qwen3 / gpt-oss / llama...'], dashed: true }
+    { id: 'ui', x: 45, y: 110, w: 250, h: 80, color: C.app, title: 'לשונית עוזר AI', sub: ['AiService → /api/ai/*'] },
+    { id: 'sum', x: 375, y: 110, w: 230, h: 80, color: C.server, title: 'סיכום פיננסי', sub: ['financialSummary.service', 'cache 60s'] },
+    { id: 'ai', x: 735, y: 110, w: 230, h: 80, color: C.server, title: 'ai.service', sub: ['AI_PROVIDER, AI_BASE_URL', 'AI_MODEL, AI_API_KEY'] },
+    { id: 'm1', x: 1180, y: 60, w: 160, h: 64, color: C.model, title: 'Ollama', sub: ['/api/generate'] },
+    { id: 'm2', x: 1180, y: 180, w: 160, h: 64, color: C.cloud, title: 'API תואם OpenAI', sub: ['/chat/completions'] },
+    { id: 'm3', x: 1380, y: 120, w: 140, h: 64, color: C.model, title: 'המודל', sub: ['qwen3 / gpt-oss', 'llama ...'], dashed: true }
   ],
   edges: [
     { from: 'ui', to: 'sum', label: 'שאלה', color: C.app }, { from: 'sum', to: 'ai', label: 'סיכום JSON', color: C.server },
@@ -198,8 +287,8 @@ const OPTIONS = [
     cons: ['CPU כמעט 100% בזמן בקשה', 'תשובה של 30 עד 120 שניות ללא GPU', 'מודל 8B חלש מהמודלים בענן'],
     env: 'AI_PROVIDER=ollama\nAI_BASE_URL=http://localhost:11434\nAI_MODEL=qwen3:8b',
     steps: ['התקנת Ollama מ-ollama.com', '<code>ollama pull qwen3:8b</code>', '<code>run-all-ai.bat</code> או <code>npm run dev:ai</code> (מפעיל Ollama אוטומטית)'],
-    diagram: { W: 640, H: 170, groups: [{ x: 10, y: 10, w: 620, h: 150, color: C.app, label: 'המחשב שלך' }],
-      nodes: [{ id: 'a', x: 30, y: 60, w: 150, h: 60, color: C.app, title: 'דפדפן' }, { id: 's', x: 240, y: 60, w: 160, h: 60, color: C.server, title: 'שרת Express', sub: [':3000'] }, { id: 'o', x: 460, y: 60, w: 150, h: 60, color: C.model, title: 'Ollama', sub: [':11434  CPU 100%'] }],
+    diagram: { W: 800, H: 180, groups: [{ x: 10, y: 10, w: 780, h: 160, color: C.app, label: 'המחשב שלך' }],
+      nodes: [{ id: 'a', x: 30, y: 60, w: 130, h: 70, color: C.app, title: 'דפדפן' }, { id: 's', x: 240, y: 60, w: 180, h: 70, color: C.server, title: 'שרת Express', sub: [':3000'] }, { id: 'o', x: 540, y: 60, w: 230, h: 70, color: C.model, title: 'Ollama', sub: [':11434', 'CPU 100% בזמן בקשה'] }],
       edges: [{ from: 'a', to: 's', color: C.app }, { from: 's', to: 'o', label: 'localhost', color: C.model }] }
   },
   {
@@ -210,8 +299,8 @@ const OPTIONS = [
     cons: ['צריך מחשב שני דולק', 'פתיחת פורט 11434 בחומת האש של המחשב השני', 'תלוי ברשת הביתית'],
     env: 'AI_PROVIDER=ollama\nAI_BASE_URL=http://192.168.1.50:11434\nAI_MODEL=qwen3:8b',
     steps: ['במחשב השני: <code>OLLAMA_HOST=0.0.0.0</code> כמשתנה סביבה (ב-Windows: <code>[Environment]::SetEnvironmentVariable(\'OLLAMA_HOST\',\'0.0.0.0\',\'User\')</code>) והפעלה מחדש של Ollama', 'במחשב השני: לאפשר פורט 11434 בחומת האש, ו-<code>ollama pull qwen3:8b</code>', 'כאן: <code>AI_BASE_URL</code> עם ה-IP של המחשב השני ב-<code>server/.env</code>', '<code>npm run dev</code> (dev:ai מזהה לבד שלא צריך Ollama מקומי ורק בודק שהמחשב השני עונה)'],
-    diagram: { W: 640, H: 190, groups: [{ x: 10, y: 10, w: 330, h: 170, color: C.app, label: 'המחשב שלך' }, { x: 380, y: 10, w: 250, h: 170, color: C.lan, label: 'מחשב שני (GPU?)' }],
-      nodes: [{ id: 'a', x: 30, y: 70, w: 120, h: 60, color: C.app, title: 'דפדפן' }, { id: 's', x: 185, y: 70, w: 135, h: 60, color: C.server, title: 'שרת Express' }, { id: 'o', x: 410, y: 70, w: 190, h: 60, color: C.model, title: 'Ollama', sub: ['OLLAMA_HOST=0.0.0.0'] }],
+    diagram: { W: 800, H: 190, groups: [{ x: 10, y: 10, w: 420, h: 170, color: C.app, label: 'המחשב שלך' }, { x: 520, y: 10, w: 270, h: 170, color: C.lan, label: 'מחשב שני (עם GPU אם יש)' }],
+      nodes: [{ id: 'a', x: 30, y: 65, w: 130, h: 70, color: C.app, title: 'דפדפן' }, { id: 's', x: 220, y: 65, w: 190, h: 70, color: C.server, title: 'שרת Express', sub: ['AI_BASE_URL ב-.env'] }, { id: 'o', x: 545, y: 65, w: 220, h: 70, color: C.model, title: 'Ollama', sub: ['OLLAMA_HOST=0.0.0.0'] }],
       edges: [{ from: 'a', to: 's', color: C.app }, { from: 's', to: 'o', label: 'LAN :11434', color: C.lan }] }
   },
   {
@@ -266,8 +355,8 @@ const OPTIONS = [
 ];
 
 function cloudDiagram(name, host, models) {
-  return { W: 640, H: 190, groups: [{ x: 10, y: 10, w: 330, h: 170, color: C.app, label: 'המחשב שלך' }, { x: 380, y: 10, w: 250, h: 170, color: C.cloud, label: 'ענן' }],
-    nodes: [{ id: 'a', x: 30, y: 70, w: 120, h: 60, color: C.app, title: 'דפדפן' }, { id: 's', x: 185, y: 70, w: 135, h: 60, color: C.server, title: 'שרת Express', sub: ['AI_API_KEY ב-.env'] }, { id: 'o', x: 410, y: 70, w: 190, h: 60, color: C.cloud, title: name, sub: [host, models] }],
+  return { W: 800, H: 200, groups: [{ x: 10, y: 10, w: 420, h: 180, color: C.app, label: 'המחשב שלך' }, { x: 520, y: 10, w: 270, h: 180, color: C.cloud, label: 'ענן' }],
+    nodes: [{ id: 'a', x: 30, y: 65, w: 130, h: 80, color: C.app, title: 'דפדפן' }, { id: 's', x: 220, y: 65, w: 190, h: 80, color: C.server, title: 'שרת Express', sub: ['AI_API_KEY ב-.env'] }, { id: 'o', x: 545, y: 55, w: 220, h: 100, color: C.cloud, title: name, sub: [host, models] }],
     edges: [{ from: 'a', to: 's', color: C.app }, { from: 's', to: 'o', label: 'HTTPS', color: C.cloud }] };
 }
 
@@ -296,22 +385,29 @@ OPTIONS.forEach(o => {
 });
 
 // ---------------------------------------------------------------- decision tree
-draw(document.getElementById('decision'), 1400, 420, {
+draw(document.getElementById('decision'), 1400, 470, {
   nodes: [
     { id: 'q1', x: 560, y: 20, w: 280, h: 60, color: C.muted, title: 'הנתונים חייבים להישאר בבית?' },
-    { id: 'q2', x: 160, y: 140, w: 280, h: 60, color: C.muted, title: 'יש מחשב שני דולק ברשת?' },
-    { id: 'q3', x: 960, y: 140, w: 280, h: 60, color: C.muted, title: 'כמה שאלות ביום?' },
-    { id: 'r1', x: 20, y: 280, w: 260, h: 80, color: C.lan, title: '2. Ollama ברשת', sub: ['AI_BASE_URL=http://<ip>:11434'] },
-    { id: 'r2', x: 310, y: 280, w: 260, h: 80, color: C.model, title: '1. Ollama מקומי', sub: ['run-all-ai.bat'] },
-    { id: 'r3', x: 820, y: 280, w: 260, h: 80, color: C.cloud, title: '3. Groq', sub: ['עד 1,000 ביום, מהיר'] },
-    { id: 'r4', x: 1110, y: 280, w: 260, h: 80, color: C.cloud, title: '4. OpenRouter / 6. Mistral', sub: ['מעט שאלות, רוצים מודל ספציפי'] }
+    { id: 'q2', x: 150, y: 170, w: 280, h: 60, color: C.muted, title: 'יש מחשב שני דולק ברשת?' },
+    { id: 'q3', x: 970, y: 170, w: 280, h: 60, color: C.muted, title: 'כמה שאלות ביום?' },
+    { id: 'r1', x: 20, y: 340, w: 260, h: 90, color: C.lan, title: '2. Ollama ברשת', sub: ['AI_BASE_URL=http://<ip>:11434'] },
+    { id: 'r2', x: 310, y: 340, w: 260, h: 90, color: C.model, title: '1. Ollama מקומי', sub: ['run-all-ai.bat'] },
+    { id: 'r3', x: 830, y: 340, w: 260, h: 90, color: C.cloud, title: '3. Groq', sub: ['עד 1,000 ביום, מהיר'] },
+    { id: 'r4', x: 1120, y: 340, w: 260, h: 90, color: C.cloud, title: '4. OpenRouter / 6. Mistral', sub: ['מעט שאלות, או מודל מסוים'] }
   ],
   edges: [
-    { from: 'q1', to: 'q2', label: 'כן', color: C.lan }, { from: 'q1', to: 'q3', label: 'לא, סיכום מותר לצאת', color: C.cloud },
+    { from: 'q1', to: 'q2', label: 'כן', color: C.lan }, { from: 'q1', to: 'q3', label: 'לא, הסיכום יכול לצאת', color: C.cloud },
     { from: 'q2', to: 'r1', label: 'כן', color: C.lan }, { from: 'q2', to: 'r2', label: 'לא', color: C.model },
     { from: 'q3', to: 'r3', label: 'כל כמות', color: C.cloud }, { from: 'q3', to: 'r4', label: 'מעט, או מודל מסוים', color: C.cloud }
   ]
 });
+
+// layout self-check result (read by humans in the console, and by the headless check in --dump-dom)
+const report = document.createElement('pre');
+report.id = 'layout-check'; report.hidden = true;
+report.textContent = window.__layoutIssues.length ? 'LAYOUT ISSUES: ' + window.__layoutIssues.join(' | ') : 'LAYOUT OK';
+document.body.appendChild(report);
+if (window.__layoutIssues.length) console.warn(report.textContent);
 </script>
 </body>
 </html>
