@@ -1,0 +1,197 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.cf-chart {
+  position: relative;
+
+  svg {
+    display: block;
+    overflow: visible;
+    outline: none;
+    font-family: inherit;
+
+    &:focus-visible {
+      box-shadow: 0 0 0 2px rgba(var(--cf-primary-rgb), 0.45);
+      border-radius: 8px;
+    }
+  }
+}
+
+// ---- רשת וצירים ----
+.grid {
+  stroke: var(--cf-border);
+  stroke-width: 1;
+  shape-rendering: crispEdges;
+
+  &.zero { stroke: var(--cf-border-strong); }
+}
+
+.axis-label {
+  fill: var(--cf-text-3);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.proj-zone { fill: rgba(var(--cf-primary-rgb), 0.05); }
+
+.zone-label,
+.today-label {
+  fill: var(--cf-text-3);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.today {
+  stroke: var(--cf-text-4);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+
+.hover-band { fill: rgba(var(--cf-text-rgb), 0.05); }
+
+.crosshair {
+  stroke: var(--cf-text-3);
+  stroke-width: 1;
+  shape-rendering: crispEdges;
+}
+
+.hit {
+  fill: transparent;
+  cursor: crosshair;
+}
+
+// ---- סימנים ----
+.line {
+  fill: none;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+
+  &.balance { stroke: var(--cf-primary); }
+  &.projected { stroke-dasharray: 6 5; }
+  &.moving-avg { stroke: var(--cf-text-2); }
+}
+
+.area {
+  fill: rgba(var(--cf-primary-rgb), 0.12);
+
+  &.projected { fill: rgba(var(--cf-primary-rgb), 0.06); }
+}
+
+.dot.balance {
+  fill: var(--cf-primary);
+  stroke: var(--cf-surface);
+  stroke-width: 2;
+}
+
+.end-label {
+  fill: var(--cf-text-strong);
+  font-size: 12px;
+  font-weight: 700;
+  paint-order: stroke;
+  stroke: var(--cf-surface);
+  stroke-width: 3px;
+}
+
+.bar {
+  transition: opacity 0.15s;
+
+  &.income { fill: var(--cf-success-solid); }
+  &.expenses { fill: var(--cf-danger-solid); }
+  &.positive { fill: var(--cf-success-solid); }
+  &.negative { fill: var(--cf-danger-solid); }
+  &.projected { opacity: 0.42; }
+}
+
+.avg {
+  stroke-width: 1.5;
+  stroke-dasharray: 5 4;
+
+  &.income { stroke: var(--cf-success-solid); }
+  &.expenses { stroke: var(--cf-danger-solid); }
+}
+
+.avg-label {
+  fill: var(--cf-text-2);
+  font-size: 10.5px;
+  font-weight: 600;
+  paint-order: stroke;
+  stroke: var(--cf-surface);
+  stroke-width: 3px;
+}
+
+// ---- tooltip ----
+.cf-tip {
+  position: absolute;
+  top: 6px;
+  min-width: 180px;
+  padding: 0.5rem 0.65rem;
+  background: var(--cf-surface);
+  border: 1px solid var(--cf-border-strong);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
+  font-size: 0.78rem;
+  color: var(--cf-text-2);
+  pointer-events: none;
+  z-index: 5;
+
+  .tip-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.35rem;
+    font-weight: 700;
+    color: var(--cf-text-strong);
+  }
+
+  .tip-badge {
+    font-size: 0.68rem;
+    font-weight: 600;
+    padding: 0.05rem 0.4rem;
+    border-radius: 999px;
+    background: var(--cf-surface-3);
+    color: var(--cf-text-2);
+
+    &.projected {
+      background: var(--cf-primary-soft);
+      color: var(--cf-primary-text);
+    }
+  }
+
+  .tip-row {
+    display: grid;
+    grid-template-columns: 14px auto 1fr;
+    align-items: center;
+    gap: 0.4rem;
+    line-height: 1.55;
+
+    strong {
+      color: var(--cf-text-strong);
+      font-variant-numeric: tabular-nums;
+    }
+  }
+
+  .tip-foot {
+    margin-top: 0.3rem;
+    padding-top: 0.3rem;
+    border-top: 1px solid var(--cf-border);
+    color: var(--cf-text-3);
+  }
+}
+
+// מפתח קו קצר (לא ריבוע) בשורות ה-tooltip
+.key {
+  display: inline-block;
+  width: 12px;
+  height: 3px;
+  border-radius: 2px;
+
+  &.income, &.positive { background: var(--cf-success-solid); }
+  &.expenses, &.negative { background: var(--cf-danger-solid); }
+  &.balance { background: var(--cf-primary); }
+  &.moving-avg { background: var(--cf-text-2); }
+}

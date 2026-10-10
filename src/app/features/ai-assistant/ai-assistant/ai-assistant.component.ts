@@ -10,6 +10,7 @@ import { LanguageService } from '../../../services/language.service';
 import { CashFlowService } from '../../../services/cash-flow.service';
 import { AiSankeyDiagramComponent } from './ai-sankey-diagram.component';
 import { ExpensePieChartComponent } from '../../cash-flow/expense-pie-chart/expense-pie-chart.component';
+import { CashFlowChartsComponent } from '../cash-flow-charts/cash-flow-charts.component';
 import { MonthData } from '../../../models/cash-flow.model'; // Import shared MonthData
 import { InstallmentService } from '../../../services/installment.service';
 import { ThemeService } from '../../../services/theme.service';
@@ -24,7 +25,7 @@ type ActiveTab = 'chat' | 'analysis' | 'scenario' | 'dashboard' | 'archive' | 's
   selector: 'app-ai-assistant',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, TranslateModule, MatTooltipModule, AiSankeyDiagramComponent, ExpensePieChartComponent], // ReactiveFormsModule already here
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, TranslateModule, MatTooltipModule, AiSankeyDiagramComponent, ExpensePieChartComponent, CashFlowChartsComponent], // ReactiveFormsModule already here
   templateUrl: './ai-assistant.component.html',
   styleUrl: './ai-assistant.component.scss'
 })
@@ -157,6 +158,7 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
   loadDashboardData() {
     // Ensure all necessary data is loaded for the dashboard
     this.loadSummary(); // Summary is already loaded, but good to ensure it's fresh
+    if (!this.cashFlowMonthsSignal().length) this.cashFlowService.load().subscribe(); // הגרפים צריכים את חודשי התזרים
     this.installmentService.load().subscribe();
     this.investmentService.load().subscribe({ // Assuming load() returns an Observable and updates its internal signal
       next: (items: any[]) => {

@@ -1,0 +1,215 @@
+<section class="cf-charts">
+  <header class="charts-head">
+    <div>
+      <h5 class="charts-title">{{ 'CF_CHARTS.TITLE' | translate }}</h5>
+      <div class="charts-sub">{{ 'CF_CHARTS.SUBTITLE' | translate }}</div>
+    </div>
+  </header>
+
+  <!-- שורת סינון אחת מעל כל הגרפים -->
+  <div class="filters" role="toolbar" [attr.aria-label]="'CF_CHARTS.FILTERS' | translate">
+    <div class="segmented" role="group" [attr.aria-label]="'CF_CHARTS.PERIOD' | translate">
+      @for (p of periods; track p) {
+        <button type="button" [class.active]="period() === p" [attr.aria-pressed]="period() === p" (click)="setPeriod(p)">
+          {{ 'CF_CHARTS.PERIOD_' + p.toUpperCase() | translate }}
+        </button>
+      }
+    </div>
+
+    <div class="segmented" role="group" [attr.aria-label]="'CF_CHARTS.RANGE' | translate">
+      @for (r of ranges; track r) {
+        <button type="button" [class.active]="range() === r" [attr.aria-pressed]="range() === r" (click)="setRange(r)">
+          {{ 'CF_CHARTS.RANGE_' + r.toUpperCase() | translate }}
+        </button>
+      }
+    </div>
+
+    <button type="button" class="chip" [class.active]="showAverage()" [attr.aria-pressed]="showAverage()" (click)="toggleAverage()">
+      {{ 'CF_CHARTS.SHOW_AVERAGE' | translate }}
+    </button>
+
+    <div class="segmented view-toggle" role="group" [attr.aria-label]="'CF_CHARTS.VIEW' | translate">
+      <button type="button" [class.active]="view() === 'chart'" [attr.aria-pressed]="view() === 'chart'" (click)="setView('chart')">
+        <i class="bi bi-bar-chart-line"></i> {{ 'CF_CHARTS.VIEW_CHART' | translate }}
+      </button>
+      <button type="button" [class.active]="view() === 'table'" [attr.aria-pressed]="view() === 'table'" (click)="setView('table')">
+        <i class="bi bi-table"></i> {{ 'CF_CHARTS.VIEW_TABLE' | translate }}
+      </button>
+    </div>
+  </div>
+
+  <!-- תחזית: כמה שנים קדימה והנחות צמיחה -->
+  <form class="projection" [formGroup]="projectionForm">
+    <div class="proj-years">
+      <label for="cfProjYears">{{ 'CF_CHARTS.YEARS_AHEAD' | translate }}</label>
+      <input id="cfProjYears" type="range" min="0" max="30" step="1" formControlName="years" class="form-range" />
+      <output class="years-value">{{ projectionYears() }}</output>
+      <div class="year-chips">
+        @for (y of yearPresets; track y) {
+          <button type="button" class="chip sm" [class.active]="projectionYears() === y" (click)="setYears(y)">
+            {{ y === 0 ? ('CF_CHARTS.NO_PROJECTION' | translate) : y }}
+          </button>
+        }
+      </div>
+    </div>
+    <div class="proj-field">
+      <label for="cfIncomeGrowth">{{ 'CF_CHARTS.INCOME_GROWTH' | translate }}</label>
+      <div class="input-group input-group-sm">
+        <input id="cfIncomeGrowth" type="number" class="form-control" step="0.5" min="-20" max="30" formControlName="incomeGrowth" />
+        <span class="input-group-text">%</span>
+      </div>
+    </div>
+    <div class="proj-field">
+      <label for="cfExpenseGrowth">{{ 'CF_CHARTS.EXPENSE_GROWTH' | translate }}</label>
+      <div class="input-group input-group-sm">
+        <input id="cfExpenseGrowth" type="number" class="form-control" step="0.5" min="-20" max="30" formControlName="expenseGrowth" />
+        <span class="input-group-text">%</span>
+      </div>
+    </div>
+    <div class="proj-field">
+      <label for="cfBasis">{{ 'CF_CHARTS.BASIS' | translate }}</label>
+      <select id="cfBasis" class="form-select form-select-sm" formControlName="basisMonths">
+        @for (b of basisOptions; track b) {
+          <option [ngValue]="b">{{ 'CF_CHARTS.BASIS_MONTHS' | translate: { n: b } }}</option>
+        }
+      </select>
+    </div>
+    <button type="button" class="btn btn-link btn-sm reset" (click)="resetProjection()">{{ 'CF_CHARTS.RESET' | translate }}</button>
+  </form>
+
+  @if (!hasData()) {
+    <div class="no-data">{{ 'CHART.NO_DATA' | translate }}</div>
+  } @else {
+    <!-- KPI -->
+    <div class="kpis">
+      <div class="kpi">
+        <div class="kpi-label">{{ 'CF_CHARTS.BALANCE_NOW' | translate }}</div>
+        <div class="kpi-value"><bdi dir="ltr">{{ money(summary().balanceNow) }}</bdi></div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label"><i class="key income"></i>{{ 'CF_CHARTS.AVG_INCOME' | translate }}</div>
+        <div class="kpi-value"><bdi dir="ltr">{{ money(summary().avgIncome) }}</bdi></div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label"><i class="key expenses"></i>{{ 'CF_CHARTS.AVG_EXPENSES' | translate }}</div>
+        <div class="kpi-value"><bdi dir="ltr">{{ money(summary().avgExpenses) }}</bdi></div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">{{ 'CF_CHARTS.AVG_NET' | translate }}</div>
+        <div class="kpi-value" [class.neg]="summary().avgNet < 0"><bdi dir="ltr">{{ money(summary().avgNet) }}</bdi></div>
+        @if (summary().savingsRate !== null) {
+          <div class="kpi-delta">{{ 'CF_CHARTS.SAVINGS_RATE' | translate }} <bdi dir="ltr">{{ summary().savingsRate | percent:'1.0-1' }}</bdi></div>
+        }
+      </div>
+      <div class="kpi hero">
+        <div class="kpi-label">{{ 'CF_CHARTS.BALANCE_AT' | translate: { date: endLabel() } }}</div>
+        <div class="kpi-value" [class.neg]="(summary().balanceEnd ?? 0) < 0"><bdi dir="ltr">{{ money(summary().balanceEnd) }}</bdi></div>
+        @if (balanceDelta() !== null) {
+          <div class="kpi-delta" [class.up]="balanceDelta()! >= 0" [class.down]="balanceDelta()! < 0">
+            <i class="bi" [class.bi-arrow-up-right]="balanceDelta()! >= 0" [class.bi-arrow-down-right]="balanceDelta()! < 0"></i>
+            <bdi dir="ltr">{{ balanceDelta()! >= 0 ? '+' : '' }}{{ money(balanceDelta()) }}</bdi> {{ 'CF_CHARTS.VS_TODAY' | translate }}
+          </div>
+        }
+      </div>
+    </div>
+
+    @if (view() === 'chart') {
+      <div class="chart-grid">
+        <div class="chart-card wide">
+          <div class="card-head">
+            <div>
+              <div class="card-title">{{ 'CF_CHARTS.BALANCE_TITLE' | translate }}</div>
+              <div class="card-sub">{{ 'CF_CHARTS.BALANCE_SUB' | translate }}</div>
+            </div>
+            <div class="legend">
+              <span><i class="lk line balance"></i>{{ 'CF_CHARTS.LEGEND_DATA' | translate }}</span>
+              @if (projectionYears() > 0) {
+                <span><i class="lk line balance dashed"></i>{{ 'CF_CHARTS.PROJECTION' | translate }}</span>
+              }
+            </div>
+          </div>
+          <app-cash-flow-chart variant="balance" [height]="300"
+            [buckets]="buckets()" [labels]="labels()" [longLabels]="longLabels()" [todayIndex]="todayIndex()"
+            [locale]="locale()" [ariaLabel]="'CF_CHARTS.BALANCE_TITLE' | translate" />
+        </div>
+
+        <div class="chart-card">
+          <div class="card-head">
+            <div>
+              <div class="card-title">{{ 'CF_CHARTS.FLOWS_TITLE' | translate }}</div>
+              <div class="card-sub">{{ 'CF_CHARTS.FLOWS_SUB' | translate }}</div>
+            </div>
+            <div class="legend">
+              <span><i class="lk rect income"></i>{{ 'CF_CHARTS.INCOME' | translate }}</span>
+              <span><i class="lk rect expenses"></i>{{ 'CF_CHARTS.EXPENSES' | translate }}</span>
+              @if (showAverage()) {
+                <span><i class="lk line neutral dashed"></i>{{ 'CF_CHARTS.AVERAGE' | translate }}</span>
+              }
+            </div>
+          </div>
+          <app-cash-flow-chart variant="flows"
+            [buckets]="buckets()" [labels]="labels()" [longLabels]="longLabels()" [todayIndex]="todayIndex()"
+            [showAverage]="showAverage()" [locale]="locale()" [ariaLabel]="'CF_CHARTS.FLOWS_TITLE' | translate" />
+        </div>
+
+        <div class="chart-card">
+          <div class="card-head">
+            <div>
+              <div class="card-title">{{ 'CF_CHARTS.NET_TITLE' | translate }}</div>
+              <div class="card-sub">{{ 'CF_CHARTS.NET_SUB' | translate }}</div>
+            </div>
+            <div class="legend">
+              <span><i class="lk rect income"></i>{{ 'CF_CHARTS.SURPLUS' | translate }}</span>
+              <span><i class="lk rect expenses"></i>{{ 'CF_CHARTS.DEFICIT' | translate }}</span>
+              @if (showAverage()) {
+                <span><i class="lk line neutral"></i>{{ 'CF_CHARTS.MOVING_AVG' | translate }}</span>
+              }
+            </div>
+          </div>
+          <app-cash-flow-chart variant="net"
+            [buckets]="buckets()" [labels]="labels()" [longLabels]="longLabels()" [todayIndex]="todayIndex()"
+            [showAverage]="showAverage()" [locale]="locale()" [ariaLabel]="'CF_CHARTS.NET_TITLE' | translate" />
+        </div>
+      </div>
+    } @else {
+      <div class="chart-card table-card">
+        <div class="table-responsive">
+          <table class="table table-sm table-hover mb-0">
+            <thead>
+              <tr>
+                <th>{{ 'CF_CHARTS.COL_PERIOD' | translate }}</th>
+                <th class="num">{{ 'CF_CHARTS.INCOME' | translate }}</th>
+                <th class="num">{{ 'CF_CHARTS.EXPENSES' | translate }}</th>
+                <th class="num">{{ 'CF_CHARTS.NET' | translate }}</th>
+                <th class="num">{{ 'CF_CHARTS.SAVINGS_RATE' | translate }}</th>
+                <th class="num">{{ 'CF_CHARTS.BALANCE_END' | translate }}</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (b of buckets(); track b.key; let i = $index) {
+                <tr [class.today-row]="i === todayIndex()" [class.projected]="b.kind === 'projected'">
+                  <td>{{ longLabels()[i] }}</td>
+                  <td class="num"><bdi dir="ltr">{{ money(b.income) }}</bdi></td>
+                  <td class="num"><bdi dir="ltr">{{ money(b.expenses) }}</bdi></td>
+                  <td class="num" [class.neg]="b.net < 0"><bdi dir="ltr">{{ money(b.net) }}</bdi></td>
+                  <td class="num"><bdi dir="ltr">{{ b.savingsRate === null ? '—' : (b.savingsRate | percent:'1.0-1') }}</bdi></td>
+                  <td class="num" [class.neg]="b.balance < 0"><bdi dir="ltr">{{ money(b.balance) }}</bdi></td>
+                  <td>
+                    @if (b.kind !== 'actual') {
+                      <span class="kind-badge" [class.projected]="b.kind === 'projected'">
+                        {{ (b.kind === 'projected' ? 'CF_CHARTS.KIND_PROJECTED' : 'CF_CHARTS.KIND_PLANNED') | translate }}
+                      </span>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+
+    <p class="footnote">{{ 'CF_CHARTS.FOOTNOTE' | translate: { n: projectionForm.controls.basisMonths.value } }}</p>
+  }
+</section>
