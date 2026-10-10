@@ -160,7 +160,7 @@ LOG_LEVEL=DEBUG node index.js
 | `inner_method_name` | שרשרת המתודות הפנימיות (ראה למעלה) |
 | `http_method`, `request_path` | המתודה והנתיב בפועל (עם המזהה) |
 | `request_data`, `response_data` | הגופים כ-JSON (חתוכים). `request_data` הוא NULL ב-GET בלי query string. ב-304 (הדפדפן כבר מחזיק את הגרסה העדכנית) `response_data` מכיל את מה שהשרת היה מחזיר, למרות שלא נשלח גוף |
-| `entity_id` | מזהה הישות מהנתיב או מ-`body.id` (פריסה / השקעה / יעד / שיחה) |
+| `entity_id` | מזהה הישות (פריסה / השקעה / יעד / שיחה), לפי הסדר: פרמטר הנתיב `:id`, `body.id`, ה-`id` בתשובה (למשל מזהה חדש אחרי POST). NULL בבקשות רשימה כמו `GET /api/installments` |
 | `is_error`, `status`, `event_message` | סטטוס 4xx/5xx או חריגה; `event_message` הוא `ErrorName: message` (ב-5xx גם ה-stack) |
 | `machine_name`, `ip_address` | שם המחשב וכתובת הלקוח |
 | `added_by`, `added_on` | ה-login של SQL ושעת הכתיבה (`SYSDATETIME()`) |

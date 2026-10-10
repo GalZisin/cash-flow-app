@@ -69,8 +69,44 @@ function requestData(req, maxChars) {
     }
 }
 
+/**
+ * The route Express matched, read while the handler is answering (req.route / req.params are
+ * only set inside the matched route, and are gone again by the time the response is finished).
+ */
+function matchedRoute(req) {
+    const params = req.params || {};
+    const names = Object.keys(params).filter((k) => typeof params[k] === 'string' && params[k] !== '');
+    if (!names.length) return null;
+    const id = params.id ?? params[names[0]];
+    return { params: names.map((name) => [name, params[name]]), entityId: String(id) };
+}
+
+/** "/api/installments/inst-abc" + [['id','inst-abc']] -> "/api/installments/:id" (other ids as in describePath). */
+function routePatternOf(requestPath, route, fallbackPattern) {
+    if (!route) return fallbackPattern;
+    const segments = requestPath.split('/');
+    for (const [name, value] of route.params) {
+        for (let i = segments.length - 1; i >= 0; i--) {
+            if (safeDecode(segments[i]) === value) { segments[i] = `:${name}`; break; }
+        }
+    }
+    return describePath(segments.join('/')).routePattern;
+}
+
+/** id of the object the server answered with (e.g. the new id after POST /api/installments). */
+function responseEntityId(status, responseText) {
+    if (status === null || (status >= 300 && status !== 304) || !responseText || responseText[0] !== '{') return null;
+    try {
+        const body = JSON.parse(responseText);
+        const id = body && (body.id ?? (body.data && body.data.id));
+        return typeof id === 'string' || typeof id === 'number' ? String(id) : null;
+    } catch {
+        return null; // truncated or not JSON
+    }
+}
+
 /** Collects what the server writes to the response (JSON or streamed text), up to maxChars. */
-function captureResponse(res, maxChars) {
+function captureResponse(res, maxChars, onRespond = () => {}) {
     const decoder = new StringDecoder('utf8');
     let text = '';
     let truncated = false;
@@ -94,6 +130,7 @@ function captureResponse(res, maxChars) {
     let sentBody = false;
     const send = res.send;
     res.send = function (body, ...rest) {
+        onRespond();
         if (!sentBody && (typeof body === 'string' || Buffer.isBuffer(body))) {
             sentBody = true;
             push(body);
@@ -105,10 +142,12 @@ function captureResponse(res, maxChars) {
     const write = res.write;
     const end = res.end;
     res.write = function (chunk, ...rest) {
+        onRespond();
         if (!sentBody) push(chunk);
         return write.call(this, chunk, ...rest);
     };
     res.end = function (chunk, ...rest) {
+        onRespond();
         if (!sentBody && typeof chunk !== 'function') push(chunk);
         return end.call(this, chunk, ...rest);
     };
@@ -144,7 +183,10 @@ function apiAccessLog({
 
         const store = { requestId: uuidv4(), startedAt: new Date(), calls: [], entityId: null };
         res.setHeader('X-Request-Id', store.requestId);
-        const responseText = captureResponse(res, maxChars);
+        let route = null; // first matched route seen while answering (the error handler has none)
+        const responseText = captureResponse(res, maxChars, () => {
+            if (!route) route = matchedRoute(req);
+        });
 
         let written = false;
         const writeRow = () => {
@@ -156,20 +198,25 @@ function apiAccessLog({
             const response = responseText();
             const message = describeError(res, response, aborted);
             const status = res.headersSent ? res.statusCode : null;
-            const bodyId = req.body && typeof req.body.id === 'string' ? req.body.id.slice(0, 50) : null;
+            const bodyId = req.body && (typeof req.body.id === 'string' || typeof req.body.id === 'number') ? String(req.body.id) : null;
+            // Route pattern: the one Express matched; otherwise (404, errors) guessed from the path.
+            const routePattern = routePatternOf(described.requestPath, route, described.routePattern);
+            // Entity: set explicitly > route param (:id) > id-looking path segment > body.id > id in the response.
+            const entityId = store.entityId || (route && route.entityId) || described.entityId || bodyId
+                || responseEntityId(status, response);
 
             const entry = {
                 request_id: store.requestId,
                 user_name: USER_NAME,
                 start_time: localDateTimeToDb(store.startedAt),
                 service_name: described.serviceName.slice(0, 100),
-                method_name: `${req.method} ${described.routePattern}`.slice(0, 256),
+                method_name: `${req.method} ${routePattern}`.slice(0, 256),
                 inner_method_name: requestContext.callChain(store.calls, 2000, store.callsDropped),
                 http_method: req.method.slice(0, 10),
                 request_path: described.requestPath.slice(0, 512),
                 request_data: requestData(req, maxChars),
                 response_data: response,
-                entity_id: store.entityId || described.entityId || bodyId,
+                entity_id: entityId ? entityId.slice(0, 50) : null,
                 is_error: aborted || !!(res.locals && res.locals.error) || (status !== null && status >= 400),
                 event_message: message,
                 machine_name: MACHINE_NAME,
