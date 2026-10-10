@@ -1,6 +1,7 @@
 const conversationsRepository = require('../repositories/conversations.repository');
 const { ValidationError, NotFoundError } = require('../utils/errors');
 const { v4: uuidv4 } = require('uuid');
+const traceMethods = require('../utils/traceMethods');
 
 /**
  * Service for conversations business logic
@@ -111,4 +112,4 @@ class ConversationsService {
     }
 }
 
-module.exports = new ConversationsService();
+module.exports = traceMethods(new ConversationsService(), 'conversationsService');

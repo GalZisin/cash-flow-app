@@ -5,6 +5,7 @@ const {
     monthToRow, monthItemRows, assembleMonths, defaultsToRows, assembleDefaults
 } = require('../db/mappers');
 const { planCashFlowWrite } = require('../db/cashFlowDiff');
+const traceMethods = require('../utils/traceMethods');
 
 const MONTH_COLUMNS = [
     C.int('sort_order'), C.date('month_date'), C.money('starting_balance'), C.money('income'),
@@ -139,4 +140,4 @@ class CashFlowRepository {
     }
 }
 
-module.exports = new CashFlowRepository();
+module.exports = traceMethods(new CashFlowRepository(), 'cashFlowRepository');

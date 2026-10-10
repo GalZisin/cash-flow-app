@@ -1,6 +1,7 @@
 const investmentsRepository = require('../repositories/investments.repository');
 const { NotFoundError, ValidationError } = require('../utils/errors');
 const { v4: uuidv4 } = require('uuid');
+const traceMethods = require('../utils/traceMethods');
 
 class InvestmentsService {
     async getAll() {
@@ -62,4 +63,4 @@ class InvestmentsService {
     }
 }
 
-module.exports = new InvestmentsService();
+module.exports = traceMethods(new InvestmentsService(), 'investmentsService');

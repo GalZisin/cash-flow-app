@@ -14,6 +14,12 @@ sqlcmd -S localhost -E -i server\db\schema.sql
 
 אופציונלי: `server/db/create-app-user.sql` יוצר login ייעודי `cashflow_app` (שנה את הסיסמה בקובץ) כדי שהשרת לא ישתמש ב-`sa`. כלים נוספים להרשאות וחיבור: `server/tools/` (`setup-sql-user.ps1`, `fix-sql-auth.sql`, `create-db-and-user.sql`).
 
+לוג גישה ל-API: `server/db/log-schema.sql` יוצר את הסכימה `log` ואת הטבלה `log.cash_flow_api_access` (שורה לכל בקשת `/api`). מריצים אחרי `schema.sql`, גם הוא בטוח להרצה חוזרת. הפירוט ב-[LOGGING.md](../server/LOGGING.md).
+
+```cmd
+sqlcmd -S localhost -E -i server\db\log-schema.sql
+```
+
 ## 2. הגדרת החיבור
 
 ```cmd

@@ -2,6 +2,7 @@
  * Cashflow Engine — pure deterministic logic, no AI.
  * All calculations here; AI only gets the summarized output.
  */
+const traceMethods = require('../utils/traceMethods');
 
 function sumExpenses(items = []) {
   return items.reduce((s, e) => s + (Number(e.amount) || 0), 0);
@@ -201,4 +202,4 @@ function simulateScenario({ summary, description, amount, date }) {
   };
 }
 
-module.exports = { buildSummary, simulateScenario };
+module.exports = traceMethods({ buildSummary, simulateScenario }, 'cashflowEngine');

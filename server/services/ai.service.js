@@ -11,6 +11,7 @@
 const http = require('http');
 const https = require('https');
 const { ServiceUnavailableError, TooManyRequestsError } = require('../utils/errors');
+const traceMethods = require('../utils/traceMethods');
 
 const OPTIONS = { temperature: 0.3, num_ctx: 2048, num_predict: 1024 };
 const MAX_TOKENS = 1024;
@@ -286,8 +287,8 @@ function describe() {
   return { provider: cfg.provider, baseUrl: cfg.baseUrl.origin + cfg.baseUrl.pathname.replace(/\/$/, ''), model: cfg.model, hasApiKey: !!cfg.apiKey };
 }
 
-module.exports = {
+module.exports = traceMethods({
   getAnalysis, getChat, getScenario, getChatStream, describe,
   // exported for tests
   getConfig, toServiceError, stripThinking, thinkFilter, providers, generate, streamGenerate
-};
+}, 'aiService');

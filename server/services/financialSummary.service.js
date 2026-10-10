@@ -9,6 +9,7 @@ const cashFlowRepository = require('../repositories/cashFlow.repository');
 const installmentsRepository = require('../repositories/installments.repository');
 const investmentsRepository = require('../repositories/investments.repository');
 const { buildSummary } = require('./cashflow-engine');
+const traceMethods = require('../utils/traceMethods');
 
 const CACHE_MS = Number(process.env.AI_SUMMARY_CACHE_MS ?? 60_000);
 
@@ -54,4 +55,4 @@ class FinancialSummaryService {
     }
 }
 
-module.exports = new FinancialSummaryService();
+module.exports = traceMethods(new FinancialSummaryService(), 'financialSummaryService');

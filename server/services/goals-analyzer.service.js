@@ -1,5 +1,6 @@
 const cashFlowRepository = require('../repositories/cashFlow.repository');
 const goalsRepository = require('../repositories/goals.repository');
+const traceMethods = require('../utils/traceMethods');
 
 class GoalsAnalyzerService {
     static SAFETY_BUFFER = 65000;
@@ -210,4 +211,4 @@ class GoalsAnalyzerService {
     getEmptyAnalysis(reason) { return { achievable: false, projectedBalance: 0, currentBalance: 0, requiredAtTarget: 0, safetyBuffer: GoalsAnalyzerService.SAFETY_BUFFER, minimumSafetyBuffer: GoalsAnalyzerService.MINIMUM_SAFETY_BUFFER, monthsUntilGoal: 0, monthlySavingsNeeded: 0, reasons: [reason], recommendations: ['הוסף נתוני תזרים מזומנים'], impactOnOtherGoals: [], conflicts: [], statusMessage: reason, status: 'NOT_ACHIEVABLE' }; }
 }
 
-module.exports = new GoalsAnalyzerService();
+module.exports = traceMethods(new GoalsAnalyzerService(), 'goalsAnalyzerService');

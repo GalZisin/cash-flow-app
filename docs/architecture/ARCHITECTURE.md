@@ -36,11 +36,11 @@
 
 | שכבה | מיקום | תפקיד |
 | --- | --- | --- |
-| כניסה | `server/app.js`, `server/index.js` | `app.js` בונה את Express: CORS מוגבל, גבול גוף בקשה, לוג בקשות, `/health`, `/api`, הגשת `dist/` בפרודקשן, 404, errorHandler. `index.js` מתחבר ל-SQL Server ומאזין |
+| כניסה | `server/app.js`, `server/index.js` | `app.js` בונה את Express: CORS מוגבל, גבול גוף בקשה, לוג בקשות, `/health`, לוג גישה ל-API בטבלה (`middleware/apiAccessLog.js`), `/api`, הגשת `dist/` בפרודקשן, 404, errorHandler. `index.js` מתחבר ל-SQL Server ומאזין |
 | Routes | `server/routes/` | ולידציה של קלט, קריאה ל-service, תשובה. עטופים ב-`asyncHandler`. נתיבי AI גם ב-rate limit |
-| Services | `server/services/` | לוגיקה עסקית: נורמליזציה, ניתוח יעדים (`goals-analyzer`), תקציב חודשי, סיכום פיננסי (`financialSummary` עם cache), חיבור למודל (`ai.service`) |
+| Services | `server/services/` | לוגיקה עסקית: נורמליזציה, ניתוח יעדים (`goals-analyzer`), תקציב חודשי, סיכום פיננסי (`financialSummary` עם cache), חיבור למודל (`ai.service`). כל singleton עטוף ב-`utils/traceMethods.js` כדי שלוג הגישה יראה את שרשרת המתודות |
 | Repositories | `server/repositories/` | כל ה-SQL. טרנזקציות ופרמטרים מוקלדים דרך `db/helpers.js`, מיפוי אובייקט↔שורה ב-`db/mappers.js` |
-| DB | `server/db/` | `schema.sql` (19 טבלאות), `connection.js` (pool יחיד), `cashFlowDiff.js` (שמירה דיפרנציאלית) |
+| DB | `server/db/` | `schema.sql` (19 טבלאות), `log-schema.sql` (טבלת לוג גישה `log.cash_flow_api_access`), `connection.js` (pool יחיד), `cashFlowDiff.js` (שמירה דיפרנציאלית) |
 
 ## זרימות מרכזיות
 

@@ -1,5 +1,6 @@
 const { sql, C, exec, rows, withTransaction, insertMany, updateRow, getPool } = require('../db/helpers');
 const { investmentToRows, assembleInvestments } = require('../db/mappers');
+const traceMethods = require('../utils/traceMethods');
 
 const PARENT_COLUMNS = [
     C.id('id'), C.str('name', 200), C.vchar('investment_type', 20), C.money('initial_value'),
@@ -125,4 +126,4 @@ class InvestmentsRepository {
     }
 }
 
-module.exports = new InvestmentsRepository();
+module.exports = traceMethods(new InvestmentsRepository(), 'investmentsRepository');

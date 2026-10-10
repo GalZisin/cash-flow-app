@@ -1,6 +1,7 @@
 const aiReportsRepository = require('../repositories/aiReports.repository');
 const { ValidationError, NotFoundError } = require('../utils/errors');
 const { v4: uuidv4 } = require('uuid');
+const traceMethods = require('../utils/traceMethods');
 
 /**
  * Service for AI reports business logic
@@ -85,4 +86,4 @@ class AiReportsService {
     }
 }
 
-module.exports = new AiReportsService();
+module.exports = traceMethods(new AiReportsService(), 'aiReportsService');

@@ -1,6 +1,7 @@
 const cashFlowRepository = require('../repositories/cashFlow.repository');
 const installmentsService = require('./installments.service');
 const logger = require('../utils/logger');
+const traceMethods = require('../utils/traceMethods');
 
 /**
  * שירות לאינטגרציה מלאה בין תזרים מזומנים, פריסות תשלומים ויעדים פיננסיים
@@ -263,4 +264,4 @@ class GoalsIntegrationService {
     }
 }
 
-module.exports = new GoalsIntegrationService();
+module.exports = traceMethods(new GoalsIntegrationService(), 'goalsIntegrationService');

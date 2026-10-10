@@ -1,5 +1,6 @@
 const { sql, C, SEL, exec, rows, withTransaction, insertMany, updateRow, getPool } = require('../db/helpers');
 const { conversationToRows, assembleConversations } = require('../db/mappers');
+const traceMethods = require('../utils/traceMethods');
 
 const PARENT_COLUMNS = [
     C.id('id'), C.str('title', 500), C.ts('created_at'), C.ts('updated_at'), C.text('extra_json')
@@ -121,4 +122,4 @@ class ConversationsRepository {
     }
 }
 
-module.exports = new ConversationsRepository();
+module.exports = traceMethods(new ConversationsRepository(), 'conversationsRepository');

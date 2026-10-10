@@ -8,6 +8,7 @@ const express = require('express');
 const cors = require('cors');
 const routes = require('./routes');
 const errorHandler = require('./middleware/errorMiddleware');
+const apiAccessLog = require('./middleware/apiAccessLog');
 const logger = require('./utils/logger');
 const { getPool } = require('./db/connection');
 const financialSummary = require('./services/financialSummary.service');
@@ -57,6 +58,11 @@ function createApp() {
             uptime: process.uptime()
         });
     });
+
+    // One row per /api request in log.cash_flow_api_access (API_ACCESS_LOG=0 turns it off).
+    if (process.env.API_ACCESS_LOG !== '0') {
+        app.use('/api', apiAccessLog());
+    }
 
     // Any change to the data makes the cached AI summary stale.
     app.use('/api', (req, res, next) => {

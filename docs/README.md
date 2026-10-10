@@ -23,7 +23,7 @@
 | קובץ | מה יש בו |
 | --- | --- |
 | [API.md](server/API.md) | כל נתיבי `/api/*`: תזרים, פריסות, השקעות, תקציב, יעדים, שיחות, דוחות, AI. פורמט שגיאות, קודי סטטוס |
-| [LOGGING.md](server/LOGGING.md) | רמות לוג, קבצי הלוג, שימוש ב-logger בקוד, ניטור |
+| [LOGGING.md](server/LOGGING.md) | רמות לוג, קבצי הלוג, שימוש ב-logger בקוד, ניטור, טבלת לוג גישה ל-API (`log.cash_flow_api_access`) |
 
 ## לקוח (frontend)
 

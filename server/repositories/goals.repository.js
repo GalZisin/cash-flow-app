@@ -1,5 +1,6 @@
 const { sql, C, SEL, exec, rows, withTransaction, insertMany, updateRow, getPool } = require('../db/helpers');
 const { goalToRow, assembleGoal } = require('../db/mappers');
+const traceMethods = require('../utils/traceMethods');
 
 const COLUMNS = [
     C.id('id'), C.str('name', 200), C.text('description'), C.vchar('goal_type', 20), C.money('target_amount'),
@@ -134,4 +135,4 @@ class GoalsRepository {
     }
 }
 
-module.exports = new GoalsRepository();
+module.exports = traceMethods(new GoalsRepository(), 'goalsRepository');

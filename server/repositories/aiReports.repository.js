@@ -1,5 +1,6 @@
 const { sql, C, SEL, exec, rows, withTransaction, insertMany, updateRow, getPool } = require('../db/helpers');
 const { reportToRow, assembleReport } = require('../db/mappers');
+const traceMethods = require('../utils/traceMethods');
 
 const COLUMNS = [
     C.id('id'), C.vchar('report_type', 30), C.text('content'), C.text('scenario_details_json'),
@@ -90,4 +91,4 @@ class AiReportsRepository {
     }
 }
 
-module.exports = new AiReportsRepository();
+module.exports = traceMethods(new AiReportsRepository(), 'aiReportsRepository');

@@ -1,6 +1,7 @@
 const logger = require('../utils/logger');
 
 function errorHandler(err, req, res, next) {
+    res.locals.error = err; // read by middleware/apiAccessLog.js
     const statusCode = err.statusCode || 500;
     const meta = { name: err.name, path: req.path, method: req.method };
     if (statusCode >= 500) {

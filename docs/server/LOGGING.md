@@ -135,6 +135,55 @@ LOG_LEVEL=DEBUG node index.js
 
 ---
 
+## 🗄️ לוג גישה ל-API בטבלה
+
+בנוסף לקבצים, כל בקשת `/api` נכתבת כשורה בטבלה **`log.cash_flow_api_access`** ב-SQL Server (request, response, שגיאה, זמנים ושרשרת המתודות הפנימיות).
+
+**הקמה**: להריץ `server/db/log-schema.sql` אחרי `schema.sql` (יוצר את הסכימה `log` ואת הטבלה; בטוח להרצה חוזרת). בלי הטבלה השרת ממשיך לעבוד ורושם אזהרה אחת ב-`combined.log`.
+
+**איך זה עובד** (`server/middleware/apiAccessLog.js`, מחובר ב-`app.js` על `/api`):
+1. לכל בקשה נוצר `request_id` (uuid v4) שחוזר גם בכותרת `X-Request-Id`, ונפתח הקשר לבקשה (`utils/requestContext.js`, AsyncLocalStorage).
+2. כל service ו-repository מיוצאים דרך `utils/traceMethods.js`, שעוטף את המתודות שלהם (כולל עוזרות `_private` שנקראות דרך `this`). כל קריאה נרשמת להקשר, כך שבעמודה `inner_method_name` מופיעה השרשרת, למשל `cashFlowService.saveCashFlow > cashFlowRepository.write > goalsService.analyzeAllGoals > goalsRepository.updateMany`. קריאות חוזרות ברצף מקוצרות (`x3`). מתודות `#private` של JavaScript לא ניתנות ליירוט.
+3. גוף הבקשה (`query` + `body`) וגוף התשובה (JSON או stream) נשמרים עד `API_ACCESS_LOG_MAX_CHARS` תווים (ברירת מחדל 20000) ואז נחתכים עם `...[truncated]`.
+4. בסיום התשובה (או כשהלקוח התנתק) השורה נכתבת דרך `repositories/apiAccessLog.repository.js`. כישלון בכתיבה לא משפיע על התשובה.
+
+**העמודות העיקריות**
+
+| עמודה | מה יש בה |
+| --- | --- |
+| `event_id` | מזהה רץ (IDENTITY מ-1000) |
+| `request_id` | uuid של הבקשה (= `X-Request-Id`) |
+| `user_name` | משתמש מערכת ההפעלה שמריץ את השרת (אין התחברות באפליקציה) |
+| `start_time`, `end_time`, `total_time` | זמן **מקומי** של מכונת השרת, ומשך במילישניות (עמודה מחושבת) |
+| `service_name` | הקבוצה בנתיב: `cash-flow`, `installments`, `investments`, `goals`, `budget`, `conversations`, `ai-reports`, `ai` |
+| `method_name` | הנתיב כתבנית, למשל `GET /api/goals/:id/analyze` |
+| `inner_method_name` | שרשרת המתודות הפנימיות (ראה למעלה) |
+| `http_method`, `request_path` | המתודה והנתיב בפועל (עם המזהה) |
+| `request_data`, `response_data` | הגופים כ-JSON (חתוכים) |
+| `entity_id` | מזהה הישות מהנתיב או מ-`body.id` (פריסה / השקעה / יעד / שיחה) |
+| `is_error`, `status`, `event_message` | סטטוס 4xx/5xx או חריגה; `event_message` הוא `ErrorName: message` (ב-5xx גם ה-stack) |
+| `machine_name`, `ip_address` | שם המחשב וכתובת הלקוח |
+| `added_by`, `added_on` | ה-login של SQL ושעת הכתיבה (`SYSDATETIME()`) |
+
+**הגדרות** (`server/.env`): `API_ACCESS_LOG=0` מכבה את הלוג, `API_ACCESS_LOG_MAX_CHARS` קובע את גודל הגופים שנשמרים.
+
+**שאילתות שימושיות**
+
+```sql
+-- 50 הבקשות האחרונות
+SELECT TOP 50 event_id, start_time, total_time, method_name, status, inner_method_name
+FROM [log].cash_flow_api_access ORDER BY start_time DESC;
+
+-- רק שגיאות (אינדקס מסונן)
+SELECT start_time, method_name, status, event_message
+FROM [log].cash_flow_api_access WHERE is_error = 1 ORDER BY start_time DESC;
+
+-- כל מה שקרה בבקשה אחת (לפי X-Request-Id)
+SELECT * FROM [log].cash_flow_api_access WHERE request_id = '3f2a1c6e-7b1d-4e0b-9c1a-0d2b5f7e8a91';
+```
+
+---
+
 ## 💡 איך להשתמש ב-Logger בקוד?
 
 ### דוגמאות שימוש:
@@ -251,4 +300,4 @@ logs/
 
 ---
 
-**עודכן**: 2026-10-09
+**עודכן**: 2026-10-10

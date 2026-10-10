@@ -17,9 +17,9 @@ npm run test:db               # בדיקת חיבור ל-SQL Server עם ה-.env
 | `routes/` | נתיבי `/api/*` (ולידציה, asyncHandler, rate limit ל-AI) |
 | `services/` | לוגיקה עסקית, `cashflow-engine`, `financialSummary` (cache), `ai.service` (Ollama / OpenAI-compatible) |
 | `repositories/` | כל ה-SQL, דרך `db/helpers.js` ו-`db/mappers.js` |
-| `db/` | `schema.sql`, `connection.js`, `cashFlowDiff.js`, מיגרציה חד-פעמית מ-JSON |
-| `middleware/` | `errorMiddleware.js`, `rateLimit.js` |
-| `utils/` | `logger.js`, `errors.js`, `asyncHandler.js` |
+| `db/` | `schema.sql`, `log-schema.sql` (טבלת לוג גישה), `connection.js`, `cashFlowDiff.js`, מיגרציה חד-פעמית מ-JSON |
+| `middleware/` | `errorMiddleware.js`, `rateLimit.js`, `apiAccessLog.js` (שורה לכל בקשת `/api` ב-`log.cash_flow_api_access`) |
+| `utils/` | `logger.js`, `errors.js`, `asyncHandler.js`, `requestContext.js` + `traceMethods.js` (שרשרת המתודות ללוג הגישה) |
 | `test/` | בדיקות (`npm test`) |
 | `tools/` | בדיקת חיבור, SQL להקמת משתמש ותיקון הרשאות |
 

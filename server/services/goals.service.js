@@ -2,6 +2,7 @@ const goalsRepository = require('../repositories/goals.repository');
 const goalsAnalyzer = require('./goals-analyzer.service');
 const { ValidationError, NotFoundError } = require('../utils/errors');
 const { v4: uuidv4 } = require('uuid');
+const traceMethods = require('../utils/traceMethods');
 
 /**
  * Service for financial goals business logic
@@ -254,4 +255,4 @@ class GoalsService {
     }
 }
 
-module.exports = new GoalsService();
+module.exports = traceMethods(new GoalsService(), 'goalsService');
