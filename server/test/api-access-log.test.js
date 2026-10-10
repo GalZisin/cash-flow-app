@@ -194,6 +194,39 @@ test('an unknown /api route is logged as a 404 error from the JSON envelope', as
     assert.equal(rows[0].inner_method_name, null);
 });
 
+test('a 304 Not Modified (browser ETag still valid) is logged with the response body Express did not send', async (t) => {
+    const rows = captureRows(t);
+    const list = [{ id: UUID, name: 'מקרר' }];
+    t.mock.method(installmentsRepository, 'findAll', async () => list);
+
+    // Plain http.get like a browser: fetch() adds "cache-control: no-cache" next to If-None-Match,
+    // which stops Express from answering 304.
+    const get = (headers = {}) => new Promise((resolve, reject) => {
+        http.get(`${base}/api/installments`, { headers }, (res) => {
+            let body = '';
+            res.setEncoding('utf8');
+            res.on('data', (c) => { body += c; });
+            res.on('end', () => resolve({ status: res.statusCode, etag: res.headers.etag, body }));
+        }).on('error', reject);
+    });
+
+    const first = await get();
+    assert.equal(first.status, 200);
+    assert.ok(first.etag, 'Express sends an ETag');
+
+    const second = await get({ 'If-None-Match': first.etag });
+    assert.equal(second.status, 304);
+    assert.equal(second.body, '', 'nothing on the wire');
+    await waitFor(() => rows.length === 2);
+
+    const row = rows[1];
+    assert.equal(row.status, 304);
+    assert.equal(row.is_error, false);
+    assert.equal(row.method_name, 'GET /api/installments');
+    assert.equal(row.inner_method_name, 'installmentsService.getAll');
+    assert.equal(row.response_data, JSON.stringify(list));
+});
+
 test('a failing log write never breaks the response', async (t) => {
     const insert = t.mock.method(apiAccessLogRepository, 'insert', async () => { throw new Error('no table'); });
     financialSummary.invalidate();

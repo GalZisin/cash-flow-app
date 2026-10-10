@@ -88,14 +88,28 @@ function captureResponse(res, maxChars) {
         }
     };
 
+    // res.json / res.send: take the body here, BEFORE Express can drop it. When the browser's
+    // ETag still matches, Express answers 304 Not Modified and sends no body at all, so the
+    // wire-level capture below would see nothing.
+    let sentBody = false;
+    const send = res.send;
+    res.send = function (body, ...rest) {
+        if (!sentBody && (typeof body === 'string' || Buffer.isBuffer(body))) {
+            sentBody = true;
+            push(body);
+        }
+        return send.call(this, body, ...rest);
+    };
+
+    // Streams (e.g. /api/ai/chat-stream) write directly, without res.send.
     const write = res.write;
     const end = res.end;
     res.write = function (chunk, ...rest) {
-        push(chunk);
+        if (!sentBody) push(chunk);
         return write.call(this, chunk, ...rest);
     };
     res.end = function (chunk, ...rest) {
-        if (typeof chunk !== 'function') push(chunk);
+        if (!sentBody && typeof chunk !== 'function') push(chunk);
         return end.call(this, chunk, ...rest);
     };
 
