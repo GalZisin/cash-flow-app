@@ -717,11 +717,33 @@ app-cash-flow-table .actions {
         color: var(--cf-text);
     }
 }
-// ---- Trash icon (bootstrap-icons bi-trash3) ----
-// inside Material icon buttons: same visual size as the old mat-icon
-.mat-mdc-icon-button > .bi {
-    font-size: 1.1rem;
-    line-height: 1;
+// ---- Trash icon: <span class="cf-icon-trash"></span> ----
+// Inline SVG as a mask (no icon font to load), painted with the danger token.
+// The SVG's stroke color is irrelevant: a mask only uses its alpha.
+.cf-icon-trash {
+    display: inline-block;
+    width: 1.15em;
+    height: 1.15em;
+    vertical-align: -0.2em;
+    flex-shrink: 0;
+    background-color: var(--cf-danger);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 6h18'/%3E%3Cpath d='M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6'/%3E%3Cpath d='M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2'/%3E%3Cpath d='M10 11v6M14 11v6'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 6h18'/%3E%3Cpath d='M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6'/%3E%3Cpath d='M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2'/%3E%3Cpath d='M10 11v6M14 11v6'/%3E%3C/svg%3E") center / contain no-repeat;
+    opacity: 0.8;
+    transition: opacity 0.15s;
+}
+
+button:hover > .cf-icon-trash,
+button:focus-visible > .cf-icon-trash {
+    opacity: 1;
+}
+
+// inside Material icon buttons: centered, 20px like a mat-icon
+.mat-mdc-icon-button > .cf-icon-trash {
+    display: block;
+    width: 20px;
+    height: 20px;
+    margin: 2px auto;
 }
 
 // soft danger circle in the delete-confirm dialogs
@@ -735,4 +757,8 @@ app-cash-flow-table .actions {
     font-size: 1.5rem;
     background: var(--cf-danger-soft);
     color: var(--cf-danger);
+}
+
+.cf-confirm-trash > .cf-icon-trash {
+    opacity: 1;
 }

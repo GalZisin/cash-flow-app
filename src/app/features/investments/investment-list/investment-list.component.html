@@ -59,7 +59,7 @@
   @if (pendingDelete) {
   <div class="overlay position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center">
     <div class="confirm-card card p-4 text-center">
-      <div class="confirm-icon mb-2"><span class="cf-confirm-trash"><i class="bi bi-trash3" aria-hidden="true"></i></span></div>
+      <div class="confirm-icon mb-2"><span class="cf-confirm-trash"><span class="cf-icon-trash" aria-hidden="true"></span></span></div>
       <div class="confirm-title mb-1">{{ 'INVESTMENTS.DELETE_CONFIRM_TITLE' | translate }}</div>
       <div class="confirm-msg mb-4">{{ 'INVESTMENTS.DELETE_CONFIRM_MSG' | translate:{ name: pendingDelete.name } }}
       </div>

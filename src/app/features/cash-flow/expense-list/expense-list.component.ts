@@ -61,7 +61,7 @@ import { StaggerFadeInDirective } from '../../../directives/stagger-fade-in.dire
               [title]="'INSTALLMENTS.DELETE' | translate"
               [matTooltip]="'INSTALLMENTS.DELETE' | translate"
               [attr.aria-label]="'INSTALLMENTS.DELETE' | translate">
-              <i class="bi bi-trash3" aria-hidden="true"></i>
+              <span class="cf-icon-trash" aria-hidden="true"></span>
             </button>
           </div>
           
