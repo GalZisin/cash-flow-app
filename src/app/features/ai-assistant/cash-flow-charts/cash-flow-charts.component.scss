@@ -1,0 +1,308 @@
+:host {
+  display: block;
+  margin-top: 1.75rem;
+}
+
+.cf-charts {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.charts-title {
+  margin: 0;
+  font-weight: 700;
+  color: var(--cf-text-strong);
+}
+
+.charts-sub {
+  font-size: 0.85rem;
+  color: var(--cf-text-3);
+}
+
+// ---- פילטרים ----
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.view-toggle { margin-inline-start: auto; }
+
+.segmented {
+  display: inline-flex;
+  padding: 3px;
+  gap: 2px;
+  background: var(--cf-surface-3);
+  border: 1px solid var(--cf-border);
+  border-radius: 10px;
+
+  button {
+    border: 0;
+    background: transparent;
+    color: var(--cf-text-2);
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 0.3rem 0.75rem;
+    border-radius: 7px;
+    white-space: nowrap;
+    transition: background 0.15s, color 0.15s;
+
+    &:hover { color: var(--cf-text-strong); }
+
+    &.active {
+      background: var(--cf-surface);
+      color: var(--cf-primary-text);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+    }
+  }
+}
+
+.chip {
+  border: 1px solid var(--cf-border-strong);
+  background: var(--cf-surface);
+  color: var(--cf-text-2);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+
+  &.sm { padding: 0.12rem 0.55rem; font-size: 0.75rem; }
+
+  &.active {
+    background: var(--cf-primary-soft);
+    border-color: var(--cf-primary-border);
+    color: var(--cf-primary-text);
+  }
+}
+
+// ---- תחזית ----
+.projection {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem 1.25rem;
+  padding: 0.85rem 1rem;
+  background: var(--cf-surface-2);
+  border: 1px solid var(--cf-border);
+  border-radius: 12px;
+
+  label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--cf-text-3);
+    margin-bottom: 0.25rem;
+  }
+
+  .reset { color: var(--cf-primary-text); }
+}
+
+.proj-years {
+  display: grid;
+  grid-template-columns: minmax(140px, 220px) auto;
+  align-items: center;
+  column-gap: 0.6rem;
+  flex: 1 1 280px;
+
+  label { grid-column: 1 / -1; }
+
+  .form-range {
+    accent-color: var(--cf-primary);
+
+    &::-webkit-slider-runnable-track { background: var(--cf-surface-4); }
+    &::-moz-range-track { background: var(--cf-surface-4); }
+  }
+
+  .years-value {
+    min-width: 2ch;
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--cf-text-strong);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .year-chips {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    margin-top: 0.35rem;
+  }
+}
+
+.proj-field {
+  width: 130px;
+}
+
+// ---- KPI ----
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.75rem;
+}
+
+.kpi {
+  padding: 0.85rem 1rem;
+  background: var(--cf-surface);
+  border: 1px solid var(--cf-border);
+  border-radius: 12px;
+
+  &.hero {
+    background: var(--cf-primary-soft);
+    border-color: var(--cf-primary-border);
+  }
+
+  .kpi-label {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.78rem;
+    color: var(--cf-text-3);
+  }
+
+  .kpi-value {
+    margin-top: 0.15rem;
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--cf-text-strong);
+    font-variant-numeric: tabular-nums;
+
+    &.neg { color: var(--cf-danger); }
+  }
+
+  .kpi-delta {
+    font-size: 0.76rem;
+    color: var(--cf-text-3);
+
+    &.up { color: var(--cf-success); }
+    &.down { color: var(--cf-danger); }
+  }
+}
+
+// ---- כרטיסי גרפים ----
+.chart-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+
+  .wide { grid-column: 1 / -1; }
+
+  @media (max-width: 991px) { grid-template-columns: minmax(0, 1fr); }
+}
+
+.chart-card {
+  min-width: 0;
+  padding: 1rem 1rem 0.5rem;
+  background: var(--cf-surface);
+  border: 1px solid var(--cf-border);
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.card-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.card-title {
+  font-weight: 700;
+  color: var(--cf-text-strong);
+}
+
+.card-sub {
+  font-size: 0.78rem;
+  color: var(--cf-text-3);
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.9rem;
+  font-size: 0.78rem;
+  color: var(--cf-text-2);
+
+  span { display: inline-flex; align-items: center; gap: 0.35rem; }
+}
+
+// מקרא: מלבן לעמודות, קו לקווים (כמו הסימן בגרף)
+.lk {
+  display: inline-block;
+
+  &.rect { width: 10px; height: 10px; border-radius: 3px; }
+  &.line { width: 16px; height: 0; border-top: 2px solid; }
+  &.dashed { border-top-style: dashed; }
+  &.rect.income { background: var(--cf-success-solid); }
+  &.rect.expenses { background: var(--cf-danger-solid); }
+  &.line.balance { border-color: var(--cf-primary); }
+  &.line.neutral { border-color: var(--cf-text-2); }
+}
+
+.key {
+  display: inline-block;
+  width: 12px;
+  height: 3px;
+  border-radius: 2px;
+
+  &.income { background: var(--cf-success-solid); }
+  &.expenses { background: var(--cf-danger-solid); }
+}
+
+// ---- טבלה ----
+.table-card {
+  padding: 0.5rem;
+
+  .table-responsive { max-height: 480px; }
+
+  th {
+    position: sticky;
+    top: 0;
+    background: var(--cf-surface);
+    font-size: 0.78rem;
+    color: var(--cf-text-3);
+    font-weight: 600;
+  }
+
+  td { font-size: 0.85rem; }
+
+  .num {
+    text-align: end;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .neg { color: var(--cf-danger); }
+  tr.projected td { color: var(--cf-text-3); }
+  tr.today-row td { background: var(--cf-primary-soft); }
+}
+
+.kind-badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.05rem 0.45rem;
+  border-radius: 999px;
+  background: var(--cf-surface-3);
+  color: var(--cf-text-2);
+
+  &.projected {
+    background: var(--cf-primary-soft);
+    color: var(--cf-primary-text);
+  }
+}
+
+.no-data {
+  padding: 3rem 1rem;
+  text-align: center;
+  color: var(--cf-text-4);
+}
+
+.footnote {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--cf-text-4);
+}

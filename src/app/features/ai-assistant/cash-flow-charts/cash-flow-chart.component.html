@@ -1,0 +1,110 @@
+<div class="cf-chart" dir="ltr">
+  <svg
+    [attr.width]="width()"
+    [attr.height]="height()"
+    [attr.viewBox]="'0 0 ' + width() + ' ' + height()"
+    role="img"
+    [attr.aria-label]="ariaLabel()"
+    tabindex="0"
+    (keydown)="onKey($event)"
+    (focus)="onFocus()"
+    (blur)="hover.set(-1)">
+
+    <!-- אזור התחזית -->
+    @if (projectionX() !== null) {
+      <rect class="proj-zone" [attr.x]="projectionX()" [attr.y]="m.top - 14"
+            [attr.width]="plotRight() - projectionX()!" [attr.height]="plotBottom() - m.top + 14" rx="6" />
+      <text class="zone-label" [attr.x]="projectionX()! + 6" [attr.y]="m.top - 4">{{ 'CF_CHARTS.PROJECTION' | translate }}</text>
+    }
+
+    <!-- רשת וציר Y -->
+    @for (t of ticks(); track t) {
+      <line class="grid" [class.zero]="t === 0" [attr.x1]="m.left" [attr.x2]="plotRight()" [attr.y1]="y(t)" [attr.y2]="y(t)" />
+      <text class="axis-label" [attr.x]="m.left - 8" [attr.y]="y(t)" dy="0.32em" text-anchor="end">{{ compact(t) }}</text>
+    }
+
+    <!-- ציר X -->
+    @for (l of xLabels(); track l.i) {
+      <text class="axis-label" [attr.x]="l.x" [attr.y]="height() - 8" text-anchor="middle">{{ l.text }}</text>
+    }
+
+    <!-- היום -->
+    @if (todayX() !== null) {
+      <line class="today" [attr.x1]="todayX()" [attr.x2]="todayX()" [attr.y1]="m.top" [attr.y2]="plotBottom()" />
+      <text class="today-label" [attr.x]="todayX()" [attr.y]="m.top - 4" text-anchor="middle">{{ 'CF_CHARTS.TODAY' | translate }}</text>
+    }
+
+    <!-- רקע התקופה המסומנת -->
+    @if (hovered(); as h) {
+      @if (variant() !== 'balance') {
+        <rect class="hover-band" [attr.x]="h.x - band() / 2" [attr.y]="m.top" [attr.width]="band()" [attr.height]="plotBottom() - m.top" />
+      }
+    }
+
+    @switch (variant()) {
+      @case ('balance') {
+        <path class="area" [attr.d]="balancePaths().area" />
+        <path class="area projected" [attr.d]="balancePaths().projArea" />
+        <path class="line balance" [attr.d]="balancePaths().line" />
+        <path class="line balance projected" [attr.d]="balancePaths().projLine" />
+        @if (endPoint(); as e) {
+          <circle class="dot balance" [attr.cx]="e.x" [attr.cy]="e.y" r="4.5" />
+          <text class="end-label" [attr.x]="e.x - 8" [attr.y]="e.y - 10" text-anchor="end">{{ compact(e.value) }}</text>
+        }
+      }
+      @default {
+        @for (bar of bars(); track $index) {
+          <path [attr.class]="bar.cls" [attr.d]="bar.d" />
+        }
+        @if (showAverage()) {
+          @for (a of averages(); track a.cls) {
+            <line [attr.class]="'avg ' + a.cls" [attr.x1]="m.left" [attr.x2]="plotRight()" [attr.y1]="a.y" [attr.y2]="a.y" />
+            <text class="avg-label" [attr.x]="plotRight() - 4" [attr.y]="a.labelY" text-anchor="end">
+              <title>{{ (a.cls === 'income' ? 'CF_CHARTS.AVG_INCOME_SHORT' : 'CF_CHARTS.AVG_EXPENSES_SHORT') | translate }}</title>{{ compact(a.value) }}
+            </text>
+          }
+          @if (netAveragePath()) {
+            <path class="line moving-avg" [attr.d]="netAveragePath()" />
+          }
+        }
+      }
+    }
+
+    <!-- crosshair -->
+    @if (hovered(); as h) {
+      @if (h.y !== null) {
+        <line class="crosshair" [attr.x1]="h.x" [attr.x2]="h.x" [attr.y1]="m.top" [attr.y2]="plotBottom()" />
+        <circle class="dot balance" [attr.cx]="h.x" [attr.cy]="h.y" r="5" />
+      }
+    }
+
+    <!-- שכבת hover על כל אזור הגרף: הקרוב ביותר ב-X נבחר -->
+    <rect class="hit" [attr.x]="m.left" [attr.y]="m.top" [attr.width]="plotRight() - m.left" [attr.height]="plotBottom() - m.top"
+          (pointermove)="onPointerMove($event)" (pointerleave)="hover.set(-1)" />
+  </svg>
+
+  @if (hovered(); as h) {
+    <div class="cf-tip" [style.left.px]="h.tipLeft" [style.right.px]="h.tipRight" [attr.dir]="'auto'">
+      <div class="tip-head">
+        <span>{{ h.label }}</span>
+        @if (h.b.kind !== 'actual') {
+          <span class="tip-badge" [class.projected]="h.b.kind === 'projected'">
+            {{ (h.b.kind === 'projected' ? 'CF_CHARTS.KIND_PROJECTED' : 'CF_CHARTS.KIND_PLANNED') | translate }}
+          </span>
+        }
+      </div>
+      <div class="tip-row"><i class="key income"></i><strong><bdi dir="ltr">{{ money(h.b.income) }}</bdi></strong><span>{{ 'CF_CHARTS.INCOME' | translate }}</span></div>
+      <div class="tip-row"><i class="key expenses"></i><strong><bdi dir="ltr">{{ money(h.b.expenses) }}</bdi></strong><span>{{ 'CF_CHARTS.EXPENSES' | translate }}</span></div>
+      <div class="tip-row"><i class="key" [class.positive]="h.b.net >= 0" [class.negative]="h.b.net < 0"></i><strong><bdi dir="ltr">{{ money(h.b.net) }}</bdi></strong><span>{{ 'CF_CHARTS.NET' | translate }}</span></div>
+      @if (variant() === 'net') {
+        <div class="tip-row"><i class="key moving-avg"></i><strong><bdi dir="ltr">{{ money(h.movingAvg) }}</bdi></strong><span>{{ 'CF_CHARTS.MOVING_AVG' | translate }}</span></div>
+      }
+      <div class="tip-row"><i class="key balance"></i><strong><bdi dir="ltr">{{ money(h.b.balance) }}</bdi></strong><span>{{ 'CF_CHARTS.BALANCE_END' | translate }}</span></div>
+      @if (h.b.savingsRate !== null) {
+        <div class="tip-foot">{{ 'CF_CHARTS.SAVINGS_RATE' | translate }}: <bdi dir="ltr">{{ h.b.savingsRate | percent:'1.0-1' }}</bdi>
+          @if (h.b.months > 1) { · {{ h.b.months }} {{ 'CF_CHARTS.MONTHS' | translate }} }
+        </div>
+      }
+    </div>
+  }
+</div>

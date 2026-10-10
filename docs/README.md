@@ -30,6 +30,7 @@
 | קובץ | מה יש בו |
 | --- | --- |
 | [BUDGET_TRACKER.md](frontend/BUDGET_TRACKER.md) | מסך מעקב התקציב: תכונות, API, קבצים |
+| [CASH_FLOW_CHARTS.md](frontend/CASH_FLOW_CHARTS.md) | גרפי מגמות התזרים בדאשבורד יועץ ה-AI: תקופות, תחזית, חישובים |
 | [GOALS_INTEGRATION.md](frontend/GOALS_INTEGRATION.md) | אינטגרציה בין יעדים, תזרים ופריסות |
 | [GOALS_INTEGRATION_EXAMPLE.md](frontend/GOALS_INTEGRATION_EXAMPLE.md) | דוגמה מעשית צעד אחר צעד |
 | [GSAP_ANIMATIONS.md](frontend/GSAP_ANIMATIONS.md) | שלוש דירקטיבות האנימציה ואיך משתמשים בהן |

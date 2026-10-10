@@ -6,6 +6,7 @@ const rateLimit = require('../middleware/rateLimit');
 const financialSummary = require('../services/financialSummary.service');
 const { simulateScenario } = require('../services/cashflow-engine');
 const aiService = require('../services/ai.service');
+const insightsService = require('../services/insights.service');
 
 // AI calls are the expensive ones (CPU on the model server / paid tokens on a hosted API).
 router.use(rateLimit({
@@ -65,6 +66,19 @@ router.post('/chat-stream', asyncHandler(async (req, res) => {
             res.end(`\n[${err.message}]`);
         }
     );
+}));
+
+/**
+ * POST /api/ai/insights   Body: { dashboard?: { kpis, trends }, lang?: 'he' | 'en' }
+ * Short typed insights from the summary + the dashboard snapshot; saved to the AI reports archive.
+ */
+router.post('/insights', asyncHandler(async (req, res) => {
+    const { dashboard, lang } = req.body || {};
+    if (dashboard !== undefined && (dashboard === null || typeof dashboard !== 'object' || Array.isArray(dashboard))) {
+        throw new ValidationError('dashboard must be an object');
+    }
+    const summary = await financialSummary.getSummary();
+    res.json(await insightsService.generate(summary, dashboard, lang === 'en' ? 'en' : 'he'));
 }));
 
 /**

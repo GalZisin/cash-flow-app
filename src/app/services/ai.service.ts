@@ -16,6 +16,38 @@ export interface FinancialSummary {
   forecast: { month: string; projectedBalance: number }[];
 }
 
+export type InsightType = 'positive' | 'warning' | 'risk' | 'tip';
+
+export interface AiInsight {
+  type: InsightType;
+  title: string;
+  text: string;
+}
+
+/** מה שמוצג בגרפי מגמות התזרים (ראה CashFlowChartsComponent.insightsSnapshot). */
+export interface InsightsTrends {
+  settings: { period: string; range: string; projectionYears: number; incomeGrowthPct: number; expenseGrowthPct: number; basisMonths: number };
+  summary: {
+    months: number; avgIncome: number; avgExpenses: number; avgNet: number; savingsRatePct: number | null;
+    balanceNow: number | null; balanceEnd: number | null; endKey: string | null;
+  };
+  periods: { period: string; kind: string; income: number; expenses: number; net: number; balance: number; savingsRatePct: number | null }[];
+}
+
+/** תמונת הדאשבורד שנשלחת עם בקשת התובנות. */
+export interface InsightsDashboard {
+  kpis: { balanceToday: number; totalInvestments: number; activeInstallments: number; monthlyInstallmentsPayment: number };
+  trends?: InsightsTrends;
+}
+
+export interface InsightsResponse {
+  model: string;
+  insights: AiInsight[];
+  /** הרשומה שנשמרה בארכיון (null אם השמירה נכשלה) */
+  report: { id: string; createdAt: string } | null;
+  archived: boolean;
+}
+
 export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
@@ -54,6 +86,11 @@ export class AiService {
 
   chat(question: string): Observable<{ model: string; answer: string }> {
     return this.http.post<any>(`${this.base}/chat`, { question });
+  }
+
+  /** תובנות מהסיכום + תמונת הדאשבורד. השרת שומר אותן בארכיון. */
+  insights(dashboard: InsightsDashboard, lang: 'he' | 'en'): Observable<InsightsResponse> {
+    return this.http.post<InsightsResponse>(`${this.base}/insights`, { dashboard, lang });
   }
 
   simulate(req: ScenarioRequest): Observable<ScenarioResult> {
