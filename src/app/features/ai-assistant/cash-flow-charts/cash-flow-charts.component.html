@@ -18,7 +18,8 @@
 
     <div class="segmented" role="group" [attr.aria-label]="'CF_CHARTS.RANGE' | translate">
       @for (r of ranges; track r) {
-        <button type="button" [class.active]="range() === r" [attr.aria-pressed]="range() === r" (click)="setRange(r)">
+        <button type="button" [class.active]="range() === r" [attr.aria-pressed]="range() === r" (click)="setRange(r)"
+                [title]="'CF_CHARTS.RANGE_HINT_' + r.toUpperCase() | translate">
           {{ 'CF_CHARTS.RANGE_' + r.toUpperCase() | translate }}
         </button>
       }

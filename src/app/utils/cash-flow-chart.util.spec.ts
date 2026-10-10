@@ -48,10 +48,18 @@ describe('cash-flow-chart.util', () => {
     expect(projectPoints([], { ...opts, years: 5 })).toEqual([]);
   });
 
-  it('filterByRange keeps the trailing window ending at the current month and everything after', () => {
-    const points = ['2024-10', '2025-10', '2025-11', '2026-10', '2027-03'].map(k => point(k, 0, 0, 0));
-    expect(filterByRange(points, '1y', '2026-10').map(p => p.key)).toEqual(['2025-11', '2026-10', '2027-03']);
-    expect(filterByRange(points, 'all', '2026-10').length).toBe(5);
+  it('filterByRange keeps a window of X years back and X years ahead of the current month', () => {
+    const points = ['2024-10', '2025-10', '2025-11', '2026-10', '2027-03', '2027-10', '2027-11', '2030-01'].map(k => point(k, 0, 0, 0));
+    expect(filterByRange(points, '1y', '2026-10').map(p => p.key)).toEqual(['2025-11', '2026-10', '2027-03', '2027-10']);
+    expect(filterByRange(points, '3y', '2026-10').map(p => p.key)).toEqual(points.slice(0, 7).map(p => p.key));
+    expect(filterByRange(points, 'all', '2026-10').length).toBe(8);
+  });
+
+  it('filterByRange changes the view when most of the table is in the future', () => {
+    // טבלה שמתחילה בפברואר 2026, עם 5 שנים קדימה
+    const points = Array.from({ length: 60 }, (_, i) => point(addMonths('2026-02', i), 0, 0, 0));
+    const counts = (['1y', '3y', '5y', 'all'] as const).map(r => filterByRange(points, r, '2026-10').length);
+    expect(counts).toEqual([21, 45, 60, 60]);
   });
 
   it('aggregatePoints sums flows, keeps the period-end balance and the last kind', () => {

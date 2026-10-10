@@ -129,12 +129,16 @@ export function projectPoints(points: FlowPoint[], options: ProjectionOptions): 
   return result;
 }
 
-/** חודשים מהחודש הראשון בטווח (לפי החודש הנוכחי) והלאה. 'all' לא מסנן. */
+/**
+ * חלון סביב החודש הנוכחי: X שנים אחורה (כולל החודש הנוכחי) ו-X שנים קדימה (מתוכנן + תחזית).
+ * כך הטווח משנה את התצוגה גם כשרוב הטבלה עתידית. 'all' לא מסנן.
+ */
 export function filterByRange(points: FlowPoint[], range: ChartRange, currentKey: string): FlowPoint[] {
   const years = { '1y': 1, '3y': 3, '5y': 5 } as const;
   if (range === 'all') return points;
   const from = addMonths(currentKey, -(years[range] * 12 - 1));
-  return points.filter(p => p.key >= from);
+  const to = addMonths(currentKey, years[range] * 12);
+  return points.filter(p => p.key >= from && p.key <= to);
 }
 
 /** המפתח, השנה והתת-תקופה (חודש / רבעון) של חודש YYYY-MM בתצוגה הנתונה. */
