@@ -1,10 +1,10 @@
-import { Component, OnInit, ViewChild, ElementRef, AfterViewChecked, inject, signal, computed, ChangeDetectionStrategy, DestroyRef, effect } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, AfterViewChecked, inject, signal, computed, ChangeDetectionStrategy, DestroyRef, effect, viewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { extractServerMessage } from '../../../interceptors/http.interceptor';
-import { AiService, ChatMessage, FinancialSummary, ScenarioRequest, ScenarioResult } from '../../../services/ai.service';
+import { AiInsight, AiService, ChatMessage, FinancialSummary, InsightType, InsightsDashboard, ScenarioRequest, ScenarioResult } from '../../../services/ai.service';
 import { ConversationService, Conversation } from '../../../services/conversation.service';
 import { LanguageService } from '../../../services/language.service';
 import { CashFlowService } from '../../../services/cash-flow.service';
@@ -70,9 +70,13 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
   totalActiveInstallments = signal(0);
   totalMonthlyInstallmentsPayment = signal(0);
   totalInvestmentsValue = signal(0);
-  insights = signal<string[]>([]);
+  insights = signal<AiInsight[]>([]);
   insightsLoading = signal(false);
   insightsLoaded = signal(false);
+  insightsError = signal<string | null>(null);
+  /** האם התובנות האחרונות נשמרו בארכיון (null = עוד לא הופקו) */
+  insightsArchived = signal<boolean | null>(null);
+  private cashFlowCharts = viewChild(CashFlowChartsComponent);
   aiResponseLang = signal<'he' | 'en'>('he'); // עברית כברירת מחדל
 
   // Confirmation for deleting chat
@@ -217,30 +221,42 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
     this.aiResponseLang.update(lang => lang === 'he' ? 'en' : 'he');
   }
 
+  /**
+   * תובנות AI: שולח לשרת את מה שמוצג בדאשבורד (כרטיסים + גרפי המגמות והתחזית).
+   * השרת מוסיף את הסיכום מהמסד, מקבל JSON מהמודל ושומר את התוצאה בארכיון.
+   */
   loadInsights() {
-    this.insights.set([]); // Clear previous insights
+    this.insights.set([]);
+    this.insightsError.set(null);
+    this.insightsArchived.set(null);
     this.insightsLoading.set(true);
     this.insightsLoaded.set(true);
-    // פנייה ל-AI לקבלת תובנות פרו-אקטיביות
-    const langText = this.aiResponseLang() === 'he' ? 'Hebrew' : 'English';
-    const prompt = `Please provide 3-4 short, proactive financial insights or warnings based on my data. Focus on trends and future risks. Be concise and practical. Respond strictly in ${langText}.`;
-    this.ai.chat(prompt).subscribe({
-      next: res => {
-        const lines = res.answer.split('\n').filter(l => l.trim().length > 5);
-        this.insights.set(lines);
-        this.insightsLoading.set(false);
 
-        // שמירה לתיעוד ב-JSON
-        this.reportService.save({
-          type: 'insights',
-          content: lines,
-          createdAt: new Date().toISOString()
-        }).subscribe({
-          error: err => console.error('Failed to archive insights:', err)
-        });
+    const dashboard: InsightsDashboard = {
+      kpis: {
+        balanceToday: this.realCurrentBalance() || this.summary()?.currentBalance || 0,
+        totalInvestments: this.totalInvestmentsValue(),
+        activeInstallments: this.totalActiveInstallments(),
+        monthlyInstallmentsPayment: this.totalMonthlyInstallmentsPayment(),
       },
-      error: () => { this.insightsLoading.set(false); }
+      trends: this.cashFlowCharts()?.insightsSnapshot(),
+    };
+
+    this.ai.insights(dashboard, this.aiResponseLang()).subscribe({
+      next: res => {
+        this.insights.set(res.insights);
+        this.insightsArchived.set(res.archived);
+        this.insightsLoading.set(false);
+      },
+      error: err => {
+        this.insightsError.set(extractServerMessage(err) || this.translate.instant('AI.INSIGHTS_FAILED'));
+        this.insightsLoading.set(false);
+      }
     });
+  }
+
+  insightIcon(type: InsightType): string {
+    return { positive: 'bi-check-circle', warning: 'bi-exclamation-triangle', risk: 'bi-shield-exclamation', tip: 'bi-lightbulb' }[type];
   }
 
   newConversation() {

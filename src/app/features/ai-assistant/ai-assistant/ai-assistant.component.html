@@ -411,22 +411,38 @@
                   <span class="spinner-border spinner-border-sm me-2 text-info"></span>
                   <span class="text-muted">{{ 'AI.INSIGHTS_LOADING' | translate }}</span>
                 </div>
+              } @else if (insightsError()) {
+                <div class="insights-status error p-2" role="alert">
+                  <i class="bi bi-exclamation-octagon me-1"></i>{{ insightsError() }}
+                </div>
               } @else {
                 <div class="row g-3">
                   @for (insight of insights(); track $index) {
                     <div class="col-md-6">
-                      <div class="insight-card p-3 h-100">
-                        <div class="d-flex align-items-start">
-                          <span class="me-2">✨</span>
-                          <div [innerHTML]="formatText(insight)"></div>
+                      <div class="insight-card p-3 h-100" [class]="'insight-' + insight.type">
+                        <div class="d-flex align-items-start gap-2">
+                          <i class="bi insight-icon" [class]="insightIcon(insight.type)" aria-hidden="true"></i>
+                          <div>
+                            <div class="insight-type">{{ 'AI.INSIGHT_TYPE_' + insight.type.toUpperCase() | translate }}</div>
+                            @if (insight.title) {
+                              <div class="insight-title">{{ insight.title }}</div>
+                            }
+                            <div>{{ insight.text }}</div>
+                          </div>
                         </div>
                       </div>
                     </div>
                   }
-                  @if (!insights().length && !insightsLoading() && insightsLoaded()) {
+                  @if (!insights().length && insightsLoaded()) {
                     <div class="col-12 text-muted small italic">{{ 'AI.NO_INSIGHTS' | translate }}</div>
                   }
                 </div>
+                @if (insightsArchived() !== null && insights().length) {
+                  <div class="insights-status mt-2" [class.ok]="insightsArchived()" [class.error]="!insightsArchived()">
+                    <i class="bi me-1" [class.bi-archive]="insightsArchived()" [class.bi-exclamation-triangle]="!insightsArchived()"></i>
+                    {{ (insightsArchived() ? 'AI.INSIGHTS_ARCHIVED' : 'AI.INSIGHTS_NOT_ARCHIVED') | translate }}
+                  </div>
+                }
               }
             </div>
           </div>

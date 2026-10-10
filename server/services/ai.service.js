@@ -109,11 +109,23 @@ function lineReader(res, onLine) {
 
 // ---------------------------------------------------------------- providers
 
+/**
+ * gpt-oss models reason before answering, and the reasoning counts toward max_tokens: at the default
+ * effort a Hebrew answer can spend the whole budget on reasoning and come back empty (finish_reason "length").
+ * AI_REASONING_EFFORT (low | medium | high, default low) is sent only to those models.
+ */
+function reasoningParams(cfg) {
+  if (!/gpt-oss/i.test(cfg.model)) return {};
+  const effort = (process.env.AI_REASONING_EFFORT || 'low').trim().toLowerCase();
+  return ['low', 'medium', 'high'].includes(effort) ? { reasoning_effort: effort } : {};
+}
+
 const providers = {
   ollama: {
     path: '/api/generate',
-    body(cfg, prompt, stream) {
-      return JSON.stringify({ model: cfg.model, prompt: prompt.system + '\n\n' + prompt.user, stream, options: OPTIONS, ...(stream ? {} : { think: false }) });
+    body(cfg, prompt, stream, maxTokens = MAX_TOKENS) {
+      const options = { ...OPTIONS, num_predict: maxTokens };
+      return JSON.stringify({ model: cfg.model, prompt: prompt.system + '\n\n' + prompt.user, stream, options, ...(stream ? {} : { think: false }) });
     },
     parseFull(data) {
       const parsed = JSON.parse(data);
@@ -130,9 +142,10 @@ const providers = {
   },
   openai: {
     path: '/chat/completions',
-    body(cfg, prompt, stream) {
+    body(cfg, prompt, stream, maxTokens = MAX_TOKENS) {
       return JSON.stringify({
-        model: cfg.model, stream, temperature: OPTIONS.temperature, max_tokens: MAX_TOKENS,
+        model: cfg.model, stream, temperature: OPTIONS.temperature, max_tokens: maxTokens,
+        ...reasoningParams(cfg),
         messages: [{ role: 'system', content: prompt.system }, { role: 'user', content: prompt.user }]
       });
     },
@@ -155,12 +168,12 @@ const providers = {
   }
 };
 
-/** Sends a prompt and resolves with the full, think-stripped answer. */
-function generate(prompt) {
+/** Sends a prompt and resolves with the full, think-stripped answer. options.maxTokens overrides MAX_TOKENS. */
+function generate(prompt, options = {}) {
   const cfg = getConfig();
   const p = providers[cfg.provider];
   return new Promise((resolve, reject) => {
-    openRequest(cfg, p.path, p.body(cfg, prompt, false), (res) => {
+    openRequest(cfg, p.path, p.body(cfg, prompt, false, options.maxTokens), (res) => {
       let data = '';
       res.on('data', (c) => (data += c));
       res.on('error', (err) => reject(toServiceError(err, cfg)));

@@ -525,17 +525,31 @@ function reportToRow(r) {
     return {
         id,
         report_type: strOrNull(r.type),
-        content: strOrNull(r.content),
+        // insights are a list of lines: stored as a JSON array (String(array) would join them with commas)
+        content: Array.isArray(r.content) ? JSON.stringify(r.content.map(String)) : strOrNull(r.content),
         scenario_details_json: jsonOrNull(r.scenarioDetails),
         created_at: isoToDb(r.createdAt),
         extra_json: extraJson(r, REPORT_KNOWN)
     };
 }
 
+/** insights content comes back as string[]; anything that is not a JSON array stays a single line. */
+function reportContentFromDb(type, content) {
+    if (type !== 'insights' || content === null || content === undefined) return content;
+    const text = String(content);
+    if (text.trim().startsWith('[')) {
+        try {
+            const list = JSON.parse(text);
+            if (Array.isArray(list)) return list.map(String);
+        } catch { /* not JSON, keep as one line */ }
+    }
+    return [text];
+}
+
 function assembleReport(row) {
     const r = { id: row.id };
     setIf(r, 'type', row.report_type);
-    setIf(r, 'content', row.content);
+    setIf(r, 'content', reportContentFromDb(row.report_type, row.content));
     setIf(r, 'scenarioDetails', parseJson(row.scenario_details_json));
     setIf(r, 'createdAt', isoFromDb(row.created_at));
     return Object.assign(r, parseJson(row.extra_json));

@@ -10,6 +10,7 @@ import {
   ChartPeriod, ChartRange, FlowBucket, aggregatePoints, bucketOf, buildPoints, filterByRange,
   formatMoney, monthKey, projectPoints, summarize,
 } from '../../../utils/cash-flow-chart.util';
+import { InsightsTrends } from '../../../services/ai.service';
 import { CashFlowChartComponent } from './cash-flow-chart.component';
 
 type ChartsView = 'chart' | 'table';
@@ -121,6 +122,32 @@ export class CashFlowChartsComponent {
   readonly endLabel = computed(() => {
     const key = this.summary().endKey;
     return key ? this.label(bucketOf(key, 'month'), 'month', true) : '';
+  });
+
+  /**
+   * מה שהמשתמש רואה בגרפים, לשליחה לתובנות ה-AI: הגדרות התצוגה והתחזית, הסיכום והתקופות.
+   * יותר מ-24 תקופות נשלחות כשנים, כדי שהבקשה תישאר קטנה.
+   */
+  readonly insightsSnapshot = computed<InsightsTrends>(() => {
+    const s = this.summary();
+    const p = this.projection();
+    const buckets = this.buckets().length <= 24 ? this.buckets() : aggregatePoints(this.visiblePoints(), 'year');
+    const rate = (r: number | null) => (r === null ? null : Math.round(r * 1000) / 10);
+    return {
+      settings: {
+        period: this.period(), range: this.range(), projectionYears: this.projectionYears(),
+        incomeGrowthPct: Number(p.incomeGrowth) || 0, expenseGrowthPct: Number(p.expenseGrowth) || 0,
+        basisMonths: Number(p.basisMonths) || 12,
+      },
+      summary: {
+        months: s.months, avgIncome: Math.round(s.avgIncome), avgExpenses: Math.round(s.avgExpenses), avgNet: Math.round(s.avgNet),
+        savingsRatePct: rate(s.savingsRate), balanceNow: s.balanceNow, balanceEnd: s.balanceEnd, endKey: s.endKey,
+      },
+      periods: buckets.map(b => ({
+        period: b.key, kind: b.kind, income: Math.round(b.income), expenses: Math.round(b.expenses),
+        net: Math.round(b.net), balance: Math.round(b.balance), savingsRatePct: rate(b.savingsRate),
+      })),
+    };
   });
 
   readonly balanceDelta = computed(() => {

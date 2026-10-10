@@ -87,7 +87,7 @@ Base URL: `http://localhost:3000/api`. כל הגופים הם JSON. מזהים �
 | --- | --- | --- |
 | GET / POST | `/conversations` | רשימה / יצירה (`title`, `messages[]`) |
 | PUT / DELETE | `/conversations/:id` | עדכון / מחיקה |
-| GET / POST | `/ai-reports` | רשימה (חדש ראשון, לפי `createdAt`) / יצירה (`type`, `content`, `scenarioDetails?`) |
+| GET / POST | `/ai-reports` | רשימה (חדש ראשון, לפי `createdAt`) / יצירה (`type`: `analysis` / `insights` / `scenario`, `content`: מחרוזת, או מערך שורות ב-`insights`, `scenarioDetails?`). בלי `content` מתקבל 400 |
 | GET / DELETE | `/ai-reports/:id` | דוח אחד / מחיקה |
 
 ## עוזר AI
@@ -101,8 +101,11 @@ Base URL: `http://localhost:3000/api`. כל הגופים הם JSON. מזהים �
 | POST | `/ai/chat` | `{ question }` | תשובה אחת: `{ model, answer }` |
 | POST | `/ai/chat-stream` | `{ question }` | `text/plain` ב-chunks. אם המודל נופל באמצע, הגוף מסתיים בשורה `[...]` עם ההודעה |
 | POST | `/ai/scenario` | `{ description, amount, date: 'YYYY-MM-DD' }` | `{ simulation, model, scenarioAnalysis }` |
+| POST | `/ai/insights` | `{ dashboard?: { kpis, trends }, lang?: 'he' \| 'en' }` | תובנות לדאשבורד: `{ model, insights: [{ type, title, text }], report, archived }` |
 
-הספק נקבע ב-`server/.env` (`AI_PROVIDER`, `AI_BASE_URL`, `AI_MODEL`, `AI_API_KEY`). ראה [AI_PROVIDERS.md](../ai/AI_PROVIDERS.md).
+**תובנות (`/ai/insights`)**: המודל מקבל את הסיכום מהמסד ואת תמונת הדאשבורד (כרטיסי KPI, תקופות מגרפי המגמות והנחות התחזית). מהלקוח נשמרים רק שדות מספריים מוכרים (`services/insights.service.js`, `sanitizeDashboard`), כך ששום טקסט חופשי מהלקוח לא נכנס ל-prompt. המודל מחזיר JSON, ו-`type` הוא `positive` / `warning` / `risk` / `tip`. התוצאה נשמרת בארכיון (`ai-reports`, `type: 'insights'`) בשרת. אם השמירה נכשלת, התובנות עדיין חוזרות עם `archived: false`.
+
+הספק נקבע ב-`server/.env` (`AI_PROVIDER`, `AI_BASE_URL`, `AI_MODEL`, `AI_API_KEY`). ראה [AI_PROVIDERS.md](../ai/AI_PROVIDERS.md). במודלי gpt-oss נשלח `reasoning_effort` (`AI_REASONING_EFFORT`, ברירת מחדל `low`): ה-reasoning נספר בתוך `max_tokens`, וב-effort ברירת המחדל תשובה בעברית יכולה לחזור ריקה.
 
 ## פורמט שגיאות
 
