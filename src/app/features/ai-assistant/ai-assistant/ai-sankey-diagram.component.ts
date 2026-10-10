@@ -3,7 +3,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { ThemeService } from '../../../services/theme.service'; // Import ThemeService
 import { FormControl, ReactiveFormsModule } from '@angular/forms'; // Import FormControl and ReactiveFormsModule
 
-import * as d3 from 'd3';
+import { select } from 'd3-selection';
 import { sankey, sankeyLinkHorizontal, SankeyGraph, SankeyNode, SankeyLink } from 'd3-sankey';
 import { MonthData } from '../../../models/cash-flow.model'; // Import shared MonthData
 
@@ -270,12 +270,12 @@ export class AiSankeyDiagramComponent implements OnChanges, AfterViewInit {
 
     const isDarkMode = this.themeService.isDarkMode(); // Ensure this is correctly accessed
     const monthStr = this.getCurrentViewData()?.month || ''; // Use currentViewData for month string
-    const svg = d3.select(container).append('svg')
+    const svg = select(container).append('svg')
       .attr('width', width)
       .attr('height', height);
 
     const defs = svg.append('defs');
-    const tooltip = d3.select(this.tooltipElement.nativeElement);
+    const tooltip = select(this.tooltipElement.nativeElement);
 
     // Helper to get node color
     const getNodeColor = (id: string) => {
@@ -360,12 +360,12 @@ export class AiSankeyDiagramComponent implements OnChanges, AfterViewInit {
           <div class="text-muted small">${monthStr}</div>
         `;
         showTooltip(event, content);
-        d3.select(event.currentTarget).style('stroke-opacity', 0.6);
+        select(event.currentTarget as Element).style('stroke-opacity', 0.6);
       })
       .on('mousemove', moveTooltip)
       .on('mouseout', (event) => {
         hideTooltip();
-        d3.select(event.currentTarget).style('stroke-opacity', 0.3);
+        select(event.currentTarget as Element).style('stroke-opacity', 0.3);
       });
 
     // Draw nodes

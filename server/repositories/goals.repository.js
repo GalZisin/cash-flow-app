@@ -1,5 +1,6 @@
 const { sql, C, SEL, exec, rows, withTransaction, insertMany, updateRow, getPool } = require('../db/helpers');
 const { goalToRow, assembleGoal } = require('../db/mappers');
+const traceMethods = require('../utils/traceMethods');
 
 const COLUMNS = [
     C.id('id'), C.str('name', 200), C.text('description'), C.vchar('goal_type', 20), C.money('target_amount'),
@@ -85,6 +86,24 @@ class GoalsRepository {
     }
 
     /**
+     * Update several goals in ONE transaction (used after re-analysing all goals).
+     * Each entry is a full goal object (already merged with its new fields).
+     * @param {Array<Object>} goals
+     * @returns {Promise<number>} rows updated
+     */
+    async updateMany(goals) {
+        if (!goals.length) return 0;
+        const stamp = new Date().toISOString();
+        return withTransaction(async (tx) => {
+            let updated = 0;
+            for (const goal of goals) {
+                updated += await updateRow(tx, 'dbo.financial_goals', COLUMNS, goalToRow({ ...goal, updatedDate: stamp }), 'id');
+            }
+            return updated;
+        });
+    }
+
+    /**
      * Delete goal
      * @param {string} id
      * @returns {Promise<boolean>}
@@ -116,4 +135,4 @@ class GoalsRepository {
     }
 }
 
-module.exports = new GoalsRepository();
+module.exports = traceMethods(new GoalsRepository(), 'goalsRepository');

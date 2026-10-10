@@ -98,6 +98,20 @@ async function insertMany(executor, table, columns, records) {
     }
 }
 
+/** INSERT one row into a table with an IDENTITY key and return the new id. */
+async function insertReturningId(executor, table, columns, record, idColumn = 'id') {
+    const request = executor.request();
+    const refs = columns.map((column, c) => {
+        const name = `p${c}`;
+        request.input(name, column.type, record[column.name] === undefined ? null : record[column.name]);
+        return paramRef(column, name);
+    });
+    const result = await request.query(
+        `INSERT INTO ${table} (${columns.map((c) => c.name).join(', ')}) OUTPUT INSERTED.${idColumn} VALUES (${refs.join(', ')})`
+    );
+    return result.recordset[0][idColumn];
+}
+
 /** UPDATE one row identified by a single key column. */
 async function updateRow(executor, table, columns, record, keyColumn = 'id') {
     const request = executor.request();
@@ -116,6 +130,6 @@ async function updateRow(executor, table, columns, record, keyColumn = 'id') {
 module.exports = {
     sql, C, SEL, col,
     ...pure,
-    exec, rows, withTransaction, insertMany, updateRow,
+    exec, rows, withTransaction, insertMany, insertReturningId, updateRow,
     getPool
 };

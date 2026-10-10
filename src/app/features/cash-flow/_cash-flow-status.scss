@@ -1,0 +1,52 @@
+// Shared status-color recipes for the cash flow table and the mobile cards.
+// Everything reads the theme's status tokens (src/themes), so the same rules
+// work in every palette and in both light and dark mode.
+
+// Sum badges (additional incomes / regular expenses / special expenses):
+// flat tinted pills - translucent fill, token text color, faint border.
+@mixin status-pills {
+  .badge {
+    border: 1px solid transparent;
+
+    &.bg-success {
+      background: rgba(var(--cf-success-rgb), 0.14) !important;
+      border-color: rgba(var(--cf-success-rgb), 0.25);
+      color: var(--cf-success);
+    }
+
+    &.bg-primary {
+      background: rgba(var(--cf-primary-rgb), 0.14) !important;
+      border-color: rgba(var(--cf-primary-rgb), 0.25);
+      color: var(--cf-primary-text);
+    }
+
+    &.bg-warning {
+      background: rgba(var(--cf-warning-rgb), 0.14) !important;
+      border-color: rgba(var(--cf-warning-rgb), 0.25);
+      color: var(--cf-warning);
+    }
+  }
+}
+
+// Income / expense mini bars: income in the success color, expenses in a muted
+// brand tint. Red is reserved for a month whose expenses exceed its income (.over).
+@mixin summary-bars {
+  .income-bar {
+    background: var(--cf-success-solid);
+  }
+
+  .expense-bar {
+    background: rgba(var(--cf-primary-rgb), 0.55);
+
+    &.over {
+      background: var(--cf-danger-solid);
+    }
+  }
+}
+
+// Ending balance below zero.
+@mixin negative-amount {
+  .negative {
+    color: var(--cf-danger);
+  }
+}

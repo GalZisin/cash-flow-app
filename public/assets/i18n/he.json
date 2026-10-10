@@ -393,5 +393,12 @@
     "TYPE_MILESTONE": "פעימות",
     "MARK_MILESTONE_PAID": "סמן פעימה כבוצעה",
     "UNDO_MILESTONE_PAYMENT": "בטל תשלום פעימה"
+  },
+  "THEME": {
+    "BUTTON": "ערכות צבע",
+    "TITLE": "ערכת צבע",
+    "MODE": "מצב תצוגה",
+    "LIGHT": "בהיר",
+    "DARK": "כהה"
   }
 }

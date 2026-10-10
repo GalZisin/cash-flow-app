@@ -1,5 +1,7 @@
 const conversationsRepository = require('../repositories/conversations.repository');
 const { ValidationError, NotFoundError } = require('../utils/errors');
+const { v4: uuidv4 } = require('uuid');
+const traceMethods = require('../utils/traceMethods');
 
 /**
  * Service for conversations business logic
@@ -40,7 +42,7 @@ class ConversationsService {
         }
 
         const conversation = {
-            id: Date.now().toString(),
+            id: uuidv4(),
             title: data.title,
             messages: data.messages || [],
             createdAt: new Date().toISOString(),
@@ -96,7 +98,7 @@ class ConversationsService {
         }
 
         const newMessage = {
-            id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+            id: uuidv4(),
             role: message.role || 'user',
             content: message.content,
             timestamp: new Date().toISOString()
@@ -110,4 +112,4 @@ class ConversationsService {
     }
 }
 
-module.exports = new ConversationsService();
+module.exports = traceMethods(new ConversationsService(), 'conversationsService');

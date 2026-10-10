@@ -1,0 +1,122 @@
+<div class="cf-overlay position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center no-print"
+  (click)="close()">
+  <div class="cf-defaults-card card" dir="rtl" (click)="$event.stopPropagation()">
+
+    <div class="cf-defaults-header d-flex justify-content-between align-items-center">
+      <span class="cf-defaults-title">{{ 'CASH_FLOW.DEFAULTS_TITLE' | translate }}</span>
+      <button mat-icon-button type="button" (click)="close()"
+        [title]="'INSTALLMENTS.CANCEL' | translate" [matTooltip]="'INSTALLMENTS.CANCEL' | translate" [attr.aria-label]="'INSTALLMENTS.CANCEL' | translate">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    @if (form) {
+      <div class="cf-defaults-body" [formGroup]="form">
+
+        <!-- שדות בסיס -->
+        <div class="row g-3 mb-3">
+          <div class="col-md-4">
+            <label class="cf-field-label" for="def-income">{{ 'CASH_FLOW.INCOME' | translate }}</label>
+            <input id="def-income" type="number" class="form-control form-control-sm" dir="rtl"
+              formControlName="income" placeholder="הכנסות" title="הכנסות" aria-label="הכנסות" />
+          </div>
+          <div class="col-md-4">
+            <label class="cf-field-label" for="def-mortgage">{{ 'CASH_FLOW.MORTGAGE' | translate }}</label>
+            <input id="def-mortgage" type="number" class="form-control form-control-sm" dir="rtl"
+              formControlName="mortgagePayment" placeholder="משכנתא" title="משכנתא" aria-label="משכנתא" />
+          </div>
+          <div class="col-md-4">
+            <label class="cf-field-label" for="def-loan">{{ 'CASH_FLOW.LOAN' | translate }}</label>
+            <input id="def-loan" type="number" class="form-control form-control-sm" dir="rtl"
+              formControlName="loanPayment" placeholder="הלוואה" title="הלוואה" aria-label="הלוואה" />
+          </div>
+        </div>
+
+        <mat-divider class="mb-3"></mat-divider>
+
+        <!-- הכנסות נוספות -->
+        <div class="cf-section-title mb-2">{{ 'CASH_FLOW.ADDITIONAL_INCOMES' | translate }}</div>
+        <div formArrayName="additionalIncomes">
+          @for (ctrl of additionalIncomes.controls; track ctrl; let j = $index) {
+            <div [formGroupName]="j" class="expense-row mb-2">
+              <input type="text" class="form-control form-control-sm" dir="rtl" formControlName="description" placeholder="תיאור" />
+              <input type="number" class="form-control form-control-sm" dir="rtl" formControlName="amount" placeholder="סכום" />
+              <button mat-icon-button type="button" color="warn" (click)="removeAdditionalIncome(j)"
+                [title]="'INSTALLMENTS.DELETE' | translate" [matTooltip]="'INSTALLMENTS.DELETE' | translate" [attr.aria-label]="'INSTALLMENTS.DELETE' | translate">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+          }
+        </div>
+        <button mat-button type="button" (click)="addAdditionalIncome()">
+          <mat-icon>add</mat-icon> {{ 'CASH_FLOW.ADD_INCOME' | translate }}
+        </button>
+
+        <mat-divider class="my-3"></mat-divider>
+
+        <!-- הוצאות שוטפות -->
+        <div class="cf-section-title mb-2">{{ 'CASH_FLOW.REGULAR_EXPENSES' | translate }}</div>
+        <div formArrayName="regularExpenses">
+          @for (ctrl of regularExpenses.controls; track ctrl; let j = $index) {
+            <div [formGroupName]="j" class="expense-item-block mb-2">
+              <div class="expense-row">
+                <input type="text" class="form-control form-control-sm" dir="rtl" formControlName="description"
+                  placeholder="תיאור" title="תיאור" aria-label="תיאור" />
+                <input type="number" class="form-control form-control-sm" dir="rtl" formControlName="amount"
+                  placeholder="סכום" title="סכום" aria-label="סכום" />
+                <button mat-icon-button type="button" color="warn" (click)="removeRegularExpense(j)"
+                  [title]="'INSTALLMENTS.DELETE' | translate" [matTooltip]="'INSTALLMENTS.DELETE' | translate" [attr.aria-label]="'INSTALLMENTS.DELETE' | translate">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+              <app-expense-category-selector
+                [selectedCategory]="ctrl.get('category')!.value"
+                (selectedCategoryChange)="ctrl.get('category')!.setValue($event)" />
+            </div>
+          }
+        </div>
+        <button mat-button type="button" (click)="addRegularExpense()">
+          <mat-icon>add</mat-icon> {{ 'CASH_FLOW.ADD_EXPENSE' | translate }}
+        </button>
+
+        <mat-divider class="my-3"></mat-divider>
+
+        <!-- הוצאות מיוחדות -->
+        <div class="cf-section-title mb-2">{{ 'CASH_FLOW.SPECIAL_EXPENSES' | translate }}</div>
+        <div formArrayName="specialExpenses">
+          @for (ctrl of specialExpenses.controls; track ctrl; let j = $index) {
+            <div [formGroupName]="j" class="expense-item-block mb-2">
+              <div class="expense-row">
+                <input type="text" class="form-control form-control-sm" dir="rtl" formControlName="description"
+                  placeholder="תיאור" title="תיאור" aria-label="תיאור" />
+                <input type="number" class="form-control form-control-sm" dir="rtl" formControlName="amount"
+                  placeholder="סכום" title="סכום" aria-label="סכום" />
+                <button mat-icon-button type="button" color="warn" (click)="removeSpecialExpense(j)"
+                  [title]="'INSTALLMENTS.DELETE' | translate" [matTooltip]="'INSTALLMENTS.DELETE' | translate" [attr.aria-label]="'INSTALLMENTS.DELETE' | translate">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+              <app-expense-category-selector
+                [selectedCategory]="ctrl.get('category')!.value"
+                (selectedCategoryChange)="ctrl.get('category')!.setValue($event)" />
+            </div>
+          }
+        </div>
+        <button mat-button type="button" (click)="addSpecialExpense()">
+          <mat-icon>add</mat-icon> {{ 'CASH_FLOW.ADD_EXPENSE' | translate }}
+        </button>
+
+      </div>
+
+      <div class="cf-defaults-footer d-flex justify-content-end gap-2">
+        <button mat-button type="button" (click)="close()">{{ 'CASH_FLOW.DELETE_NO' | translate }}</button>
+        <button mat-raised-button color="primary" type="button" (click)="save()" [disabled]="saving">
+          {{ 'CASH_FLOW.SAVE' | translate }}
+        </button>
+      </div>
+    } @else {
+      <div class="cf-defaults-body text-center text-muted py-4" data-testid="defaults-loading">...</div>
+    }
+
+  </div>
+</div>

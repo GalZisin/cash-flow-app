@@ -1,0 +1,96 @@
+<!-- Alerts Section -->
+@if (alerts().length > 0) {
+  <div class="alerts-section">
+    @for (alert of alerts(); track alert.category) {
+      <mat-card [class]="'alert-card ' + alert.severity">
+        <mat-card-content>
+          <div class="alert-content">
+            <mat-icon class="alert-icon">
+              {{ alert.severity === 'danger' ? 'error' : 'warning' }}
+            </mat-icon>
+            <div class="alert-text">
+              <strong>{{ categoryConfig(alert.category).label }}</strong>
+              @if (alert.severity === 'danger') {
+                <span>חריגה: {{ formatCurrency(alert.overAmount) }}</span>
+              } @else {
+                <span>התקרבת לתקרה ({{ alert.percentage | number:'1.0-0' }}%)</span>
+              }
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    }
+  </div>
+}
+
+<!-- Summary Cards -->
+@if (budget(); as budget) {
+  <div class="summary-cards">
+    <mat-card class="summary-card">
+      <mat-card-content>
+        <div class="summary-icon budget-icon">
+          <mat-icon>account_balance</mat-icon>
+        </div>
+        <div class="summary-details">
+          <div class="summary-label">סך תקציב</div>
+          <div class="summary-value">{{ formatCurrency(budget.totalBudget) }}</div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="summary-card">
+      <mat-card-content>
+        <div class="summary-icon spent-icon">
+          <mat-icon>payments</mat-icon>
+        </div>
+        <div class="summary-details">
+          <div class="summary-label">הוצאות</div>
+          <div class="summary-value">{{ formatCurrency(budget.totalSpent) }}</div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="summary-card">
+      <mat-card-content>
+        <div class="summary-icon remaining-icon">
+          <mat-icon>savings</mat-icon>
+        </div>
+        <div class="summary-details">
+          <div class="summary-label">נותר</div>
+          <div class="summary-value" [class.negative]="budget.totalRemaining < 0">
+            {{ formatCurrency(budget.totalRemaining) }}
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="summary-card">
+      <mat-card-content>
+        <div class="summary-icon percentage-icon">
+          <mat-icon>pie_chart</mat-icon>
+        </div>
+        <div class="summary-details">
+          <div class="summary-label">ניצול</div>
+          <div class="summary-value">{{ budget.overallPercentage | number:'1.0-0' }}%</div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Overall Progress -->
+  <mat-card class="overall-progress-card">
+    <mat-card-content>
+      <div class="overall-progress-header">
+        <span class="progress-label">התקדמות כללית</span>
+        <span class="progress-percentage">
+          {{ budget.overallPercentage | number:'1.1-1' }}%
+        </span>
+      </div>
+      <mat-progress-bar
+        mode="determinate"
+        [value]="budget.overallPercentage > 100 ? 100 : budget.overallPercentage"
+        [color]="progressColor(budget.overallPercentage)">
+      </mat-progress-bar>
+    </mat-card-content>
+  </mat-card>
+}

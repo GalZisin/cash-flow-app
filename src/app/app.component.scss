@@ -6,7 +6,7 @@
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border-bottom: 1px solid #e8eaed;
+    border-bottom: 1px solid var(--cf-border);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
     padding-top: 8px !important;
@@ -34,7 +34,7 @@
     font-family: 'Heebo', sans-serif;
     font-size: 0.88rem;
     font-weight: 500;
-    color: #64748b;
+    color: var(--cf-text-3);
     border: none !important;
     padding: 8px 14px;
     border-bottom: 2px solid transparent !important;
@@ -42,13 +42,13 @@
     white-space: nowrap;
 
     &:hover:not(.active) {
-        color: #1e293b;
+        color: var(--cf-text);
         background: transparent;
     }
 
     &.active {
-        color: #4f46e5 !important;
-        border-bottom: 2px solid #4f46e5 !important;
+        color: var(--cf-primary-text) !important;
+        border-bottom: 2px solid var(--cf-primary) !important;
         font-weight: 600;
         background: transparent !important;
     }
@@ -61,16 +61,16 @@
     font-weight: 500;
     padding: 5px 12px;
     border-radius: 8px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--cf-border);
     background: transparent;
-    color: #475569;
+    color: var(--cf-text-2);
     transition: background 0.15s, border-color 0.15s, color 0.15s;
     white-space: nowrap;
 
     &:hover {
-        background: #f1f5f9;
-        border-color: #cbd5e1;
-        color: #1e293b;
+        background: var(--cf-surface-3);
+        border-color: var(--cf-border-strong);
+        color: var(--cf-text);
     }
 }
 
@@ -92,10 +92,10 @@
 [data-bs-theme="dark"],
 .dark-mode {
     .app-navbar {
-        background: rgba(15, 23, 42, 0.95) !important;
+        background: rgba(var(--cf-bg-rgb), 0.95) !important;
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
-        border-bottom-color: #1e293b !important;
+        border-bottom-color: var(--cf-border) !important;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
 
         &.scrolled {
@@ -104,28 +104,28 @@
     }
 
     .nav-link {
-        color: #94a3b8 !important;
+        color: var(--cf-text-3) !important;
 
         &:hover:not(.active) {
-            color: #e5e7eb !important;
+            color: var(--cf-text) !important;
             background: transparent !important;
         }
 
         &.active {
-            color: #38bdf8 !important;
-            border-bottom-color: #38bdf8 !important;
+            color: var(--cf-accent) !important;
+            border-bottom-color: var(--cf-accent) !important;
         }
     }
 
     .navbar-btn {
-        background: #1e293b !important;
-        border-color: #334155 !important;
-        color: #cbd5e1 !important;
+        background: var(--cf-surface-3) !important;
+        border-color: var(--cf-border-strong) !important;
+        color: var(--cf-text-2) !important;
 
         &:hover {
-            background: #334155 !important;
-            border-color: #475569 !important;
-            color: #f1f5f9 !important;
+            background: var(--cf-surface-4) !important;
+            border-color: var(--cf-border-strong) !important;
+            color: var(--cf-text-strong) !important;
         }
     }
 
@@ -133,40 +133,40 @@
     .btn.navbar-btn,
     .navbar-btn.btn-sm,
     button.navbar-btn {
-        background-color: #1e293b !important;
-        border-color: #334155 !important;
-        color: #cbd5e1 !important;
+        background-color: var(--cf-surface-3) !important;
+        border-color: var(--cf-border-strong) !important;
+        color: var(--cf-text-2) !important;
         box-shadow: none !important;
 
         &:hover,
         &:focus,
         &:active,
         &:focus-visible {
-            background-color: #334155 !important;
-            border-color: #475569 !important;
-            color: #f1f5f9 !important;
-            box-shadow: 0 0 0 0.15rem rgba(56, 189, 248, 0.15) !important;
+            background-color: var(--cf-surface-4) !important;
+            border-color: var(--cf-border-strong) !important;
+            color: var(--cf-text-strong) !important;
+            box-shadow: 0 0 0 0.15rem rgba(var(--cf-accent-rgb), 0.15) !important;
         }
     }
 
     .theme-toggle-btn {
-        background: #1e293b !important;
+        background: var(--cf-surface-3) !important;
 
         &:hover {
-            background: #334155 !important;
+            background: var(--cf-surface-4) !important;
         }
     }
 
     // Extra specificity for Bootstrap button overrides
     button.btn.theme-toggle-btn,
     .btn-sm.theme-toggle-btn {
-        background-color: #1e293b !important;
+        background-color: var(--cf-surface-3) !important;
 
         &:hover,
         &:focus,
         &:active {
-            background-color: #334155 !important;
-            border-color: #475569 !important;
+            background-color: var(--cf-surface-4) !important;
+            border-color: var(--cf-border-strong) !important;
         }
     }
 }

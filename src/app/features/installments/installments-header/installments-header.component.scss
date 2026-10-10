@@ -1,16 +1,16 @@
 // ── Layout ──────────────────────────────────────────
 .inst-sticky-header {
     flex-shrink: 0;
-    background: #f8f9fb;
+    background: var(--cf-surface-2);
     padding: 16px 24px 14px;
-    border-bottom: 1px solid #e8eaed;
+    border-bottom: 1px solid var(--cf-border);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .inst-page-title {
     font-size: 1.25rem;
     font-weight: 700;
-    color: #1e293b;
+    color: var(--cf-text);
 }
 
 // ── KPI cards ──────────────────────────────────────
@@ -37,28 +37,28 @@
 }
 
 .inst-stat-blue {
-    background: #e8eeff;
-    color: #2d4fd6;
+    background: var(--cf-primary-soft);
+    color: var(--cf-primary-text);
 }
 
 .inst-stat-red {
-    background: #fee2e2;
-    color: #c0392b;
+    background: var(--cf-danger-soft);
+    color: var(--cf-danger);
 }
 
 .inst-stat-amber {
-    background: #fff4e0;
-    color: #a05c00;
+    background: var(--cf-warning-soft);
+    color: var(--cf-warning);
 }
 
 .inst-stat-green {
-    background: #e6f7f0;
-    color: #1a7a52;
+    background: var(--cf-success-soft);
+    color: var(--cf-success);
 }
 
 // ── Add button ─────────────────────────────────────
 .inst-add-btn {
-    background: #4f6ef7;
+    background: var(--cf-primary);
     color: #fff;
     border: none;
     border-radius: 8px;
@@ -70,7 +70,7 @@
     transition: background 0.15s;
 
     &:hover {
-        background: #3b5bdb;
+        background: var(--cf-primary-strong);
     }
 }
 
@@ -82,53 +82,53 @@
 :host-context([data-bs-theme="dark"]),
 :host-context(.dark-mode) {
     .inst-sticky-header {
-        background: #0f172a !important;
-        border-bottom-color: #1e2d45 !important;
+        background: var(--cf-bg) !important;
+        border-bottom-color: var(--cf-border) !important;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
     }
 
     .inst-page-title {
-        color: #e5e7eb !important;
+        color: var(--cf-text) !important;
     }
 
     .inst-stat-blue {
-        background: rgba(45, 79, 214, 0.18);
-        color: #93c5fd;
+        background: rgba(var(--cf-primary-rgb), 0.18);
+        color: var(--cf-primary-text);
     }
 
     .inst-stat-red {
-        background: rgba(192, 57, 43, 0.18);
-        color: #fca5a5;
+        background: rgba(var(--cf-danger-rgb), 0.18);
+        color: var(--cf-danger);
     }
 
     .inst-stat-amber {
-        background: rgba(160, 92, 0, 0.18);
-        color: #fcd34d;
+        background: rgba(var(--cf-warning-rgb), 0.18);
+        color: var(--cf-warning);
     }
 
     .inst-stat-green {
-        background: rgba(26, 122, 82, 0.18);
-        color: #6ee7b7;
+        background: rgba(var(--cf-success-rgb), 0.18);
+        color: var(--cf-success);
     }
 
     .inst-add-btn {
-        background: rgba(79, 110, 247, 0.2) !important;
-        color: #a5b4fc !important;
-        border: 1px solid rgba(79, 110, 247, 0.35) !important;
+        background: rgba(var(--cf-primary-rgb), 0.2) !important;
+        color: var(--cf-primary-text) !important;
+        border: 1px solid rgba(var(--cf-primary-rgb), 0.35) !important;
 
         &:hover {
-            background: rgba(79, 110, 247, 0.32) !important;
+            background: rgba(var(--cf-primary-rgb), 0.32) !important;
         }
     }
 
     // View toggle button (Bootstrap outline-secondary)
     .btn-outline-secondary {
-        border-color: #334155 !important;
-        color: #94a3b8 !important;
+        border-color: var(--cf-border-strong) !important;
+        color: var(--cf-text-3) !important;
 
         &:hover {
             background: rgba(255, 255, 255, 0.06) !important;
-            color: #e5e7eb !important;
+            color: var(--cf-text) !important;
         }
     }
 }

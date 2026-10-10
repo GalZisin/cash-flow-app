@@ -1,9 +1,11 @@
 const {
-    sql, C, SEL, exec, rows, withTransaction, insertMany, getPool
+    sql, C, SEL, exec, rows, withTransaction, insertMany, insertReturningId, updateRow, getPool
 } = require('../db/helpers');
 const {
     monthToRow, monthItemRows, assembleMonths, defaultsToRows, assembleDefaults
 } = require('../db/mappers');
+const { planCashFlowWrite } = require('../db/cashFlowDiff');
+const traceMethods = require('../utils/traceMethods');
 
 const MONTH_COLUMNS = [
     C.int('sort_order'), C.date('month_date'), C.money('starting_balance'), C.money('income'),
@@ -11,6 +13,9 @@ const MONTH_COLUMNS = [
     C.money('installments_payment'), C.money('ending_balance'), C.money('savings'),
     C.str('row_color', 20), C.text('extra_json')
 ];
+
+// Same columns plus the identity key, for UPDATE ... WHERE id = @id
+const MONTH_UPDATE_COLUMNS = [C.int('id'), ...MONTH_COLUMNS];
 
 const ITEM_COLUMNS = [
     C.int('month_id'), C.vchar('kind', 20), C.int('sort_order'), C.str('description', 500), C.money('amount'),
@@ -51,28 +56,52 @@ class CashFlowRepository {
     }
 
     /**
-     * Replaces the whole cash flow table (same behaviour as overwriting the old JSON file).
+     * Saves the whole cash flow table, but only writes the months that changed:
+     * unchanged months are left alone, changed months are updated in place (their items are
+     * replaced), new months are inserted and months beyond the new length are deleted.
+     * Returns { inserted, updated, deleted, unchanged } for logging / tests.
      */
     async write(data) {
         const months = Array.isArray(data.months) ? data.months : [];
-        const monthRows = months.map(monthToRow); // validates month values before touching the DB
+        // Mapping first: it validates month values before anything touches the DB.
+        const incoming = months.map((m, index) => ({ row: monthToRow(m, index), items: monthItemRows(m) }));
 
-        await withTransaction(async (tx) => {
-            // TABLOCKX makes two concurrent saves queue up instead of colliding.
-            await exec(tx, 'DELETE FROM dbo.cash_flow_items WITH (TABLOCKX)');
-            await exec(tx, 'DELETE FROM dbo.cash_flow_months WITH (TABLOCKX)');
+        return withTransaction(async (tx) => {
+            // TABLOCKX makes two concurrent saves queue up instead of interleaving.
+            const existingMonths = await rows(tx, `
+                SELECT id, sort_order, ${SEL.date('month_date')}, starting_balance, income, mortgage_payment,
+                       loan_payment, manual_loan_payment, installments_payment, ending_balance, savings,
+                       row_color, extra_json
+                FROM dbo.cash_flow_months WITH (TABLOCKX)`);
+            const existingItems = await rows(tx, `
+                SELECT month_id, kind, sort_order, description, amount, category, goal_related, goal_id, extra_json
+                FROM dbo.cash_flow_items`);
 
-            await insertMany(tx, 'dbo.cash_flow_months', MONTH_COLUMNS, monthRows);
+            const plan = planCashFlowWrite(existingMonths, existingItems, incoming);
 
-            const ids = await rows(tx, 'SELECT id, sort_order FROM dbo.cash_flow_months');
-            const idBySortOrder = new Map(ids.map((r) => [r.sort_order, r.id]));
+            if (plan.deleteIds.length) {
+                // ON DELETE CASCADE removes the items of deleted months.
+                const params = {};
+                const refs = plan.deleteIds.map((id, i) => { params[`d${i}`] = [sql.Int, id]; return `@d${i}`; });
+                await exec(tx, `DELETE FROM dbo.cash_flow_months WHERE id IN (${refs.join(', ')})`, params);
+            }
 
-            const itemRows = [];
-            months.forEach((m, index) => {
-                const monthId = idBySortOrder.get(index + 1);
-                for (const item of monthItemRows(m)) itemRows.push({ ...item, month_id: monthId });
-            });
-            await insertMany(tx, 'dbo.cash_flow_items', ITEM_COLUMNS, itemRows);
+            for (const change of plan.update) {
+                if (change.rowChanged) {
+                    await updateRow(tx, 'dbo.cash_flow_months', MONTH_UPDATE_COLUMNS, { ...change.row, id: change.id }, 'id');
+                }
+                if (change.itemsChanged) {
+                    await exec(tx, 'DELETE FROM dbo.cash_flow_items WHERE month_id = @id', { id: [sql.Int, change.id] });
+                    await insertMany(tx, 'dbo.cash_flow_items', ITEM_COLUMNS, change.items.map((it) => ({ ...it, month_id: change.id })));
+                }
+            }
+
+            for (const added of plan.insert) {
+                const monthId = await insertReturningId(tx, 'dbo.cash_flow_months', MONTH_COLUMNS, added.row);
+                await insertMany(tx, 'dbo.cash_flow_items', ITEM_COLUMNS, added.items.map((it) => ({ ...it, month_id: monthId })));
+            }
+
+            return { inserted: plan.insert.length, updated: plan.update.length, deleted: plan.deleteIds.length, unchanged: plan.unchanged };
         });
     }
 
@@ -111,4 +140,4 @@ class CashFlowRepository {
     }
 }
 
-module.exports = new CashFlowRepository();
+module.exports = traceMethods(new CashFlowRepository(), 'cashFlowRepository');

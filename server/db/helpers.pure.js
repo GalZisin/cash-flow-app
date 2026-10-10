@@ -25,6 +25,15 @@ const isoToDb = (value) => {
     return d.toISOString().slice(0, -1);
 };
 
+/** Date -> value for a ts column in the LOCAL time of this machine ('2026-10-10T08:05:03.007'), null if invalid */
+const localDateTimeToDb = (date) => {
+    const d = date instanceof Date ? date : new Date(date);
+    if (Number.isNaN(d.getTime())) return null;
+    const pad = (n, width = 2) => String(n).padStart(width, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}` +
+        `T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}.${pad(d.getMilliseconds(), 3)}`;
+};
+
 const jsonOrNull = (value) => (value === undefined || value === null ? null : JSON.stringify(value));
 
 const parseJson = (text) => (text === undefined || text === null || text === '' ? undefined : JSON.parse(text));
@@ -56,5 +65,5 @@ function groupBy(list, keyOf) {
 }
 
 module.exports = {
-    num, numOrNull, strOrNull, boolOrNull, isoToDb, jsonOrNull, parseJson, extraJson, setIf, groupBy
+    num, numOrNull, strOrNull, boolOrNull, isoToDb, localDateTimeToDb, jsonOrNull, parseJson, extraJson, setIf, groupBy
 };

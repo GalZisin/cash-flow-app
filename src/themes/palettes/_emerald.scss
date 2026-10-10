@@ -1,0 +1,25 @@
+// Emerald - "wealth" green with a deep teal accent. Fresh, finance-friendly.
+$palette: (
+  light: (
+    bg: #f5f8f6, surface: #ffffff, surface-2: #f7faf8, surface-3: #eef4f0, surface-4: #dde8e1, header: #f7faf8,
+    border: #e0e9e3, border-strong: #c4d4c9,
+    text-strong: #0c1a13, text: #16261d, text-2: #3d5246, text-3: #566a5e, text-4: #7d9084,
+    primary: #047857, primary-strong: #065f46, primary-text: #065f46, primary-soft: #e3f4ec, primary-border: #b5dfcb, on-primary: #ffffff,
+    accent: #0f766e,
+    success: #166534, success-soft: #e4f6e9, success-solid: #16a34a, success-toast: #166534,
+    danger: #c62828, danger-soft: #fdecea, danger-solid: #dc2626, danger-toast: #b91c1c,
+    warning: #92600a, warning-soft: #fdf3dc, warning-solid: #d97706,
+    tooltip-bg: #10231a,
+  ),
+  dark: (
+    bg: #08110d, surface: #0d1a14, surface-2: #11211a, surface-3: #162a21, surface-4: #21392d, header: #0a150f,
+    border: #1a2e24, border-strong: #2a4536,
+    text-strong: #f3faf6, text: #e1ece6, text-2: #c2d3c9, text-3: #8ea69a, text-4: #6a8276,
+    primary: #047857, primary-strong: #065f46, primary-text: #6ee7b7, primary-soft: #0f2c21, primary-border: #1d5a42, on-primary: #ffffff,
+    accent: #2dd4bf,
+    success: #86efac, success-soft: #0f2e1c, success-solid: #16a34a, success-toast: #166534,
+    danger: #fca5a5, danger-soft: #3a1618, danger-solid: #dc2626, danger-toast: #b91c1c,
+    warning: #fcd34d, warning-soft: #33270b, warning-solid: #d97706,
+    tooltip-bg: #162a21,
+  ),
+);

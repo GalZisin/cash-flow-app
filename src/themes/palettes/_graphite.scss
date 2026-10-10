@@ -1,0 +1,25 @@
+// Graphite - neutral, minimal (zinc greys, near-black primary) with a single blue accent.
+$palette: (
+  light: (
+    bg: #f7f7f8, surface: #ffffff, surface-2: #fafafa, surface-3: #f4f4f5, surface-4: #e4e4e7, header: #fafafa,
+    border: #e4e4e7, border-strong: #d4d4d8,
+    text-strong: #09090b, text: #18181b, text-2: #3f3f46, text-3: #52525b, text-4: #71717a,
+    primary: #18181b, primary-strong: #000000, primary-text: #18181b, primary-soft: #f4f4f5, primary-border: #d4d4d8, on-primary: #ffffff,
+    accent: #2563eb,
+    success: #15803d, success-soft: #ecfdf3, success-solid: #16a34a, success-toast: #166534,
+    danger: #b91c1c, danger-soft: #fef2f2, danger-solid: #dc2626, danger-toast: #b91c1c,
+    warning: #a16207, warning-soft: #fefce8, warning-solid: #ca8a04,
+    tooltip-bg: #18181b,
+  ),
+  dark: (
+    bg: #09090b, surface: #111113, surface-2: #161618, surface-3: #1c1c1f, surface-4: #27272a, header: #0c0c0e,
+    border: #232326, border-strong: #3f3f46,
+    text-strong: #fafafa, text: #ededef, text-2: #d4d4d8, text-3: #a1a1aa, text-4: #71717a,
+    primary: #3f3f46, primary-strong: #52525b, primary-text: #fafafa, primary-soft: #1f1f23, primary-border: #3f3f46, on-primary: #ffffff,
+    accent: #60a5fa,
+    success: #86efac, success-soft: #0f2e1c, success-solid: #16a34a, success-toast: #166534,
+    danger: #fca5a5, danger-soft: #3a1618, danger-solid: #dc2626, danger-toast: #b91c1c,
+    warning: #fde047, warning-soft: #2e2a0b, warning-solid: #ca8a04,
+    tooltip-bg: #27272a,
+  ),
+);

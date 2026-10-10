@@ -1,3 +1,5 @@
+@use '../cash-flow-status' as status;
+
 .mobile-cards-container {
     display: flex;
     flex-direction: column;
@@ -22,7 +24,7 @@
         .month-name {
             font-weight: 700;
             font-size: 1.1rem;
-            color: #1e293b;
+            color: var(--cf-text);
         }
     }
 
@@ -37,19 +39,19 @@
         label {
             display: block;
             font-size: 11px;
-            color: #64748b;
+            color: var(--cf-text-3);
             font-weight: 600;
             margin-bottom: 2px;
         }
 
         .val {
             font-size: 14px;
-            color: #1e293b;
+            color: var(--cf-text);
         }
 
         .amount-display {
             cursor: pointer;
-            border-bottom: 1px dashed #cbd5e1;
+            border-bottom: 1px dashed var(--cf-border-strong);
         }
     }
 
@@ -77,9 +79,9 @@
             .expense-item-block {
                 margin-bottom: 12px;
                 padding: 10px;
-                border: 1px solid #e2e8f0;
+                border: 1px solid var(--cf-border);
                 border-radius: 12px;
-                background: #fff;
+                background: var(--cf-surface);
             }
 
             .expense-row {
@@ -88,7 +90,7 @@
                 margin-bottom: 8px;
 
                 input {
-                    border: 1px solid #e2e8f0;
+                    border: 1px solid var(--cf-border);
                     border-radius: 4px;
                     padding: 4px;
                     font-size: 12px;
@@ -110,12 +112,9 @@
             transition: width 0.3s;
         }
 
-        .income-bar {
-            background: #10b981;
-        }
-
-        .expense-bar {
-            background: #ef4444;
-        }
+        @include status.summary-bars;
     }
+
+    @include status.status-pills;
+    @include status.negative-amount;
 }

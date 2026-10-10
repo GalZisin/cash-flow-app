@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cash Flow App - חלופות ל-Ollama מקומי</title>
+<style>
+  :root {
+    --bg: #0f172a; --panel: #111c33; --panel2: #0b1222; --border: #1e293b; --text: #e2e8f0; --muted: #94a3b8;
+    --app: #3b82f6; --server: #22c55e; --model: #a855f7; --cloud: #f59e0b; --lan: #06b6d4; --bad: #ef4444; --ok: #22c55e; --warn: #f59e0b;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body { font-family: "Heebo", "Segoe UI", Arial, sans-serif; background: radial-gradient(1200px 600px at 80% -10%, #1e293b 0%, var(--bg) 60%); color: var(--text); line-height: 1.6; }
+  .page { max-width: 1500px; margin: 0 auto; padding: 28px 24px 60px; }
+  h1 { font-size: clamp(24px, 2vw, 34px); margin: 0 0 6px; }
+  h1 small { display: block; font-size: 15px; color: var(--muted); font-weight: 400; margin-top: 6px; }
+  h2 { font-size: 22px; margin: 44px 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  h3 { font-size: 18px; margin: 0 0 6px; }
+  p { margin: 6px 0; }
+  .lead { color: var(--muted); max-width: 1000px; }
+  .meta { color: var(--muted); font-size: 13px; }
+  code { background: #0b1222; border: 1px solid var(--border); border-radius: 6px; padding: 1px 6px; font-family: Consolas, "Courier New", monospace; font-size: 13px; direction: ltr; unicode-bidi: embed; }
+  pre { background: #0b1222; border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; direction: ltr; text-align: left; overflow-x: auto; font-size: 13px; line-height: 1.5; margin: 8px 0; }
+  pre code { background: none; border: none; padding: 0; }
+  a { color: #93c5fd; }
+
+  /* the general flow at the top */
+  .canvas { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 10px; margin: 12px 0 6px; direction: ltr; overflow-x: auto; }
+  .canvas svg { display: block; width: 100%; height: auto; min-width: 700px; }
+
+  /* option cards */
+  .option { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 20px 22px; margin: 18px 0; display: grid; grid-template-columns: 1.1fr 1fr; gap: 20px; }
+  @media (max-width: 1000px) { .option { grid-template-columns: 1fr; } }
+  .option .head { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
+  .num { width: 36px; height: 36px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; color: #fff; font-size: 16px; flex: none; }
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; color: #0b1222; }
+  .badge.ok { background: var(--ok); } .badge.warn { background: var(--warn); } .badge.bad { background: var(--bad); color: #fff; } .badge.info { background: #93c5fd; }
+  .diagram { background: var(--panel2); border: 1px solid var(--border); border-radius: 12px; padding: 8px; direction: ltr; }
+  .diagram svg { display: block; width: 100%; height: auto; }
+  .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin: 8px 0 10px; }
+  .fact { background: var(--panel2); border: 1px solid var(--border); border-radius: 10px; padding: 8px 10px; font-size: 13px; }
+  .fact b { display: block; color: var(--muted); font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: .4px; margin-bottom: 2px; }
+  ul { margin: 6px 0; padding-inline-start: 20px; }
+  li { margin: 3px 0; }
+  .pros li::marker { color: var(--ok); } .cons li::marker { color: var(--bad); }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 700px) { .two { grid-template-columns: 1fr; } }
+  .steps { counter-reset: s; padding: 0; list-style: none; }
+  .steps li { counter-increment: s; position: relative; padding-inline-start: 30px; margin: 5px 0; }
+  .steps li::before { content: counter(s); position: absolute; inset-inline-start: 0; top: 2px; width: 22px; height: 22px; border-radius: 50%; background: var(--border); color: var(--text); font-size: 12px; display: flex; align-items: center; justify-content: center; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14px; background: var(--panel); border-radius: 12px; overflow: hidden; }
+  th, td { padding: 10px 12px; border-bottom: 1px solid var(--border); text-align: right; vertical-align: top; }
+  th { background: #0b1222; color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .4px; }
+  tr:last-child td { border-bottom: none; }
+  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-inline-end: 6px; vertical-align: middle; }
+
+  .decision { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 10px; direction: ltr; }
+  .decision svg { display: block; width: 100%; height: auto; min-width: 700px; }
+  .callout { border-inline-start: 4px solid var(--cloud); background: var(--panel); border-radius: 10px; padding: 12px 16px; margin: 12px 0; }
+  .callout.green { border-color: var(--ok); } .callout.red { border-color: var(--bad); }
+  footer { margin-top: 40px; color: var(--muted); font-size: 12px; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<h1>חלופות ל-Ollama מקומי
+  <small>איך לחבר את עוזר ה-AI של Cash Flow App למודל שלא תופס את ה-CPU של המחשב: Ollama על מחשב אחר, או ספק API חינמי. נכון ל-2026-10-09.</small>
+</h1>
+
+<h2>איך האפליקציה מתחברת למודל</h2>
+<p class="lead">השרת בונה <b>סיכום פיננסי קומפקטי</b> (יתרות, ממוצעים, הלוואות, תחזית) ושולח רק אותו למודל, לעולם לא את הנתונים הגולמיים. הספק נבחר בקובץ <code>server/.env</code> בלי שינוי קוד: <code>AI_PROVIDER=ollama</code> מדבר בפרוטוקול של Ollama, <code>AI_PROVIDER=openai</code> מדבר עם כל API תואם OpenAI. הדפדפן לא מכיר את הספק ולא רואה את מפתח ה-API.</p>
+<div class="canvas"><svg id="flow"></svg></div>
+<p class="meta">הקוד: <code>server/services/ai.service.js</code>. בדיקות מול ספק מדומה: <code>server/test/ai-providers.test.js</code>. תיעוד: <code>docs/ai/AI_PROVIDERS.md</code>.</p>
+
+<h2>האפשרויות</h2>
+<div id="options"></div>
+
+<h2>השוואה</h2>
+<table>
+  <thead><tr><th>אפשרות</th><th>עלות</th><th>כרטיס אשראי</th><th>מכסה חינמית (פורסם)</th><th>פרטיות</th><th>עומס על המחשב שלך</th><th>מהירות תשובה</th><th>התאמה לאפליקציה</th></tr></thead>
+  <tbody>
+    <tr><td><span class="dot" style="background:var(--model)"></span>Ollama מקומי (המצב היום)</td><td>0</td><td>לא</td><td>ללא הגבלה</td><td>מלאה</td><td><span class="badge bad">גבוה מאוד</span></td><td>איטי (CPU)</td><td>גיבוי / offline</td></tr>
+    <tr><td><span class="dot" style="background:var(--lan)"></span>Ollama על מחשב אחר ברשת</td><td>0</td><td>לא</td><td>ללא הגבלה</td><td>מלאה (הכל ברשת הביתית)</td><td><span class="badge ok">אפס</span></td><td>לפי המחשב השני</td><td><span class="badge ok">מצוינת</span> אם יש מחשב פנוי</td></tr>
+    <tr><td><span class="dot" style="background:var(--cloud)"></span>Groq</td><td>0 עד המכסה</td><td>לא</td><td>1,000 בקשות ו-200K טוקנים ביום (מודלים גדולים), 30 לדקה</td><td>הסיכום עובר לספק</td><td><span class="badge ok">אפס</span></td><td>מהיר מאוד (שניות)</td><td><span class="badge ok">ההמלצה הראשונה</span></td></tr>
+    <tr><td><span class="dot" style="background:var(--cloud)"></span>OpenRouter</td><td>0 עד המכסה</td><td>לא</td><td>מודלי :free: 50 ביום (1,000 אחרי רכישה חד-פעמית של $10), 20 לדקה</td><td>הסיכום עובר לספק ולספק-המשנה</td><td><span class="badge ok">אפס</span></td><td>משתנה לפי מודל</td><td><span class="badge warn">טובה</span>, מכסה יומית קטנה</td></tr>
+    <tr><td><span class="dot" style="background:var(--cloud)"></span>Google Gemini</td><td>0 (Flash)</td><td>לא</td><td>מוצג רק ב-AI Studio; דיווחים 250 עד 1,500 ביום</td><td><span class="badge warn">הנתונים משמשים לאימון</span></td><td><span class="badge ok">אפס</span></td><td>מהיר</td><td><span class="badge warn">בזהירות</span></td></tr>
+    <tr><td><span class="dot" style="background:var(--cloud)"></span>Mistral</td><td>0 (תוכנית Experiment)</td><td>לא</td><td>לא מפורסם</td><td>ספק אירופאי</td><td><span class="badge ok">אפס</span></td><td>מהיר</td><td><span class="badge warn">טובה</span></td></tr>
+    <tr><td><span class="dot" style="background:var(--cloud)"></span>Cloudflare Workers AI</td><td>0 עד 10,000 neurons ביום</td><td>לא (חשבון Cloudflare)</td><td>~10K neurons ביום</td><td>הסיכום עובר לספק</td><td><span class="badge ok">אפס</span></td><td>מהיר</td><td><span class="badge warn">טובה</span>, הגדרה מעט מורכבת</td></tr>
+    <tr><td><span class="dot" style="background:var(--bad)"></span>Cerebras</td><td>$5 קרדיט ל-30 יום</td><td><span class="badge bad">נדרש</span></td><td>5 לדקה</td><td></td><td></td><td></td><td>לא עומד בדרישה "חינמי ללא כרטיס"</td></tr>
+    <tr><td><span class="dot" style="background:var(--bad)"></span>GitHub Models</td><td colspan="7">נסגר סופית ב-30.7.2026. הגדרות ישנות ל-models.github.ai ייכשלו.</td></tr>
+  </tbody>
+</table>
+<p class="meta">המכסות משתנות לעיתים קרובות. האפליקציה צורכת מעט: כמה שאלות ביום, כל אחת 2,000 עד 4,000 טוקנים, ולכן גם המכסה הקטנה של OpenRouter מספיקה לשימוש יומי רגיל.</p>
+
+<h2>איזו אפשרות לבחור</h2>
+<div class="decision"><svg id="decision"></svg></div>
+
+<h2>מה קורה כשמשהו נכשל</h2>
+<table>
+  <thead><tr><th>מצב</th><th>תגובת השרת ללקוח</th><th>מה המשתמש רואה</th></tr></thead>
+  <tbody>
+    <tr><td>Ollama לא רץ / הספק לא נגיש</td><td><code>503</code> <code>code: AI_UNAVAILABLE</code></td><td>הודעה ברורה בלשונית ה-AI; שאר האפליקציה עובדת כרגיל</td></tr>
+    <tr><td>מפתח API שגוי (401/403)</td><td><code>503</code> <code>code: AI_AUTH</code></td><td>"הספק דחה את המפתח, בדוק AI_API_KEY"</td></tr>
+    <tr><td>חריגה ממכסת הספק (429)</td><td><code>429</code> <code>code: RATE_LIMITED</code></td><td>"הגעת למכסה, נסה בעוד דקה"</td></tr>
+    <tr><td>המודל לא ענה תוך AI_TIMEOUT_MS (60 שניות)</td><td><code>503</code> <code>code: AI_TIMEOUT</code></td><td>הודעת timeout</td></tr>
+    <tr><td>נפילה באמצע streaming</td><td><code>200</code>, הגוף מסתיים בשורה <code>[...]</code> עם ההודעה</td><td>התשובה החלקית נשארת, ההודעה בסופה</td></tr>
+  </tbody>
+</table>
+
+<div class="callout green"><b>המלצה:</b> Groq עם <code>openai/gpt-oss-20b</code> לשימוש יומי (מהיר, 1,000 בקשות ביום, ללא כרטיס), ו-Ollama מקומי או ברשת כגיבוי למצב offline. המעבר ביניהם הוא שינוי 4 שורות ב-<code>server/.env</code> והפעלה מחדש של השרת.</div>
+<div class="callout red"><b>פרטיות:</b> עם ספק מרוחק, הסיכום הפיננסי (יתרות, ממוצעים, שמות פריסות והשקעות, תחזית) נשלח לשרת של הספק. אין בו שמות אנשים, מספרי חשבון או פירוט תנועות. מי שלא רוצה שום דבר מחוץ לבית בוחר באפשרות 2 (Ollama ברשת).</div>
+
+<footer>נוצר 2026-10-09 מתוך הקוד ב-branch feature/optimizations-node24-ai. קובץ עצמאי ללא תלויות חיצוניות. מקורות למכסות: openrouter.ai/blog (Free LLM APIs compared), gravity.fast (free LLM API tiers), klymentiev.com (Groq pricing), openrouter.zendesk.com (rate limits), memetik.ai (Gemini free tier), github.blog (GitHub Models retired).</footer>
+</div>
+
+<script>
+const NS = 'http://www.w3.org/2000/svg';
+const C = { app: '#3b82f6', server: '#22c55e', model: '#a855f7', cloud: '#f59e0b', lan: '#06b6d4', bad: '#ef4444', muted: '#64748b' };
+function el(tag, attrs, parent) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
+
+/** Small diagram renderer: nodes {id,x,y,w,h,color,title,sub[],dashed}, edges {from,to,label,color,dashed}, groups {x,y,w,h,color,label}.
+ *  - text is measured and wrapped to the card width; a card grows taller if needed
+ *  - arrow labels get a background pill and are moved until they do not cover any card
+ *  - checkLayout() records any remaining overlap in window.__layoutIssues */
+const RTL = (t) => /[\u0590-\u05FF]/.test(t);
+const FONT_UI = 'Heebo, Segoe UI, sans-serif', FONT_MONO = 'Consolas, Courier New, monospace';
+window.__layoutIssues = [];
+
+function measurer(svgEl) {
+  const probe = el('text', { x: -9999, y: -9999, visibility: 'hidden' }, svgEl);
+  return (text, size, weight, family) => {
+    probe.setAttribute('font-size', size); probe.setAttribute('font-weight', weight); probe.setAttribute('font-family', family);
+    probe.textContent = text; return probe.getComputedTextLength();
+  };
+}
+function wrapText(text, maxW, size, weight, family, measure) {
+  const fits = (t) => measure(t, size, weight, family) <= maxW;
+  const words = [];
+  text.split(' ').forEach((w) => {
+    if (fits(w)) { words.push({ t: w, glue: false }); return; }
+    let cur = '', first = true;                                   // break a long token (url / path)
+    for (const ch of w) {
+      if (fits(cur + ch)) { cur += ch; continue; }
+      const m = cur.match(/^(.*[\/.\-_])(.+)$/);
+      if (m) { words.push({ t: m[1], glue: !first }); cur = m[2] + ch; } else { words.push({ t: cur, glue: !first }); cur = ch; }
+      first = false;
+    }
+    if (cur) words.push({ t: cur, glue: !first });
+  });
+  const lines = []; let line = '';
+  for (const { t, glue } of words) {
+    const cand = line ? line + (glue ? '' : ' ') + t : t;
+    if (fits(cand)) line = cand; else { if (line) lines.push(line); line = t; }
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+const overlaps = (a, b, pad = 0) => a.x < b.x + b.w + pad && a.x + a.w + pad > b.x && a.y < b.y + b.h + pad && a.y + a.h + pad > b.y;
+
+function draw(svgEl, W, H, { groups = [], nodes, edges }) {
+  svgEl.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  const measure = measurer(svgEl);
+  const defs = el('defs', {}, svgEl);
+  new Set(edges.map(e => e.color || C.muted)).forEach(c => {
+    const m = el('marker', { id: `${svgEl.id}-a-${c.slice(1)}`, viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 7, markerHeight: 7, orient: 'auto-start-reverse' }, defs);
+    el('path', { d: 'M0,0 L10,5 L0,10 z', fill: c }, m);
+  });
+  groups.forEach(g => {
+    el('rect', { x: g.x, y: g.y, width: g.w, height: g.h, rx: 14, fill: g.color, 'fill-opacity': .07, stroke: g.color, 'stroke-opacity': .4, 'stroke-dasharray': '6 5' }, svgEl);
+    const t = el('text', { x: g.x + g.w - 12, y: g.y + 20, 'text-anchor': 'start', fill: g.color, 'font-size': 13, 'font-weight': 700, 'font-family': FONT_UI, style: 'direction:rtl' }, svgEl);
+    t.textContent = g.label;
+  });
+
+  // 1) fit the text of every card (wrap, grow height)
+  nodes.forEach(n => {
+    const maxW = n.w - 20;
+    n.lines = [];
+    wrapText(n.title, maxW, 14, 700, FONT_UI, measure).forEach(t => n.lines.push({ t, size: 14, weight: 700, family: FONT_UI, lh: 18 }));
+    (n.sub || []).forEach(sub => wrapText(sub, maxW, 11.5, 400, RTL(sub) ? FONT_UI : FONT_MONO, measure)
+      .forEach(t => n.lines.push({ t, size: 11.5, weight: 400, family: RTL(t) ? FONT_UI : FONT_MONO, lh: 15 })));
+    const need = n.lines.reduce((a, l) => a + l.lh, 0) + 16;
+    if (need > n.h) { n.y -= (need - n.h) / 2; n.h = need; }
+  });
+  const byId = Object.fromEntries(nodes.map(n => [n.id, n]));
+
+  // 2) arrows
+  const edgeLayer = el('g', {}, svgEl), labelLayer = el('g', {}, svgEl), nodeLayer = el('g', {}, svgEl);
+  const placedLabels = [];
+  edges.forEach(e => {
+    const a = byId[e.from], b = byId[e.to];
+    const horiz = Math.abs((a.y + a.h / 2) - (b.y + b.h / 2)) < Math.max(a.h, b.h) * 0.6 || b.x >= a.x + a.w || a.x >= b.x + b.w && Math.abs((a.y + a.h / 2) - (b.y + b.h / 2)) < Math.max(a.h, b.h);
+    let sx, sy, tx, ty, d;
+    if (horiz && (b.x >= a.x + a.w || a.x >= b.x + b.w)) {
+      const right = b.x > a.x;
+      sx = right ? a.x + a.w : a.x; sy = a.y + a.h / 2; tx = right ? b.x : b.x + b.w; ty = b.y + b.h / 2;
+      const dx = (tx - sx) * .5; d = `M${sx},${sy} C${sx + dx},${sy} ${tx - dx},${ty} ${tx},${ty}`;
+    } else {
+      const down = b.y > a.y;
+      sx = a.x + a.w / 2; sy = down ? a.y + a.h : a.y; tx = b.x + b.w / 2; ty = down ? b.y : b.y + b.h;
+      const dy = (ty - sy) * .5; d = `M${sx},${sy} C${sx},${sy + dy} ${tx},${ty - dy} ${tx},${ty}`;
+    }
+    const color = e.color || C.muted;
+    el('path', { d, fill: 'none', stroke: color, 'stroke-width': 2.5, 'stroke-dasharray': e.dashed ? '7 5' : 'none', 'marker-end': `url(#${svgEl.id}-a-${color.slice(1)})` }, edgeLayer);
+    if (!e.label) return;
+
+    // label pill: start at the middle of the arrow, then slide until it covers no card and no other label
+    const family = RTL(e.label) ? FONT_UI : FONT_MONO;
+    const w = measure(e.label, 12, 600, family) + 14, h = 20;
+    const mx = (sx + tx) / 2, my = (sy + ty) / 2;
+    const candidates = [0, -16, 16, -30, 30, -44, 44, -58, 58];
+    let box = null;
+    for (const off of candidates) {
+      const c = { x: mx - w / 2, y: my - h / 2 + off, w, h };
+      if (c.x < 2 || c.x + c.w > W - 2 || c.y < 2 || c.y + c.h > H - 2) continue;
+      if (nodes.some(n => overlaps(c, n, 3)) || placedLabels.some(l => overlaps(c, l, 3))) continue;
+      box = c; break;
+    }
+    if (!box) { box = { x: mx - w / 2, y: my - h / 2, w, h }; }
+    placedLabels.push(box);
+    el('rect', { x: box.x, y: box.y, width: box.w, height: box.h, rx: 10, fill: '#0b1222', stroke: color, 'stroke-opacity': .7 }, labelLayer);
+    const t = el('text', { x: box.x + box.w / 2, y: box.y + 14, 'text-anchor': 'middle', fill: '#e2e8f0', 'font-size': 12, 'font-weight': 600, 'font-family': family, style: `direction:${RTL(e.label) ? 'rtl' : 'ltr'}` }, labelLayer);
+    t.textContent = e.label;
+    t.dataset.check = 'label';
+  });
+
+  // 3) cards on top
+  nodes.forEach(n => {
+    const g = el('g', { 'data-node': n.id }, nodeLayer);
+    el('rect', { x: n.x, y: n.y, width: n.w, height: n.h, rx: 12, fill: n.color, 'fill-opacity': n.dashed ? .25 : .9, stroke: n.color, 'stroke-width': 2, 'stroke-dasharray': n.dashed ? '8 5' : 'none' }, g);
+    const total = n.lines.reduce((a, l) => a + l.lh, 0);
+    let y = n.y + (n.h - total) / 2 + 13;
+    n.lines.forEach(l => {
+      const t = el('text', { x: n.x + n.w / 2, y, 'text-anchor': 'middle', fill: '#f8fafc', 'font-size': l.size, 'font-weight': l.weight, 'font-family': l.family, style: `direction:${RTL(l.t) ? 'rtl' : 'ltr'}` }, g);
+      t.textContent = l.t; y += l.lh;
+    });
+  });
+  checkLayout(svgEl, nodes, placedLabels);
+}
+
+/** Verifies: every card text inside its card, no label over a card, no two labels overlapping, nothing outside the canvas. */
+function checkLayout(svgEl, nodes, labels) {
+  const vb = svgEl.viewBox.baseVal;
+  const issue = (m) => window.__layoutIssues.push(`${svgEl.id}: ${m}`);
+  svgEl.querySelectorAll('g[data-node]').forEach(g => {
+    const n = nodes.find(x => x.id === g.dataset.node);
+    g.querySelectorAll('text').forEach(t => {
+      const b = t.getBBox();
+      if (b.x < n.x + 2 || b.x + b.width > n.x + n.w - 2 || b.y < n.y + 1 || b.y + b.height > n.y + n.h - 1) issue(`text "${t.textContent}" overflows card ${n.id}`);
+    });
+  });
+  nodes.forEach((a, i) => nodes.slice(i + 1).forEach(b => { if (overlaps(a, b)) issue(`cards ${a.id} and ${b.id} overlap`); }));
+  labels.forEach((l, i) => {
+    nodes.forEach(n => { if (overlaps(l, n)) issue(`arrow label #${i} covers card ${n.id}`); });
+    labels.slice(i + 1).forEach((o, j) => { if (overlaps(l, o)) issue(`arrow labels #${i} and #${i + j + 1} overlap`); });
+  });
+  [...nodes, ...labels].forEach(r => { if (r.x < 0 || r.y < 0 || r.x + r.w > vb.width || r.y + r.h > vb.height) issue(`element outside canvas at ${Math.round(r.x)},${Math.round(r.y)}`); });
+}
+
+// ---------------------------------------------------------------- general flow
+draw(document.getElementById('flow'), 1560, 300, {
+  groups: [{ x: 20, y: 20, w: 300, h: 260, color: C.app, label: 'דפדפן' }, { x: 350, y: 20, w: 640, h: 260, color: C.server, label: 'שרת Express (המחשב שלך)' }, { x: 1020, y: 20, w: 520, h: 260, color: C.model, label: 'מודל שפה (אחת מהאפשרויות למטה)' }],
+  nodes: [
+    { id: 'ui', x: 45, y: 110, w: 250, h: 80, color: C.app, title: 'לשונית עוזר AI', sub: ['AiService → /api/ai/*'] },
+    { id: 'sum', x: 375, y: 110, w: 230, h: 80, color: C.server, title: 'סיכום פיננסי', sub: ['financialSummary.service', 'cache 60s'] },
+    { id: 'ai', x: 735, y: 110, w: 230, h: 80, color: C.server, title: 'ai.service', sub: ['AI_PROVIDER, AI_BASE_URL', 'AI_MODEL, AI_API_KEY'] },
+    { id: 'm1', x: 1180, y: 60, w: 160, h: 64, color: C.model, title: 'Ollama', sub: ['/api/generate'] },
+    { id: 'm2', x: 1180, y: 180, w: 160, h: 64, color: C.cloud, title: 'API תואם OpenAI', sub: ['/chat/completions'] },
+    { id: 'm3', x: 1380, y: 120, w: 140, h: 64, color: C.model, title: 'המודל', sub: ['qwen3 / gpt-oss', 'llama ...'], dashed: true }
+  ],
+  edges: [
+    { from: 'ui', to: 'sum', label: 'שאלה', color: C.app }, { from: 'sum', to: 'ai', label: 'סיכום JSON', color: C.server },
+    { from: 'ai', to: 'm1', label: 'AI_PROVIDER=ollama', color: C.model, dashed: true }, { from: 'ai', to: 'm2', label: 'AI_PROVIDER=openai', color: C.cloud, dashed: true },
+    { from: 'm1', to: 'm3', color: C.model }, { from: 'm2', to: 'm3', color: C.cloud }
+  ]
+});
+
+// ---------------------------------------------------------------- options
+const OPTIONS = [
+  {
+    n: 1, color: C.model, title: 'Ollama על המחשב הזה (המצב היום)', badges: [['info', 'בסיס להשוואה'], ['bad', 'תופס את ה-CPU']],
+    facts: [['עלות', '0'], ['כרטיס', 'לא'], ['מכסה', 'ללא הגבלה'], ['פרטיות', 'מלאה'], ['מהירות', 'איטי על CPU, מהיר עם GPU']],
+    desc: 'Ollama רץ על אותו מחשב כמו האפליקציה. המודל (qwen3:8b, כ-5GB) נטען לזיכרון ובכל בקשה מחשב על ה-CPU, ולכן המחשב כמעט לא זמין למשך התשובה. עדיין האפשרות הפרטית ביותר ומתאימה למצב offline.',
+    pros: ['שום מידע לא יוצא מהמחשב', 'עובד בלי אינטרנט', 'ללא מכסות'],
+    cons: ['CPU כמעט 100% בזמן בקשה', 'תשובה של 30 עד 120 שניות ללא GPU', 'מודל 8B חלש מהמודלים בענן'],
+    env: 'AI_PROVIDER=ollama\nAI_BASE_URL=http://localhost:11434\nAI_MODEL=qwen3:8b',
+    steps: ['התקנת Ollama מ-ollama.com', '<code>ollama pull qwen3:8b</code>', '<code>run-all-ai.bat</code> או <code>npm run dev:ai</code> (מפעיל Ollama אוטומטית)'],
+    diagram: { W: 800, H: 180, groups: [{ x: 10, y: 10, w: 780, h: 160, color: C.app, label: 'המחשב שלך' }],
+      nodes: [{ id: 'a', x: 30, y: 60, w: 130, h: 70, color: C.app, title: 'דפדפן' }, { id: 's', x: 240, y: 60, w: 180, h: 70, color: C.server, title: 'שרת Express', sub: [':3000'] }, { id: 'o', x: 540, y: 60, w: 230, h: 70, color: C.model, title: 'Ollama', sub: [':11434', 'CPU 100% בזמן בקשה'] }],
+      edges: [{ from: 'a', to: 's', color: C.app }, { from: 's', to: 'o', label: 'localhost', color: C.model }] }
+  },
+  {
+    n: 2, color: C.lan, title: 'Ollama על מחשב אחר ברשת הביתית', badges: [['ok', 'מומלץ לפרטיות'], ['ok', 'אפס עומס כאן']],
+    facts: [['עלות', '0'], ['כרטיס', 'לא'], ['מכסה', 'ללא הגבלה'], ['פרטיות', 'מלאה (רשת ביתית)'], ['מהירות', 'לפי המחשב השני']],
+    desc: 'אותו Ollama, אבל על מחשב שני (שולחני חזק, מחשב עם GPU, מיני-PC). השרת שלך פונה אליו דרך הרשת. זה בדיוק המצב שתיארת: המודל מותקן על מכונה אחרת, ואתה רק פונה ל-API. שום שינוי קוד, רק הכתובת ב-.env.',
+    pros: ['המחשב שלך פנוי לגמרי', 'הנתונים לא יוצאים מהבית', 'אפשר מודל גדול יותר אם למחשב השני יש GPU'],
+    cons: ['צריך מחשב שני דולק', 'פתיחת פורט 11434 בחומת האש של המחשב השני', 'תלוי ברשת הביתית'],
+    env: 'AI_PROVIDER=ollama\nAI_BASE_URL=http://192.168.1.50:11434\nAI_MODEL=qwen3:8b',
+    steps: ['במחשב השני: <code>OLLAMA_HOST=0.0.0.0</code> כמשתנה סביבה (ב-Windows: <code>[Environment]::SetEnvironmentVariable(\'OLLAMA_HOST\',\'0.0.0.0\',\'User\')</code>) והפעלה מחדש של Ollama', 'במחשב השני: לאפשר פורט 11434 בחומת האש, ו-<code>ollama pull qwen3:8b</code>', 'כאן: <code>AI_BASE_URL</code> עם ה-IP של המחשב השני ב-<code>server/.env</code>', '<code>npm run dev</code> (dev:ai מזהה לבד שלא צריך Ollama מקומי ורק בודק שהמחשב השני עונה)'],
+    diagram: { W: 800, H: 190, groups: [{ x: 10, y: 10, w: 420, h: 170, color: C.app, label: 'המחשב שלך' }, { x: 520, y: 10, w: 270, h: 170, color: C.lan, label: 'מחשב שני (עם GPU אם יש)' }],
+      nodes: [{ id: 'a', x: 30, y: 65, w: 130, h: 70, color: C.app, title: 'דפדפן' }, { id: 's', x: 220, y: 65, w: 190, h: 70, color: C.server, title: 'שרת Express', sub: ['AI_BASE_URL ב-.env'] }, { id: 'o', x: 545, y: 65, w: 220, h: 70, color: C.model, title: 'Ollama', sub: ['OLLAMA_HOST=0.0.0.0'] }],
+      edges: [{ from: 'a', to: 's', color: C.app }, { from: 's', to: 'o', label: 'LAN :11434', color: C.lan }] }
+  },
+  {
+    n: 3, color: C.cloud, title: 'Groq (API חינמי, מהיר במיוחד)', badges: [['ok', 'ההמלצה הראשונה'], ['ok', 'ללא כרטיס']],
+    facts: [['עלות', '0 עד המכסה'], ['כרטיס', 'לא'], ['מכסה', '1,000 בקשות / 200K טוקנים ביום, 30 לדקה'], ['פרטיות', 'הסיכום עובר ל-Groq'], ['מהירות', 'שניות בודדות']],
+    desc: 'Groq מריצים מודלים פתוחים על חומרה ייעודית (LPU) ונותנים שכבה חינמית נדיבה ללא כרטיס אשראי. API תואם OpenAI. מודלים: gpt-oss-120b ו-gpt-oss-20b של OpenAI, Qwen3, Llama 3.3. לאפליקציה הזו, שעושה כמה בקשות ביום, המכסה גדולה פי מאות מהצורך.',
+    pros: ['תשובה תוך שניות במקום דקות', 'מודלים חזקים בהרבה מ-qwen3:8b', 'מכסה יומית גדולה, ללא כרטיס'],
+    cons: ['הסיכום הפיננסי נשלח לשרת חיצוני', 'דורש אינטרנט', 'רשימת המודלים החינמיים משתנה'],
+    env: 'AI_PROVIDER=openai\nAI_BASE_URL=https://api.groq.com/openai/v1\nAI_MODEL=openai/gpt-oss-20b\nAI_API_KEY=gsk_xxxxxxxxxxxx',
+    steps: ['חשבון ב-<a href="https://console.groq.com" target="_blank">console.groq.com</a> ויצירת מפתח ב-API Keys', '4 השורות למעלה ב-<code>server/.env</code>', '<code>run-all.bat</code> או <code>npm run dev</code> (Ollama לא נדרש)'],
+    diagram: cloudDiagram('Groq', 'api.groq.com/openai/v1', 'gpt-oss-20b / 120b, qwen3, llama')
+  },
+  {
+    n: 4, color: C.cloud, title: 'OpenRouter (שער לעשרות מודלים, חלקם חינמיים)', badges: [['ok', 'ללא כרטיס'], ['warn', '50 בקשות ביום']],
+    facts: [['עלות', '0 למודלי :free'], ['כרטיס', 'לא'], ['מכסה', '50 ביום, 20 לדקה (1,000 ביום אחרי רכישה חד-פעמית של $10)'], ['פרטיות', 'עובר ל-OpenRouter ולספק המשנה'], ['מהירות', 'משתנה']],
+    desc: 'OpenRouter הוא שער אחד למודלים של עשרות ספקים. מודלים שמסתיימים ב-:free הם בחינם אבל עם מכסה יומית קטנה. יתרון: מחליפים מודל בשינוי שורה אחת בלי חשבון חדש. חיסרון: הבקשה עוברת דרך שני גופים.',
+    pros: ['בחירת מודל רחבה מאוד', 'מפתח אחד לכל הספקים', 'קל להחליף מודל'],
+    cons: ['50 בקשות ביום בחינם', 'המודלים החינמיים מתחלפים', 'שני גופים רואים את הסיכום'],
+    env: 'AI_PROVIDER=openai\nAI_BASE_URL=https://openrouter.ai/api/v1\nAI_MODEL=qwen/qwen3-235b-a22b:free\nAI_API_KEY=sk-or-xxxxxxxxxxxx',
+    steps: ['חשבון ב-<a href="https://openrouter.ai" target="_blank">openrouter.ai</a>, מפתח ב-Keys', 'בחירת מודל מהרשימה ב-openrouter.ai/models (סינון Free)', '4 השורות ב-<code>server/.env</code> ו-<code>npm run dev</code>'],
+    diagram: cloudDiagram('OpenRouter', 'openrouter.ai/api/v1', 'מודל :free → ספק משנה')
+  },
+  {
+    n: 5, color: C.cloud, title: 'Google Gemini (שכבה חינמית)', badges: [['ok', 'ללא כרטיס'], ['warn', 'הנתונים משמשים לאימון']],
+    facts: [['עלות', '0 (Flash / Flash-Lite)'], ['כרטיס', 'לא'], ['מכסה', 'מוצג רק ב-AI Studio; דיווחים 250 עד 1,500 ביום'], ['פרטיות', 'Google משתמשים בנתוני השכבה החינמית לאימון'], ['מהירות', 'מהיר']],
+    desc: 'Gemini 2.5 Flash זמין בחינם דרך Google AI Studio, עם endpoint תואם OpenAI. איכות גבוהה והקשר ארוך. ההסתייגות: תנאי השכבה החינמית מאפשרים ל-Google להשתמש בתוכן לשיפור המוצרים, וזה מידע פיננסי אישי, גם אם מסוכם.',
+    pros: ['מודל חזק', 'ללא כרטיס', 'הקשר ארוך'],
+    cons: ['הנתונים משמשים לאימון בשכבה החינמית', 'המכסה לא מפורסמת וירדה במהלך 2026', 'מודלי Pro כבר לא חינמיים'],
+    env: 'AI_PROVIDER=openai\nAI_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai\nAI_MODEL=gemini-2.5-flash\nAI_API_KEY=AIzaxxxxxxxxxxxx',
+    steps: ['מפתח ב-<a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a>', 'לבדוק את המכסה של הפרויקט בעמוד Quota של AI Studio', '4 השורות ב-<code>server/.env</code> ו-<code>npm run dev</code>'],
+    diagram: cloudDiagram('Google AI Studio', 'generativelanguage.googleapis.com', 'gemini-2.5-flash')
+  },
+  {
+    n: 6, color: C.cloud, title: 'Mistral (תוכנית חינמית, ספק אירופאי)', badges: [['ok', 'ללא כרטיס'], ['info', 'EU']],
+    facts: [['עלות', '0 (Experiment)'], ['כרטיס', 'לא'], ['מכסה', 'לא מפורסמת'], ['פרטיות', 'ספק אירופאי, תנאים נוחים'], ['מהירות', 'מהיר']],
+    desc: 'Mistral מציעים תוכנית חינמית לניסויים עם API תואם OpenAI. מתאים למי שמעדיף ספק אירופאי. המכסה לא מפורסמת בבירור, ולכן כדאי לוודא בקונסולה.',
+    pros: ['ללא כרטיס', 'מדיניות פרטיות אירופאית', 'מודלים טובים בעברית'],
+    cons: ['מכסה לא שקופה', 'פחות מהיר מ-Groq'],
+    env: 'AI_PROVIDER=openai\nAI_BASE_URL=https://api.mistral.ai/v1\nAI_MODEL=mistral-small-latest\nAI_API_KEY=xxxxxxxxxxxx',
+    steps: ['חשבון ב-<a href="https://console.mistral.ai" target="_blank">console.mistral.ai</a>, בחירת תוכנית Experiment, מפתח ב-API Keys', '4 השורות ב-<code>server/.env</code> ו-<code>npm run dev</code>'],
+    diagram: cloudDiagram('Mistral', 'api.mistral.ai/v1', 'mistral-small-latest')
+  },
+  {
+    n: 7, color: C.cloud, title: 'Cloudflare Workers AI', badges: [['ok', 'ללא כרטיס'], ['info', '10K neurons ביום']],
+    facts: [['עלות', '0 עד 10,000 neurons ביום'], ['כרטיס', 'לא (חשבון Cloudflare)'], ['מכסה', '~10K neurons ביום'], ['פרטיות', 'הסיכום עובר ל-Cloudflare'], ['מהירות', 'מהיר']],
+    desc: 'Cloudflare מריצים מודלים פתוחים ברשת שלהם, עם endpoint תואם OpenAI לכל חשבון. ה-"neurons" הם יחידת חישוב; 10K ביום מספיקים לכמה עשרות שאלות. ההגדרה דורשת Account ID ו-API Token.',
+    pros: ['ללא כרטיס', 'יציב'], cons: ['הגדרה מעט מורכבת יותר', 'יחידת המכסה לא אינטואיטיבית'],
+    env: 'AI_PROVIDER=openai\nAI_BASE_URL=https://api.cloudflare.com/client/v4/accounts/<ACCOUNT_ID>/ai/v1\nAI_MODEL=@cf/meta/llama-3.3-70b-instruct-fp8-fast\nAI_API_KEY=<API_TOKEN>',
+    steps: ['חשבון Cloudflare, Account ID מהדשבורד', 'API Token עם הרשאת Workers AI', '4 השורות ב-<code>server/.env</code> ו-<code>npm run dev</code>'],
+    diagram: cloudDiagram('Cloudflare Workers AI', 'api.cloudflare.com/.../ai/v1', 'llama-3.3-70b')
+  }
+];
+
+function cloudDiagram(name, host, models) {
+  return { W: 800, H: 200, groups: [{ x: 10, y: 10, w: 420, h: 180, color: C.app, label: 'המחשב שלך' }, { x: 520, y: 10, w: 270, h: 180, color: C.cloud, label: 'ענן' }],
+    nodes: [{ id: 'a', x: 30, y: 65, w: 130, h: 80, color: C.app, title: 'דפדפן' }, { id: 's', x: 220, y: 65, w: 190, h: 80, color: C.server, title: 'שרת Express', sub: ['AI_API_KEY ב-.env'] }, { id: 'o', x: 545, y: 55, w: 220, h: 100, color: C.cloud, title: name, sub: [host, models] }],
+    edges: [{ from: 'a', to: 's', color: C.app }, { from: 's', to: 'o', label: 'HTTPS', color: C.cloud }] };
+}
+
+const container = document.getElementById('options');
+OPTIONS.forEach(o => {
+  const card = document.createElement('section'); card.className = 'option';
+  card.innerHTML = `
+    <div class="head"><span class="num" style="background:${o.color}">${o.n}</span><h3>${o.title}</h3>${o.badges.map(b => `<span class="badge ${b[0]}">${b[1]}</span>`).join('')}</div>
+    <div>
+      <p>${o.desc}</p>
+      <div class="facts">${o.facts.map(f => `<div class="fact"><b>${f[0]}</b>${f[1]}</div>`).join('')}</div>
+      <div class="two">
+        <div><b>יתרונות</b><ul class="pros">${o.pros.map(x => `<li>${x}</li>`).join('')}</ul></div>
+        <div><b>חסרונות</b><ul class="cons">${o.cons.map(x => `<li>${x}</li>`).join('')}</ul></div>
+      </div>
+    </div>
+    <div>
+      <div class="diagram"><svg id="d${o.n}"></svg></div>
+      <p style="margin-top:10px"><b>server/.env</b></p>
+      <pre><code>${o.env.replace(/</g, '&lt;')}</code></pre>
+      <b>צעדים</b>
+      <ol class="steps">${o.steps.map(x => `<li>${x}</li>`).join('')}</ol>
+    </div>`;
+  container.appendChild(card);
+  draw(document.getElementById('d' + o.n), o.diagram.W, o.diagram.H, o.diagram);
+});
+
+// ---------------------------------------------------------------- decision tree
+draw(document.getElementById('decision'), 1400, 470, {
+  nodes: [
+    { id: 'q1', x: 560, y: 20, w: 280, h: 60, color: C.muted, title: 'הנתונים חייבים להישאר בבית?' },
+    { id: 'q2', x: 150, y: 170, w: 280, h: 60, color: C.muted, title: 'יש מחשב שני דולק ברשת?' },
+    { id: 'q3', x: 970, y: 170, w: 280, h: 60, color: C.muted, title: 'כמה שאלות ביום?' },
+    { id: 'r1', x: 20, y: 340, w: 260, h: 90, color: C.lan, title: '2. Ollama ברשת', sub: ['AI_BASE_URL=http://<ip>:11434'] },
+    { id: 'r2', x: 310, y: 340, w: 260, h: 90, color: C.model, title: '1. Ollama מקומי', sub: ['run-all-ai.bat'] },
+    { id: 'r3', x: 830, y: 340, w: 260, h: 90, color: C.cloud, title: '3. Groq', sub: ['עד 1,000 ביום, מהיר'] },
+    { id: 'r4', x: 1120, y: 340, w: 260, h: 90, color: C.cloud, title: '4. OpenRouter / 6. Mistral', sub: ['מעט שאלות, או מודל מסוים'] }
+  ],
+  edges: [
+    { from: 'q1', to: 'q2', label: 'כן', color: C.lan }, { from: 'q1', to: 'q3', label: 'לא, הסיכום יכול לצאת', color: C.cloud },
+    { from: 'q2', to: 'r1', label: 'כן', color: C.lan }, { from: 'q2', to: 'r2', label: 'לא', color: C.model },
+    { from: 'q3', to: 'r3', label: 'כל כמות', color: C.cloud }, { from: 'q3', to: 'r4', label: 'מעט, או מודל מסוים', color: C.cloud }
+  ]
+});
+
+// layout self-check result (read by humans in the console, and by the headless check in --dump-dom)
+const report = document.createElement('pre');
+report.id = 'layout-check'; report.hidden = true;
+report.textContent = window.__layoutIssues.length ? 'LAYOUT ISSUES: ' + window.__layoutIssues.join(' | ') : 'LAYOUT OK';
+document.body.appendChild(report);
+if (window.__layoutIssues.length) console.warn(report.textContent);
+</script>
+</body>
+</html>

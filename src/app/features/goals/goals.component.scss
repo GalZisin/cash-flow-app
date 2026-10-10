@@ -8,7 +8,7 @@
     max-width: none;
     margin: 0 auto;
     padding: 28px 32px 32px;
-    color: #172033;
+    color: var(--cf-text);
     min-height: 100%;
     box-sizing: border-box;
     overflow-y: auto;
@@ -20,7 +20,7 @@
 
 .segmented-toggle {
     display: inline-flex;
-    background: #e2e8f0;
+    background: var(--cf-surface-4);
     padding: 4px;
     border-radius: 10px;
     gap: 4px;
@@ -33,18 +33,18 @@
     border-radius: 7px;
     font-size: 0.95rem;
     font-weight: 600;
-    color: #475569;
+    color: var(--cf-text-2);
     cursor: pointer;
     transition: all 0.2s ease;
 
     &:hover {
-        color: #087f8c;
+        color: var(--cf-accent);
     }
 
     &.active {
-        background: #087f8c;
+        background: var(--cf-accent);
         color: #ffffff;
-        box-shadow: 0 2px 8px rgba(8, 127, 140, 0.3);
+        box-shadow: 0 2px 8px rgba(var(--cf-accent-rgb), 0.3);
     }
 }
 
@@ -73,7 +73,7 @@
 
 .eyebrow {
     margin: 0 0 5px;
-    color: #087f8c;
+    color: var(--cf-accent);
     font-size: .85rem;
     font-weight: 600;
     letter-spacing: 0;
@@ -86,7 +86,7 @@ h1 {
 }
 
 .goals-header p:last-child {
-    color: #64748b;
+    color: var(--cf-text-3);
     margin: 5px 0 0;
 }
 
@@ -111,13 +111,13 @@ h1 {
     padding: 10px 18px;
     font-size: 0.95rem;
     font-weight: 600;
-    color: #087f8c;
-    border: 2px solid #087f8c;
+    color: var(--cf-accent);
+    border: 2px solid var(--cf-accent);
     background: white;
     transition: all 0.2s ease;
 
     &:hover {
-        background: #087f8c;
+        background: var(--cf-accent);
         color: white;
     }
 
@@ -135,7 +135,7 @@ h1 {
 
 .overview div {
     padding: 12px 16px;
-    border-inline-start: 4px solid #087f8c;
+    border-inline-start: 4px solid var(--cf-accent);
     background: #f3f8f8;
     border-radius: 6px;
 }
@@ -145,7 +145,7 @@ h1 {
 }
 
 .overview .warning {
-    border-color: #e5a72b;
+    border-color: var(--cf-warning-solid);
 }
 
 .overview .bad {
@@ -162,7 +162,7 @@ h1 {
 }
 
 .overview span {
-    color: #64748b;
+    color: var(--cf-text-3);
     font-size: .85rem;
 }
 
@@ -176,9 +176,9 @@ h1 {
 
 .goal-form,
 .goal-card {
-    border: 1px solid #e1e8eb;
+    border: 1px solid var(--cf-border);
     border-radius: 10px;
-    background: #fff;
+    background: var(--cf-surface);
     padding: 22px;
     box-shadow: 0 5px 18px rgba(23, 32, 51, .05);
 }
@@ -208,7 +208,7 @@ h2 {
 label {
     display: grid;
     gap: 5px;
-    color: #475569;
+    color: var(--cf-text-2);
     font-size: .86rem;
     font-weight: 600;
 }
@@ -217,12 +217,12 @@ input,
 select,
 textarea {
     width: 100%;
-    border: 1px solid #cbd5e1;
+    border: 1px solid var(--cf-border-strong);
     border-radius: 6px;
     padding: 9px 12px;
     font: inherit;
-    color: #172033;
-    background: #fff;
+    color: var(--cf-text);
+    background: var(--cf-surface);
     box-sizing: border-box;
 }
 
@@ -241,7 +241,7 @@ textarea {
     border-radius: 8px;
     padding: 12px;
     color: #fff;
-    background: #087f8c;
+    background: var(--cf-accent);
     cursor: pointer;
     font-weight: 700;
     font-size: 0.95rem;
@@ -297,7 +297,7 @@ textarea {
 }
 
 .delete-button {
-    color: #dc2626;
+    color: var(--cf-danger);
 }
 
 .form-header {
@@ -311,7 +311,7 @@ textarea {
     background: none;
     border: none;
     font-size: 24px;
-    color: #64748b;
+    color: var(--cf-text-3);
     cursor: pointer;
     padding: 0;
     width: 32px;
@@ -324,8 +324,8 @@ textarea {
 }
 
 .cancel-edit-button:hover {
-    background: #f1f5f9;
-    color: #dc2626;
+    background: var(--cf-surface-3);
+    color: var(--cf-danger);
 }
 
 .form-actions {
@@ -334,10 +334,10 @@ textarea {
 }
 
 .secondary-button {
-    border: 1px solid #cbd5e1;
+    border: 1px solid var(--cf-border-strong);
     border-radius: 5px;
     padding: 10px;
-    color: #475569;
+    color: var(--cf-text-2);
     background: white;
     cursor: pointer;
     font-weight: 600;
@@ -345,7 +345,7 @@ textarea {
 }
 
 .secondary-button:hover {
-    background: #f1f5f9;
+    background: var(--cf-surface-3);
     border-color: #94a3b8;
 }
 
@@ -358,7 +358,7 @@ h3 {
     border: 0;
     width: 28px;
     height: 28px;
-    color: #64748b;
+    color: var(--cf-text-3);
 }
 
 .status-dot {
@@ -382,7 +382,7 @@ h3 {
 
 .goal-meta {
     margin: 6px 0 13px;
-    color: #64748b;
+    color: var(--cf-text-3);
     font-size: .82rem;
 }
 
@@ -392,7 +392,7 @@ h3 {
     padding: 3px 8px;
     border-radius: 12px;
     background: #e6f4f5;
-    color: #087f8c;
+    color: var(--cf-accent);
     font-size: .78rem;
     font-weight: 700;
 }
@@ -406,13 +406,13 @@ h3 {
     gap: 4px;
     margin-top: 14px;
     padding-top: 12px;
-    border-top: 1px solid #e1e8eb;
-    color: #475569;
+    border-top: 1px solid var(--cf-border);
+    color: var(--cf-text-2);
     font-size: .82rem;
 }
 
 .loan-details strong {
-    color: #087f8c;
+    color: var(--cf-accent);
     margin-bottom: 2px;
 }
 
@@ -420,7 +420,7 @@ h3 {
     display: grid;
     gap: 7px;
     margin-top: 15px;
-    color: #475569;
+    color: var(--cf-text-2);
     font-size: .85rem;
 }
 
@@ -429,7 +429,7 @@ h3 {
 }
 
 .status-message {
-    color: #334155;
+    color: var(--cf-text-2);
     font-size: .86rem;
     font-weight: 600;
     line-height: 1.45;
@@ -440,13 +440,13 @@ h3 {
     gap: 6px;
     margin-top: 10px;
     padding: 10px;
-    background: #f8fafc;
+    background: var(--cf-surface-2);
     border-radius: 6px;
-    border-right: 3px solid #087f8c;
+    border-right: 3px solid var(--cf-accent);
 }
 
 .insights-title {
-    color: #087f8c;
+    color: var(--cf-accent);
     font-size: .88rem;
     margin-bottom: 4px;
 }
@@ -454,7 +454,7 @@ h3 {
 .insight {
     font-size: .82rem;
     line-height: 1.5;
-    color: #475569;
+    color: var(--cf-text-2);
     padding-right: 8px;
 }
 
@@ -489,13 +489,13 @@ h3 {
 
 .installment-name,
 .expense-desc {
-    color: #334155;
+    color: var(--cf-text-2);
     font-weight: 600;
 }
 
 .installment-impact,
 .expense-amount {
-    color: #64748b;
+    color: var(--cf-text-3);
     font-size: .78rem;
 }
 
@@ -503,7 +503,7 @@ h3 {
     display: grid;
     gap: 6px;
     margin-top: 12px;
-    color: #475569;
+    color: var(--cf-text-2);
     font-size: .82rem;
 }
 
@@ -523,19 +523,19 @@ h3 {
 
 .fixed-badge {
     margin-top: 12px;
-    color: #08714f;
+    color: var(--cf-success);
     font-size: .82rem;
     font-weight: 700;
 }
 
 .conflicts {
     padding: 10px;
-    border-inline-start: 3px solid #e5a72b;
+    border-inline-start: 3px solid var(--cf-warning-solid);
     background: #fff8e1;
 }
 
 .conflicts strong {
-    color: #8a5e00;
+    color: var(--cf-warning);
 }
 
 .status {
@@ -546,24 +546,24 @@ h3 {
 }
 
 .status.achievable {
-    color: #08714f;
+    color: var(--cf-success);
     background: #dff5eb;
 }
 
 .status.warning {
-    color: #8a5e00;
+    color: var(--cf-warning);
     background: #fff0c7;
 }
 
 .status.not_achievable {
-    color: #a43e39;
+    color: var(--cf-danger);
     background: #fde4e2;
 }
 
 .text-button {
     border: 0;
     background: none;
-    color: #087f8c;
+    color: var(--cf-accent);
     padding: 15px 0 0;
     cursor: pointer;
     font-weight: 700;
@@ -572,42 +572,42 @@ h3 {
 .empty,
 .loading,
 .error {
-    color: #64748b;
+    color: var(--cf-text-3);
     padding: 20px;
 }
 
 .error {
-    color: #a43e39;
+    color: var(--cf-danger);
 }
 
 :host-context([data-bs-theme="dark"]),
 :host-context(.dark-mode) {
     .goals-page {
-        background: #0f172a;
-        color: #e5e7eb;
+        background: var(--cf-bg);
+        color: var(--cf-text);
     }
 
     .segmented-toggle {
-        background: #1f2937;
+        background: var(--cf-surface-3);
     }
 
     .toggle-btn {
-        color: #94a3b8;
+        color: var(--cf-text-3);
 
         &:hover {
-            color: #38bdf8;
+            color: var(--cf-accent);
         }
 
         &.active {
-            background: #0891b2;
-            color: #ffffff;
-            box-shadow: 0 2px 8px rgba(8, 145, 178, 0.4);
+            background: var(--cf-accent);
+            color: var(--cf-text-strong);
+            box-shadow: 0 2px 8px rgba(var(--cf-accent-rgb), 0.4);
         }
     }
 
     .eyebrow,
     .text-button {
-        color: #38bdf8;
+        color: var(--cf-accent);
     }
 
     .goals-header p:last-child,
@@ -615,96 +615,96 @@ h3 {
     .goal-meta,
     .empty,
     .loading {
-        color: #94a3b8;
+        color: var(--cf-text-3);
     }
 
     .overview div {
-        background: #1a2233;
+        background: var(--cf-surface-2);
     }
 
     .goal-form,
     .goal-card {
-        background: #111827;
-        border-color: #1e2d45;
+        background: var(--cf-surface);
+        border-color: var(--cf-border);
         box-shadow: 0 5px 18px rgba(0, 0, 0, .2);
     }
 
     label,
     .analysis,
     .loan-details {
-        color: #cbd5e1;
+        color: var(--cf-text-2);
     }
 
     .status-message {
-        color: #e5e7eb;
+        color: var(--cf-text);
     }
 
     .insights-section {
-        background: #1a2233;
-        border-right-color: #38bdf8;
+        background: var(--cf-surface-2);
+        border-right-color: var(--cf-accent);
 
         .insights-title {
-            color: #38bdf8;
+            color: var(--cf-accent);
         }
 
         .insight {
-            color: #cbd5e1;
+            color: var(--cf-text-2);
         }
     }
 
     .related-installments,
     .related-expenses {
-        background: #1f2937;
-        border-right-color: #fbbf24;
+        background: var(--cf-surface-3);
+        border-right-color: var(--cf-warning);
 
         strong {
-            color: #fcd34d;
+            color: var(--cf-warning);
         }
 
         .installment-item,
         .expense-item {
-            background: #111827;
-            border: 1px solid #334155;
+            background: var(--cf-surface);
+            border: 1px solid var(--cf-border-strong);
 
             .installment-name,
             .expense-desc {
-                color: #e5e7eb;
+                color: var(--cf-text);
             }
 
             .installment-impact,
             .expense-amount {
-                color: #94a3b8;
+                color: var(--cf-text-3);
             }
         }
     }
 
     .conflicts {
-        color: #cbd5e1;
+        color: var(--cf-text-2);
     }
 
     .conflicts {
-        background: rgba(251, 191, 36, .1);
+        background: rgba(var(--cf-warning-rgb), .1);
     }
 
     .conflicts strong {
-        color: #fcd34d;
+        color: var(--cf-warning);
     }
 
     .fixed-badge {
-        color: #86efac;
+        color: var(--cf-success);
     }
 
     .loan-details {
-        border-top-color: #334155;
+        border-top-color: var(--cf-border-strong);
     }
 
     .loan-details strong {
-        color: #38bdf8;
+        color: var(--cf-accent);
     }
 
     .schedule-badge {
-        background: rgba(56, 189, 248, .14);
-        color: #7dd3fc;
+        background: rgba(var(--cf-accent-rgb), .14);
+        color: var(--cf-accent);
     }
 
     .goal-list {
@@ -714,88 +714,88 @@ h3 {
     input,
     select,
     textarea {
-        background: #1f2937;
-        border-color: #334155;
-        color: #e5e7eb;
+        background: var(--cf-surface-3);
+        border-color: var(--cf-border-strong);
+        color: var(--cf-text);
 
         &::placeholder {
-            color: #64748b;
+            color: var(--cf-text-4);
         }
 
         &:focus {
-            border-color: #38bdf8;
-            box-shadow: 0 0 0 3px rgba(56, 189, 248, .2);
+            border-color: var(--cf-accent);
+            box-shadow: 0 0 0 3px rgba(var(--cf-accent-rgb), .2);
             outline: none;
         }
     }
 
     .refresh-button,
     .icon-button {
-        background: #1f2937;
-        border-color: #334155;
-        color: #e5e7eb;
+        background: var(--cf-surface-3);
+        border-color: var(--cf-border-strong);
+        color: var(--cf-text);
     }
 
     .refresh-button:hover,
     .icon-button:hover {
-        background: #334155;
+        background: var(--cf-surface-4);
     }
 
     .delete-button {
-        color: #f87171;
+        color: var(--cf-danger);
     }
 
     .cancel-edit-button {
-        color: #94a3b8;
+        color: var(--cf-text-3);
     }
 
     .cancel-edit-button:hover {
-        background: #1f2937;
-        color: #f87171;
+        background: var(--cf-surface-3);
+        color: var(--cf-danger);
     }
 
     .secondary-button {
-        background: #1f2937;
-        border-color: #334155;
-        color: #cbd5e1;
+        background: var(--cf-surface-3);
+        border-color: var(--cf-border-strong);
+        color: var(--cf-text-2);
     }
 
     .secondary-button:hover {
-        background: #334155;
-        border-color: #475569;
+        background: var(--cf-surface-4);
+        border-color: var(--cf-border-strong);
     }
 
     .primary-button {
-        background: #0891b2;
-        color: #f8fafc;
+        background: var(--cf-accent);
+        color: var(--cf-text-strong);
     }
 
     .status.achievable {
-        color: #86efac;
-        background: rgba(74, 222, 128, .16);
+        color: var(--cf-success);
+        background: rgba(var(--cf-success-rgb), .16);
     }
 
     .status.warning {
-        color: #fcd34d;
-        background: rgba(251, 191, 36, .16);
+        color: var(--cf-warning);
+        background: rgba(var(--cf-warning-rgb), .16);
     }
 
     .status.not_achievable {
-        color: #fca5a5;
-        background: rgba(248, 113, 113, .16);
+        color: var(--cf-danger);
+        background: rgba(var(--cf-danger-rgb), .16);
     }
 
     .error {
-        color: #fca5a5;
+        color: var(--cf-danger);
     }
 
     .refresh-from-original-button {
-        background: #1f2937;
-        border-color: #38bdf8;
-        color: #38bdf8;
+        background: var(--cf-surface-3);
+        border-color: var(--cf-accent);
+        color: var(--cf-accent);
 
         &:hover {
-            background: #38bdf8;
+            background: var(--cf-accent);
             color: #1f2937;
         }
     }
@@ -855,7 +855,7 @@ h3 {
     display: grid;
     grid-template-columns: 1fr 1fr 0.6fr 1fr 32px;
     gap: 6px;
-    color: #64748b;
+    color: var(--cf-text-3);
     font-size: .78rem;
     font-weight: 700;
 }

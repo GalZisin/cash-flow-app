@@ -3,17 +3,21 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve  --port 4300 --open",
+    "start": "ng serve --port 4300 --open",
     "client": "ng serve --port 4300",
     "server": "node server/index.js",
-    "backend": "node server/index.js",
-    "dev": "concurrently \"npm run start\" \"npm run server\"",
-    "dev:ai": "concurrently \"npm run start\" \"npm run server\" \"C:/Users/user/AppData/Local/Programs/Ollama/ollama.exe serve\"",
+    "ollama": "node scripts/start-ollama.js",
+    "dev": "concurrently -n server,client -c green,blue \"npm run server\" \"npm run start\"",
+    "dev:ai": "concurrently -n ollama,server,client -c magenta,green,blue \"npm run ollama\" \"npm run server\" \"npm run start\"",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "themes:check": "node scripts/check-theme-contrast.js"
   },
   "private": true,
+  "engines": {
+    "node": ">=24.0.0"
+  },
   "dependencies": {
     "@angular/animations": "^21.2.17",
     "@angular/cdk": "^21.2.14",
@@ -28,11 +32,11 @@
     "@ngx-translate/core": "^17.0.0",
     "@ngx-translate/http-loader": "^17.0.0",
     "bootstrap": "^5.3.8",
-    "d3": "^7.9.0",
     "d3-sankey": "^0.12.3",
+    "d3-selection": "^3.0.0",
+    "d3-shape": "^3.2.0",
+    "d3-transition": "^3.0.1",
     "gsap": "^3.15.0",
-    "jspdf": "^4.2.1",
-    "jspdf-autotable": "^5.0.7",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.15.0"
@@ -41,8 +45,10 @@
     "@angular/build": "^21.2.18",
     "@angular/cli": "^21.2.18",
     "@angular/compiler-cli": "^21.2.17",
-    "@types/d3": "^7.4.3",
     "@types/d3-sankey": "^0.12.4",
+    "@types/d3-selection": "^3.0.12",
+    "@types/d3-shape": "^3.2.0",
+    "@types/d3-transition": "^3.0.9",
     "@types/jasmine": "~5.1.0",
     "concurrently": "^9.2.1",
     "jasmine-core": "~5.4.0",

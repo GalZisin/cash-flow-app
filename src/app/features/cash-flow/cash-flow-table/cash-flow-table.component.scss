@@ -1,13 +1,15 @@
-$primary: #4f46e5;
-$primary-light: #eef2ff;
-$accent: #06b6d4;
-$danger: #ef4444;
-$success: #10b981;
-$text: #1e293b;
-$text-muted: #64748b;
-$border: #e2e8f0;
-$bg: #f8fafc;
-$white: #ffffff;
+@use '../cash-flow-status' as status;
+
+$primary: var(--cf-primary);
+$primary-light: var(--cf-primary-soft);
+$accent: var(--cf-accent);
+$danger: var(--cf-danger);
+$success: var(--cf-success-solid);
+$text: var(--cf-text);
+$text-muted: var(--cf-text-3);
+$border: var(--cf-border);
+$bg: var(--cf-surface-2);
+$white: var(--cf-surface);
 
 :host {
   font-family: 'Heebo', sans-serif;
@@ -46,72 +48,21 @@ $white: #ffffff;
     }
   }
 
-  .table-loading {
-    position: absolute;
-    inset: 0;
-    z-index: 20;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-    background: radial-gradient(circle at top, rgba(79, 70, 229, 0.16), transparent 52%), rgba(248, 250, 252, 0.88);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
-    height: 100vh;
-  }
-
-  .loading-card {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 14px;
-    min-width: min(360px, 90vw);
-    padding: 36px 32px;
-    border-radius: 24px;
-    background: rgba(255, 255, 255, 0.95);
-    box-shadow: 0 20px 60px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(79, 70, 229, 0.12);
-    border: 1px solid rgba(99, 102, 241, 0.16);
-    transform: translateY(0);
-    animation: card-pop 0.45s ease-out;
-  }
-
-  .loading-spinner {
-    width: 64px;
-    height: 64px;
-    border-radius: 50%;
-    border: 6px solid rgba(79, 70, 229, 0.16);
-    border-top-color: $primary;
-    border-right-color: $accent;
-    animation: spin 0.95s linear infinite;
-    box-shadow: 0 0 20px rgba(79, 70, 229, 0.2);
-  }
-
-  .loading-title {
-    font-size: 18px;
-    font-weight: 800;
-    color: $text;
-    letter-spacing: 0.01em;
-  }
-
-  .loading-subtitle {
-    font-size: 14px;
-    color: $text-muted;
-    text-align: center;
-    line-height: 1.5;
-  }
-
   .save-status {
     display: inline-flex;
     align-items: center;
     gap: 8px;
+    height: 32px;
     font-size: 12px;
-    color: $text-muted;
-    background: rgba(255, 255, 255, 0.8);
-    border: 1px solid rgba(148, 163, 184, 0.25);
+    font-weight: 500;
+    color: var(--cf-text-2);
+    background: var(--cf-surface);
+    border: 1px solid var(--cf-border);
     border-radius: 999px;
-    padding: 6px 10px;
+    padding: 0 12px;
     margin-left: 8px;
+    white-space: nowrap;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
   }
 
   .save-status-dot {
@@ -119,7 +70,7 @@ $white: #ffffff;
     height: 8px;
     border-radius: 50%;
     background: $success;
-    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.18);
+    box-shadow: 0 0 0 3px rgba(var(--cf-success-rgb), 0.18);
   }
 
   .actions {
@@ -160,17 +111,23 @@ $white: #ffffff;
 :host-context([data-bs-theme="dark"]),
 :host-context(.dark-mode) {
   .cash-flow-table {
-    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    background: linear-gradient(135deg, var(--cf-bg) 0%, var(--cf-surface-3) 100%);
+
+    .save-status {
+      background: var(--cf-surface-2);
+      border-color: var(--cf-border-strong);
+      box-shadow: none;
+    }
 
     .actions button {
-      border: 1px solid rgba(99, 102, 241, 0.3);
+      border: 1px solid rgba(var(--cf-primary-rgb), 0.3);
       -webkit-backdrop-filter: blur(10px);
       backdrop-filter: blur(10px);
 
       &:hover {
-        box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3),
-          0 0 20px rgba(99, 102, 241, 0.2);
-        border-color: rgba(99, 102, 241, 0.5);
+        box-shadow: 0 4px 20px rgba(var(--cf-primary-rgb), 0.3),
+          0 0 20px rgba(var(--cf-primary-rgb), 0.2);
+        border-color: rgba(var(--cf-primary-rgb), 0.5);
       }
     }
   }
@@ -186,7 +143,7 @@ $white: #ffffff;
     background: $primary;
 
     .mat-mdc-header-cell {
-      color: $white;
+      color: var(--cf-on-primary);
       font-family: 'Heebo', sans-serif;
       font-weight: 600;
       font-size: 13px;
@@ -202,7 +159,7 @@ $white: #ffffff;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 
     &:nth-child(even) {
-      background: #f1f5f9;
+      background: var(--cf-surface-3);
     }
 
     &:hover {
@@ -253,148 +210,22 @@ $white: #ffffff;
   }
 }
 
-// ── Skeleton Loading ──────────────────────────────────────────
-@keyframes shimmer {
-  0% {
-    background-position: -1000px 0;
-  }
-
-  100% {
-    background-position: 1000px 0;
-  }
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes card-pop {
-  0% {
-    opacity: 0;
-    transform: translateY(10px) scale(0.96);
-  }
-
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-.skeleton-table {
-  width: 100%;
-  min-width: 900px;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.07);
-  background: $white;
-}
-
-.skeleton-header {
-  height: 45px;
-  // Fallback for older browsers
-  background: linear-gradient(90deg, $primary 0%, rgba(79, 70, 229, 0.9) 50%, $primary 100%);
-
-  // Modern browsers with color-mix support
-  @supports (background: color-mix(in srgb, red 50%, blue)) {
-    background: linear-gradient(90deg, $primary 0%, color-mix(in srgb, $primary 90%, white) 50%, $primary 100%);
-  }
-
-  background-size: 1000px 100%;
-  animation: shimmer 2s infinite linear;
-}
-
-.skeleton-row {
-  display: flex;
-  gap: 16px;
-  padding: 10px 16px;
-  border-bottom: 1px solid $border;
-  background: $white;
-
-  &:nth-child(even) {
-    background: #f1f5f9;
-  }
-}
-
-.skeleton-cell {
-  height: 24px;
-  border-radius: 6px;
-  background: linear-gradient(90deg,
-      #e2e8f0 0%,
-      #f1f5f9 50%,
-      #e2e8f0 100%);
-  background-size: 1000px 100%;
-  animation: shimmer 2s infinite linear;
-
-  &.skeleton-cell-small {
-    flex: 0 0 40px;
-  }
-
-  &.skeleton-cell-medium {
-    flex: 0 0 100px;
-  }
-
-  &.skeleton-cell-large {
-    flex: 1;
-  }
-}
-
-// ── Dark mode skeleton with sleek glow effect ──
-:host-context([data-bs-theme="dark"]),
-:host-context(.dark-mode) {
-  .skeleton-table {
-    background: rgba(17, 24, 39, 0.6);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4),
-      0 0 1px rgba(99, 102, 241, 0.2);
-    -webkit-backdrop-filter: blur(10px);
-    backdrop-filter: blur(10px);
-  }
-
-  .skeleton-header {
-    background: linear-gradient(90deg,
-        rgba(99, 102, 241, 0.3) 0%,
-        rgba(99, 102, 241, 0.5) 50%,
-        rgba(99, 102, 241, 0.3) 100%);
-    background-size: 1000px 100%;
-    box-shadow: 0 2px 10px rgba(99, 102, 241, 0.2);
-  }
-
-  .skeleton-row {
-    background: rgba(17, 24, 39, 0.9);
-    border-bottom-color: rgba(99, 102, 241, 0.1);
-
-    &:nth-child(even) {
-      background: rgba(26, 34, 51, 0.9);
-    }
-  }
-
-  .skeleton-cell {
-    background: linear-gradient(90deg,
-        rgba(99, 102, 241, 0.1) 0%,
-        rgba(99, 102, 241, 0.25) 50%,
-        rgba(99, 102, 241, 0.1) 100%);
-    background-size: 1000px 100%;
-    box-shadow: 0 0 10px rgba(99, 102, 241, 0.1);
-  }
-}
-
 // ── Dark mode table styling with glass effect ──
 :host-context([data-bs-theme="dark"]),
 :host-context(.dark-mode) {
   .mat-mdc-table {
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4),
-      0 0 1px rgba(99, 102, 241, 0.2) !important;
-    background: rgba(17, 24, 39, 0.6);
+      0 0 1px rgba(var(--cf-primary-rgb), 0.2) !important;
+    background: rgba(var(--cf-surface-rgb), 0.6);
     -webkit-backdrop-filter: blur(10px);
     backdrop-filter: blur(10px);
 
     .mat-mdc-header-row {
-      background: linear-gradient(135deg, rgba(99, 102, 241, 0.9) 0%, rgba(79, 70, 229, 0.8) 100%);
-      box-shadow: 0 2px 10px rgba(99, 102, 241, 0.3);
+      background: linear-gradient(135deg, rgba(var(--cf-primary-rgb), 0.9) 0%, rgba(var(--cf-primary-rgb), 0.8) 100%);
+      box-shadow: 0 2px 10px rgba(var(--cf-primary-rgb), 0.3);
 
       .mat-mdc-header-cell {
-        color: #fff;
+        color: var(--cf-text-strong);
         text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
       }
     }
@@ -406,19 +237,19 @@ $white: #ffffff;
 :host-context([data-bs-theme="dark"]),
 :host-context(.dark-mode) {
   .mat-mdc-row {
-    background: rgba(17, 24, 39, 0.9) !important;
+    background: rgba(var(--cf-surface-rgb), 0.9) !important;
     -webkit-backdrop-filter: blur(10px);
     backdrop-filter: blur(10px);
-    border-bottom: 1px solid rgba(99, 102, 241, 0.1);
+    border-bottom: 1px solid rgba(var(--cf-primary-rgb), 0.1);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
     &:nth-child(even) {
-      background: rgba(26, 34, 51, 0.9) !important;
+      background: rgba(var(--cf-surface-rgb), 0.9) !important;
     }
 
     &:hover {
-      background: rgba(99, 102, 241, 0.15) !important;
-      box-shadow: 0 4px 20px rgba(99, 102, 241, 0.25);
+      background: rgba(var(--cf-primary-rgb), 0.15) !important;
+      box-shadow: 0 4px 20px rgba(var(--cf-primary-rgb), 0.25);
     }
   }
 }
@@ -431,117 +262,36 @@ $white: #ffffff;
 }
 
 // ── Colored rows (red / yellow / green) ──────────────────────
-// --row-color is resolved by resolveRowColor() in TS — light pastels in light mode,
-// deep darks in dark mode. Text color is forced to full readable value always.
-.mat-mdc-row[style*='--row-color'] {
-  background: var(--row-color) !important;
-  box-shadow: inset 4px 0 0 0 var(--row-color) !important; // משתמש ב-box-shadow במקום border
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
-
-  // ── Light mode text ─────────────────────────────────────
-  .mat-mdc-cell {
-    color: #1e293b !important;
-    border-bottom-color: #e2e8f0 !important;
-
-    input[type='number'],
-    input[type='text'],
-    input:not([type]) {
-      color: #1e293b !important;
-    }
-  }
-
-  td:last-child {
-    color: #1e293b !important;
-    font-weight: 700 !important;
-  }
-
-  .amount-display {
-    color: #1e293b !important;
-  }
+// The stored value stays a hex (ROW_COLORS); rowColorKey() maps it to
+// data-row-color="red|yellow|green". The whole row gets a translucent tint of
+// the theme's solid status color (softer than an opaque pastel, adapts to every
+// palette and to dark mode) plus a thin stripe on the start edge. Text keeps
+// its normal color. !important: the zebra/hover rules above use it too.
+.mat-mdc-row[data-row-color] {
+  --row-tint: 0.14;
+  background: rgba(var(--row-rgb), var(--row-tint)) !important;
+  box-shadow: inset -3px 0 0 0 rgb(var(--row-rgb)) !important;
 
   &:hover {
-    filter: brightness(0.95) !important;
+    --row-tint: 0.2;
   }
 }
 
-// ── Dark mode colored rows with sleek glass effect ──
-:host-context([data-bs-theme="dark"]) .mat-mdc-row[style*='--row-color'],
-:host-context(.dark-mode) .mat-mdc-row[style*='--row-color'] {
-  background: var(--row-color) !important;
+.mat-mdc-row[data-row-color='green'] { --row-rgb: var(--cf-success-solid-rgb); }
+.mat-mdc-row[data-row-color='yellow'] { --row-rgb: var(--cf-warning-solid-rgb); }
+.mat-mdc-row[data-row-color='red'] { --row-rgb: var(--cf-danger-solid-rgb); }
 
-  // Fallback for older browsers
-  box-shadow: inset 4px 0 0 0 rgba(96, 165, 250, 0.7),
-    0 2px 10px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
-
-  // Modern browsers with color-mix support
-  @supports (background: color-mix(in srgb, red 50%, blue)) {
-    box-shadow: inset 4px 0 0 0 color-mix(in srgb, var(--row-color) 70%, #60a5fa),
-      0 2px 10px rgba(0, 0, 0, 0.2),
-      inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
-  }
-
-  -webkit-backdrop-filter: blur(12px) saturate(1.8);
-  backdrop-filter: blur(12px) saturate(1.8);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-
-  .mat-mdc-cell {
-    color: #f1f5f9 !important;
-    border-bottom-color: rgba(255, 255, 255, 0.08) !important;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-
-    input[type='number'],
-    input[type='text'],
-    input:not([type]) {
-      color: #f1f5f9 !important;
-      background: rgba(0, 0, 0, 0.15) !important;
-      border: 1px solid rgba(255, 255, 255, 0.1) !important;
-      transition: all 0.2s ease;
-
-      &:focus {
-        background: rgba(0, 0, 0, 0.25) !important;
-        border-color: rgba(96, 165, 250, 0.5) !important;
-        box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
-      }
-    }
-  }
-
-  td:last-child {
-    color: #60a5fa !important;
-    font-weight: 700 !important;
-    text-shadow: 0 0 10px rgba(96, 165, 250, 0.3);
-  }
-
-  .amount-display {
-    color: #f1f5f9 !important;
-    transition: all 0.2s ease;
-
-    &:hover {
-      background: rgba(255, 255, 255, 0.12) !important;
-      border-color: rgba(255, 255, 255, 0.2) !important;
-      transform: scale(1.02);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    }
-  }
+:host-context([data-bs-theme="dark"]) .mat-mdc-row[data-row-color],
+:host-context(.dark-mode) .mat-mdc-row[data-row-color] {
+  --row-tint: 0.2;
+  background: rgba(var(--row-rgb), var(--row-tint)) !important;
 
   &:hover {
-    filter: brightness(1.15) !important;
-
-    // Fallback for older browsers
-    box-shadow: inset 4px 0 0 0 rgba(96, 165, 250, 0.7),
-      0 4px 20px rgba(0, 0, 0, 0.3),
-      0 0 30px rgba(96, 165, 250, 0.3),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
-
-    // Modern browsers with color-mix support
-    @supports (background: color-mix(in srgb, red 50%, blue)) {
-      box-shadow: inset 4px 0 0 0 color-mix(in srgb, var(--row-color) 70%, #60a5fa),
-        0 4px 20px rgba(0, 0, 0, 0.3),
-        0 0 30px color-mix(in srgb, var(--row-color) 30%, transparent),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
-    }
+    --row-tint: 0.26;
   }
 }
+
+@include status.negative-amount;
 
 .dots-btn {
   opacity: 0.3;
@@ -562,8 +312,8 @@ $white: #ffffff;
 :host-context(.dark-mode) {
   .dots-btn {
     &:hover {
-      background: rgba(99, 102, 241, 0.2);
-      box-shadow: 0 0 10px rgba(99, 102, 241, 0.3);
+      background: rgba(var(--cf-primary-rgb), 0.2);
+      box-shadow: 0 0 10px rgba(var(--cf-primary-rgb), 0.3);
     }
   }
 }
@@ -596,15 +346,15 @@ $white: #ffffff;
 :host-context(.dark-mode) {
   .amount-display {
     &:hover {
-      background: rgba(99, 102, 241, 0.15) !important;
-      border-color: rgba(99, 102, 241, 0.3) !important;
-      box-shadow: 0 0 10px rgba(99, 102, 241, 0.2);
+      background: rgba(var(--cf-primary-rgb), 0.15) !important;
+      border-color: rgba(var(--cf-primary-rgb), 0.3) !important;
+      box-shadow: 0 0 10px rgba(var(--cf-primary-rgb), 0.2);
     }
   }
 
   .amount-display-read-only {
-    background: rgba(96, 165, 250, 0.1);
-    color: #60a5fa;
+    background: rgba(var(--cf-accent-rgb), 0.1);
+    color: var(--cf-primary-text);
   }
 }
 
@@ -653,26 +403,26 @@ $white: #ffffff;
 :host-context([data-bs-theme="dark"]),
 :host-context(.dark-mode) {
   .expense-item-block {
-    background: rgba(17, 24, 39, 0.6);
-    border: 1px solid rgba(99, 102, 241, 0.2);
+    background: rgba(var(--cf-surface-rgb), 0.6);
+    border: 1px solid rgba(var(--cf-primary-rgb), 0.2);
     -webkit-backdrop-filter: blur(10px);
     backdrop-filter: blur(10px);
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
 
     &:hover {
-      box-shadow: 0 4px 20px rgba(99, 102, 241, 0.2);
-      border-color: rgba(99, 102, 241, 0.4);
+      box-shadow: 0 4px 20px rgba(var(--cf-primary-rgb), 0.2);
+      border-color: rgba(var(--cf-primary-rgb), 0.4);
       transform: translateY(-1px);
     }
 
     input {
       background: rgba(0, 0, 0, 0.3) !important;
-      border: 1px solid rgba(99, 102, 241, 0.3) !important;
-      color: #f1f5f9 !important;
+      border: 1px solid rgba(var(--cf-primary-rgb), 0.3) !important;
+      color: var(--cf-text-strong) !important;
 
       &:focus {
-        border-color: rgba(96, 165, 250, 0.6) !important;
-        box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+        border-color: rgba(var(--cf-accent-rgb), 0.6) !important;
+        box-shadow: 0 0 0 3px rgba(var(--cf-accent-rgb), 0.1);
       }
     }
   }
@@ -701,53 +451,26 @@ $white: #ffffff;
   transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.income-bar {
-  background-color: #10b981;
-}
-
-// Success green
-.expense-bar {
-  background-color: #ef4444;
-}
+@include status.summary-bars;
 
 .savings-bar {
-  background-color: #60a5fa;
+  background: var(--cf-accent);
   height: 3px;
   margin-top: 1px;
   border-radius: 1px;
   opacity: 0.8;
 }
 
-// Danger red
-
-// ── Dark mode mini-charts with glow ──
+// ── Dark mode mini-chart container ──
 :host-context([data-bs-theme="dark"]),
 :host-context(.dark-mode) {
   .mini-chart-container {
     background: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(99, 102, 241, 0.2);
-    -webkit-backdrop-filter: blur(5px);
-    backdrop-filter: blur(5px);
+    border: 1px solid rgba(var(--cf-primary-rgb), 0.2);
 
     &:hover {
-      box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);
-      border-color: rgba(99, 102, 241, 0.4);
+      border-color: rgba(var(--cf-primary-rgb), 0.4);
     }
-  }
-
-  .income-bar {
-    background: linear-gradient(90deg, #10b981 0%, #34d399 100%);
-    box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
-  }
-
-  .expense-bar {
-    background: linear-gradient(90deg, #ef4444 0%, #f87171 100%);
-    box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
-  }
-
-  .savings-bar {
-    background: linear-gradient(90deg, #60a5fa 0%, #93c5fd 100%);
-    box-shadow: 0 0 8px rgba(96, 165, 250, 0.5);
   }
 }
 
@@ -757,69 +480,22 @@ $white: #ffffff;
   letter-spacing: 0 !important;
 }
 
-// ── Badge styling ──
+// ── Badge styling: flat tinted pills, same recipe in both modes ──
 .badge {
-  transition: all 0.2s ease;
+  transition: transform 0.2s ease;
 
   &.expense-count-badge {
     font-size: 0.7rem;
     font-weight: 600;
     padding: 4px 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 
     &:hover {
       transform: scale(1.05);
     }
   }
-
-  &.bg-success {
-    background: linear-gradient(135deg, #10b981 0%, #34d399 100%) !important;
-    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
-  }
-
-  &.bg-primary {
-    background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%) !important;
-    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
-  }
-
-  &.bg-warning {
-    background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%) !important;
-    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
-  }
 }
 
-// ── Dark mode badges with glow ──
-:host-context([data-bs-theme="dark"]),
-:host-context(.dark-mode) {
-  .badge {
-    &.expense-count-badge {
-      -webkit-backdrop-filter: blur(10px);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    &.bg-success {
-      background: linear-gradient(135deg, rgba(16, 185, 129, 0.3) 0%, rgba(52, 211, 153, 0.3) 100%) !important;
-      box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
-      color: #6ee7b7 !important;
-      border-color: rgba(16, 185, 129, 0.4);
-    }
-
-    &.bg-primary {
-      background: linear-gradient(135deg, rgba(99, 102, 241, 0.3) 0%, rgba(79, 70, 229, 0.3) 100%) !important;
-      box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
-      color: #a5b4fc !important;
-      border-color: rgba(99, 102, 241, 0.4);
-    }
-
-    &.bg-warning {
-      background: linear-gradient(135deg, rgba(245, 158, 11, 0.3) 0%, rgba(251, 191, 36, 0.3) 100%) !important;
-      box-shadow: 0 0 15px rgba(245, 158, 11, 0.4);
-      color: #fcd34d !important;
-      border-color: rgba(245, 158, 11, 0.4);
-    }
-  }
-}
+@include status.status-pills;
 
 .print-only {
   display: none;
@@ -924,12 +600,12 @@ $white: #ffffff;
 
 .cf-confirm-title {
   font-weight: 700;
-  color: #1e293b;
+  color: var(--cf-text);
   font-size: 1rem;
 }
 
 .cf-confirm-msg {
-  color: #64748b;
+  color: var(--cf-text-3);
   font-size: 0.875rem;
 }
 
@@ -943,148 +619,24 @@ $white: #ffffff;
   }
 
   .cf-confirm-card {
-    background: linear-gradient(135deg, rgba(17, 24, 39, 0.95) 0%, rgba(30, 41, 59, 0.95) 100%);
-    border: 1px solid rgba(99, 102, 241, 0.3);
+    background: linear-gradient(135deg, rgba(var(--cf-surface-rgb), 0.95) 0%, rgba(var(--cf-surface-rgb), 0.95) 100%);
+    border: 1px solid rgba(var(--cf-primary-rgb), 0.3);
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5),
-      0 0 1px rgba(99, 102, 241, 0.5);
+      0 0 1px rgba(var(--cf-primary-rgb), 0.5);
     -webkit-backdrop-filter: blur(20px);
     backdrop-filter: blur(20px);
   }
 
   .cf-confirm-title {
-    color: #f1f5f9;
+    color: var(--cf-text-strong);
   }
 
   .cf-confirm-msg {
-    color: #94a3b8;
+    color: var(--cf-text-3);
   }
 }
 
-// Defaults dialog
-.cf-defaults-card {
-  border-radius: 16px;
-  border: none;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
-  width: 560px;
-  max-width: 95vw;
-  max-height: 85vh;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  transition: transform 0.2s ease;
-}
-
-.cf-defaults-header {
-  padding: 16px 20px;
-  border-bottom: 1px solid #f0f2f5;
-  flex-shrink: 0;
-}
-
-.cf-defaults-title {
-  font-weight: 700;
-  font-size: 1rem;
-  color: #1e293b;
-}
-
-.cf-defaults-body {
-  padding: 20px;
-  overflow-y: auto;
-  flex: 1;
-}
-
-.cf-defaults-footer {
-  padding: 12px 20px;
-  border-top: 1px solid #f0f2f5;
-  flex-shrink: 0;
-  background: #f8fafc;
-}
-
-.cf-field-label {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #64748b;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-  display: block;
-  margin-bottom: 4px;
-}
-
-.cf-section-title {
-  font-size: 0.78rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: #94a3b8;
-}
-
-// ── Dark mode defaults dialog with glass effect ──
-:host-context([data-bs-theme="dark"]),
-:host-context(.dark-mode) {
-  .cf-defaults-card {
-    background: linear-gradient(135deg, rgba(17, 24, 39, 0.95) 0%, rgba(30, 41, 59, 0.95) 100%);
-    border: 1px solid rgba(99, 102, 241, 0.3);
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6),
-      0 0 1px rgba(99, 102, 241, 0.5);
-    -webkit-backdrop-filter: blur(20px);
-    backdrop-filter: blur(20px);
-  }
-
-  .cf-defaults-header {
-    border-bottom: 1px solid rgba(99, 102, 241, 0.2);
-    background: rgba(99, 102, 241, 0.05);
-  }
-
-  .cf-defaults-title {
-    color: #f1f5f9;
-  }
-
-  .cf-defaults-body {
-
-    // Custom scrollbar for dark mode
-    &::-webkit-scrollbar {
-      width: 8px;
-    }
-
-    &::-webkit-scrollbar-track {
-      background: rgba(0, 0, 0, 0.2);
-      border-radius: 4px;
-    }
-
-    &::-webkit-scrollbar-thumb {
-      background: rgba(99, 102, 241, 0.4);
-      border-radius: 4px;
-
-      &:hover {
-        background: rgba(99, 102, 241, 0.6);
-      }
-    }
-
-    input.form-control {
-      background: rgba(0, 0, 0, 0.3) !important;
-      border: 1px solid rgba(99, 102, 241, 0.3) !important;
-      color: #f1f5f9 !important;
-
-      &:focus {
-        border-color: rgba(96, 165, 250, 0.6) !important;
-        box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
-        background: rgba(0, 0, 0, 0.4) !important;
-      }
-    }
-  }
-
-  .cf-defaults-footer {
-    border-top: 1px solid rgba(99, 102, 241, 0.2);
-    background: rgba(99, 102, 241, 0.05);
-  }
-
-  .cf-field-label {
-    color: #94a3b8;
-  }
-
-  .cf-section-title {
-    color: #60a5fa;
-  }
-}
+// (defaults dialog styles moved to cash-flow-defaults-dialog.component.scss)
 
 /* Simulation Banner */
 .simulation-banner {
@@ -1092,16 +644,16 @@ $white: #ffffff;
   align-items: center;
   gap: 10px;
   padding: 12px 20px;
-  background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
-  border: 1px solid #7dd3fc;
+  background: var(--cf-primary-soft);
+  border: 1px solid var(--cf-primary-border);
   border-radius: 8px;
-  color: #0c4a6e;
+  color: var(--cf-primary-text);
   font-weight: 600;
   margin-bottom: 16px;
-  box-shadow: 0 2px 8px rgba(14, 165, 233, 0.15);
+  box-shadow: 0 2px 8px rgba(var(--cf-primary-rgb), 0.15);
 
   mat-icon {
-    color: #0284c7;
+    color: var(--cf-primary-text);
     font-size: 22px;
     width: 22px;
     height: 22px;
@@ -1110,12 +662,12 @@ $white: #ffffff;
 
 [data-bs-theme="dark"] .simulation-banner,
 .dark-mode .simulation-banner {
-  background: linear-gradient(135deg, #1e3a5f 0%, #1e40af 100%);
-  border-color: #3b82f6;
-  color: #bfdbfe;
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25);
+  background: var(--cf-primary-soft);
+  border-color: var(--cf-primary-border);
+  color: var(--cf-primary-text);
+  box-shadow: 0 2px 8px rgba(var(--cf-primary-rgb), 0.25);
 
   mat-icon {
-    color: #60a5fa;
+    color: var(--cf-primary-text);
   }
 }

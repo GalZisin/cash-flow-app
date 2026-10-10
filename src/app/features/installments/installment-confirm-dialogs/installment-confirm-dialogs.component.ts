@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, Output, EventEmitter } from '@angular/core';
 
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -7,6 +7,7 @@ import { CashFlowWarning, Installment } from '../../../models/installment.model'
 
 @Component({
   selector: 'app-installment-confirm-dialogs',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [FormsModule, TranslateModule],
   templateUrl: './installment-confirm-dialogs.component.html',

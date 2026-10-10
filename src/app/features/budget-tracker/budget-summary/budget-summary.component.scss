@@ -1,0 +1,269 @@
+// Its children (alerts, summary cards, overall progress) stay direct flex items of the parent's .left-column.
+:host {
+  display: contents;
+}
+
+// Alerts Section
+.alerts-section {
+  display: grid;
+  gap: 12px;
+
+  .alert-card {
+    border-right: 4px solid;
+
+    &.warning {
+      border-right-color: var(--cf-warning-solid);
+      background: var(--cf-warning-soft);
+    }
+
+    &.danger {
+      border-right-color: var(--cf-danger-solid);
+      background: var(--cf-danger-soft);
+    }
+
+    .alert-content {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+      .alert-icon {
+        font-size: 28px;
+        width: 28px;
+        height: 28px;
+      }
+
+      .alert-text {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+
+        strong {
+          font-size: 16px;
+        }
+
+        span {
+          font-size: 14px;
+          opacity: 0.8;
+        }
+      }
+    }
+  }
+}
+
+// Summary Cards
+.summary-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+
+  .summary-card {
+    mat-card-content {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+      .summary-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+
+        mat-icon {
+          font-size: 28px;
+          width: 28px;
+          height: 28px;
+          color: white;
+        }
+
+        &.budget-icon {
+          background: linear-gradient(135deg, var(--cf-primary) 0%, var(--cf-primary-strong) 100%);
+        }
+
+        &.spent-icon {
+          background: linear-gradient(135deg, var(--cf-danger-solid) 0%, var(--cf-danger) 100%);
+        }
+
+        &.remaining-icon {
+          background: linear-gradient(135deg, var(--cf-accent) 0%, rgba(var(--cf-accent-rgb), 0.75) 100%);
+        }
+
+        &.percentage-icon {
+          background: linear-gradient(135deg, var(--cf-success-solid) 0%, var(--cf-success) 100%);
+        }
+      }
+
+      .summary-details {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 0;
+        flex: 1;
+
+        .summary-label {
+          font-size: 13px;
+          opacity: 0.7;
+        }
+
+        .summary-value {
+          font-size: 20px;
+          font-weight: 600;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+
+          &.negative {
+            color: var(--cf-danger);
+          }
+        }
+      }
+    }
+  }
+}
+
+// Overall Progress
+.overall-progress-card {
+  mat-card-content {
+    .overall-progress-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+
+      .progress-label {
+        font-size: 16px;
+        font-weight: 500;
+      }
+
+      .progress-percentage {
+        font-size: 20px;
+        font-weight: 600;
+        color: var(--primary-color);
+      }
+    }
+
+    mat-progress-bar {
+      height: 12px;
+      border-radius: 6px;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .summary-cards {
+    grid-template-columns: 1fr;
+    gap: 10px;
+
+    .summary-card {
+      mat-card-content {
+        gap: 10px;
+
+        .summary-icon {
+          width: 44px;
+          height: 44px;
+
+          mat-icon {
+            font-size: 24px;
+            width: 24px;
+            height: 24px;
+          }
+        }
+
+        .summary-details {
+          .summary-label {
+            font-size: 12px;
+          }
+
+          .summary-value {
+            font-size: 18px;
+          }
+        }
+      }
+    }
+  }
+}
+
+// ============================================
+:host-context(.dark-mode),
+:host-context([data-bs-theme="dark"]) {
+  .summary-cards .summary-card,
+  .overall-progress-card {
+    background: var(--cf-surface);
+    border: 1px solid var(--cf-border);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+
+    mat-card-content {
+      color: var(--cf-text);
+    }
+  }
+
+  // Summary cards details
+  .summary-cards {
+    .summary-card {
+      .summary-details {
+        .summary-label {
+          color: var(--cf-text-3);
+        }
+
+        .summary-value {
+          color: var(--cf-text);
+
+          &.negative {
+            color: var(--cf-danger);
+          }
+        }
+      }
+    }
+  }
+
+  // Overall progress card
+  .overall-progress-card {
+    mat-card-content {
+      .overall-progress-header {
+        .progress-label {
+          color: var(--cf-text);
+        }
+
+        .progress-percentage {
+          color: var(--cf-accent);
+        }
+      }
+    }
+  }
+
+  // Alerts
+  .alerts-section {
+    .alert-card {
+      &.warning {
+        background: var(--cf-surface);
+        border: 1px solid var(--cf-warning);
+        border-right-width: 4px;
+
+        mat-card-content {
+          color: var(--cf-warning);
+
+          .alert-icon {
+            color: var(--cf-warning);
+          }
+        }
+      }
+
+      &.danger {
+        background: var(--cf-surface);
+        border: 1px solid var(--cf-danger);
+        border-right-width: 4px;
+
+        mat-card-content {
+          color: var(--cf-danger);
+
+          .alert-icon {
+            color: var(--cf-danger);
+          }
+        }
+      }
+    }
+  }
+}

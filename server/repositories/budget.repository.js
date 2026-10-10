@@ -1,5 +1,6 @@
 const { C, exec, rows, withTransaction, insertMany, getPool } = require('../db/helpers');
 const { budgetToRows, assembleBudget } = require('../db/mappers');
+const traceMethods = require('../utils/traceMethods');
 
 const COLUMNS = [C.vchar('category', 30), C.int('sort_order'), C.money('monthly_limit')];
 
@@ -32,4 +33,4 @@ class BudgetRepository {
     }
 }
 
-module.exports = new BudgetRepository();
+module.exports = traceMethods(new BudgetRepository(), 'budgetRepository');

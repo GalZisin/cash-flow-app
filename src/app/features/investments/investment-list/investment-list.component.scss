@@ -1,16 +1,16 @@
   .inv-card {
       border-radius: 14px;
-      border: 1px solid #e8eaed;
-      background: #fff;
+      border: 1px solid var(--cf-border);
+      background: var(--cf-surface);
       overflow: hidden;
   }
 
   .inv-header {
       padding: 14px 16px;
-      background: #fff;
-      border-bottom: 1px solid #f0f2f5;
+      background: var(--cf-surface);
+      border-bottom: 1px solid var(--cf-border);
       font-weight: 600;
-      color: #1e293b;
+      color: var(--cf-text);
       font-size: 0.9rem;
   }
 
@@ -20,13 +20,13 @@
 
   .add-form {
       padding: 14px 16px;
-      background: #f8f9fb;
-      border-bottom: 1px solid #f0f2f5;
+      background: var(--cf-surface-2);
+      border-bottom: 1px solid var(--cf-border);
   }
 
   .inv-item {
       padding: 12px 16px;
-      border-bottom: 1px solid #f0f2f5;
+      border-bottom: 1px solid var(--cf-border);
       cursor: pointer;
       transition: background 0.12s;
       display: flex;
@@ -39,48 +39,48 @@
   }
 
   .inv-item:hover {
-      background: #f8f9fb;
+      background: var(--cf-surface-2);
   }
 
   .inv-item.selected {
-      background: #eef2ff;
-      border-left: 3px solid #4f6ef7;
+      background: var(--cf-primary-soft);
+      border-left: 3px solid var(--cf-primary);
   }
 
   .inv-name {
       font-weight: 600;
       font-size: 0.9rem;
-      color: #1e293b;
+      color: var(--cf-text);
   }
 
   .inv-type {
       font-size: 0.72rem;
-      color: #64748b;
+      color: var(--cf-text-3);
       margin-top: 2px;
   }
 
   .inv-value {
       font-weight: 600;
       font-size: 0.9rem;
-      color: #1e293b;
+      color: var(--cf-text);
       text-align: end;
   }
 
   .inv-pct-pos {
       font-size: 0.75rem;
-      color: #1a7a52;
+      color: var(--cf-success);
       font-weight: 500;
   }
 
   .inv-pct-neg {
       font-size: 0.75rem;
-      color: #c0392b;
+      color: var(--cf-danger);
       font-weight: 500;
   }
 
   .inv-pct-neu {
       font-size: 0.75rem;
-      color: #94a3b8;
+      color: var(--cf-text-4);
   }
 
   .inv-pct-end {
@@ -88,13 +88,13 @@
   }
 
   .inv-chevron {
-      color: #94a3b8;
+      color: var(--cf-text-4);
       font-size: 0.8rem;
       flex-shrink: 0;
   }
 
   .btn-add-investment {
-      background: #4f6ef7;
+      background: var(--cf-primary);
       color: #fff;
       border-radius: 8px;
       font-size: 0.8rem;
@@ -102,7 +102,7 @@
       border: none;
 
       &:hover {
-          background: #3b5bdb;
+          background: var(--cf-primary-strong);
           color: #fff;
       }
   }
@@ -126,7 +126,7 @@
       border-radius: 50%;
       border: 1.5px solid transparent;
       background: transparent;
-      color: #cbd5e1;
+      color: var(--cf-text-4);
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -136,9 +136,9 @@
   }
 
   .delete-btn:hover {
-      background: #fee2e2;
+      background: var(--cf-danger-soft);
       border-color: #fca5a5;
-      color: #dc2626;
+      color: var(--cf-danger);
   }
 
   .inv-item:not(:hover) .delete-btn {
@@ -167,17 +167,17 @@
 
   .confirm-title {
       font-weight: 700;
-      color: #1e293b;
+      color: var(--cf-text);
       font-size: 1rem;
   }
 
   .confirm-msg {
-      color: #64748b;
+      color: var(--cf-text-3);
       font-size: 0.875rem;
   }
 
   .btn-delete-confirm {
-      background: #dc2626;
+      background: var(--cf-danger-solid);
       color: #fff;
       border: none;
       border-radius: 8px;
@@ -186,13 +186,13 @@
   }
 
   .btn-delete-confirm:hover {
-      background: #b91c1c;
+      background: var(--cf-danger-solid);
       color: #fff;
   }
 
   .btn-cancel-confirm {
-      background: #f1f5f9;
-      color: #475569;
+      background: var(--cf-surface-3);
+      color: var(--cf-text-2);
       border: none;
       border-radius: 8px;
       padding: 8px 24px;
@@ -200,7 +200,7 @@
   }
 
   .btn-cancel-confirm:hover {
-      background: #e2e8f0;
+      background: var(--cf-surface-4);
   }
 
   // ════════════════════════════════════════════════════════════
@@ -209,85 +209,85 @@
   :host-context([data-bs-theme="dark"]),
   :host-context(.dark-mode) {
       .inv-card {
-          background: #111827 !important;
-          border-color: #1e2d45 !important;
+          background: var(--cf-surface) !important;
+          border-color: var(--cf-border) !important;
       }
 
       .inv-header {
-          background: #0d1526 !important;
-          border-bottom-color: #1e2d45 !important;
-          color: #e5e7eb !important;
+          background: var(--cf-header) !important;
+          border-bottom-color: var(--cf-border) !important;
+          color: var(--cf-text) !important;
       }
 
       .inv-wrapper {
-          background: #111827 !important;
+          background: var(--cf-surface) !important;
       }
 
       .add-form {
-          background: #0d1526 !important;
-          border-bottom-color: #1e2d45 !important;
+          background: var(--cf-header) !important;
+          border-bottom-color: var(--cf-border) !important;
       }
 
       .inv-item {
-          border-bottom-color: #1e2d45 !important;
+          border-bottom-color: var(--cf-border) !important;
 
           &:hover {
               background: rgba(255, 255, 255, 0.03) !important;
           }
 
           &.selected {
-              background: rgba(56, 189, 248, 0.08) !important;
-              border-left-color: #38bdf8 !important;
+              background: rgba(var(--cf-accent-rgb), 0.08) !important;
+              border-left-color: var(--cf-accent) !important;
           }
       }
 
       .inv-name {
-          color: #e5e7eb !important;
+          color: var(--cf-text) !important;
       }
 
       .inv-type {
-          color: #64748b !important;
+          color: var(--cf-text-4) !important;
       }
 
       .inv-value {
-          color: #e5e7eb !important;
+          color: var(--cf-text) !important;
       }
 
       .inv-chevron {
-          color: #475569 !important;
+          color: var(--cf-text-4) !important;
       }
 
       .btn-add-investment {
-          background: rgba(79, 110, 247, 0.2) !important;
-          color: #a5b4fc !important;
-          border: 1px solid rgba(79, 110, 247, 0.35) !important;
+          background: rgba(var(--cf-primary-rgb), 0.2) !important;
+          color: var(--cf-primary-text) !important;
+          border: 1px solid rgba(var(--cf-primary-rgb), 0.35) !important;
 
           &:hover {
-              background: rgba(79, 110, 247, 0.32) !important;
+              background: rgba(var(--cf-primary-rgb), 0.32) !important;
           }
       }
 
       .btn-save-investment {
-          background: rgba(26, 122, 82, 0.2) !important;
-          color: #6ee7b7 !important;
-          border: 1px solid rgba(26, 122, 82, 0.35) !important;
+          background: rgba(var(--cf-success-rgb), 0.2) !important;
+          color: var(--cf-success) !important;
+          border: 1px solid rgba(var(--cf-success-rgb), 0.35) !important;
       }
 
       .confirm-card {
-          background: #1f2937 !important;
-          border: 1px solid #334155 !important;
+          background: var(--cf-surface-3) !important;
+          border: 1px solid var(--cf-border-strong) !important;
       }
 
       .confirm-title {
-          color: #e5e7eb !important;
+          color: var(--cf-text) !important;
       }
 
       .confirm-msg {
-          color: #94a3b8 !important;
+          color: var(--cf-text-3) !important;
       }
 
       .btn-cancel-confirm {
           background: rgba(255, 255, 255, 0.07) !important;
-          color: #94a3b8 !important;
+          color: var(--cf-text-3) !important;
       }
   }

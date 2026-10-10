@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const logger = require('../utils/logger');
 
 // Import refactored route modules
 const cashFlowRoutes = require('./cashFlow.routes');
@@ -10,16 +11,7 @@ const aiReportsRoutes = require('./aiReports.routes');
 const budgetRoutes = require('./budget.routes');
 const goalsRoutes = require('./goals.routes');
 
-console.log('📌 Mounting goals routes on /goals');
-
-// Import legacy AI routes (not refactored yet)
-const aiRoutes = require('../ai.routes');
-
-// Mount routes
-router.use((req, res, next) => {
-    console.log(`🔍 Router handling: ${req.method} ${req.path}`);
-    next();
-});
+const aiRoutes = require('./ai.routes');
 
 router.use('/goals', goalsRoutes);
 router.use('/budget', budgetRoutes);
@@ -29,9 +21,8 @@ router.use('/conversations', conversationsRoutes);
 router.use('/ai-reports', aiReportsRoutes);
 router.use('/', cashFlowRoutes);
 
-console.log('✅ All routes mounted');
-
-// Legacy AI routes
 router.use('/ai', aiRoutes);
+
+logger.debug('All /api routes mounted');
 
 module.exports = router;

@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -6,6 +6,7 @@ import { Installment, InstallmentStatus, LoanComponent, MilestonePayment } from 
 // JsonPipe
 @Component({
   selector: 'app-installment-card',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [CommonModule, TranslateModule, MatTooltipModule],
   templateUrl: './installment-card.component.html',

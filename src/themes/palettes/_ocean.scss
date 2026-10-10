@@ -1,0 +1,25 @@
+// Ocean - calm fintech blue with a teal accent. Soft blue-grey page, white cards.
+$palette: (
+  light: (
+    bg: #f4f7fb, surface: #ffffff, surface-2: #f7f9fc, surface-3: #eef3f9, surface-4: #dfe7f1, header: #f7f9fc,
+    border: #e1e8f0, border-strong: #c5d2e0,
+    text-strong: #0b1b2b, text: #142538, text-2: #3d5168, text-3: #56697f, text-4: #7d8fa3,
+    primary: #1d64d8, primary-strong: #1550b0, primary-text: #1550b0, primary-soft: #e8f0fd, primary-border: #bcd3f7, on-primary: #ffffff,
+    accent: #0e7f91,
+    success: #12784d, success-soft: #e3f5ec, success-solid: #16a34a, success-toast: #0e6842,
+    danger: #c62828, danger-soft: #fde8e8, danger-solid: #dc2626, danger-toast: #b91c1c,
+    warning: #9a5b00, warning-soft: #fff3dc, warning-solid: #f59e0b,
+    tooltip-bg: #12263f,
+  ),
+  dark: (
+    bg: #0a1220, surface: #0f1a2c, surface-2: #13213a, surface-3: #182944, surface-4: #233a5c, header: #0b1526,
+    border: #1c2d47, border-strong: #2b4266,
+    text-strong: #f5f9ff, text: #e2eaf4, text-2: #c3d0e0, text-3: #8fa3bb, text-4: #6a7f99,
+    primary: #2563eb, primary-strong: #1d4ed8, primary-text: #8ab8ff, primary-soft: #142a4d, primary-border: #24467a, on-primary: #ffffff,
+    accent: #22c3e6,
+    success: #5ee0a6, success-soft: #0d2e23, success-solid: #16a34a, success-toast: #0e6842,
+    danger: #ff9b9b, danger-soft: #3b1519, danger-solid: #dc2626, danger-toast: #b91c1c,
+    warning: #ffd166, warning-soft: #33270b, warning-solid: #f59e0b,
+    tooltip-bg: #182944,
+  ),
+);

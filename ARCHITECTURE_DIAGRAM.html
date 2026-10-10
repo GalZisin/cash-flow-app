@@ -1,0 +1,631 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cash Flow App - תרשים ארכיטקטורה</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --panel: #111c33;
+    --panel-border: #1e293b;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    font-family: "Heebo", "Segoe UI", Arial, sans-serif;
+    background: radial-gradient(1200px 600px at 80% -10%, #1e293b 0%, var(--bg) 60%);
+    color: var(--text);
+    min-height: 100vh;
+  }
+  /* page fills the screen; on ultra-wide screens it stays centred */
+  .page { width: 100%; max-width: 2600px; margin: 0 auto; padding: 0 24px 40px; }
+
+  header {
+    padding: 28px 8px 12px;
+    display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; justify-content: space-between;
+  }
+  h1 { margin: 0; font-size: clamp(22px, 1.6vw, 32px); font-weight: 700; }
+  h1 small { display: block; font-size: clamp(12px, 0.8vw, 15px); color: var(--muted); font-weight: 400; margin-top: 6px; }
+  h2 { font-size: clamp(18px, 1.2vw, 24px); margin: 26px 8px 6px; }
+  .lead { margin: 0 8px 12px; color: var(--muted); font-size: 14px; line-height: 1.6; max-width: 1100px; }
+
+  .stats { display: flex; gap: 10px; flex-wrap: wrap; }
+  .stat {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 8px 14px; font-size: 13px; color: var(--muted); min-width: 92px; text-align: center;
+  }
+  .stat b { display: block; font-size: 20px; color: var(--text); }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 8px 18px; padding: 6px 8px 12px; font-size: 13px; color: var(--muted); }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+  .legend i { width: 14px; height: 14px; border-radius: 4px; display: inline-block; flex: none; }
+  .legend .line { width: 28px; height: 0; border-top: 3px solid; border-radius: 0; }
+  .legend .line.dashed { border-top-style: dashed; }
+  .hint { padding: 0 8px 10px; font-size: 13px; color: var(--muted); }
+
+  /* the diagram scales with the screen width; below the min width it scrolls sideways */
+  .canvas {
+    margin: 0 0 8px; background: var(--panel); border: 1px solid var(--panel-border); border-radius: 14px;
+    overflow-x: auto; overflow-y: hidden; direction: ltr; padding: 6px;
+  }
+  .canvas svg { display: block; width: 100%; height: auto; }
+  .canvas.overview svg { min-width: 1000px; }
+  .canvas.detailed svg { min-width: 1500px; }
+
+  /* nodes */
+  .node { cursor: pointer; transition: opacity .15s; }
+  .node rect.box { stroke-width: 2; rx: 12; ry: 12; }
+  .node text { pointer-events: none; }
+  .node .title { font-size: 15px; font-weight: 700; fill: #f8fafc; direction: rtl; }
+  .node .title.big { font-size: 19px; }
+  .node .file { font-size: 11px; fill: #dbeafe; direction: ltr; font-family: Consolas, "Courier New", monospace; }
+  .node .sub { font-size: 11.5px; fill: #e2e8f0; direction: rtl; }
+  .node .sub.big { font-size: 13px; }
+  .node.dim { opacity: .18; }
+  .node.hi rect.box { stroke: #fff; stroke-width: 3; filter: drop-shadow(0 0 8px rgba(255,255,255,.6)); }
+
+  /* bands */
+  .band rect { fill-opacity: .07; stroke-opacity: .35; stroke-width: 1.5; stroke-dasharray: 6 5; rx: 18; }
+  .band text { font-size: 18px; font-weight: 700; direction: rtl; }
+  .band .port { font-size: 12px; font-weight: 400; direction: ltr; font-family: Consolas, monospace; }
+
+  /* edges */
+  .edge { fill: none; stroke-width: 2; opacity: .85; transition: opacity .15s, stroke-width .15s; }
+  .edge.thick { stroke-width: 3.5; }
+  .edge.dim { opacity: .06; }
+  .edge.hi { opacity: 1; stroke-width: 4; }
+  .edge.http { stroke-dasharray: 7 5; }
+  .edge.ai { stroke-dasharray: 4 4; }
+  .edge.cross { stroke-dasharray: 2 4; }
+  .edge-label { font-size: 11px; fill: #cbd5e1; font-family: Consolas, monospace; direction: ltr; pointer-events: none; paint-order: stroke; stroke: var(--panel); stroke-width: 4px; }
+  .edge-label.big { font-size: 13px; font-family: "Heebo", "Segoe UI", sans-serif; }
+  .edge-label.rtl { direction: rtl; font-family: "Heebo", "Segoe UI", sans-serif; }
+  .edge-label.dim, .label-pill.dim { opacity: .1; }
+  .label-pill { fill: #0b1222; stroke-width: 1; stroke-opacity: .8; }
+  .edge-label { stroke: none; paint-order: normal; }
+
+  /* info panel */
+  #info {
+    position: fixed; left: 20px; bottom: 20px; width: 400px; max-width: calc(100vw - 40px); max-height: 60vh; overflow: auto;
+    background: #0b1222; border: 1px solid #334155; border-radius: 14px; padding: 16px 18px;
+    box-shadow: 0 20px 50px rgba(0,0,0,.5); display: none; z-index: 10; font-size: 14px;
+  }
+  #info.open { display: block; }
+  #info h3 { margin: 0 0 4px; font-size: 18px; padding-left: 24px; }
+  #info .file { font-family: Consolas, monospace; font-size: 12px; color: #93c5fd; direction: ltr; text-align: left; word-break: break-all; }
+  #info p { color: var(--muted); line-height: 1.5; margin: 10px 0; }
+  #info ul { margin: 6px 0 0; padding-inline-start: 18px; color: var(--text); }
+  #info li { margin: 3px 0; }
+  #info .close { position: absolute; left: 12px; top: 10px; cursor: pointer; color: var(--muted); font-size: 18px; }
+  #info .tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; margin-bottom: 6px; color: #fff; }
+
+  /* flows */
+  .flow { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 14px; padding: 14px 18px; margin: 0 0 14px; }
+  .flow h4 { margin: 0 0 10px; font-size: 16px; }
+  .steps { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .step { padding: 6px 12px; border-radius: 999px; font-size: 13px; color: #fff; white-space: nowrap; }
+  .arrow { color: var(--muted); font-size: 16px; }
+  .note { font-size: 13px; color: var(--muted); margin-top: 8px; }
+  footer { padding: 10px 8px 0; font-size: 12px; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="page">
+
+<header>
+  <h1>Cash Flow App - תרשים ארכיטקטורה וזרימה
+    <small>Angular 21 (לקוח) ← REST/JSON → Express 5 (שרת) → SQL Server (CashFlowDB) | AI דרך Ollama מקומי או API מרוחק</small>
+  </h1>
+  <div class="stats" id="stats"></div>
+</header>
+
+<div class="legend" id="legendLayers"></div>
+
+<h2>1. מבט-על: איך הפרויקט בנוי</h2>
+<p class="lead">שלוש שכבות. הדפדפן מריץ את Angular, שמדבר עם שרת Express ב-HTTP בלבד. השרת מחולק ל-Routes, Services ו-Repositories, ורק ה-Repositories ניגשים ל-SQL Server. מודול ה-AI הוא ענף צדדי בשרת: הוא בונה סיכום פיננסי קומפקטי ושולח אותו למודל שפה, מקומי או מרוחק.</p>
+<div class="canvas overview"><svg id="svgOverview" xmlns="http://www.w3.org/2000/svg"></svg></div>
+<div class="hint">ריחוף על קופסה מדגיש את החיבורים שלה. לחיצה פותחת פרטים.</div>
+
+<h2>2. תרשים מפורט: כל רכיב ומי פונה למי</h2>
+<div class="legend" id="legendEdges"></div>
+<div class="hint">ריחוף על קופסה מדגיש את כל מי שפונה אליה ואת כל מי שהיא פונה אליו ומעמעם את השאר. לחיצה פותחת פרטים על הרכיב. במסכים צרים התרשים נגלל אופקית.</div>
+<div class="canvas detailed"><svg id="svgDetailed" xmlns="http://www.w3.org/2000/svg"></svg></div>
+
+<div id="info"><span class="close" onclick="closeInfo()">✕</span><div id="infoBody"></div></div>
+
+<h2>3. שלוש זרימות לדוגמה</h2>
+<div id="flows"></div>
+
+<footer>נוצר אוטומטית מתוך סריקת הקוד בתאריך 2026-10-09, עודכן אחרי יישום הצעות הייעול. קובץ עצמאי ללא תלויות חיצוניות, ניתן לפתוח ישירות בדפדפן.</footer>
+</div>
+
+<script>
+// ---------------------------------------------------------------- colors
+const COLORS = {
+  shell: '#6366f1', feature: '#3b82f6', ngsvc: '#06b6d4', http: '#f59e0b', entry: '#f97316',
+  route: '#fb923c', service: '#22c55e', repo: '#a855f7', db: '#ec4899', sql: '#ef4444', ext: '#64748b'
+};
+const EDGE_COLORS = {
+  ui: '#60a5fa', state: '#22d3ee', http: '#fbbf24', call: '#4ade80', data: '#c084fc',
+  sql: '#f472b6', ai: '#cbd5e1', cross: '#fb7185'
+};
+const LAYER_NAMES = {
+  shell: 'תשתית לקוח', feature: 'קומפוננטת מסך (Angular)', ngsvc: 'שירות Angular', http: 'שכבת HTTP',
+  entry: 'כניסת שרת', route: 'Route (Express)', service: 'Service (לוגיקה עסקית)', repo: 'Repository (גישה לנתונים)',
+  db: 'שכבת DB', sql: 'SQL Server', ext: 'שירות חיצוני'
+};
+const EDGE_NAMES = {
+  ui: 'קומפוננטה → שירות', state: 'שירות ↔ שירות (state בלקוח)', http: 'קריאת HTTP', call: 'קריאת פונקציה',
+  data: 'service → repository', sql: 'גישה ל-DB', ai: 'קריאה למודל AI', cross: 'קריאה חוצת שכבות (לתשומת לב)'
+};
+const NS = 'http://www.w3.org/2000/svg';
+
+// ================================================================ generic renderer
+function el(tag, attrs, parent) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+
+const boxOverlap = (a, b, pad = 0) => a.x < b.x + b.w + pad && a.x + a.w + pad > b.x && a.y < b.y + b.h + pad && a.y + a.h + pad > b.y;
+window.__layoutIssues = [];
+
+/** Verifies: card text inside its card, no label over a card, no overlapping labels or cards, nothing off-canvas. */
+function checkLayout(svg, N, labels, cfg, bandBoxes = []) {
+  const issue = (m) => window.__layoutIssues.push(svg.id + ': ' + m);
+  const solid = N.filter(n => !n.container);
+  svg.querySelectorAll('g.node').forEach(g => {
+    const n = N.find(x => x.id === g.dataset.id);
+    g.querySelectorAll('text').forEach(t => {
+      const b = t.getBBox();
+      if (b.x < n.x + 2 || b.x + b.width > n.x + n.w - 2 || b.y < n.y || b.y + b.height > n.y + n.h) issue('text "' + t.textContent + '" overflows card ' + n.id);
+    });
+  });
+  solid.forEach((a, i) => solid.slice(i + 1).forEach(b => { if (boxOverlap(a, b)) issue('cards ' + a.id + ' and ' + b.id + ' overlap'); }));
+  bandBoxes.forEach((b, k) => solid.forEach(n => { if (boxOverlap(b, n)) issue('band title #' + k + ' overlaps card ' + n.id); }));
+  labels.forEach((l, i) => {
+    solid.forEach(n => { if (boxOverlap(l, n)) issue('arrow label #' + i + ' covers card ' + n.id); });
+    bandBoxes.forEach((b, k) => { if (boxOverlap(l, b)) issue('arrow label #' + i + ' covers band title #' + k); });
+    labels.slice(i + 1).forEach((o, j) => { if (boxOverlap(l, o)) issue('arrow labels #' + i + ' and #' + (i + j + 1) + ' overlap'); });
+  });
+  [...N, ...labels].forEach(r => { if (r.x < 0 || r.y < 0 || r.x + r.w > cfg.width || r.y + r.h > cfg.height) issue('element off canvas at ' + Math.round(r.x) + ',' + Math.round(r.y)); });
+}
+
+/** Measures text width in the given svg with the given class (exact, font-aware). */
+function makeMeasurer(svg) {
+  const probe = el('text', { x: -9999, y: -9999, visibility: 'hidden' }, svg);
+  return (text, cls) => { probe.setAttribute('class', cls); probe.textContent = text; return probe.getComputedTextLength(); };
+}
+
+/** Wraps text into lines that really fit maxW (measured), breaking long tokens at / . , - */
+function wrapFit(text, maxW, cls, measure) {
+  if (!text) return [];
+  const fits = (s) => measure(s, cls) <= maxW;
+  const splitLong = (tok) => {
+    const parts = []; let cur = '';
+    for (const ch of tok) {
+      if (fits(cur + ch)) { cur += ch; continue; }
+      // break at the last separator if there is one, else hard-break
+      const m = cur.match(/^(.*[\/.,\-])(.+)$/);
+      if (m && m[1].length) { parts.push(m[1]); cur = m[2] + ch; } else { parts.push(cur); cur = ch; }
+    }
+    if (cur) parts.push(cur);
+    return parts;
+  };
+  const tokens = []; // { t, glue }  glue = this piece continues a long token that was broken
+  text.split(' ').forEach((tok) => {
+    if (fits(tok)) tokens.push({ t: tok, glue: false });
+    else splitLong(tok).forEach((piece, i) => tokens.push({ t: piece, glue: i > 0 }));
+  });
+  const lines = []; let cur = '';
+  for (const { t, glue } of tokens) {
+    const candidate = cur ? cur + (glue ? '' : ' ') + t : t;
+    if (fits(candidate)) cur = candidate; else { if (cur) lines.push(cur); cur = t; }
+  }
+  if (cur) lines.push(cur);
+  return lines;
+}
+
+/**
+ * Renders one diagram: { svg, width, height, bands, nodes, edges, big }.
+ * Node: { id, layer, x, y, w, h, title, file, sub, desc, container }.
+ * Edge: { from, to, type, label }.
+ */
+function renderDiagram(cfg) {
+  const svg = cfg.svg;
+  const N = cfg.nodes, E = cfg.edges;
+  const big = !!cfg.big;
+  const byId = Object.fromEntries(N.map(n => [n.id, n]));
+  svg.setAttribute('viewBox', `0 0 ${cfg.width} ${cfg.height}`);
+  const measure = makeMeasurer(svg);
+
+  // markers
+  const defs = el('defs', {}, svg);
+  for (const t in EDGE_COLORS) {
+    const m = el('marker', { id: `${svg.id}-arrow-${t}`, viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: big ? 6 : 7, markerHeight: big ? 6 : 7, orient: 'auto-start-reverse' }, defs);
+    el('path', { d: 'M0,0 L10,5 L0,10 z', fill: EDGE_COLORS[t] }, m);
+  }
+
+  // bands
+  const bandTexts = []; // band titles / ports are obstacles for arrow labels
+  (cfg.bands || []).forEach(b => {
+    const g = el('g', { class: 'band' }, svg);
+    const bx = b.x ?? 30, bw = b.w ?? cfg.width - 60;
+    el('rect', { x: bx, y: b.y, width: bw, height: b.h, fill: b.color, stroke: b.color }, g);
+    if (b.title) {
+      // titleLeft: title on the left side (above the port text) when the right side is busy
+      const t = b.titleLeft
+        ? el('text', { x: bx + 15, y: b.y + 24, 'text-anchor': 'end', fill: b.color }, g)
+        : el('text', { x: bx + bw - 15, y: b.y + 24, 'text-anchor': 'start', fill: b.color }, g);
+      t.textContent = b.title; bandTexts.push(t);
+    }
+    if (b.port) {
+      const p = el('text', { x: bx + 15, y: b.y + (b.titleLeft ? 46 : 24), class: 'port', 'text-anchor': 'start', fill: b.color }, g); p.textContent = b.port; bandTexts.push(p);
+    }
+  });
+  const bandBoxes = bandTexts.map(t => { const r = t.getBBox(); return { x: r.x - 4, y: r.y - 2, w: r.width + 8, h: r.height + 4 }; });
+
+  // ---- pass 1: fit text into every node (may grow the box height)
+  const titleCls = big ? 'title big' : 'title', subCls = big ? 'sub big' : 'sub';
+  const LH = { title: big ? 22 : 17, file: 13, sub: big ? 16 : 14 };
+  N.forEach(n => {
+    const maxW = n.w - 18;
+    n.lines = { title: wrapFit(n.title, maxW, titleCls, measure), file: wrapFit(n.file, maxW, 'file', measure), sub: wrapFit(n.sub, maxW, subCls, measure) };
+    if (n.container) return; // big background boxes: only a header line
+    const need = n.lines.title.length * LH.title + n.lines.file.length * LH.file + n.lines.sub.length * LH.sub + 14;
+    if (need > n.h) n.h = need; // grow downwards instead of overflowing
+  });
+
+  const labelLayer = el('g', {});
+  // ---- pass 2: edges (ports spread along the box edge, sorted by target position)
+  const center = n => ({ cx: n.x + n.w / 2, cy: n.y + n.h / 2 });
+  E.forEach(e => {
+    const a = byId[e.from], b = byId[e.to];
+    if (!a || !b) throw new Error('unknown node in edge ' + e.from + '->' + e.to);
+    e.dir = b.y >= a.y + a.h ? 'down' : a.y >= b.y + b.h ? 'up' : (b.x > a.x ? 'right' : 'left');
+  });
+  const spread = (list, keyFn, posFn, assign) => {
+    const groups = {};
+    list.forEach(e => { const k = keyFn(e); (groups[k] = groups[k] || []).push(e); });
+    Object.values(groups).forEach(g => { g.sort((p, q) => posFn(p) - posFn(q)); g.forEach((e, i) => assign(e, i, g.length)); });
+  };
+  const vert = E.filter(e => e.dir === 'down' || e.dir === 'up'), horiz = E.filter(e => !vert.includes(e));
+  spread(vert, e => e.from + e.dir, e => center(byId[e.to]).cx, (e, i, k) => { const a = byId[e.from]; e.sx = a.x + a.w * (i + 1) / (k + 1); e.sy = e.dir === 'down' ? a.y + a.h : a.y; });
+  spread(vert, e => e.to + e.dir, e => center(byId[e.from]).cx, (e, i, k) => { const b = byId[e.to]; e.tx = b.x + b.w * (i + 1) / (k + 1); e.ty = e.dir === 'down' ? b.y : b.y + b.h; });
+  spread(horiz, e => e.from + e.dir, e => center(byId[e.to]).cy, (e, i, k) => { const a = byId[e.from]; e.sy = a.y + a.h * (i + 1) / (k + 1); e.sx = e.dir === 'right' ? a.x + a.w : a.x; });
+  spread(horiz, e => e.to + e.dir, e => center(byId[e.from]).cy, (e, i, k) => { const b = byId[e.to]; e.ty = b.y + b.h * (i + 1) / (k + 1); e.tx = e.dir === 'right' ? b.x : b.x + b.w; });
+
+  const edgeLayer = el('g', {}, svg);
+  const labels = [];
+  E.forEach(e => {
+    let d;
+    if (e.dir === 'down' || e.dir === 'up') { const dy = (e.ty - e.sy) * 0.5; d = `M${e.sx},${e.sy} C${e.sx},${e.sy + dy} ${e.tx},${e.ty - dy} ${e.tx},${e.ty}`; }
+    else { const dx = (e.tx - e.sx) * 0.5; d = `M${e.sx},${e.sy} C${e.sx + dx},${e.sy} ${e.tx - dx},${e.ty} ${e.tx},${e.ty}`; }
+    e.el = el('path', { d, class: 'edge ' + e.type + (big ? ' thick' : ''), stroke: EDGE_COLORS[e.type], 'marker-end': `url(#${svg.id}-arrow-${e.type})` }, edgeLayer);
+    if (e.label) {
+      const rtl = /[\u0590-\u05FF]/.test(e.label);
+      const cls = 'edge-label' + (big ? ' big' : '') + (rtl ? ' rtl' : '');
+      const w = measure(e.label, cls) + 14, h = big ? 22 : 18;
+      const mx = (e.sx + e.tx) / 2, my = (e.sy + e.ty) / 2;
+      const solid = [...N.filter(n => !n.container), ...bandBoxes];
+      let box = null;
+      // slide along the arrow and sideways until the pill covers no card and no other label
+      outer: for (const t of [0.5, 0.4, 0.6, 0.3, 0.7, 0.2, 0.8]) {
+        const px = e.sx + (e.tx - e.sx) * t, py = e.sy + (e.ty - e.sy) * t;
+        for (const [dx, dy] of [[0, 0], [0, -14], [0, 14], [-60, 0], [60, 0], [0, -28], [0, 28], [-120, 0], [120, 0]]) {
+          const c = { x: px - w / 2 + dx, y: py - h / 2 + dy, w, h };
+          if (c.x < 2 || c.x + w > cfg.width - 2 || c.y < 2 || c.y + h > cfg.height - 2) continue;
+          if (solid.some(n => boxOverlap(c, n, 3)) || labels.some(l => boxOverlap(c, l, 3))) continue;
+          box = c; break outer;
+        }
+      }
+      if (!box) box = { x: mx - w / 2, y: my - h / 2, w, h };
+      labels.push(box);
+      const bg = el('rect', { x: box.x, y: box.y, width: w, height: h, rx: h / 2, class: 'label-pill', stroke: EDGE_COLORS[e.type] }, labelLayer);
+      const t = el('text', { x: box.x + w / 2, y: box.y + h / 2 + (big ? 5 : 4), class: cls, 'text-anchor': 'middle' }, labelLayer);
+      t.textContent = e.label; e.labelEl = t; e.labelBg = bg;
+    }
+  });
+
+  // ---- pass 3: nodes
+  const nodeLayer = el('g', {}, svg);
+  svg.appendChild(labelLayer); // labels above cards
+  const nodeEls = [];
+  let pinned = null;
+  N.forEach(n => {
+    const g = el('g', { class: 'node', 'data-id': n.id }, nodeLayer);
+    const c = COLORS[n.layer];
+    el('rect', { class: 'box', x: n.x, y: n.y, width: n.w, height: n.h, fill: n.container ? 'transparent' : c,
+      'fill-opacity': n.container ? 0 : (n.layer === 'ext' ? .35 : .85), stroke: c, 'stroke-dasharray': n.layer === 'ext' ? '8 5' : 'none' }, g);
+    const cx = n.x + n.w / 2;
+    // a line with no Hebrew is drawn LTR, so "+", "/" and "," stay in place after wrapping
+    const draw = (lines, cls, y, lh) => { lines.forEach(l => {
+      const t = el('text', { x: cx, y, class: cls, 'text-anchor': 'middle', style: /[֐-׿]/.test(l) ? '' : 'direction:ltr' }, g);
+      t.textContent = l; y += lh;
+    }); return y; };
+    if (n.container) {
+      let y = n.y + 24; y = draw(n.lines.title, titleCls, y, LH.title); draw(n.lines.file, 'file', y, LH.file);
+    } else {
+      const total = n.lines.title.length * LH.title + n.lines.file.length * LH.file + n.lines.sub.length * LH.sub;
+      let y = n.y + (n.h - total) / 2 + (big ? 16 : 13);
+      y = draw(n.lines.title, titleCls, y, LH.title);
+      y = draw(n.lines.file, 'file', y, LH.file);
+      draw(n.lines.sub, subCls, y, LH.sub);
+    }
+    nodeEls.push(g);
+    g.addEventListener('mouseenter', () => highlight(n.id));
+    g.addEventListener('mouseleave', () => { if (!pinned) clear(); else highlight(pinned); });
+    g.addEventListener('click', ev => { ev.stopPropagation(); pinned = n.id; highlight(n.id); showInfo(n, E, byId); });
+  });
+  svg.addEventListener('click', () => { pinned = null; clear(); closeInfo(); });
+
+  function highlight(id) {
+    const related = new Set([id]);
+    E.forEach(e => { if (e.from === id || e.to === id) { related.add(e.from); related.add(e.to); } });
+    nodeEls.forEach(g => { const nid = g.dataset.id; g.classList.toggle('dim', !related.has(nid)); g.classList.toggle('hi', nid === id); });
+    E.forEach(e => { const on = e.from === id || e.to === id; e.el.classList.toggle('hi', on); e.el.classList.toggle('dim', !on); if (e.labelEl) { e.labelEl.classList.toggle('dim', !on); e.labelBg.classList.toggle('dim', !on); } });
+  }
+  function clear() {
+    nodeEls.forEach(g => g.classList.remove('dim', 'hi'));
+    E.forEach(e => { e.el.classList.remove('hi', 'dim'); if (e.labelEl) { e.labelEl.classList.remove('dim'); e.labelBg.classList.remove('dim'); } });
+  }
+  checkLayout(svg, N, labels, cfg, bandBoxes);
+  return E.length;
+}
+
+function showInfo(n, E, byId) {
+  const out = E.filter(e => e.from === n.id).map(e => byId[e.to].title + (e.label ? ` (${e.label})` : ''));
+  const inn = E.filter(e => e.to === n.id).map(e => byId[e.from].title);
+  document.getElementById('infoBody').innerHTML = `
+    <span class="tag" style="background:${COLORS[n.layer]}">${LAYER_NAMES[n.layer]}</span>
+    <h3>${n.title}</h3>
+    <div class="file">${n.file || ''}</div>
+    <p>${n.desc || ''}</p>
+    ${out.length ? `<b>פונה אל (${out.length}):</b><ul>${out.map(x => `<li>${x}</li>`).join('')}</ul>` : ''}
+    ${inn.length ? `<b style="display:block;margin-top:8px">מי פונה אליו (${inn.length}):</b><ul>${inn.map(x => `<li>${x}</li>`).join('')}</ul>` : ''}`;
+  document.getElementById('info').classList.add('open');
+}
+function closeInfo() { document.getElementById('info').classList.remove('open'); }
+
+// ================================================================ 1. OVERVIEW diagram (few boxes, the big picture)
+const O = [];
+const onode = (id, layer, x, y, w, h, title, file, sub, desc) => O.push({ id, layer, x, y, w, h, title, file, sub, desc });
+
+onode('o_ui',    'feature', 70,   100, 470, 120, 'ממשק משתמש: 6 מסכים', 'src/app/features/', 'תזרים מזומנים, פריסות תשלומים, השקעות, תקציב, יעדים, עוזר AI. כל מסך נטען לפי דרישה (lazy).', 'המסכים של האפליקציה. כל מסך הוא קומפוננטת Angular עצמאית שמשתמשת בשירותים.');
+onode('o_svc',   'ngsvc',   590,  100, 420, 120, 'שירותי Angular', 'src/app/services/', '9 שירותי נתונים: HttpClient + signals. כל המסכים עוברים דרכם, לא ניגשים לשרת ישירות.', 'שכבת הנתונים בלקוח: טעינה ושמירה דרך HTTP, והחזקת state ב-signals.');
+onode('o_infra', 'shell',   1060, 100, 470, 120, 'תשתית לקוח', 'app.config / app.routes / interceptors', 'ניתוב, תרגום עברית/אנגלית, מצב כהה/בהיר, interceptor שמציג שגיאות שרת ב-Snackbar.', 'ההגדרות הגלובליות של Angular.');
+
+onode('o_http',  'http',    70,   290, 1460, 56, 'HTTP REST / JSON    ·    /api/*    ·    http://localhost:3000', '', '', 'כל התקשורת בין הלקוח לשרת. בפרודקשן השרת מגיש גם את הלקוח, אז הכל באותו origin.');
+
+onode('o_routes','route',   70,   430, 330, 120, 'Routes', 'server/routes/', '8 מודולים לפי נושא. ולידציה של הקלט, asyncHandler, rate limit על AI.', 'שכבת ה-HTTP של השרת: מתרגמת בקשה לקריאה ל-service.');
+onode('o_serv',  'service', 450,  430, 330, 120, 'Services', 'server/services/', 'הלוגיקה העסקית: נורמליזציה, ניתוח יעדים, תקציב חודשי, סיכום פיננסי.', 'הלוגיקה העסקית, ללא SQL וללא HTTP.');
+onode('o_repo',  'repo',    830,  430, 330, 120, 'Repositories', 'server/repositories/ + db/', 'הגישה היחידה ל-DB: טרנזקציות, מיפוי אובייקטים ↔ שורות, שמירה דיפרנציאלית.', 'כל ה-SQL נמצא כאן.');
+onode('o_ai',    'service', 1210, 430, 320, 120, 'מודול AI', 'routes/ai.routes.js, services/ai.service.js', 'בונה סיכום פיננסי קומפקטי (עם cache), מרכיב prompt ושולח למודל. ללא AI האפליקציה עובדת כרגיל.', 'ענף ה-AI: הסיכום בלבד נשלח למודל, לא הנתונים הגולמיים.');
+
+onode('o_sql',   'sql',     450,  640, 710, 90, 'SQL Server · CashFlowDB', 'server/db/schema.sql', '19 טבלאות: תזרים, פריסות, השקעות, תקציב, יעדים, שיחות, דוחות AI', 'מסד הנתונים. חיבור דרך DB_CONNECTION_STRING ב-server/.env.');
+onode('o_model', 'ext',     1210, 640, 320, 90, 'מודל שפה', 'AI_PROVIDER + AI_BASE_URL', 'Ollama מקומי, Ollama ברשת, או API מרוחק (Groq ועוד)', 'שרת המודל. הכתובת בקובץ .env, ולכן יכול לרוץ על מכונה אחרת.');
+
+const OE = [
+  { from: 'o_ui', to: 'o_svc', type: 'ui' },
+  { from: 'o_infra', to: 'o_svc', type: 'state' },
+  { from: 'o_svc', to: 'o_http', type: 'http', label: 'GET / POST / PUT / DELETE' },
+  { from: 'o_http', to: 'o_routes', type: 'http', label: 'Express' },
+  { from: 'o_http', to: 'o_ai', type: 'http', label: '/api/ai/*' },
+  { from: 'o_routes', to: 'o_serv', type: 'call' },
+  { from: 'o_serv', to: 'o_repo', type: 'data' },
+  { from: 'o_repo', to: 'o_sql', type: 'sql', label: 'T-SQL (mssql)' },
+  { from: 'o_ai', to: 'o_repo', type: 'data' },
+  { from: 'o_ai', to: 'o_model', type: 'ai', label: 'prompt עם סיכום JSON' }
+];
+renderDiagram({
+  svg: document.getElementById('svgOverview'), width: 1600, height: 780, big: true,
+  bands: [
+    { y: 50, h: 210, color: COLORS.feature, title: 'דפדפן · Angular 21', port: 'http://localhost:4300' },
+    { y: 366, h: 214, color: COLORS.service, title: 'שרת · Node.js 24 + Express 5', port: 'http://localhost:3000', titleLeft: true },
+    { y: 610, h: 150, color: COLORS.sql, title: 'אחסון ושירותים חיצוניים', port: 'SQL Server :1433  |  AI model', titleLeft: true }
+  ],
+  nodes: O, edges: OE
+});
+
+// ================================================================ 2. DETAILED diagram
+const N = [];
+function node(id, layer, x, y, w, h, title, file, sub, desc, container) { N.push({ id, layer, x, y, w, h, title, file, sub, desc, container }); }
+
+// --- Client: shell row
+node('shell',   'shell', 60,  110, 330, 64, 'App Shell: ניווט, ערכת נושא, שפה', 'src/app/app.component.ts', 'RouterOutlet + ThemeService + LanguageService', 'המעטפת של האפליקציה: סרגל ניווט, החלפת מצב כהה/בהיר, החלפת עברית/אנגלית (RTL/LTR).');
+node('routes',  'shell', 420, 110, 300, 64, 'ניתוב עצל (Lazy Routes)', 'src/app/app.routes.ts', '6 מסכים, כל אחד נטען לפי דרישה', 'כל מסך נטען כ-chunk נפרד רק כשנכנסים אליו.');
+node('config',  'shell', 750, 110, 330, 64, 'הגדרות אפליקציה (Providers)', 'src/app/app.config.ts', 'HttpClient + Interceptor, Router, Animations, i18n', 'רישום הספקים הגלובליים: HttpClient עם interceptor, ngx-translate, Material defaults.');
+node('shared',  'shell', 1110, 110, 300, 64, 'Directives + Models + Utils', 'src/app/directives, models, utils', 'אנימציות GSAP, מודלים, אנליטיקת הוצאות', 'דירקטיבות אנימציה (מונה, התקדמות, skeleton), מודלים משותפים ופונקציות עזר.');
+node('i18n',    'shell', 1440, 110, 300, 64, 'תרגומים', 'public/assets/i18n/he.json, en.json', 'ngx-translate HTTP loader', 'קובצי תרגום שנטענים דרך HTTP בעת עליית האפליקציה.');
+
+// --- Client: feature components
+const FY = 250, FH = 112, FW = 250, FS = 280;
+node('f_cash',  'feature', 60,           FY, FW, FH, 'תזרים מזומנים', 'features/cash-flow/', 'CashFlowTable + Cards, PieChart, ExpenseList, CategorySelector, DefaultsDialog', 'טבלת התזרים החודשי: הכנסות, משכנתה, הלוואות, הוצאות קבועות ומיוחדות, חישוב יתרות, ברירות מחדל (קומפוננטה נפרדת), הדפסה.');
+node('f_inst',  'feature', 60+FS,        FY, FW, FH, 'פריסות תשלומים', 'features/installments/', 'Installments + Form, Card, Table, Header, EmptyState, Dialogs', 'ניהול עסקאות בתשלומים, מקדמות, אבני דרך ורכיבי הלוואה.');
+node('f_inv',   'feature', 60+FS*2,      FY, FW, FH, 'השקעות', 'features/investments/', 'Dashboard + List, Detail, Simulation', 'ניהול השקעות, עסקאות, צילומי שווי וחוקי סימולציה.');
+node('f_bud',   'feature', 60+FS*3,      FY, FW, FH, 'מעקב תקציב', 'features/budget-tracker/', 'BudgetTracker', 'תקציב חודשי לפי קטגוריות הוצאה והתראות חריגה.');
+node('f_goals', 'feature', 60+FS*4,      FY, FW, FH, 'יעדים פיננסיים', 'features/goals/', 'Goals', 'יצירת יעדים, ניתוח היתכנות וסימולציה של השפעתם על התזרים.');
+node('f_ai',    'feature', 60+FS*5,      FY, FW, FH, 'עוזר AI', 'features/ai-assistant/', 'AiAssistant + SankeyDiagram (d3)', 'צ׳אט פיננסי עם streaming, ניתוח מלא, סימולציית רכישה, ארכיון דוחות ושיחות, דיאגרמת Sankey.');
+
+// --- Client: Angular services
+const SY = 450, SH = 74, SW = 172, SS = 190;
+node('s_cash', 'ngsvc', 60,        SY, SW, SH, 'CashFlowService', 'services/cash-flow.service.ts', 'signal + observable', 'טעינה ושמירה של התזרים וברירות המחדל. state ב-signal, עם observable תואם לצרכנים הקיימים.');
+node('s_inst', 'ngsvc', 60+SS,     SY, SW, SH, 'InstallmentService', 'services/installment.service.ts', 'signals, חישובי תשלום', 'CRUD לפריסות + חישובי תשלום חודשי. מסנכרן עם CashFlowService.');
+node('s_inv',  'ngsvc', 60+SS*2,   SY, SW, SH, 'InvestmentService', 'services/investment.service.ts', 'BehaviorSubject', 'CRUD להשקעות, עסקאות וסימולציות.');
+node('s_bud',  'ngsvc', 60+SS*3,   SY, SW, SH, 'BudgetService', 'services/budget.service.ts', 'signals + computed', 'הגדרות תקציב, תקציב חודשי מחושב והתראות.');
+node('s_goal', 'ngsvc', 60+SS*4,   SY, SW, SH, 'GoalsService', 'services/goals.service.ts', 'signals', 'CRUD ליעדים וניתוח מחדש.');
+node('s_sim',  'ngsvc', 60+SS*5,   SY, SW, SH, 'CashFlowSimulation', 'services/cash-flow-simulation.service.ts', 'לקוח בלבד, ללא HTTP', 'משכפל את התזרים ומוסיף את השפעת היעדים. מאזין ל-CashFlowService ו-GoalsService. הטעינה מופעלת ממסך היעדים.');
+node('s_ai',   'ngsvc', 60+SS*6,   SY, SW, SH, 'AiService', 'services/ai.service.ts', 'HttpClient + fetch stream', 'סיכום, ניתוח, צ׳אט, צ׳אט ב-streaming (fetch) וסימולציית תרחיש.');
+node('s_conv', 'ngsvc', 60+SS*7,   SY, SW, SH, 'ConversationService', 'services/conversation.service.ts', 'signal', 'שמירה וטעינה של היסטוריית שיחות עם ה-AI.');
+node('s_rep',  'ngsvc', 60+SS*8,   SY, SW, SH, 'AiReportService', 'services/ai-report.service.ts', 'HttpClient', 'ארכיון דוחות AI (ניתוח, תובנות, תרחישים).');
+
+// --- HTTP band
+node('http', 'http', 60, 612, 1680, 60, 'HTTP REST / JSON  ·  http://localhost:3000/api', 'src/app/interceptors/http.interceptor.ts', 'httpInterceptor: לוג במצב פיתוח + הצגת שגיאות שרת ב-Snackbar. ‎/ai/chat-stream עובר ב-fetch ישיר (chunked text)', 'כל התקשורת בין הלקוח לשרת. CORS מוגבל ל-localhost:4300 כברירת מחדל (CORS_ORIGIN).');
+
+// --- Server entry
+node('index',  'entry', 60,  758, 760, 64, 'Express App', 'server/app.js + index.js', 'cors(origin) → json(limit) → log → /health → /api → static client → 404 → errorHandler', 'app.js בונה את האפליקציה (CORS מוגבל, גבול גוף בקשה, הגשת dist בפרודקשן). index.js מתחבר ל-SQL Server לפני ההאזנה וסוגר מסודר ב-SIGINT/SIGTERM.');
+node('router', 'entry', 860, 758, 880, 64, 'Router ראשי', 'server/routes/index.js', 'מרכיב את כל ה-routes תחת /api', 'מרכיב את כל מודולי ה-routes, כולל routes/ai.routes.js.');
+
+// --- Server routes (8 columns)
+const CX = i => 60 + i * 215, CW = 195;
+const RY = 866, RH = 80;
+node('r_cash', 'route', CX(0), RY, CW, RH, 'cashFlow.routes', 'routes/cashFlow.routes.js', 'GET/POST /cash-flow, /cash-flow-defaults', 'קריאה ושמירה של התזרים. אחרי POST מריץ analyzeAllGoals.');
+node('r_inst', 'route', CX(1), RY, CW, RH, 'installments.routes', 'routes/installments.routes.js', 'CRUD /installments', 'CRUD לפריסות.');
+node('r_inv',  'route', CX(2), RY, CW, RH, 'investments.routes', 'routes/investments.routes.js', 'CRUD /investments', 'CRUD להשקעות.');
+node('r_bud',  'route', CX(3), RY, CW, RH, 'budget.routes', 'routes/budget.routes.js', '/budget/settings, /monthly/:m, /alerts/:m', 'הגדרות תקציב ותקציב חודשי מחושב.');
+node('r_goal', 'route', CX(4), RY, CW, RH, 'goals.routes', 'routes/goals.routes.js', 'CRUD /goals, /overview, /timeline, /:id/analyze, /:id/integration', 'יעדים, סקירה, ציר זמן, ניתוח ואינטגרציה עם תזרים ופריסות.');
+node('r_conv', 'route', CX(5), RY, CW, RH, 'conversations.routes', 'routes/conversations.routes.js', 'CRUD /conversations', 'שיחות AI שמורות.');
+node('r_rep',  'route', CX(6), RY, CW, RH, 'aiReports.routes', 'routes/aiReports.routes.js', 'CRUD /ai-reports', 'ארכיון דוחות AI.');
+node('r_ai',   'route', CX(7), RY, CW, RH, 'ai.routes', 'routes/ai.routes.js', '/ai/summary, /analysis, /chat, /chat-stream, /scenario + rate limit', 'נתיבי AI במבנה השכבות: asyncHandler, ולידציה, rate limit. מקבלים את הסיכום הפיננסי משירות עם cache.');
+
+// --- Server services
+const VY = 1020, VH = 74;
+node('v_cash', 'service', CX(0), VY, CW, VH, 'cashFlow.service', 'services/cashFlow.service.js', 'ולידציה + נורמליזציה', 'ולידציה של מבנה החודשים ונורמליזציה של ברירות מחדל.');
+node('v_inst', 'service', CX(1), VY, CW, VH, 'installments.service', 'services/installments.service.js', 'נורמליזציה, id = uuid', 'CRUD + נורמליזציה של פריסה.');
+node('v_inv',  'service', CX(2), VY, CW, VH, 'investments.service', 'services/investments.service.js', '', 'CRUD להשקעות.');
+node('v_bud',  'service', CX(3), VY, CW, VH, 'budget.service', 'services/budget.service.js', 'מחשב תקציב חודשי מהתזרים', 'מחשב תקציב חודשי לפי קטגוריות מתוך נתוני התזרים.');
+node('v_goal', 'service', CX(4), VY, CW, VH, 'goals.service', 'services/goals.service.js', 'CRUD + analyzeAllGoals', 'CRUD ליעדים. כל שינוי מריץ ניתוח של כל היעדים: קריאה אחת, כתיבה אחת.');
+node('v_conv', 'service', CX(5), VY, CW, VH, 'conversations.service', 'services/conversations.service.js', '', 'שיחות AI.');
+node('v_rep',  'service', CX(6), VY, CW, VH, 'aiReports.service', 'services/aiReports.service.js', 'id = uuid', 'דוחות AI.');
+node('v_ai',   'service', CX(7), VY, CW, VH, 'ai.service', 'services/ai.service.js', 'AI_BASE_URL, AI_MODEL, timeout 60s', 'בונה את ה-prompts (persona + סיכום JSON), שולח למודל ב-HTTP (מקומי או מרוחק לפי AI_BASE_URL), מסנן בלוקי think, תומך ב-streaming. שגיאת חיבור הופכת ל-503 ברור.');
+
+node('v_analyzer',    'service', CX(4), 1134, CW, 66, 'goals-analyzer', 'services/goals-analyzer.service.js', 'היתכנות יעד מול תחזית תזרים (טהור)', 'מחשב האם יעד בר השגה: תחזית יתרה, מרווח ביטחון, התנגשויות. analyzeGoalSync הוא חישוב טהור על הקשר שנטען פעם אחת.');
+node('v_integration', 'service', CX(5), 1134, CW, 66, 'goals-integration', 'services/goals-integration.service.js', 'קישור יעד להוצאות ופריסות', 'מאתר הוצאות ופריסות שקשורות ליעד ומחשב התחייבויות עתידיות.');
+node('v_engine',      'service', CX(7), 1134, CW, 66, 'financialSummary', 'financialSummary.service.js + cashflow-engine.js', 'סיכום פיננסי עם cache 60s, חישובים ללא AI', 'financialSummary טוען תזרים, פריסות והשקעות פעם אחת ושומר את הסיכום ב-cache קצר (מתאפס בכל שינוי נתונים). cashflow-engine בונה את הסיכום ומדמה תרחיש רכישה.');
+
+// --- Repositories
+const PY = 1262, PH = 74;
+node('p_cash', 'repo', CX(0), PY, CW, PH, 'cashFlow.repository', 'repositories/cashFlow.repository.js', 'שמירה דיפרנציאלית (db/cashFlowDiff.js)', 'קורא חודשים ופריטים. שמירה משווה למצב הקיים וכותבת רק חודשים שהשתנו, בטרנזקציה אחת.');
+node('p_inst', 'repo', CX(1), PY, CW, PH, 'installments.repository', 'repositories/installments.repository.js', 'טבלת אב + 5 טבלאות בנות', 'פריסות עם רכיבי הלוואה, אבני דרך ותשלומים.');
+node('p_inv',  'repo', CX(2), PY, CW, PH, 'investments.repository', 'repositories/investments.repository.js', 'טבלת אב + 3 טבלאות בנות', 'השקעות, עסקאות, צילומי שווי, חוקי סימולציה.');
+node('p_bud',  'repo', CX(3), PY, CW, PH, 'budget.repository', 'repositories/budget.repository.js', 'שורה אחת של הגדרות', 'הגדרות תקציב.');
+node('p_goal', 'repo', CX(4), PY, CW, PH, 'goals.repository', 'repositories/goals.repository.js', 'findById, getActive, updateMany', 'יעדים פיננסיים כולל ניתוח שמור כ-JSON. updateMany כותב את כל היעדים בטרנזקציה אחת.');
+node('p_conv', 'repo', CX(5), PY, CW, PH, 'conversations.repository', 'repositories/conversations.repository.js', 'שיחות + הודעות', 'שיחות והודעות.');
+node('p_rep',  'repo', CX(6), PY, CW, PH, 'aiReports.repository', 'repositories/aiReports.repository.js', '', 'דוחות AI.');
+
+// --- DB layer
+node('helpers', 'db', 60,  1400, 1000, 64, 'db/helpers.js + db/mappers.js', 'server/db/helpers.js, mappers.js', 'פרמטרים מוקלדים, טרנזקציות, insertMany בחלקים, המרת שורות ↔ אובייקטים', 'שכבת עזר מעל חבילת mssql: טיפוסי עמודות מפורשים, טרנזקציות, הכנסה מרובת שורות, מיפוי בין אובייקטי האפליקציה לשורות SQL.');
+node('pool',    'db', 1100, 1400, 400, 64, 'Connection Pool', 'server/db/connection.js', 'DB_CONNECTION_STRING מ-.env, mssql או msnodesqlv8', 'pool יחיד משותף. בוחר דרייבר לפי מחרוזת החיבור (SQL login או Windows Authentication).');
+
+// --- SQL Server (container) + table groups
+node('sql', 'sql', 60, 1550, 1440, 160, 'SQL Server - CashFlowDB (19 טבלאות)', 'server/db/schema.sql', '', 'מסד הנתונים. כל טבלאות הבנות עם ON DELETE CASCADE.', true);
+const TY = 1600, TH = 96;
+[
+  ['t_cash', 'תזרים', 'cash_flow_months, cash_flow_items, cash_flow_defaults, cash_flow_default_items'],
+  ['t_inst', 'פריסות', 'installments, loan_components, loan_payments, milestones, milestone_payments, payments'],
+  ['t_inv',  'השקעות', 'investments, investment_transactions, investment_snapshots, investment_simulation_rules'],
+  ['t_bud',  'תקציב', 'budget_settings'],
+  ['t_goal', 'יעדים', 'financial_goals'],
+  ['t_conv', 'שיחות', 'conversations, conversation_messages'],
+  ['t_rep',  'דוחות AI', 'ai_reports']
+].forEach((t, i) => node(t[0], 'sql', 80 + i * 203, TY, 190, TH, t[1], t[2], '', 'טבלאות: ' + t[2]));
+
+// --- External
+node('ollama', 'ext', 1530, 1550, 210, 160, 'מודל AI (חיצוני)', 'AI_BASE_URL /api/generate', 'Ollama מקומי או שרת מרוחק, מודל לפי AI_MODEL', 'שרת המודל. הכתובת מגיעה מ-.env ולכן יכול לרוץ על מכונה אחרת. מופעל רק במצב run-all-ai / npm run dev:ai.');
+
+// ---------------------------------------------------------------- detailed edges
+const E = [];
+const edge = (from, to, type, label) => E.push({ from, to, type, label });
+
+// components → services
+edge('f_cash','s_cash','ui'); edge('f_cash','s_inst','ui');
+edge('f_inst','s_inst','ui'); edge('f_inst','s_cash','ui');
+edge('f_inv','s_inv','ui');
+edge('f_bud','s_bud','ui');
+edge('f_goals','s_goal','ui'); edge('f_goals','s_sim','ui');
+edge('f_ai','s_ai','ui'); edge('f_ai','s_conv','ui'); edge('f_ai','s_rep','ui');
+edge('f_ai','s_cash','ui'); edge('f_ai','s_inst','ui'); edge('f_ai','s_inv','ui');
+// service ↔ service (client state)
+edge('s_inst','s_cash','state'); edge('s_sim','s_cash','state'); edge('s_sim','s_goal','state');
+// services → http
+edge('s_cash','http','http','/cash-flow, /cash-flow-defaults');
+edge('s_inst','http','http','/installments');
+edge('s_inv','http','http','/investments');
+edge('s_bud','http','http','/budget/*');
+edge('s_goal','http','http','/goals/*');
+edge('s_ai','http','http','/ai/*');
+edge('s_conv','http','http','/conversations');
+edge('s_rep','http','http','/ai-reports');
+// http → server
+edge('http','index','http'); edge('index','router','call');
+['r_cash','r_inst','r_inv','r_bud','r_goal','r_conv','r_rep','r_ai'].forEach(r => edge('router', r, 'call'));
+// routes → services
+edge('r_cash','v_cash','call'); edge('r_cash','v_goal','cross','analyzeAllGoals אחרי שמירה');
+edge('r_inst','v_inst','call'); edge('r_inv','v_inv','call'); edge('r_bud','v_bud','call');
+edge('r_goal','v_goal','call'); edge('r_goal','v_integration','call');
+edge('r_conv','v_conv','call'); edge('r_rep','v_rep','call');
+edge('r_ai','v_ai','call'); edge('r_ai','v_engine','call');
+// services → repos
+edge('v_cash','p_cash','data'); edge('v_inst','p_inst','data'); edge('v_inv','p_inv','data');
+edge('v_bud','p_bud','data'); edge('v_bud','p_cash','cross');
+edge('v_goal','p_goal','data'); edge('v_goal','v_analyzer','call');
+edge('v_analyzer','p_cash','cross'); edge('v_analyzer','p_goal','data');
+edge('v_integration','p_cash','cross'); edge('v_integration','v_inst','cross');
+edge('v_conv','p_conv','data'); edge('v_rep','p_rep','data');
+edge('v_engine','p_cash','data'); edge('v_engine','p_inst','data'); edge('v_engine','p_inv','data');
+edge('v_ai','ollama','ai','HTTP POST, stream');
+// repos → db
+['p_cash','p_inst','p_inv','p_bud','p_goal','p_conv','p_rep'].forEach(p => edge(p, 'helpers', 'sql'));
+edge('helpers','pool','sql'); edge('pool','sql','sql','T-SQL');
+edge('index','pool','cross');
+
+const detailedEdges = renderDiagram({
+  svg: document.getElementById('svgDetailed'), width: 1800, height: 1760,
+  bands: [
+    { y: 70,   h: 490, color: COLORS.feature, title: 'צד לקוח: דפדפן + Angular 21', port: 'http://localhost:4300  (ng serve)' },
+    { y: 592,  h: 100, color: COLORS.http },
+    { y: 716,  h: 770, color: COLORS.service, title: 'צד שרת: Node.js 24 + Express 5', port: 'http://localhost:3000  (node server/index.js)' },
+    { y: 1510, h: 225, color: COLORS.sql,     title: 'אחסון ושירותים חיצוניים', port: 'SQL Server :1433   |   AI model (AI_BASE_URL)' }
+  ],
+  nodes: N, edges: E
+});
+
+// ---------------------------------------------------------------- legends, stats, flows
+const legendLayers = document.getElementById('legendLayers');
+Object.entries(LAYER_NAMES).forEach(([k, v]) => legendLayers.insertAdjacentHTML('beforeend', `<span><i style="background:${COLORS[k]}"></i>${v}</span>`));
+const legendEdges = document.getElementById('legendEdges');
+Object.entries(EDGE_NAMES).forEach(([k, v]) => legendEdges.insertAdjacentHTML('beforeend', `<span><i class="line ${['http','ai','cross'].includes(k) ? 'dashed' : ''}" style="border-color:${EDGE_COLORS[k]}"></i>${v}</span>`));
+
+const stats = [
+  ['6', 'מסכים (lazy)'], ['22', 'קומפוננטות'], ['13', 'שירותי Angular'], ['8', 'מודולי Routes'],
+  ['12', 'שירותי שרת'], ['7', 'Repositories'], ['19', 'טבלאות SQL'], [String(detailedEdges), 'חיבורים בתרשים המפורט']
+];
+document.getElementById('stats').innerHTML = stats.map(s => `<div class="stat"><b>${s[0]}</b>${s[1]}</div>`).join('');
+
+const flows = [
+  { title: '1. שמירת תזרים מזומנים', steps: [
+    ['feature', 'משתמש עורך תא בטבלה'], ['feature', 'CashFlowTable.save()'], ['ngsvc', 'CashFlowService.save()'],
+    ['http', 'POST /api/cash-flow'], ['entry', 'app.js → router'], ['route', 'cashFlow.routes'], ['service', 'cashFlow.service.saveCashFlow()'],
+    ['repo', 'cashFlow.repository.write()'], ['sql', 'רק חודשים שהשתנו נכתבים (טרנזקציה אחת)'], ['service', 'goals.service.analyzeAllGoals()'],
+    ['service', 'goals-analyzer לכל יעד בזיכרון'], ['repo', 'goals.repository.updateMany()'], ['http', '{ success: true }'] ],
+    note: 'השמירה היא דיפרנציאלית: השרת משווה את מה שהגיע למה שכבר ב-DB וכותב רק חודשים שהשתנו. ניתוח היעדים קורא נתונים פעם אחת וכותב פעם אחת.' },
+  { title: '2. שאלה לעוזר ה-AI (streaming)', steps: [
+    ['feature', 'AiAssistant.sendMessage()'], ['ngsvc', 'AiService.chatStream() עם fetch'], ['http', 'POST /api/ai/chat-stream'],
+    ['route', 'ai.routes (rate limit, ולידציה)'], ['service', 'financialSummary.getSummary() מה-cache'], ['service', 'cashflow-engine.buildSummary() בפעם הראשונה'],
+    ['service', 'ai.service.getChatStream()'], ['ext', 'מודל: AI_BASE_URL /api/generate (stream)'], ['service', 'סינון <think>, token אחרי token'],
+    ['http', 'chunked text'], ['feature', 'הודעה מתעדכנת במסך'], ['ngsvc', 'ConversationService.update()'], ['http', 'PUT /api/conversations/:id'] ],
+    note: 'רק סיכום פיננסי קומפקטי נשלח למודל, לא הנתונים הגולמיים. אם המודל לא רץ, השרת מחזיר 503 עם הודעה ברורה והאפליקציה ממשיכה לעבוד.' },
+  { title: '3. יצירת יעד פיננסי', steps: [
+    ['feature', 'Goals: טופס יעד חדש'], ['ngsvc', 'GoalsService.create()'], ['http', 'POST /api/goals'], ['route', 'goals.routes'],
+    ['service', 'goals.service.createGoal()'], ['repo', 'goals.repository.create()'], ['service', 'analyzeAllGoals(): תזרים + יעדים נטענים פעם אחת'],
+    ['repo', 'goals.repository.updateMany()'], ['http', '201 + יעד עם analysis'],
+    ['ngsvc', 'goals signal מתעדכן'], ['ngsvc', 'CashFlowSimulation מחשב תזרים מדומה'], ['feature', 'תצוגת היתכנות + סימולציה'] ],
+    note: 'הסימולציה של השפעת היעדים על התזרים רצה בצד הלקוח בלבד.' }
+];
+document.getElementById('flows').innerHTML = flows.map(f => `
+  <div class="flow"><h4>${f.title}</h4><div class="steps">${f.steps.map((s, i) =>
+    `<span class="step" style="background:${COLORS[s[0]]}">${s[1]}</span>${i < f.steps.length - 1 ? '<span class="arrow">←</span>' : ''}`).join('')}</div>
+    <div class="note">${f.note}</div></div>`).join('');
+
+const report = document.createElement('pre');
+report.id = 'layout-check'; report.hidden = true;
+report.textContent = window.__layoutIssues.length ? 'LAYOUT ISSUES: ' + window.__layoutIssues.join(' | ') : 'LAYOUT OK';
+document.body.appendChild(report);
+if (window.__layoutIssues.length) console.warn(report.textContent);
+</script>
+</body>
+</html>

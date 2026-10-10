@@ -1,5 +1,6 @@
 const cashFlowRepository = require('../repositories/cashFlow.repository');
 const { ValidationError } = require('../utils/errors');
+const traceMethods = require('../utils/traceMethods');
 
 class CashFlowService {
     async getCashFlow() {
@@ -60,4 +61,4 @@ class CashFlowService {
     }
 }
 
-module.exports = new CashFlowService();
+module.exports = traceMethods(new CashFlowService(), 'cashFlowService');

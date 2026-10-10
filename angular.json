@@ -33,8 +33,17 @@
             ],
             "styles": [
               "@angular/material/prebuilt-themes/azure-blue.css",
-              "node_modules/bootstrap/dist/css/bootstrap.min.css",
-              "src/styles.scss"
+              "src/styles.scss",
+              {
+                "input": "node_modules/bootstrap/dist/css/bootstrap.rtl.min.css",
+                "bundleName": "bootstrap-rtl",
+                "inject": false
+              },
+              {
+                "input": "node_modules/bootstrap/dist/css/bootstrap.min.css",
+                "bundleName": "bootstrap-ltr",
+                "inject": false
+              }
             ],
             "scripts": []
           },
@@ -48,8 +57,8 @@
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "15kB",
-                  "maximumError": "25kB"
+                  "maximumWarning": "20kB",
+                  "maximumError": "32kB"
                 }
               ],
               "outputHashing": "all"

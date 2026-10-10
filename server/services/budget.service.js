@@ -1,6 +1,7 @@
 const budgetRepository = require('../repositories/budget.repository');
 const cashFlowRepository = require('../repositories/cashFlow.repository');
 const { ValidationError } = require('../utils/errors');
+const traceMethods = require('../utils/traceMethods');
 
 /**
  * Service for budget tracking business logic
@@ -212,4 +213,4 @@ class BudgetService {
     }
 }
 
-module.exports = new BudgetService();
+module.exports = traceMethods(new BudgetService(), 'budgetService');

@@ -1,6 +1,7 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, tap } from 'rxjs';
+import { toObservable } from '@angular/core/rxjs-interop';
+import { Observable, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { ExpenseItem } from '../models/expense.model';
 
@@ -36,26 +37,29 @@ export class CashFlowService {
   private readonly apiUrl = `${environment.apiUrl}/cash-flow`;
   private readonly defaultsUrl = `${environment.apiUrl}/cash-flow-defaults`;
 
-  private _cashFlowMonths = new BehaviorSubject<MonthData[]>([]);
-  public cashFlowMonths$ = this._cashFlowMonths.asObservable();
+  /** The months as last loaded / edited (signal is the source of truth). */
+  private readonly _months = signal<MonthData[]>([]);
+  readonly months = this._months.asReadonly();
+  /** Same data as an observable, for the rxjs consumers (simulation service). */
+  readonly cashFlowMonths$ = toObservable(this._months);
 
   constructor(private http: HttpClient) { }
 
   load(): Observable<CashFlowData> {
     return this.http.get<CashFlowData>(this.apiUrl).pipe(
       tap(data => {
-        if (data && data.months) this._cashFlowMonths.next(data.months);
+        if (data && data.months) this._months.set(data.months);
       })
     );
   }
 
   updateMonths(months: MonthData[]) {
-    this._cashFlowMonths.next(months);
+    this._months.set(months);
   }
 
   save(data: CashFlowData): Observable<CashFlowData> {
     return this.http.post<CashFlowData>(this.apiUrl, data).pipe(
-      tap(() => this._cashFlowMonths.next(data.months))
+      tap(() => this._months.set(data.months))
     );
   }
 

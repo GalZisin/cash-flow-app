@@ -3,11 +3,12 @@ import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/rou
 import { TranslateModule } from '@ngx-translate/core';
 import { LanguageService } from './services/language.service';
 import { ThemeService } from './services/theme.service';
+import { ThemePickerComponent } from '../themes/theme-picker/theme-picker.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [TranslateModule, RouterLink, RouterLinkActive, RouterOutlet],
+  imports: [TranslateModule, RouterLink, RouterLinkActive, RouterOutlet, ThemePickerComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
