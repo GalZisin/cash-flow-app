@@ -34,6 +34,7 @@ src/themes/
 | טקסט | `text-strong`, `text`, `text-2`, `text-3`, `text-4` | כותרות, גוף, משני, מושתק, רמזים |
 | מותג | `primary`, `primary-strong`, `primary-text`, `primary-soft`, `primary-border`, `on-primary`, `accent` | כפתורים, טאב פעיל, קישורים, רקע עדין, הדגשה |
 | סטטוס | `success*`, `danger*`, `warning*` (רגיל / `-soft` רקע / `-solid` מילוי) | הכנסות, הוצאות, התראות |
+| הודעות (toast) | `success-toast`, `danger-toast` | רקע הודעת השמירה / השגיאה (snackbar) עם טקסט לבן. כהה מספיק גם במצב כהה |
 | שונות | `tooltip-bg` | רקע tooltip |
 
 ל-`bg`, `surface`, `text`, `primary`, `accent`, `success`, `danger`, `warning` וגם ל-`success-solid`, `danger-solid`, `warning-solid` יש `--cf-<token>-rgb` לשקיפות:
@@ -58,4 +59,4 @@ src/themes/
 
 ## כללי ניגודיות שהערכות עומדות בהם
 
-`npm run themes:check` בודק: טקסט על רקע ≥ 7, טקסט משני ומושתק ≥ 4.5, רמזים ≥ 3, טקסט לבן על `primary` ≥ 4.5, `primary-text` על כרטיס ועל `primary-soft` ≥ 4.5, צבעי סטטוס על הרקע העדין שלהם ≥ 4.5.
+`npm run themes:check` בודק: טקסט על רקע ≥ 7, טקסט משני ומושתק ≥ 4.5, רמזים ≥ 3, טקסט לבן על `primary` ≥ 4.5, טקסט לבן על `success-toast` ו-`danger-toast` ≥ 6, `primary-text` על כרטיס ועל `primary-soft` ≥ 4.5, צבעי סטטוס על הרקע העדין שלהם ≥ 4.5.

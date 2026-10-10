@@ -24,7 +24,10 @@ const CHECKS = [
   ['success on success-soft', 'success', 'success-soft', 4.5], ['danger on danger-soft', 'danger', 'danger-soft', 4.5],
   ['warning on warning-soft', 'warning', 'warning-soft', 4.5], ['success on surface', 'success', 'surface', 4.5],
   ['danger on surface', 'danger', 'surface', 4.5], ['warning on surface', 'warning', 'surface', 4.5],
-  ['white on danger-solid', null, 'danger-solid', 4.5]
+  ['white on danger-solid', null, 'danger-solid', 4.5],
+  // snackbar toasts: white text on a filled bar, kept well above the minimum so it reads at a glance
+  ['white on success-toast', null, 'success-toast', 6], ['white on danger-toast', null, 'danger-toast', 6],
+  ['on-primary on success-toast', 'on-primary', 'success-toast', 6], ['on-primary on danger-toast', 'on-primary', 'danger-toast', 6]
 ];
 let fails = 0;
 for (const f of fs.readdirSync(dir).filter(f => f.endsWith('.scss'))) {

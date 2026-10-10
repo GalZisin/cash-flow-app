@@ -167,13 +167,15 @@ body {
     line-height: 1.4 !important;
 }
 
+// Toast fills: dedicated tokens, dark enough for white text in light AND dark mode
+// (the plain success/danger tokens are light text colors in dark mode).
 .snack-error .mdc-snackbar__surface {
-    background-color: $error-color !important;
+    background-color: var(--cf-danger-toast) !important;
     color: $white-color !important;
 }
 
 .snack-success .mdc-snackbar__surface {
-    background-color: $success-color !important;
+    background-color: var(--cf-success-toast) !important;
     color: $white-color !important;
     font-weight: 500 !important;
 }
