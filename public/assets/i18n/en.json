@@ -227,6 +227,7 @@
     "LANG_TOOLTIP": "Select whether the AI responds in Hebrew or English",
     "TAB_DASHBOARD": "📊 Dashboard",
     "DASHBOARD_TITLE": "Financial Dashboard",
+    "DASHBOARD_OVERVIEW": "Overview",
     "LOADING_DATA": "Loading data...",
     "INSIGHTS_TITLE": "Smart AI Insights",
     "GENERATE_INSIGHTS": "Generate Insights",

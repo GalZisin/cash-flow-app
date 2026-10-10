@@ -19,7 +19,8 @@ import { AiReportService, AiReport } from '../../../services/ai-report.service';
 import { Subscription, take } from 'rxjs';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 
-type ActiveTab = 'chat' | 'analysis' | 'scenario' | 'dashboard' | 'archive' | 'sankey' | 'pie';
+type ActiveTab = 'chat' | 'analysis' | 'scenario' | 'dashboard' | 'archive';
+type DashboardView = 'overview' | 'sankey' | 'pie';
 
 @Component({
   selector: 'app-ai-assistant',
@@ -78,6 +79,7 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
   insightsArchived = signal<boolean | null>(null);
   private cashFlowCharts = viewChild(CashFlowChartsComponent);
   aiResponseLang = signal<'he' | 'en'>('he'); // עברית כברירת מחדל
+  dashboardView = signal<DashboardView>('overview');
 
   // Confirmation for deleting chat
   pendingDeleteChatId = signal<string | null>(null);
@@ -145,6 +147,13 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
     if (tab === 'archive') {
       this.loadArchive(); // Load archive data only when archive tab is active
     }
+    if (tab === 'dashboard') {
+      this.dashboardView.set('overview');
+    }
+  }
+
+  setDashboardView(view: DashboardView) {
+    this.dashboardView.set(view);
   }
 
   ngAfterViewChecked(): void {
