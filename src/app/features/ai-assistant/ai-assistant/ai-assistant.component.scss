@@ -295,6 +295,125 @@
 }
 
 // ============================================
+// ARCHIVE PANEL - fills the remaining height, only the report list scrolls
+// (theme tokens only, so light and dark both follow the active palette)
+// ============================================
+.archive-panel {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 0.75rem 0.75rem 0;
+
+  h4 {
+    color: var(--cf-text-strong);
+  }
+
+  .input-group-text {
+    background: var(--cf-surface-2);
+    border-color: var(--cf-border-strong);
+    color: var(--cf-text-3);
+  }
+
+  .form-select,
+  .form-control {
+    background-color: var(--cf-surface);
+    border-color: var(--cf-border-strong);
+    color: var(--cf-text);
+
+    &::placeholder {
+      color: var(--cf-text-4);
+    }
+  }
+}
+
+.report-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-inline-end: 4px;
+  padding-bottom: 0.25rem;
+
+  .report-card:last-child {
+    margin-bottom: 0 !important;
+  }
+}
+
+.report-card {
+  background: var(--cf-surface);
+  border: 1px solid var(--cf-border);
+  border-radius: 10px;
+  color: var(--cf-text);
+  box-shadow: 0 1px 2px rgba(var(--cf-text-rgb), 0.06);
+
+  .card-header {
+    background: var(--cf-surface-2);
+    border-bottom: 1px solid var(--cf-border);
+    color: var(--cf-text);
+    gap: 0.5rem;
+  }
+
+  .card-body {
+    background: var(--cf-surface);
+    color: var(--cf-text);
+  }
+
+  .report-date {
+    margin-inline-start: auto;
+    font-weight: 600;
+    color: var(--cf-text-3);
+  }
+
+  .report-delete-btn {
+    border: none;
+    background: transparent;
+    color: var(--cf-text-3);
+    padding: 0.2rem 0.4rem;
+    border-radius: 6px;
+    line-height: 1;
+    transition: background 0.15s, color 0.15s;
+
+    &:hover,
+    &:focus-visible {
+      background: var(--cf-danger-soft);
+      color: var(--cf-danger);
+    }
+  }
+
+  .report-scenario {
+    background: rgba(var(--cf-accent-rgb), 0.1);
+    border-inline-start: 4px solid var(--cf-accent);
+
+    .text-muted {
+      color: var(--cf-text-3) !important;
+    }
+  }
+}
+
+.report-badge {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+
+  &.report-badge-analysis {
+    background: var(--cf-primary-soft);
+    color: var(--cf-primary-text);
+  }
+
+  &.report-badge-insights {
+    background: var(--cf-warning-soft);
+    color: var(--cf-warning);
+  }
+
+  &.report-badge-scenario {
+    background: rgba(var(--cf-accent-rgb), 0.14);
+    color: var(--cf-accent);
+  }
+}
+
+// ============================================
 // DARK MODE - ALL CHAT TAB STYLES
 // ============================================
 :host-context([data-bs-theme="dark"]),

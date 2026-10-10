@@ -717,3 +717,22 @@ app-cash-flow-table .actions {
         color: var(--cf-text);
     }
 }
+// ---- Trash icon (bootstrap-icons bi-trash3) ----
+// inside Material icon buttons: same visual size as the old mat-icon
+.mat-mdc-icon-button > .bi {
+    font-size: 1.1rem;
+    line-height: 1;
+}
+
+// soft danger circle in the delete-confirm dialogs
+.cf-confirm-trash {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3.25rem;
+    height: 3.25rem;
+    border-radius: 50%;
+    font-size: 1.5rem;
+    background: var(--cf-danger-soft);
+    color: var(--cf-danger);
+}

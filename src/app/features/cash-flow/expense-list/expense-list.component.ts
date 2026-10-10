@@ -2,7 +2,6 @@ import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
 import { FormArray, FormGroup, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslateModule } from '@ngx-translate/core';
 import { ExpenseCategorySelectorComponent } from '../expense-category-selector/expense-category-selector.component';
@@ -20,7 +19,6 @@ import { StaggerFadeInDirective } from '../../../directives/stagger-fade-in.dire
     CommonModule,
     ReactiveFormsModule,
     MatButtonModule,
-    MatIconModule,
     MatTooltipModule,
     TranslateModule,
     ExpenseCategorySelectorComponent,
@@ -63,7 +61,7 @@ import { StaggerFadeInDirective } from '../../../directives/stagger-fade-in.dire
               [title]="'INSTALLMENTS.DELETE' | translate"
               [matTooltip]="'INSTALLMENTS.DELETE' | translate"
               [attr.aria-label]="'INSTALLMENTS.DELETE' | translate">
-              <mat-icon>delete</mat-icon>
+              <i class="bi bi-trash3" aria-hidden="true"></i>
             </button>
           </div>
           

@@ -72,7 +72,7 @@
                 <div class="conv-title">{{ conv.title }}</div>
                 <div class="d-flex justify-content-between align-items-center">
                   <small class="text-muted">{{ conv.updatedAt | date:'dd/MM HH:mm' }}</small>
-                  <button class="btn btn-link btn-sm p-0 text-danger" (click)="confirmDeleteChat(conv.id, $event)" [title]="'AI.DELETE_CONFIRM_TITLE' | translate" [attr.aria-label]="'AI.DELETE_CONFIRM_TITLE' | translate">🗑</button>
+                  <button class="btn btn-link btn-sm p-0 text-danger" (click)="confirmDeleteChat(conv.id, $event)" [title]="'AI.DELETE_CONFIRM_TITLE' | translate" [attr.aria-label]="'AI.DELETE_CONFIRM_TITLE' | translate"><i class="bi bi-trash3" aria-hidden="true"></i></button>
                 </div>
               </div>
             }
@@ -453,8 +453,8 @@
 
   <!-- ===================== ARCHIVE TAB ===================== -->
   @if (activeTab() === 'archive') {
-    <div class="archive-panel p-3">
-      <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="archive-panel">
+      <div class="d-flex justify-content-between align-items-center mb-3">
         <h4 class="mb-0">{{ 'AI.ARCHIVE_TITLE' | translate }}</h4>
         <button class="btn btn-outline-primary btn-sm" (click)="loadArchive()" [disabled]="archiveLoading()">
           <i class="bi bi-arrow-clockwise me-1"></i> {{ 'AI.REFRESH' | translate }}
@@ -462,14 +462,14 @@
       </div>
 
       <!-- Archive Filters -->
-      <div class="row g-2 mb-4">
+      <div class="row g-2 mb-3">
         <div class="col-md-4">
           <div class="input-group input-group-sm">
-            <span class="input-group-text bg-light"><i class="bi bi-funnel"></i></span>
-            <select class="form-select" [ngModel]="archiveFilterType()" (ngModelChange)="archiveFilterType.set($event)">
+            <span class="input-group-text"><i class="bi bi-funnel"></i></span>
+            <select class="form-select" [ngModel]="archiveFilterType()" (ngModelChange)="archiveFilterType.set($event)" [attr.aria-label]="'AI.FILTER_TYPE' | translate">
               <option value="all">{{ 'AI.FILTER_ALL' | translate }}</option>
               <option value="analysis">{{ 'AI.TAB_ANALYSIS' | translate }}</option>
-              <option value="insights">{{ 'AI.INSIGHTS_TITLE' | translate }}</option>
+              <option value="insights">{{ 'AI.FILTER_INSIGHTS' | translate }}</option>
               <option value="scenario">{{ 'AI.TAB_SCENARIO' | translate }}</option>
             </select>
           </div>
@@ -488,23 +488,20 @@
           {{ 'AI.NO_INSIGHTS' | translate }}
         </div>
       } @else {
-        <div class="report-list" style="max-height: 60vh; overflow-y: auto; padding-right: 5px;">
+        <div class="report-list">
           @for (report of filteredReports; track report.id) {
-            <div class="card mb-3 shadow-sm">
-              <div class="card-header d-flex justify-content-between align-items-center bg-light">
-                <span class="badge" 
-                      [class.bg-primary]="report.type === 'analysis'" 
-                      [class.bg-warning]="report.type === 'insights'"
-                      [class.bg-info]="report.type === 'scenario'">
-                  {{ (report.type === 'analysis' ? 'AI.TAB_ANALYSIS' : (report.type === 'scenario' ? 'AI.TAB_SCENARIO' : 'AI.INSIGHTS_TITLE')) | translate }}
+            <div class="report-card card mb-3">
+              <div class="card-header d-flex justify-content-between align-items-center">
+                <span class="report-badge" [class]="'report-badge-' + report.type">
+                  {{ (report.type === 'analysis' ? 'AI.TAB_ANALYSIS' : (report.type === 'scenario' ? 'AI.TAB_SCENARIO' : 'AI.FILTER_INSIGHTS')) | translate }}
                 </span>
-                <small class="text-muted fw-bold">{{ report.createdAt | date:'dd/MM/yyyy HH:mm' }}</small>
-                <button class="btn btn-link btn-sm p-0 text-danger ms-2" (click)="confirmDeleteReport(report.id!)" title="מחק דוח">🗑</button>
+                <small class="report-date">{{ report.createdAt | date:'dd/MM/yyyy HH:mm' }}</small>
+                <button class="report-delete-btn ms-2" type="button" (click)="confirmDeleteReport(report.id!)" [title]="'AI.REPORT_DELETE_CONFIRM_TITLE' | translate" [attr.aria-label]="'AI.REPORT_DELETE_CONFIRM_TITLE' | translate"><i class="bi bi-trash3" aria-hidden="true"></i></button>
               </div>
               <div class="card-body">
                 @if (report.type === 'analysis' || report.type === 'scenario') {
                   @if (report.type === 'scenario') {
-                    <div class="mb-3 p-2 bg-info bg-opacity-10 border-start border-4 border-info rounded">
+                    <div class="report-scenario mb-3 p-2 rounded">
                       <div class="small fw-bold">{{ 'AI.SCENARIO_TITLE' | translate }}: {{ report.scenarioDetails.description }}</div>
                       <div class="small text-muted">{{ report.scenarioDetails.amount | number:'1.0-0' }} ₪ | {{ report.scenarioDetails.date }}</div>
                     </div>
@@ -532,9 +529,9 @@
   @if (pendingDeleteReportId()) {
     <div class="cf-overlay position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style="background: rgba(15, 23, 42, 0.5); z-index: 1100;">
       <div class="cf-confirm-card card p-4 text-center" dir="rtl" style="border-radius: 16px; min-width: 300px;">
-        <div class="cf-confirm-icon mb-2" style="font-size: 2rem;">🗑️</div>
+        <div class="cf-confirm-icon mb-2" style="font-size: 2rem;"><span class="cf-confirm-trash"><i class="bi bi-trash3" aria-hidden="true"></i></span></div>
         <div class="cf-confirm-title mb-1" style="font-weight: 700;">{{ 'AI.REPORT_DELETE_CONFIRM_TITLE' | translate }}</div>
-        <div class="cf-confirm-msg mb-4" style="color: #64748b;">{{ 'AI.REPORT_DELETE_CONFIRM_MSG' | translate }}</div>
+        <div class="cf-confirm-msg mb-4">{{ 'AI.REPORT_DELETE_CONFIRM_MSG' | translate }}</div>
         <div class="d-flex gap-2 justify-content-center">
           <button class="btn btn-danger" type="button" (click)="doDeleteReport()">
             {{ 'AI.DELETE_YES' | translate }}
@@ -551,9 +548,9 @@
   @if (pendingDeleteChatId()) {
     <div class="cf-overlay position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style="background: rgba(15, 23, 42, 0.5); z-index: 1100;">
       <div class="cf-confirm-card card p-4 text-center" dir="rtl" style="border-radius: 16px; min-width: 300px;">
-        <div class="cf-confirm-icon mb-2" style="font-size: 2rem;">🗑️</div>
+        <div class="cf-confirm-icon mb-2" style="font-size: 2rem;"><span class="cf-confirm-trash"><i class="bi bi-trash3" aria-hidden="true"></i></span></div>
         <div class="cf-confirm-title mb-1" style="font-weight: 700;">{{ 'AI.DELETE_CONFIRM_TITLE' | translate }}</div>
-        <div class="cf-confirm-msg mb-4" style="color: #64748b;">{{ 'AI.DELETE_CONFIRM_MSG' | translate }}</div>
+        <div class="cf-confirm-msg mb-4">{{ 'AI.DELETE_CONFIRM_MSG' | translate }}</div>
         <div class="d-flex gap-2 justify-content-center">
           <button class="btn btn-danger" type="button" (click)="doDeleteChat()">
             {{ 'AI.DELETE_YES' | translate }}
