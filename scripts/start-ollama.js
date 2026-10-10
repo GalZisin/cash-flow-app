@@ -1,8 +1,9 @@
 /**
  * Starts the local Ollama server (used by `npm run dev:ai` and run-all-ai.bat).
  *
- * - Reads server/.env: when AI_PROVIDER=openai (remote API) or AI_BASE_URL points to another
- *   machine, Ollama is not needed here and the script exits 0 without starting anything.
+ * - Reads server/.env: Ollama is only the offline fallback (AI_PROVIDER=ollama). With the default
+ *   remote API (Groq) or an AI_BASE_URL on another machine, Ollama is not needed here and the script
+ *   exits 0 without starting anything.
  * - If Ollama is already listening on the configured port nothing is started.
  * - Looks for `ollama` in PATH, then in the default Windows / macOS / Linux install locations.
  * - Exits with code 1 and a clear message when Ollama is not installed, so the rest of the
@@ -26,7 +27,8 @@ function readEnvFile(file) {
 }
 
 const env = { ...readEnvFile(path.join(__dirname, '..', 'server', '.env')), ...process.env };
-const provider = (env.AI_PROVIDER || 'ollama').toLowerCase();
+// Same rule as server/services/ai.service.js: only AI_PROVIDER=ollama uses Ollama, the default is Groq.
+const provider = (env.AI_PROVIDER || '').trim().toLowerCase() === 'ollama' ? 'ollama' : 'openai';
 let baseUrl;
 try { baseUrl = new URL(env.AI_BASE_URL || 'http://localhost:11434'); } catch { baseUrl = new URL('http://localhost:11434'); }
 const HOST = baseUrl.hostname;
@@ -58,7 +60,7 @@ function findOllama() {
 
 (async () => {
   if (provider === 'openai') {
-    console.log(`[ollama] AI_PROVIDER=openai (${baseUrl.origin}) - remote API configured, no local Ollama needed.`);
+    console.log(`[ollama] AI_PROVIDER is not "ollama" (remote API, default Groq) - no local Ollama needed. Set AI_PROVIDER=ollama in server/.env for the offline fallback.`);
     return;
   }
   if (!LOCAL_HOSTS.includes(HOST)) {
@@ -75,7 +77,7 @@ function findOllama() {
   if (!exe) {
     console.error('[ollama] Ollama is not installed on this machine (not in PATH and not in the default install folder).');
     console.error('[ollama] Install it from https://ollama.com and run: ollama pull qwen3:8b');
-    console.error('[ollama] Or use a remote provider: see docs/ai/AI_PROVIDERS.md (AI_PROVIDER=openai in server/.env).');
+    console.error('[ollama] Or use the default Groq API: remove AI_PROVIDER=ollama from server/.env and set AI_API_KEY (docs/ai/AI_PROVIDERS.md).');
     console.error('[ollama] The app keeps running without AI. The AI tab will show a clear "AI service unavailable" message.');
     process.exit(1);
   }

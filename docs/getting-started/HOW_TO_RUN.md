@@ -20,22 +20,24 @@ nvm use 24
 
 ---
 
-## 🎯 הרצה בקובץ אחד: עם AI או בלי AI
+## 🎯 הרצה בקובץ אחד
 
 | מצב | קובץ bat (לחיצה כפולה) | פקודת npm | מה רץ |
 | --- | --- | --- | --- |
-| **בלי AI** | `run-all.bat` | `npm run dev` | שרת + לקוח |
-| **עם AI מקומי (Ollama)** | `run-all-ai.bat` | `npm run dev:ai` | Ollama + שרת + לקוח |
+| **רגיל (AI דרך Groq)** | `run-all.bat` | `npm run dev` | שרת + לקוח. ה-AI עובד מול Groq כש-`AI_API_KEY` מוגדר ב-`server/.env` |
+| **גיבוי offline (Ollama מקומי)** | `run-all-ai.bat` | `npm run dev:ai` | Ollama + שרת + לקוח, רק עם `AI_PROVIDER=ollama` |
 
 שני המצבים רצים בחלון אחד (דרך `concurrently`), כל תהליך עם צבע ושם משלו. `Ctrl+C` עוצר את כולם.
 קובצי ה-bat גם מתקינים `node_modules` אוטומטית אם חסר.
 
-**בלי AI:** כל האפליקציה עובדת כרגיל. לשונית ה-AI מחזירה הודעה ברורה "AI service is not running" (HTTP 503) במקום שגיאת חיבור.
+**AI דרך Groq (ברירת המחדל):** נרשמים ב-https://console.groq.com, יוצרים מפתח ב-*API Keys* ומעתיקים אותו לשורה `AI_API_KEY=gsk_...` ב-`server/.env`. זה הכל, אין מה להתקין. פירוט צעד אחר צעד: [../ai/AI_PROVIDERS.md](../ai/AI_PROVIDERS.md).
 
-**עם AI:** הסקריפט `scripts/start-ollama.js` מחפש את Ollama ב-PATH או בתיקיית ההתקנה הרגילה ומריץ `ollama serve`. אם Ollama כבר רץ, הוא לא מופעל פעמיים. אם Ollama לא מותקן, מודפסת הודעה והשרת והלקוח ממשיכים לרוץ בלי AI.
+**בלי מפתח:** כל האפליקציה עובדת כרגיל. לשונית ה-AI מחזירה הודעה ברורה (HTTP 503, `AI_NO_KEY`) עם הקישור ליצירת מפתח.
 
-**AI בלי להעמיס על המחשב:** אפשר להפנות את השרת ל-Ollama על מחשב אחר ברשת, או לספק API חינמי (Groq, OpenRouter, Gemini, Mistral) דרך `server/.env`. אז מספיק `run-all.bat` / `npm run dev`, ו-`dev:ai` מזהה לבד שלא צריך להפעיל Ollama מקומי. פירוט: [../ai/AI_PROVIDERS.md](../ai/AI_PROVIDERS.md).
-דרישות ל-AI: [Ollama](https://ollama.com) מותקן ומודל מורד (`ollama pull qwen3:8b`). בחירת מודל אחר: משתנה סביבה `AI_MODEL`.
+**גיבוי offline (`AI_PROVIDER=ollama`):** הסקריפט `scripts/start-ollama.js` מחפש את Ollama ב-PATH או בתיקיית ההתקנה הרגילה ומריץ `ollama serve`. אם Ollama כבר רץ, הוא לא מופעל פעמיים. אם Ollama לא מותקן, מודפסת הודעה והשרת והלקוח ממשיכים לרוץ בלי AI.
+
+בלי `AI_PROVIDER=ollama`, `dev:ai` מזהה לבד שלא צריך Ollama מקומי ומדלג עליו. אפשר גם Ollama על מחשב אחר ברשת, או ספק חינמי אחר (OpenRouter, Gemini, Mistral): [../ai/AI_PROVIDERS.md](../ai/AI_PROVIDERS.md).
+דרישות לגיבוי Ollama: [Ollama](https://ollama.com) מותקן ומודל מורד (`ollama pull qwen3:8b`). בחירת מודל אחר: `AI_MODEL`.
 
 ### הרצת כל צד בנפרד
 ```cmd

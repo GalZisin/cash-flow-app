@@ -11,8 +11,8 @@ Angular 21 client (`src/`) + Express 5 server (`server/`) + SQL Server. UI langu
 
 ```bash
 npm install && npm install --prefix server   # once
-npm run dev          # server + client, no AI
-npm run dev:ai       # Ollama + server + client (scripts/start-ollama.js skips Ollama when a remote AI provider is configured)
+npm run dev          # server + client; AI goes to Groq (default) when AI_API_KEY is set in server/.env
+npm run dev:ai       # Ollama + server + client, offline fallback (scripts/start-ollama.js starts Ollama only with AI_PROVIDER=ollama)
 npm start            # client only (ng serve, port 4300)
 npm run server       # server only (port 3000)
 npm run build        # production build -> dist/cash-flow-app/browser (served by the server when present)
@@ -27,7 +27,7 @@ Node 24+ for both parts (`engines`, `.nvmrc`). Do not reintroduce separate Node 
 
 - **Client**: standalone components under `src/app/features/<feature>/`, one data service per domain under `src/app/services/` (HttpClient + signals). Routes are lazy (`app.routes.ts`). All API calls go through services, never from components.
 - **Server**: `app.js` builds the Express app (CORS, JSON limit, logging, /health, static client, error handler); `index.js` connects to SQL Server and listens. `routes/` validate and delegate, `services/` hold business logic, `repositories/` hold all SQL (via `db/helpers.js` + `db/mappers.js`). Only repositories touch the database.
-- **AI**: `routes/ai.routes.js` -> `services/financialSummary.service.js` (cached summary built by `services/cashflow-engine.js`) -> `services/ai.service.js` (provider: Ollama `/api/generate` or any OpenAI-compatible `/chat/completions`, chosen by `AI_PROVIDER`). Only the compact summary is sent to the model.
+- **AI**: `routes/ai.routes.js` -> `services/financialSummary.service.js` (cached summary built by `services/cashflow-engine.js`) -> `services/ai.service.js` (provider chosen by `AI_PROVIDER`: default any OpenAI-compatible `/chat/completions`, pointed at Groq; `ollama` = Ollama `/api/generate` as offline fallback). Only the compact summary is sent to the model.
 - **API access log**: `middleware/apiAccessLog.js` writes one row per `/api` request to `log.cash_flow_api_access` (`db/log-schema.sql`, local machine time). Every service/repository singleton is exported through `utils/traceMethods.js`, which records each method call into the request context (`utils/requestContext.js`) so the row's `inner_method_name` shows the call chain. Keep that wrapper on new services/repositories; the log repository itself is not traced.
 - **Errors**: throw `ValidationError` / `NotFoundError` / `ServiceUnavailableError` / `TooManyRequestsError` from `utils/errors.js` inside `asyncHandler`; the error middleware answers `{ success:false, error:{ name, message, code? } }`. The client interceptor reads that envelope (`extractServerMessage`).
 - **Cash flow save** is differential (`db/cashFlowDiff.js`): only changed months are written. Goals re-analysis loads the context once and writes once (`goalsRepository.updateMany`).
@@ -46,7 +46,7 @@ Node 24+ for both parts (`engines`, `.nvmrc`). Do not reintroduce separate Node 
 ## Environment and secrets
 
 - `server/.env` (git-ignored) holds `DB_CONNECTION_STRING` and the AI settings. Template with every variable: `server/.env.example`.
-- The developer machine may have **no SQL Server and no Ollama**. The server then exits at startup with a clear message; use the test suite, which needs neither.
+- The developer machine may have **no SQL Server, no Ollama and no AI_API_KEY**. The server then exits at startup with a clear message; use the test suite, which needs neither.
 - Never commit `.env`, `server/logs/*.log`, `dist/`.
 
 ## Git rules for assistants

@@ -117,7 +117,7 @@
 
 <header>
   <h1>Cash Flow App - תרשים ארכיטקטורה וזרימה
-    <small>Angular 21 (לקוח) ← REST/JSON → Express 5 (שרת) → SQL Server (CashFlowDB) | AI דרך Ollama מקומי או API מרוחק</small>
+    <small>Angular 21 (לקוח) ← REST/JSON → Express 5 (שרת) → SQL Server (CashFlowDB) | AI דרך Groq (ברירת מחדל) או Ollama מקומי</small>
   </h1>
   <div class="stats" id="stats"></div>
 </header>
@@ -407,7 +407,7 @@ onode('o_repo',  'repo',    830,  430, 330, 120, 'Repositories', 'server/reposit
 onode('o_ai',    'service', 1210, 430, 320, 120, 'מודול AI', 'routes/ai.routes.js, services/ai.service.js', 'בונה סיכום פיננסי קומפקטי (עם cache), מרכיב prompt ושולח למודל. ללא AI האפליקציה עובדת כרגיל.', 'ענף ה-AI: הסיכום בלבד נשלח למודל, לא הנתונים הגולמיים.');
 
 onode('o_sql',   'sql',     450,  640, 710, 90, 'SQL Server · CashFlowDB', 'server/db/schema.sql', '19 טבלאות: תזרים, פריסות, השקעות, תקציב, יעדים, שיחות, דוחות AI', 'מסד הנתונים. חיבור דרך DB_CONNECTION_STRING ב-server/.env.');
-onode('o_model', 'ext',     1210, 640, 320, 90, 'מודל שפה', 'AI_PROVIDER + AI_BASE_URL', 'Ollama מקומי, Ollama ברשת, או API מרוחק (Groq ועוד)', 'שרת המודל. הכתובת בקובץ .env, ולכן יכול לרוץ על מכונה אחרת.');
+onode('o_model', 'ext',     1210, 640, 320, 90, 'מודל שפה', 'AI_PROVIDER + AI_BASE_URL', 'Groq (ברירת מחדל), Ollama מקומי או ברשת', 'שרת המודל. הכתובת בקובץ .env, ולכן יכול לרוץ על מכונה אחרת.');
 
 const OE = [
   { from: 'o_ui', to: 'o_svc', type: 'ui' },
@@ -525,7 +525,7 @@ const TY = 1600, TH = 96;
 ].forEach((t, i) => node(t[0], 'sql', 80 + i * 203, TY, 190, TH, t[1], t[2], '', 'טבלאות: ' + t[2]));
 
 // --- External
-node('ollama', 'ext', 1530, 1550, 210, 160, 'מודל AI (חיצוני)', 'AI_BASE_URL /api/generate', 'Ollama מקומי או שרת מרוחק, מודל לפי AI_MODEL', 'שרת המודל. הכתובת מגיעה מ-.env ולכן יכול לרוץ על מכונה אחרת. מופעל רק במצב run-all-ai / npm run dev:ai.');
+node('ollama', 'ext', 1530, 1550, 210, 160, 'מודל AI (חיצוני)', 'AI_PROVIDER + AI_BASE_URL', 'Groq (ברירת מחדל) או Ollama מקומי, מודל לפי AI_MODEL', 'שרת המודל. ברירת המחדל Groq (צריך AI_API_KEY ב-.env). Ollama מקומי מופעל רק עם AI_PROVIDER=ollama ו-npm run dev:ai.');
 
 // ---------------------------------------------------------------- detailed edges
 const E = [];

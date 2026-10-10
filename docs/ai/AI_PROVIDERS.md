@@ -4,10 +4,16 @@
 
 | `AI_PROVIDER` | פרוטוקול | מתאים ל- |
 | --- | --- | --- |
-| `ollama` (ברירת מחדל) | Ollama `/api/generate` | Ollama על המחשב הזה או על מחשב אחר ברשת |
-| `openai` | OpenAI Chat Completions `/chat/completions` (כולל streaming ב-SSE) | Groq, OpenRouter, Google Gemini, Mistral, Cloudflare Workers AI, Together, LM Studio, vLLM, llama.cpp server וכל API תואם |
+| `openai` (ברירת מחדל; גם `groq`) | OpenAI Chat Completions `/chat/completions` (כולל streaming ב-SSE) | **Groq (ברירת המחדל)**, OpenRouter, Google Gemini, Mistral, Cloudflare Workers AI, Together, LM Studio, vLLM, llama.cpp server וכל API תואם |
+| `ollama` | Ollama `/api/generate` | גיבוי offline: Ollama על המחשב הזה או על מחשב אחר ברשת |
 
-ההגדרה כולה ב-`server/.env` (תבנית מלאה ב-`server/.env.example`):
+**ברירת המחדל היא Groq** עם `openai/gpt-oss-20b`. בלי `AI_PROVIDER` ב-`.env` השרת פונה ל-`https://api.groq.com/openai/v1`, וכל מה שצריך הוא מפתח:
+
+```ini
+AI_API_KEY=gsk_...
+```
+
+ההגדרה המלאה, עם ערכי ברירת המחדל במפורש (תבנית ב-`server/.env.example`):
 
 ```ini
 AI_PROVIDER=openai
@@ -17,11 +23,13 @@ AI_API_KEY=gsk_...
 # AI_TIMEOUT_MS=60000
 ```
 
+גיבוי offline עם Ollama: `AI_PROVIDER=ollama` (ראה אפשרות 1 למטה) והפעלה עם `npm run dev:ai` / `run-all-ai.bat`.
+
 הקוד: `server/services/ai.service.js`. בדיקות מול שרת מדומה: `server/test/ai-providers.test.js`.
 
-## הבעיה שפותרים
+## הבעיה שנפתרה
 
-Ollama מקומי מריץ את המודל על ה-CPU של המחשב ותופס אותו כמעט כולו בזמן בקשה. שלוש דרכים לפתור:
+עד 2026-10 ברירת המחדל הייתה Ollama מקומי. Ollama מקומי מריץ את המודל על ה-CPU של המחשב ותופס אותו כמעט כולו בזמן בקשה. שלוש דרכים לפתור:
 
 1. **Ollama על מחשב אחר ברשת** (הנתונים נשארים אצלך, אפס עלות, המחשב שלך פנוי).
 2. **ספק API מרוחק עם מכסה חינמית** (אפס עלות עד המכסה, מהיר מאוד, אבל הסיכום הפיננסי עובר לספק).
@@ -68,18 +76,17 @@ AI_MODEL=qwen3:8b
 
 **Groq** עם `openai/gpt-oss-20b` (מהיר, 1,000 בקשות ביום, ללא כרטיס) או `openai/gpt-oss-120b` לאיכות גבוהה יותר. אם Groq לא זמין: **OpenRouter** עם מודל `:free`. **Gemini** רק אם מקבלים שהסיכום ישמש לאימון.
 
-### הגדרה צעד אחר צעד (Groq)
+### הגדרה צעד אחר צעד (Groq, ברירת המחדל)
 
-1. חשבון ב-https://console.groq.com, יצירת מפתח ב-*API Keys*.
-2. ב-`server/.env`:
+1. להיכנס ל-https://console.groq.com ולהירשם (Google, GitHub או אימייל). אין צורך בכרטיס אשראי.
+2. בתפריט *API Keys* (https://console.groq.com/keys): *Create API Key*, לתת שם (למשל `cash-flow-app`) ולהעתיק את המפתח מיד. הוא מתחיל ב-`gsk_` ומוצג פעם אחת בלבד; אם אבד, מוחקים ויוצרים חדש.
+3. אם עוד אין `server/.env`, להעתיק את `server/.env.example` ל-`server/.env`. למלא:
    ```ini
-   AI_PROVIDER=openai
-   AI_BASE_URL=https://api.groq.com/openai/v1
-   AI_MODEL=openai/gpt-oss-20b
    AI_API_KEY=gsk_xxxxxxxx
    ```
-3. `npm run dev` (לא צריך `dev:ai`; Ollama לא נדרש). לשונית ה-AI עובדת מול Groq.
-4. בדיקה מהירה: `curl -X POST http://localhost:3000/api/ai/chat -H "Content-Type: application/json" -d "{\"question\":\"hello\"}"`.
+   `AI_PROVIDER`, `AI_BASE_URL` ו-`AI_MODEL` הם ברירות המחדל ל-Groq ואפשר להשאיר אותם בהערה. אם יש שורה פעילה `AI_PROVIDER=ollama`, למחוק אותה.
+4. `npm run dev` או `run-all.bat` (לא צריך `dev:ai`; Ollama לא נדרש). בעליית השרת מופיעה בלוג השורה `AI: openai https://api.groq.com/openai/v1 (model openai/gpt-oss-20b)`; בלי מפתח מופיעה אזהרה.
+5. בדיקה מהירה: `curl -X POST http://localhost:3000/api/ai/chat -H "Content-Type: application/json" -d "{\"question\":\"hello\"}"`.
 
 אותם שלבים לשאר הספקים, עם הכתובת, המודל והמפתח מהטבלה (דוגמאות מוכנות ב-`.env.example`).
 
@@ -87,6 +94,7 @@ AI_MODEL=qwen3:8b
 
 | מצב | תגובת השרת ללקוח |
 | --- | --- |
+| `AI_API_KEY` חסר (ספק מרוחק) | `503` עם `code: AI_NO_KEY` והודעה עם הקישור ליצירת מפתח; שום בקשה לא נשלחת לספק |
 | הספק לא נגיש / Ollama לא רץ | `503` עם `code: AI_UNAVAILABLE` והודעה שמסבירה מה להפעיל |
 | מפתח API שגוי (401/403 מהספק) | `503` עם `code: AI_AUTH` |
 | חריגה ממכסת הספק (429) | `429` עם `code: RATE_LIMITED` |

@@ -12,7 +12,7 @@
                                        │
 שרת (Node 24 + Express 5, :3000)       ▼
   routes/ ──► services/ ──► repositories/ ──► SQL Server (CashFlowDB)
-     └──► מודול AI: financialSummary ──► ai.service ──► מודל שפה (Ollama / API מרוחק)
+     └──► מודול AI: financialSummary ──► ai.service ──► מודל שפה (Groq / Ollama)
 ```
 
 - הלקוח לא ניגש למסד הנתונים ולא למודל. הכל דרך השרת.
@@ -54,7 +54,7 @@
 
 - **SQL Server במקום JSON**: טבלאות מנורמלות עם `extra_json` בכל טבלה כדי לא לאבד שדות שהאפליקציה תוסיף בעתיד. כסף ב-`DECIMAL(18,2)`.
 - **סיכום במקום נתונים גולמיים ל-AI**: פרומפט קטן, פרטיות טובה יותר, אותו סיכום לכל השאלות ברצף (ולכן cache).
-- **ספק AI מתחלף דרך `.env`**: `AI_PROVIDER=ollama` או `openai` (כל endpoint תואם OpenAI). ראה [AI_PROVIDERS.md](../ai/AI_PROVIDERS.md).
+- **ספק AI מתחלף דרך `.env`**: ברירת המחדל `openai` מול Groq (צריך רק `AI_API_KEY`), או `AI_PROVIDER=ollama` כגיבוי offline. ראה [AI_PROVIDERS.md](../ai/AI_PROVIDERS.md).
 - **ללא אימות משתמשים**: האפליקציה מיועדת להרצה מקומית של משתמש אחד. לפני חשיפה לרשת צריך אימות, HTTPS ו-CORS מוגבל לדומיין.
 - **מזהים**: uuid v4 בכל הישויות.
 

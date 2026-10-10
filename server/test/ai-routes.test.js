@@ -1,6 +1,6 @@
 /**
  * HTTP tests for the AI routes, the error format, the rate limiter and the 404 handler.
- * The summary service and the AI service are stubbed, so no database and no Ollama are needed.
+ * The summary service and the AI service are stubbed, so no database and no AI provider are needed.
  */
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
@@ -82,7 +82,7 @@ test('POST /api/ai/chat when the model server is down is a 503 with code AI_UNAV
     assert.equal(res.status, 503);
     assert.equal(res.json.error.name, 'ServiceUnavailableError');
     assert.equal(res.json.error.code, 'AI_UNAVAILABLE');
-    assert.match(res.json.error.message, /not running/);
+    assert.match(res.json.error.message, /is not (running|reachable)/);
 });
 
 test('POST /api/ai/chat-stream streams tokens and ends the body with a note on failure', async (t) => {
@@ -97,7 +97,7 @@ test('POST /api/ai/chat-stream streams tokens and ends the body with a note on f
     assert.equal(res.status, 200);
     assert.match(res.headers.get('content-type'), /text\/plain/);
     assert.match(res.text, /^Hello world/);
-    assert.match(res.text, /\[AI service .* is not running/);
+    assert.match(res.text, /\[AI (service|provider) .* is not (running|reachable)/);
 });
 
 test('POST /api/ai/scenario validates input and returns the simulation next to the AI text', async (t) => {

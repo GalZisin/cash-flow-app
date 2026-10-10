@@ -2,9 +2,11 @@
  * AI service - sends the compact financial summary (never the raw data) to a language model.
  *
  * Two providers, chosen with AI_PROVIDER in server/.env:
- *   ollama  (default)  Ollama's /api/generate            e.g. AI_BASE_URL=http://localhost:11434  (or another machine)
- *   openai             any OpenAI-compatible /chat/completions endpoint: Groq, OpenRouter, Gemini, Mistral,
- *                      Cloudflare Workers AI, LM Studio, vLLM, ...  needs AI_API_KEY (except local servers)
+ *   openai  (default)  any OpenAI-compatible /chat/completions endpoint. Default target: Groq
+ *                      (https://api.groq.com/openai/v1, model openai/gpt-oss-20b). Also OpenRouter, Gemini,
+ *                      Mistral, Cloudflare Workers AI, LM Studio, vLLM, ...  needs AI_API_KEY (except local servers).
+ *                      AI_PROVIDER=groq is accepted as another name for it.
+ *   ollama             Ollama's /api/generate            e.g. AI_BASE_URL=http://localhost:11434  (or another machine)
  *
  * Other settings: AI_MODEL, AI_TIMEOUT_MS (default 60000). Configuration is read per call so tests can change it.
  */
@@ -17,7 +19,7 @@ const OPTIONS = { temperature: 0.3, num_ctx: 2048, num_predict: 1024 };
 const MAX_TOKENS = 1024;
 
 function getConfig() {
-  const provider = (process.env.AI_PROVIDER || 'ollama').toLowerCase() === 'openai' ? 'openai' : 'ollama';
+  const provider = (process.env.AI_PROVIDER || '').trim().toLowerCase() === 'ollama' ? 'ollama' : 'openai';
   const defaultUrl = provider === 'openai' ? 'https://api.groq.com/openai/v1' : 'http://localhost:11434';
   const baseUrl = new URL(process.env.AI_BASE_URL || defaultUrl);
   const model = process.env.AI_MODEL || (provider === 'openai' ? 'openai/gpt-oss-20b' : 'qwen3:8b');
@@ -32,6 +34,17 @@ function unavailableMessage(cfg) {
   return cfg.provider === 'ollama'
     ? `AI service (${cfg.baseUrl.origin}) is not running. Start the app with "npm run dev:ai" or run-all-ai.bat to enable AI.`
     : `AI provider (${cfg.baseUrl.origin}) is not reachable. Check AI_BASE_URL and your network.`;
+}
+
+const LOCAL_HOSTS = ['localhost', '127.0.0.1', '::1', '[::1]'];
+
+/** A remote OpenAI-compatible provider (Groq, ...) without AI_API_KEY: explain instead of sending a request that gets 401. */
+function missingKeyError(cfg) {
+  if (cfg.provider !== 'openai' || cfg.apiKey || LOCAL_HOSTS.includes(cfg.baseUrl.hostname)) return null;
+  return new ServiceUnavailableError(
+    `AI_API_KEY is not set in server/.env for ${cfg.baseUrl.origin}. Create a free key at https://console.groq.com/keys and restart the server.`,
+    'AI_NO_KEY'
+  );
 }
 
 /** Maps low-level failures to errors the client can explain (503 / 429). */
@@ -55,6 +68,8 @@ function httpErrorFor(status, text) {
 
 /** Opens a POST to <baseUrl><path>; the caller consumes the response stream. */
 function openRequest(cfg, path, body, onResponse, onError) {
+  const noKey = missingKeyError(cfg);
+  if (noKey) { process.nextTick(() => onError(noKey)); return null; }
   const client = cfg.baseUrl.protocol === 'https:' ? https : http;
   const basePath = cfg.baseUrl.pathname.replace(/\/$/, '');
   const headers = { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) };
@@ -284,7 +299,10 @@ async function getScenario(summary, scenario, simulationResult) {
 /** Which provider / model the server is configured for (for /health-style diagnostics and tests). */
 function describe() {
   const cfg = getConfig();
-  return { provider: cfg.provider, baseUrl: cfg.baseUrl.origin + cfg.baseUrl.pathname.replace(/\/$/, ''), model: cfg.model, hasApiKey: !!cfg.apiKey };
+  return {
+    provider: cfg.provider, baseUrl: cfg.baseUrl.origin + cfg.baseUrl.pathname.replace(/\/$/, ''), model: cfg.model,
+    hasApiKey: !!cfg.apiKey, missingApiKey: !!missingKeyError(cfg)
+  };
 }
 
 module.exports = traceMethods({
