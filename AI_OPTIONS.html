@@ -82,7 +82,7 @@
 <table>
   <thead><tr><th>אפשרות</th><th>עלות</th><th>כרטיס אשראי</th><th>מכסה חינמית (פורסם)</th><th>פרטיות</th><th>עומס על המחשב שלך</th><th>מהירות תשובה</th><th>התאמה לאפליקציה</th></tr></thead>
   <tbody>
-    <tr><td><span class="dot" style="background:var(--model)"></span>Ollama מקומי (המצב היום)</td><td>0</td><td>לא</td><td>ללא הגבלה</td><td>מלאה</td><td><span class="badge bad">גבוה מאוד</span></td><td>איטי (CPU)</td><td>גיבוי / offline</td></tr>
+    <tr><td><span class="dot" style="background:var(--model)"></span>Ollama מקומי (גיבוי offline)</td><td>0</td><td>לא</td><td>ללא הגבלה</td><td>מלאה</td><td><span class="badge bad">גבוה מאוד</span></td><td>איטי (CPU)</td><td>גיבוי / offline</td></tr>
     <tr><td><span class="dot" style="background:var(--lan)"></span>Ollama על מחשב אחר ברשת</td><td>0</td><td>לא</td><td>ללא הגבלה</td><td>מלאה (הכל ברשת הביתית)</td><td><span class="badge ok">אפס</span></td><td>לפי המחשב השני</td><td><span class="badge ok">מצוינת</span> אם יש מחשב פנוי</td></tr>
     <tr><td><span class="dot" style="background:var(--cloud)"></span>Groq</td><td>0 עד המכסה</td><td>לא</td><td>1,000 בקשות ו-200K טוקנים ביום (מודלים גדולים), 30 לדקה</td><td>הסיכום עובר לספק</td><td><span class="badge ok">אפס</span></td><td>מהיר מאוד (שניות)</td><td><span class="badge ok">ההמלצה הראשונה</span></td></tr>
     <tr><td><span class="dot" style="background:var(--cloud)"></span>OpenRouter</td><td>0 עד המכסה</td><td>לא</td><td>מודלי :free: 50 ביום (1,000 אחרי רכישה חד-פעמית של $10), 20 לדקה</td><td>הסיכום עובר לספק ולספק-המשנה</td><td><span class="badge ok">אפס</span></td><td>משתנה לפי מודל</td><td><span class="badge warn">טובה</span>, מכסה יומית קטנה</td></tr>
@@ -280,7 +280,7 @@ draw(document.getElementById('flow'), 1560, 300, {
 // ---------------------------------------------------------------- options
 const OPTIONS = [
   {
-    n: 1, color: C.model, title: 'Ollama על המחשב הזה (המצב היום)', badges: [['info', 'בסיס להשוואה'], ['bad', 'תופס את ה-CPU']],
+    n: 1, color: C.model, title: 'Ollama על המחשב הזה (גיבוי offline)', badges: [['info', 'AI_PROVIDER=ollama'], ['bad', 'תופס את ה-CPU']],
     facts: [['עלות', '0'], ['כרטיס', 'לא'], ['מכסה', 'ללא הגבלה'], ['פרטיות', 'מלאה'], ['מהירות', 'איטי על CPU, מהיר עם GPU']],
     desc: 'Ollama רץ על אותו מחשב כמו האפליקציה. המודל (qwen3:8b, כ-5GB) נטען לזיכרון ובכל בקשה מחשב על ה-CPU, ולכן המחשב כמעט לא זמין למשך התשובה. עדיין האפשרות הפרטית ביותר ומתאימה למצב offline.',
     pros: ['שום מידע לא יוצא מהמחשב', 'עובד בלי אינטרנט', 'ללא מכסות'],
@@ -304,7 +304,7 @@ const OPTIONS = [
       edges: [{ from: 'a', to: 's', color: C.app }, { from: 's', to: 'o', label: 'LAN :11434', color: C.lan }] }
   },
   {
-    n: 3, color: C.cloud, title: 'Groq (API חינמי, מהיר במיוחד)', badges: [['ok', 'ההמלצה הראשונה'], ['ok', 'ללא כרטיס']],
+    n: 3, color: C.cloud, title: 'Groq (API חינמי, מהיר במיוחד)', badges: [['ok', 'ברירת המחדל'], ['ok', 'ללא כרטיס']],
     facts: [['עלות', '0 עד המכסה'], ['כרטיס', 'לא'], ['מכסה', '1,000 בקשות / 200K טוקנים ביום, 30 לדקה'], ['פרטיות', 'הסיכום עובר ל-Groq'], ['מהירות', 'שניות בודדות']],
     desc: 'Groq מריצים מודלים פתוחים על חומרה ייעודית (LPU) ונותנים שכבה חינמית נדיבה ללא כרטיס אשראי. API תואם OpenAI. מודלים: gpt-oss-120b ו-gpt-oss-20b של OpenAI, Qwen3, Llama 3.3. לאפליקציה הזו, שעושה כמה בקשות ביום, המכסה גדולה פי מאות מהצורך.',
     pros: ['תשובה תוך שניות במקום דקות', 'מודלים חזקים בהרבה מ-qwen3:8b', 'מכסה יומית גדולה, ללא כרטיס'],

@@ -3,9 +3,10 @@ setlocal
 cd /d "%~dp0"
 
 REM ============================================================
-REM   Cash Flow App - run EVERYTHING (server + client) WITHOUT AI
+REM   Cash Flow App - run EVERYTHING (server + client)
 REM   One Node.js version (24 or newer) for both parts.
-REM   For the version with the local AI model use: run-all-ai.bat
+REM   AI goes to Groq (cloud) when AI_API_KEY is set in server\.env, nothing else to start.
+REM   For the offline fallback with a local Ollama model use: run-all-ai.bat
 REM ============================================================
 call :check_node || goto :fail
 
@@ -23,7 +24,7 @@ if not exist "server\node_modules\" (
 )
 
 echo ========================================
-echo   Cash Flow App  (without AI)
+echo   Cash Flow App  (AI: Groq when AI_API_KEY is set)
 echo ========================================
 echo   Backend : http://localhost:3000
 echo   Frontend: http://localhost:4300  (browser opens when ready)

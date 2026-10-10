@@ -106,9 +106,31 @@ test('a slow provider hits AI_TIMEOUT_MS and becomes a 503 AI_TIMEOUT', async ()
 
 test('describe() reflects the configuration and defaults', () => {
     process.env.AI_PROVIDER = 'openai'; process.env.AI_BASE_URL = 'https://api.groq.com/openai/v1'; process.env.AI_MODEL = 'openai/gpt-oss-20b'; process.env.AI_API_KEY = 'x';
-    assert.deepEqual(ai.describe(), { provider: 'openai', baseUrl: 'https://api.groq.com/openai/v1', model: 'openai/gpt-oss-20b', hasApiKey: true });
+    assert.deepEqual(ai.describe(), { provider: 'openai', baseUrl: 'https://api.groq.com/openai/v1', model: 'openai/gpt-oss-20b', hasApiKey: true, missingApiKey: false });
+    // no AI settings at all -> Groq, and the missing key is reported
     delete process.env.AI_PROVIDER; delete process.env.AI_BASE_URL; delete process.env.AI_MODEL; process.env.AI_API_KEY = '';
-    assert.deepEqual(ai.describe(), { provider: 'ollama', baseUrl: 'http://localhost:11434', model: 'qwen3:8b', hasApiKey: false });
+    assert.deepEqual(ai.describe(), { provider: 'openai', baseUrl: 'https://api.groq.com/openai/v1', model: 'openai/gpt-oss-20b', hasApiKey: false, missingApiKey: true });
+    process.env.AI_PROVIDER = 'ollama';
+    assert.deepEqual(ai.describe(), { provider: 'ollama', baseUrl: 'http://localhost:11434', model: 'qwen3:8b', hasApiKey: false, missingApiKey: false });
+});
+
+test('AI_PROVIDER=groq is another name for the OpenAI-compatible provider', () => {
+    process.env.AI_PROVIDER = 'Groq'; delete process.env.AI_BASE_URL; delete process.env.AI_MODEL;
+    assert.equal(ai.getConfig().provider, 'openai');
+    assert.equal(ai.getConfig().baseUrl.origin, 'https://api.groq.com');
+});
+
+test('remote provider without AI_API_KEY: 503 AI_NO_KEY, nothing is sent', async () => {
+    process.env.AI_PROVIDER = 'openai'; process.env.AI_BASE_URL = 'https://api.groq.com/openai/v1'; process.env.AI_API_KEY = '';
+    await assert.rejects(ai.generate({ system: 'S', user: 'U' }), (err) => err.statusCode === 503 && err.code === 'AI_NO_KEY' && /console\.groq\.com/.test(err.message));
+    await assert.rejects(collectStream({ system: 'S', user: 'U' }), (err) => err.code === 'AI_NO_KEY');
+});
+
+test('a local OpenAI-compatible server (LM Studio, vLLM) works without a key', async () => {
+    process.env.AI_PROVIDER = 'openai'; process.env.AI_BASE_URL = base; process.env.AI_API_KEY = '';
+    behaviour = (req, res) => { res.setHeader('Content-Type', 'application/json'); res.end(JSON.stringify({ choices: [{ message: { content: 'ok' } }] })); };
+    assert.equal(await ai.generate({ system: 'S', user: 'U' }), 'ok');
+    assert.equal(lastRequest.headers.authorization, undefined);
 });
 
 test('thinkFilter and stripThinking', () => {

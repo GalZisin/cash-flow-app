@@ -1,6 +1,7 @@
 const { createApp } = require('./app');
 const logger = require('./utils/logger');
 const { getPool, closePool } = require('./db/connection');
+const aiService = require('./services/ai.service');
 
 const PORT = process.env.PORT || 3000;
 const app = createApp();
@@ -23,6 +24,11 @@ async function start() {
         logger.info(`║   Running on http://localhost:${PORT}    ║`);
         logger.info(`║   Environment: ${process.env.NODE_ENV || 'development'}              ║`);
         logger.info('╚════════════════════════════════════════╝');
+        const ai = aiService.describe();
+        logger.info(`AI: ${ai.provider} ${ai.baseUrl} (model ${ai.model})`);
+        if (ai.missingApiKey) {
+            logger.warn('AI_API_KEY is not set in server/.env - the AI tab will not work. Free Groq key: https://console.groq.com/keys (see docs/ai/AI_PROVIDERS.md)');
+        }
     });
 }
 

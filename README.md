@@ -7,7 +7,7 @@
 | לקוח | Angular 21 (standalone components, signals), Angular Material, Bootstrap 5.3, GSAP, d3-sankey |
 | שרת | Node.js 24, Express 5, ארכיטקטורה שכבתית (Routes → Services → Repositories) |
 | מסד נתונים | SQL Server (`CashFlowDB`) דרך `mssql` / `msnodesqlv8` |
-| AI (אופציונלי) | Ollama מקומי **או** ספק API מרוחק תואם OpenAI (Groq, OpenRouter, Gemini, Mistral) |
+| AI (אופציונלי) | Groq (ברירת מחדל, API חינמי תואם OpenAI; גם OpenRouter, Gemini, Mistral), Ollama מקומי כגיבוי offline |
 
 ## התחלה מהירה
 
@@ -18,8 +18,10 @@ npm install                      # לקוח
 npm install --prefix server      # שרת
 copy server\.env.example server\.env   # ולמלא DB_CONNECTION_STRING (ראה docs/getting-started/DATABASE_SETUP.md)
 
-npm run dev        # שרת + לקוח, בלי AI       (או לחיצה כפולה על run-all.bat)
-npm run dev:ai     # Ollama + שרת + לקוח, עם AI (או run-all-ai.bat)
+                                       # ול-AI: AI_API_KEY ממפתח Groq חינמי (docs/ai/AI_PROVIDERS.md)
+
+npm run dev        # שרת + לקוח, AI דרך Groq   (או לחיצה כפולה על run-all.bat)
+npm run dev:ai     # Ollama + שרת + לקוח, גיבוי offline עם AI_PROVIDER=ollama (או run-all-ai.bat)
 ```
 
 - ממשק: http://localhost:4300

@@ -3,10 +3,11 @@ setlocal
 cd /d "%~dp0"
 
 REM ============================================================
-REM   Cash Flow App - run EVERYTHING (Ollama + server + client) WITH AI
+REM   Cash Flow App - run EVERYTHING (Ollama + server + client) with LOCAL AI
 REM   One Node.js version (24 or newer) for both parts.
-REM   Requires Ollama installed (https://ollama.com) and a model:  ollama pull qwen3:8b
-REM   Without AI use: run-all.bat
+REM   Only for the offline fallback: AI_PROVIDER=ollama in server\.env, Ollama installed
+REM   (https://ollama.com) and a model:  ollama pull qwen3:8b
+REM   The default AI is Groq (cloud, needs AI_API_KEY in server\.env): use run-all.bat
 REM ============================================================
 call :check_node || goto :fail
 
