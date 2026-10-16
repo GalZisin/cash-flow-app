@@ -29,6 +29,30 @@ export interface MilestonePayment {
     description?: string;
 }
 
+/** תיקון ידני לתשלום מתוך לוח התשלומים (ראו utils/installment-schedule.util.ts) */
+export interface PaymentOverride {
+    key: string;                  // 'down' | 'm:<n>' | 'l:<loanId>:<n>' | 'l:<loanId>:payoff' | 'ms:<milestoneId>' | 'x:<id>'
+    status: 'paid' | 'skipped';   // שולם (גם מוקדם / בסכום אחר) או לא שולם למרות שהמועד עבר
+    date?: string;                // תאריך התשלום בפועל (YYYY-MM-DD)
+    amount?: number;              // סכום בפועל כשהוא שונה מהמתוכנן
+    description?: string;         // לתשלום נוסף שלא בלוח
+}
+
+/** שורה בהיסטוריה / בתשלומים הקרובים של פריסה */
+export interface InstallmentPaymentEntry {
+    key: string;
+    date: string;                 // שולם: תאריך התשלום, עתידי: מועד החיוב
+    dueDate: string;
+    amount: number;
+    type: 'down' | 'manual' | 'loan' | 'milestone' | 'extra';
+    source: 'auto' | 'manual';    // אוטומטי לפי תאריך או תיקון ידני
+    skipped?: boolean;            // המועד עבר וסומן "לא שולם"
+    index?: number;
+    description?: string;
+    milestoneId?: string;
+    loanId?: string;
+}
+
 export interface Installment {
     id: string;
     name: string;
@@ -45,7 +69,8 @@ export interface Installment {
     paymentType?: 'manual' | 'loan' | 'milestone'; // סוג הפריסה: תשלומים קבועים, הלוואה, או פעימות
     loanComponents: LoanComponent[]; // רשימת ההלוואות המשויכות
     milestones?: Milestone[];        // פעימות תשלום לפי אחוזים
-    milestonePayments?: MilestonePayment[]; // תיעוד תשלומים שבוצעו עבור פעימות
+    milestonePayments?: MilestonePayment[]; // מודל ישן: מומר ל-paymentOverrides בטעינה
+    paymentOverrides?: PaymentOverride[];   // תיקונים ידניים ללוח התשלומים האוטומטי
 
     // קישור ליעד פיננסי
     linkedGoalId?: string;           // ID של יעד פיננסי קשור
@@ -59,6 +84,8 @@ export interface LoanComponentStatus {
     paidInstallments: number;
     monthsLeft: number;
     isCompleted: boolean;
+    history: InstallmentPaymentEntry[];   // תשלומי ההלוואה ששולמו
+    upcoming: InstallmentPaymentEntry[];  // תשלומי ההלוואה שטרם שולמו
 }
 
 export interface InstallmentStatus {
@@ -73,9 +100,8 @@ export interface InstallmentStatus {
     isCompleted: boolean;       // האם הסתיים
     monthsLeft: number;         // חודשים שנותרו
     loanStatuses: LoanComponentStatus[];
-    combinedPaymentHistory?: { date: string, amount: number, type: 'manual' | 'loan' | 'milestone', description?: string, milestoneId?: string, loanId?: string }[];
-    upcomingPayments?: { date: string, amount: number, type: 'manual' | 'loan' | 'milestone', description?: string, milestoneId?: string, loanId?: string }[];
-    milestonePayments?: MilestonePayment[]; // Include actual milestone payments in status
+    combinedPaymentHistory: InstallmentPaymentEntry[]; // תשלומים ששולמו, לפי תאריך
+    upcomingPayments: InstallmentPaymentEntry[];       // תשלומים שטרם שולמו (כולל כאלה שסומנו "לא שולם")
 }
 
 export interface CashFlowWarning {

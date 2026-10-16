@@ -84,8 +84,8 @@ export class InstallmentsComponent implements OnInit {
     form = signal<Installment | Omit<Installment, 'id'>>(EMPTY_FORM()); // Form state as a signal
     pendingDeleteId = signal<string | null>(null);
     pendingWarnings: CashFlowWarning[] | null = null;
-    // Added milestoneId to pendingUndoAction type
-    pendingUndoAction: { item: Installment, loanId?: string, milestoneId?: string } | null = null;
+    // key = תשלום ספציפי מלוח התשלומים
+    pendingUndoAction: { item: Installment, loanId?: string, milestoneId?: string, key?: string } | null = null;
     expandedLoans = signal<Record<string, boolean>>({}); // Track expand state for history
 
     showMarkAsPaidDialog = signal(false);
@@ -488,15 +488,19 @@ export class InstallmentsComponent implements OnInit {
         this.cancelMarkAsPaidDialog();
     }
 
-    undoPayment(item: Installment, loanId?: string, milestoneId?: string) {
-        this.pendingUndoAction = { item, loanId, milestoneId }; // Still using object for this specific dialog state
+    undoPayment(item: Installment, loanId?: string, key?: string) {
+        this.pendingUndoAction = { item, loanId, key };
     }
 
     doUndoPayment() {
         if (!this.pendingUndoAction) return;
-        const { item, loanId, milestoneId } = this.pendingUndoAction;
+        const { item, loanId, milestoneId, key } = this.pendingUndoAction;
         this.pendingUndoAction = null; // Clear after use
-        if (milestoneId) {
+        if (key) {
+            this.svc.undoPaymentByKey(item, key).subscribe(() => {
+                this.snackBar.open(this.translate.instant('INSTALLMENTS.PAYMENT_UNDONE'), '', { duration: 2000 });
+            });
+        } else if (milestoneId) {
             this.svc.undoMilestonePayment(item, milestoneId).subscribe(() => {
                 this.snackBar.open('תשלום הפעימה בוטל בהצלחה', '', { duration: 2000 });
             });
@@ -505,6 +509,13 @@ export class InstallmentsComponent implements OnInit {
                 this.snackBar.open('התשלום בוטל בהצלחה', '', { duration: 2000 });
             });
         }
+    }
+
+    /** מחזיר תשלום שסומן "לא שולם" לחישוב האוטומטי לפי תאריך (בלי אישור, זה לא מוחק כלום) */
+    resetPayment(item: Installment, key: string) {
+        this.svc.resetPayment(item, key).subscribe(() => {
+            this.snackBar.open(this.translate.instant('INSTALLMENTS.PAYMENT_RESET'), '', { duration: 2000 });
+        });
     }
 
     undoMilestonePayment(item: Installment, milestoneId: string) {
@@ -669,6 +680,11 @@ export class InstallmentsComponent implements OnInit {
             ...mp,
             amount: Number(mp.amount) || 0
         }));
+
+        // תיקונים ידניים נשמרים רק לתשלומים שקיימים בלוח של הסוג הנוכחי (מקדמה / תשלומים / הלוואות / פעימות)
+        const overridePrefixes: Record<string, string[]> = { manual: ['m:'], loan: ['l:'], milestone: ['ms:', 'x:'] };
+        const allowedPrefixes = ['down', ...(overridePrefixes[currentForm.paymentType || 'manual'] || [])];
+        currentForm.paymentOverrides = (currentForm.paymentOverrides || []).filter(o => allowedPrefixes.some(p => o.key.startsWith(p)));
 
         // Update the form signal with the prepared data
         this.form.set(currentForm);

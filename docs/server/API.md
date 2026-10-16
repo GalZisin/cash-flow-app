@@ -43,7 +43,36 @@ Base URL: `http://localhost:3000/api`. כל הגופים הם JSON. מזהים �
 | PUT | `/installments/:id` | עדכון חלקי |
 | DELETE | `/installments/:id` | `{ success: true }` |
 
-שדות: `name, totalAmount, downPayment, monthlyPayment, installmentsCount, startDate (YYYY-MM-DD), color, notes, manualPaidCount, lastManualPaymentDate, paymentType ('manual' | 'loan' | 'milestone'), loanComponents[], milestones[], milestonePayments[], payments[]`.
+שדות: `name, totalAmount, downPayment, monthlyPayment, installmentsCount, startDate (YYYY-MM-DD), color, notes, manualPaidCount, lastManualPaymentDate, paymentType ('manual' | 'loan' | 'milestone'), linkedGoalId, loanComponents[], milestones[], milestonePayments[], payments[], paymentOverrides[]`.
+
+### התקדמות תשלומים: לפי תאריך + תיקונים (`paymentOverrides`)
+
+תשלום מתוזמן נחשב **שולם אוטומטית ברגע שתאריך החיוב שלו הגיע** (`dueDate <= היום`, השוואת מחרוזות `YYYY-MM-DD` לפי התאריך המקומי). אין יותר סימון ידני של כל תשלום. המימוש בשרת: `server/utils/installmentSchedule.js` (`buildSchedule`, `getPaymentProgress(installment, today)`), והוא משמש את סיכום ה-AI (`services/cashflow-engine.js`).
+
+לוח התשלומים ומפתחות (`key`):
+
+| מפתח | מה | סכום | תאריך חיוב |
+| --- | --- | --- | --- |
+| `down` | מקדמה (כש-`downPayment > 0`) | `downPayment` | `startDate` |
+| `m:<n>` | פריסה ידנית, n = 1..`installmentsCount` | `monthlyPayment` | `startDate` + (n-1) חודשים, אותו יום בחודש, נחתך ליום האחרון (31/1 -> 28/2) |
+| `l:<loanId>:<n>` | רכיב הלוואה | `loan.monthlyPayment` | אותו כלל מ-`loan.startDate` |
+| `l:<loanId>:payoff` | פירעון מוקדם (`payoffDate`) | `payoffAmount` | `payoffDate` (יום 1 אם `YYYY-MM`). מחליף את התשלומים שחודש החיוב שלהם הוא חודש הפירעון או אחריו |
+| `ms:<milestoneId>` | פעימה | `milestone.amount` | `milestone.date` (יום 1 אם `YYYY-MM`) |
+
+`startDate` יכול להיות `YYYY-MM` (יום 1) או `YYYY-MM-DD`. סוג הפריסה: `paymentType`, ובהיעדרו `loan` אם יש `loanComponents`, `milestone` אם יש `milestones`, אחרת `manual`.
+
+`paymentOverrides` (נשמר ב-`extra_json`, בלי עמודה משלו) מתקן תשלום בודד:
+
+```json
+{ "key": "m:3", "status": "paid" | "skipped", "date": "2026-03-02", "amount": 950, "description": "..." }
+```
+
+- `skipped` - לא שולם, גם אם התאריך עבר (עדיין נחשב חוב שנותר).
+- `paid` - שולם, גם לפני התאריך. הסכום = `amount` אם נשלח, אחרת הסכום המתוזמן.
+- מפתח `x:<id>` עם `paid` - תשלום נוסף שלא בלוח (נספר בסכום ששולם).
+- ללא תיקון - שולם אם תאריך החיוב הגיע.
+
+`remainingAmount = max(0, סך הלוח - סך ששולם)` (כולל תשלומים נוספים). נתונים ישנים: רשומה ב-`milestonePayments` עם `milestoneId` נחשבת `paid` עבור `ms:<milestoneId>` אם אין לו תיקון מפורש (`milestoneId` שלא קיים -> תשלום נוסף). `payments[]`, `manualPaidCount` ו-`paidCount` של הלוואה **אינם משפיעים** יותר על ההתקדמות (נשמרים רק לתאימות).
 
 ## השקעות
 

@@ -2,8 +2,7 @@ import { ChangeDetectionStrategy, Component, Input, Output, EventEmitter } from 
 import { CommonModule } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { Installment, InstallmentStatus, LoanComponent, MilestonePayment } from '../../../models/installment.model'; // Updated path
-// JsonPipe
+import { Installment, InstallmentPaymentEntry, InstallmentStatus, LoanComponent } from '../../../models/installment.model';
 @Component({
   selector: 'app-installment-card',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -17,7 +16,10 @@ export class InstallmentCardComponent {
   @Input() st!: InstallmentStatus; // Changed to 'st' as per HTML usage
   @Input() expandedLoans: Record<string, boolean> = {};
 
-  @Output() undoPayment = new EventEmitter<{ item: Installment, loanId?: string }>();
+  /** key = תשלום ספציפי מהלוח; בלי key = התשלום האחרון (של ההלוואה, אם צוינה) */
+  @Output() undoPayment = new EventEmitter<{ item: Installment, loanId?: string, key?: string }>();
+  /** מחזיר תשלום שסומן "לא שולם" לחישוב האוטומטי לפי תאריך */
+  @Output() resetPayment = new EventEmitter<{ item: Installment, key: string }>();
   @Output() markAsPaid = new EventEmitter<{ item: Installment, loan?: LoanComponent, milestoneId?: string }>();
   @Output() openEdit = new EventEmitter<Installment>();
   @Output() confirmDelete = new EventEmitter<string>();
@@ -34,9 +36,14 @@ export class InstallmentCardComponent {
   }
 
   // Getter לקבלת התשלום האחרון שבוצע
-  get lastPayment() {
+  get lastPayment(): InstallmentPaymentEntry | null {
     const history = this.st?.combinedPaymentHistory;
     return history && history.length > 0 ? history[history.length - 1] : null;
+  }
+
+  /** תשלומים שהמועד שלהם עבר אבל סומנו "לא שולם" */
+  get skippedPayments(): InstallmentPaymentEntry[] {
+    return (this.st?.upcomingPayments || []).filter(p => p.skipped);
   }
 
   // Helper to emit markAsPaid for main installment
@@ -62,11 +69,11 @@ export class InstallmentCardComponent {
     this.markMilestoneAsPaid.emit({ item, milestoneId });
   }
 
-  isMilestonePaid(milestoneId: string): boolean {
-    return !!this.st?.milestonePayments?.some(p => p.milestoneId === milestoneId);
+  getMilestonePayment(milestoneId: string): InstallmentPaymentEntry | undefined {
+    return this.st?.combinedPaymentHistory.find(p => p.type === 'milestone' && p.milestoneId === milestoneId);
   }
 
-  getMilestonePayment(milestoneId: string): MilestonePayment | undefined {
-    return this.st?.milestonePayments?.find(p => p.milestoneId === milestoneId);
+  isSkipped(milestoneId: string): boolean {
+    return this.skippedPayments.some(p => p.milestoneId === milestoneId);
   }
 }

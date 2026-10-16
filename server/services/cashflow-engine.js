@@ -3,6 +3,7 @@
  * All calculations here; AI only gets the summarized output.
  */
 const traceMethods = require('../utils/traceMethods');
+const { getPaymentProgress, resolvePaymentType } = require('../utils/installmentSchedule');
 
 function sumExpenses(items = []) {
   return items.reduce((s, e) => s + (Number(e.amount) || 0), 0);
@@ -11,8 +12,9 @@ function sumExpenses(items = []) {
 /**
  * Build a compact financial summary from raw data files.
  * This is the DTO sent to AI — small, structured, no raw history.
+ * `today` (Date or 'YYYY-MM-DD') decides which installment payments are already paid.
  */
-function buildSummary({ cashFlow, installments = [], investments = [], defaults = {} }) {
+function buildSummary({ cashFlow, installments = [], investments = [], defaults = {}, today = new Date() }) {
   const months = cashFlow?.months || [];
   if (!months.length) return { error: 'No cashflow data' };
 
@@ -46,50 +48,41 @@ function buildSummary({ cashFlow, installments = [], investments = [], defaults 
   const monthCount = months.length;
 
   // --- Active Loans / Installments ---
-  const activeLoans = installments
-    .filter(i => i.loanComponents?.length > 0)
-    .filter(i => {
-      const remaining = i.installmentsCount - (i.manualPaidCount || 0);
-      return remaining > 0 && i.monthlyPayment > 0;
-    })
-    .map(i => ({
+  // Progress follows the date-based rule (utils/installmentSchedule.js): a payment counts as paid once
+  // its due date arrives, unless paymentOverrides say otherwise. manualPaidCount / paidCount are ignored.
+  const withProgress = installments.map(i => ({
+    i,
+    type: resolvePaymentType(i),
+    progress: getPaymentProgress(i, today)
+  }));
+  const isActive = ({ progress }) => progress.remainingCount > 0 && progress.remainingAmount > 0;
+
+  const activeLoans = withProgress
+    .filter(x => x.type === 'loan')
+    .filter(isActive)
+    .map(({ i, progress }) => ({
       name: i.name,
       totalAmount: i.totalAmount,
-      monthlyPayment: i.monthlyPayment,
-      remainingPayments: i.installmentsCount - (i.manualPaidCount || 0),
-      remainingBalance: i.monthlyPayment * (i.installmentsCount - (i.manualPaidCount || 0))
+      monthlyPayment: Number(i.monthlyPayment) ||
+        (i.loanComponents || []).reduce((s, l) => s + (Number(l.monthlyPayment) || 0), 0),
+      remainingPayments: progress.remainingCount,
+      remainingBalance: progress.remainingAmount
     }));
 
-  const activeInstallments = installments
-    .filter(i => !i.loanComponents?.length)
-    .filter(i => {
-      // Include milestone-based payments or monthly payments
-      if (i.paymentType === 'milestone' && i.milestones?.length > 0) {
-        // Check if there are unpaid milestones
-        const totalMilestones = i.milestones.length;
-        const paidMilestones = i.milestonePayments?.length || 0;
-        return paidMilestones < totalMilestones;
-      }
-      // Regular monthly payments
-      const remaining = i.installmentsCount - (i.manualPaidCount || 0);
-      return remaining > 0 && i.monthlyPayment > 0;
-    })
-    .map(i => {
-      if (i.paymentType === 'milestone') {
-        const totalMilestones = i.milestones?.length || 0;
-        const paidMilestones = i.milestonePayments?.length || 0;
-        const remainingMilestones = totalMilestones - paidMilestones;
-        const remainingAmount = i.milestones
-          ?.slice(paidMilestones)
-          .reduce((sum, m) => sum + (m.amount || 0), 0) || 0;
-
+  const activeInstallments = withProgress
+    .filter(x => x.type !== 'loan')
+    .filter(isActive)
+    .map(({ i, type, progress }) => {
+      if (type === 'milestone') {
+        const unpaidMilestones = progress.entries.filter(e => e.kind === 'milestone' && !e.paid);
+        const next = unpaidMilestones[0];
         return {
           name: i.name,
           totalAmount: i.totalAmount,
           paymentType: 'milestone',
-          remainingMilestones: remainingMilestones,
-          remainingAmount: remainingAmount,
-          nextMilestone: i.milestones?.[paidMilestones]
+          remainingMilestones: unpaidMilestones.length,
+          remainingAmount: progress.remainingAmount,
+          nextMilestone: next ? (i.milestones || []).find(m => m.id === next.milestoneId) : undefined
         };
       }
 
@@ -97,7 +90,7 @@ function buildSummary({ cashFlow, installments = [], investments = [], defaults 
         name: i.name,
         totalAmount: i.totalAmount,
         monthlyPayment: i.monthlyPayment,
-        remainingPayments: i.installmentsCount - (i.manualPaidCount || 0)
+        remainingPayments: progress.entries.filter(e => e.kind === 'manual' && !e.paid).length
       };
     });
 

@@ -67,7 +67,10 @@ class InstallmentsService {
             loanComponents: data.loanComponents ?? existing.loanComponents ?? [],
             milestones: data.milestones ?? existing.milestones ?? [],
             milestonePayments: data.milestonePayments ?? existing.milestonePayments ?? [],
-            payments: data.payments ?? existing.payments ?? []
+            payments: data.payments ?? existing.payments ?? [],
+            // per-payment corrections to the date-based rule (utils/installmentSchedule.js); stored in extra_json
+            paymentOverrides: data.paymentOverrides ?? existing.paymentOverrides ?? [],
+            linkedGoalId: data.linkedGoalId ?? existing.linkedGoalId ?? undefined
         };
     }
 }

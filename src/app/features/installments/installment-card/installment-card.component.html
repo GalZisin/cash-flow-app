@@ -4,13 +4,9 @@
     <span class="inst-card-name">{{ item.name }}</span>
     <div class="d-flex gap-1 align-items-center">
       <!-- כפתור ביטול תשלום (Undo) דינמי בראש הכרטיסייה -->
-      @if (st.paidInstallments > 0) {
-        @if (lastPayment; as last) {
-          @if (last.type === 'manual') {
-            <button class="inst-icon-btn" type="button" [matTooltip]="'INSTALLMENTS.UNDO_PAYMENT' | translate" (click)="undoPayment.emit({ item: item })">↺</button>
-          } @else if (last.type === 'milestone' && last.milestoneId) {
-            <button class="inst-icon-btn" type="button" [matTooltip]="'INSTALLMENTS.UNDO_PAYMENT' | translate" (click)="undoMilestonePayment.emit({ item: item, milestoneId: last.milestoneId })">↺</button>
-          }
+      @if (lastPayment; as last) {
+        @if (last.type === 'manual' || last.type === 'milestone' || last.type === 'extra') {
+          <button class="inst-icon-btn" type="button" [matTooltip]="'INSTALLMENTS.UNDO_PAYMENT' | translate" (click)="undoPayment.emit({ item: item, key: last.key })">↺</button>
         }
       }
 
@@ -74,7 +70,7 @@
   </div>
 
   <!-- היסטוריה כללית (Combined) - מוצגת רק עבור תשלומים ידניים למניעת כפילות -->
-  @if (expandedLoans['top_' + item.id] && st.combinedPaymentHistory?.length && item.paymentType === 'manual') {
+  @if (expandedLoans['top_' + item.id] && item.paymentType === 'manual') {
     <div class="inst-history-popup inst-history-text bg-light p-3 mb-3 rounded shadow-sm border">
       <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
         <span class="fw-bold text-primary">{{ 'INSTALLMENTS.PAYMENT_HISTORY' | translate }} ({{ 'INSTALLMENTS.TOTAL' | translate }})</span>
@@ -85,19 +81,37 @@
         }
       </div>
 
-      @for (p of st.combinedPaymentHistory; track $index) {
+      @for (p of st.combinedPaymentHistory; track p.key) {
         <div class="text-muted border-bottom-dashed py-2 d-flex justify-content-between align-items-center">
           <div class="d-flex align-items-center gap-2">
             <span>✓ {{ p.date | date:'shortDate' }}</span>
-            <button class="inst-icon-btn p-0 text-muted small" (click)="undoPayment.emit({ item: item })">↺</button>
+            <span class="extra-small" [matTooltip]="(p.source === 'auto' ? 'INSTALLMENTS.AUTO_PAID_HINT' : 'INSTALLMENTS.MANUAL_PAID_HINT') | translate">
+              {{ (p.source === 'auto' ? 'INSTALLMENTS.AUTO_PAID' : 'INSTALLMENTS.MANUAL_PAID') | translate }}
+            </span>
+            @if (p.type !== 'down') {
+              <button class="inst-icon-btn p-0 text-muted small" type="button" [matTooltip]="'INSTALLMENTS.UNDO_PAYMENT' | translate" (click)="undoPayment.emit({ item: item, key: p.key })">↺</button>
+            }
           </div>
           <div class="text-end">
             <div class="fw-bold small">{{ p.amount | number:'1.0-0' }} ₪</div>
-            @if (p.description) { <div class="extra-small text-muted inst-payment-desc">{{ p.description }}</div> }
+            @if (p.type === 'down') { <div class="extra-small text-muted inst-payment-desc">{{ 'INSTALLMENTS.DOWN_PAYMENT' | translate }}</div> }
+            @else if (p.description) { <div class="extra-small text-muted inst-payment-desc">{{ p.description }}</div> }
           </div>
         </div>
       }
-      @if (!st.combinedPaymentHistory!.length) { <div class="small text-muted text-center py-2">אין היסטוריית תשלומים</div> }
+      @for (p of skippedPayments; track p.key) {
+        <div class="text-muted border-bottom-dashed py-2 d-flex justify-content-between align-items-center">
+          <div class="d-flex align-items-center gap-2">
+            <span class="text-decoration-line-through">{{ p.dueDate | date:'shortDate' }}</span>
+            <span class="extra-small">{{ 'INSTALLMENTS.SKIPPED' | translate }}</span>
+            <button class="inst-icon-btn p-0 text-muted small" type="button" [matTooltip]="'INSTALLMENTS.RESET_AUTO' | translate" (click)="resetPayment.emit({ item: item, key: p.key })">⟲</button>
+          </div>
+          <div class="fw-bold small">{{ p.amount | number:'1.0-0' }} ₪</div>
+        </div>
+      }
+      @if (!st.combinedPaymentHistory.length && !skippedPayments.length) {
+        <div class="small text-muted text-center py-2">{{ 'INSTALLMENTS.NO_PAYMENTS_YET' | translate }}</div>
+      }
     </div>
   }
 
@@ -152,17 +166,32 @@
               </div>
 
               <!-- רשימת התשלומים של ההלוואה -->
-              @for (p of ls.loan.payments; track $index) {
+              @for (p of ls.history; track p.key) {
                 <div class="text-muted border-bottom-dashed py-1 d-flex justify-content-between align-items-center">
                   <div class="d-flex align-items-center gap-2">
                     <span>✓ {{ p.date | date:'shortDate' }}</span>
-                    <button class="btn btn-link p-0 text-muted small inst-line-height-reset" (click)="undoPayment.emit({ item: item, loanId: ls.loan.id })" [matTooltip]="'INSTALLMENTS.UNDO_PAYMENT' | translate">↺</button>
+                    <span class="extra-small" [matTooltip]="(p.source === 'auto' ? 'INSTALLMENTS.AUTO_PAID_HINT' : 'INSTALLMENTS.MANUAL_PAID_HINT') | translate">
+                      {{ (p.source === 'auto' ? 'INSTALLMENTS.AUTO_PAID' : 'INSTALLMENTS.MANUAL_PAID') | translate }}
+                    </span>
+                    <button class="btn btn-link p-0 text-muted small inst-line-height-reset" type="button" (click)="undoPayment.emit({ item: item, key: p.key })" [matTooltip]="'INSTALLMENTS.UNDO_PAYMENT' | translate">↺</button>
                   </div>
                   <span class="fw-bold small">{{ p.amount | number:'1.0-0' }} ₪</span>
                 </div>
               }
-              @if (!ls.loan.payments?.length) {
-                <div class="text-center text-muted small py-2">אין היסטוריית תשלומים</div>
+              @for (p of ls.upcoming; track p.key) {
+                @if (p.skipped) {
+                  <div class="text-muted border-bottom-dashed py-1 d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-2">
+                      <span class="text-decoration-line-through">{{ p.dueDate | date:'shortDate' }}</span>
+                      <span class="extra-small">{{ 'INSTALLMENTS.SKIPPED' | translate }}</span>
+                      <button class="btn btn-link p-0 text-muted small inst-line-height-reset" type="button" (click)="resetPayment.emit({ item: item, key: p.key })" [matTooltip]="'INSTALLMENTS.RESET_AUTO' | translate">⟲</button>
+                    </div>
+                    <span class="fw-bold small">{{ p.amount | number:'1.0-0' }} ₪</span>
+                  </div>
+                }
+              }
+              @if (!ls.history.length) {
+                <div class="text-center text-muted small py-2">{{ 'INSTALLMENTS.NO_PAYMENTS_YET' | translate }}</div>
               }
             </div>
           }
@@ -202,7 +231,7 @@
                   <span class="fw-bold text-primary small">{{ 'INSTALLMENTS.PAYMENT_HISTORY' | translate }}</span>
                   <div class="d-flex gap-2">
                     @if (isPaid) {
-                      <button class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1" (click)="undoMilestonePayment.emit({ item: item, milestoneId: m.id })">
+                      <button class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1" (click)="undoPayment.emit({ item: item, key: 'ms:' + m.id })">
                         <span>↺</span> {{ 'INSTALLMENTS.UNDO_PAYMENT' | translate }}
                       </button>
                     } @else {
@@ -212,13 +241,23 @@
                     }
                   </div>
                 </div>
-                @if (isPaid) {
+                @if (payment) {
                   <div class="text-muted py-1 d-flex justify-content-between align-items-center">
-                    <span>✓ שולם ב-{{ payment.date | date:'dd/MM/yy' }}</span>
+                    <span>
+                      ✓ {{ 'INSTALLMENTS.PAID_ON' | translate }} {{ payment.date | date:'dd/MM/yy' }}
+                      <span class="extra-small ms-1" [matTooltip]="(payment.source === 'auto' ? 'INSTALLMENTS.AUTO_PAID_HINT' : 'INSTALLMENTS.MANUAL_PAID_HINT') | translate">
+                        {{ (payment.source === 'auto' ? 'INSTALLMENTS.AUTO_PAID' : 'INSTALLMENTS.MANUAL_PAID') | translate }}
+                      </span>
+                    </span>
                     <span class="fw-bold small">{{ payment.amount | number:'1.0-0' }} ₪ ({{ m.percentage }}%)</span>
                   </div>
+                } @else if (isSkipped(m.id)) {
+                  <div class="text-muted py-1 d-flex justify-content-between align-items-center">
+                    <span>{{ 'INSTALLMENTS.SKIPPED' | translate }}</span>
+                    <button class="btn btn-link p-0 text-muted small" type="button" (click)="resetPayment.emit({ item: item, key: 'ms:' + m.id })">⟲ {{ 'INSTALLMENTS.RESET_AUTO' | translate }}</button>
+                  </div>
                 } @else {
-                  <div class="text-center text-muted small py-2">טרם בוצע תשלום לפעימה זו</div>
+                  <div class="text-center text-muted small py-2">{{ 'INSTALLMENTS.MILESTONE_NOT_DUE' | translate }} ({{ m.date }})</div>
                 }
               </div>
             }

@@ -23,18 +23,56 @@ test('buildSummary computes averages, balance and a 6-month forecast', () => {
     assert.equal(summary.forecast[0].month, monthKey(1));
 });
 
-test('buildSummary lists only active loans and installments', () => {
+test('buildSummary lists only active loans and installments (payments count as paid by due date)', () => {
+    const today = '2026-04-10';
     const installments = [
-        { name: 'TV', totalAmount: 6000, monthlyPayment: 500, installmentsCount: 12, manualPaidCount: 3, paymentType: 'manual' },
-        { name: 'Done', totalAmount: 1200, monthlyPayment: 100, installmentsCount: 12, manualPaidCount: 12, paymentType: 'manual' },
-        { name: 'Loan', totalAmount: 50000, monthlyPayment: 1000, installmentsCount: 50, manualPaidCount: 10, loanComponents: [{}] }
+        // 4 payments due by today (Jan 10 .. Apr 10, inclusive) -> 8 remaining
+        { name: 'TV', totalAmount: 6000, monthlyPayment: 500, installmentsCount: 12, startDate: '2026-01-10', manualPaidCount: 0, paymentType: 'manual' },
+        { name: 'Done', totalAmount: 1200, monthlyPayment: 100, installmentsCount: 12, startDate: '2025-01-01', paymentType: 'manual' },
+        // marked as fully paid manually, but only 1 payment was due -> still active
+        { name: 'Early', totalAmount: 1000, monthlyPayment: 100, installmentsCount: 10, startDate: '2026-04-01', manualPaidCount: 10, paymentType: 'manual' },
+        {
+            name: 'Loan', totalAmount: 50000, monthlyPayment: 1000, installmentsCount: 50, manualPaidCount: 40,
+            loanComponents: [{ id: 'L', monthlyPayment: 1000, installmentsCount: 50, startDate: '2025-07-01', paidCount: 0 }]
+        },
+        {
+            name: 'Paid off', paymentType: 'loan', totalAmount: 5000, monthlyPayment: 500,
+            loanComponents: [{ id: 'P', monthlyPayment: 500, installmentsCount: 10, startDate: '2026-01-01', payoffDate: '2026-03', payoffAmount: 3500 }]
+        }
     ];
-    const summary = buildSummary({ cashFlow: sampleCashFlow(), installments, investments: [] });
+    const summary = buildSummary({ cashFlow: sampleCashFlow(), installments, investments: [], today });
 
-    assert.deepEqual(summary.installments.map(i => i.name), ['TV']);
-    assert.equal(summary.installments[0].remainingPayments, 9);
+    assert.deepEqual(summary.installments.map(i => i.name), ['TV', 'Early']);
+    assert.equal(summary.installments[0].remainingPayments, 8);
+    assert.equal(summary.installments[1].remainingPayments, 9);
     assert.deepEqual(summary.loans.map(l => l.name), ['Loan']);
+    // Jul 2025 .. Apr 2026 = 10 payments paid
+    assert.equal(summary.loans[0].remainingPayments, 40);
     assert.equal(summary.loans[0].remainingBalance, 40000);
+});
+
+test('buildSummary milestone installments: remaining milestones, amount and next milestone by date and overrides', () => {
+    const installments = [{
+        name: 'Flat', paymentType: 'milestone', totalAmount: 600, downPayment: 0, startDate: '2026-01-01',
+        milestones: [
+            { id: 'a', description: 'A', amount: 100, date: '2026-01' },
+            { id: 'b', description: 'B', amount: 200, date: '2026-06' },
+            { id: 'c', description: 'C', amount: 300, date: '2026-09' }
+        ],
+        milestonePayments: [],
+        paymentOverrides: [{ key: 'ms:b', status: 'paid', date: '2026-03-01' }]
+    }, {
+        name: 'All due', paymentType: 'milestone', totalAmount: 100,
+        milestones: [{ id: 'z', amount: 100, date: '2026-02' }]
+    }];
+    const summary = buildSummary({ cashFlow: sampleCashFlow(), installments, investments: [], today: '2026-04-10' });
+
+    assert.deepEqual(summary.installments.map(i => i.name), ['Flat']);
+    const flat = summary.installments[0];
+    assert.equal(flat.paymentType, 'milestone');
+    assert.equal(flat.remainingMilestones, 1);
+    assert.equal(flat.remainingAmount, 300);
+    assert.equal(flat.nextMilestone.id, 'c');
 });
 
 test('simulateScenario deducts the purchase in the first forecast month on/after the date', () => {

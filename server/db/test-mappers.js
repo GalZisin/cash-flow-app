@@ -122,7 +122,12 @@ for (const file of fs.readdirSync(DATA).filter((f) => /^cash-flow-data.*\.json$/
         ],
         milestones: [{ id: 'm1', description: 'פעימה', percentage: 20, amount: 20000, date: '2026-08' }],
         milestonePayments: [{ date: '2026-08-18', amount: 20000, milestoneId: 'm1', description: 'שולם' }],
-        payments: [{ date: '2026-01-01', amount: 1500 }]
+        payments: [{ date: '2026-01-01', amount: 1500 }],
+        paymentOverrides: [
+            { key: 'l:L1:3', status: 'paid', date: '2026-02-20', amount: 1400 },
+            { key: 'l:L1:4', status: 'skipped' },
+            { key: 'x:abc', status: 'paid', date: '2026-02-25', amount: 500, description: 'תשלום נוסף' }
+        ]
     }];
     const p2 = { parents: [], loans: [], loanPayments: [], milestones: [], milestonePayments: [], payments: [] };
     for (const inst of rich) {

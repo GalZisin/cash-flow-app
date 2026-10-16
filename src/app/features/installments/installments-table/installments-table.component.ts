@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Installment, InstallmentStatus, LoanComponent } from '../../../models/installment.model';
-// import { Installment, InstallmentStatus, LoanComponent } from '../../../models/installment.model';
 
 @Component({
   selector: 'app-installments-table',
@@ -21,13 +20,19 @@ export class InstallmentsTableComponent {
 
   @Output() setSort = new EventEmitter<string>();
   @Output() toggleTopHistory = new EventEmitter<string>();
-  @Output() undoPayment = new EventEmitter<{ item: Installment, loanId?: string, milestoneId?: string }>();
+  /** key = תשלום ספציפי מהלוח; בלי key = התשלום האחרון (של ההלוואה, אם צוינה) */
+  @Output() undoPayment = new EventEmitter<{ item: Installment, loanId?: string, key?: string }>();
+  /** מחזיר תשלום שסומן "לא שולם" לחישוב האוטומטי לפי תאריך */
+  @Output() resetPayment = new EventEmitter<{ item: Installment, key: string }>();
   @Output() markAsPaid = new EventEmitter<{ item: Installment, loan?: LoanComponent, milestoneId?: string }>();
   @Output() openEdit = new EventEmitter<Installment>();
   @Output() confirmDelete = new EventEmitter<string>();
   @Output() toggleLoanHistory = new EventEmitter<string>();
   @Output() undoMilestonePayment = new EventEmitter<{ item: Installment, milestoneId: string }>();
   @Output() markMilestoneAsPaid = new EventEmitter<{ item: Installment, milestoneId: string }>();
+
+  /** כמה תשלומים קרובים להציג בשורה המורחבת */
+  readonly upcomingLimit = 6;
 
   constructor() { }
 

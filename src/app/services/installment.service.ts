@@ -1,7 +1,8 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap, of, switchMap } from 'rxjs';
-import { Installment, InstallmentStatus, LoanComponentStatus, CashFlowWarning, MilestonePayment } from '../models/installment.model';
+import { Installment, InstallmentStatus, LoanComponentStatus, CashFlowWarning, InstallmentPaymentEntry, PaymentOverride } from '../models/installment.model';
+import { getOverrides, overridesAfterPay, overridesAfterReset, overridesAfterUnpay, ResolvedPayment, resolvePayments } from '../utils/installment-schedule.util';
 import { environment } from '../../environments/environment';
 import { CashFlowService } from './cash-flow.service';
 
@@ -86,106 +87,68 @@ export class InstallmentService {
         );
     }
 
-    markAsPaid(item: Installment, paymentDate: string, loanId?: string): Observable<any> {
-        if (loanId) {
-            const updatedLoans = (item.loanComponents || []).map(l => {
-                if (l.id === loanId) {
-                    const payments = l.payments || [];
-                    return {
-                        ...l,
-                        paidCount: payments.length + 1,
-                        lastPaidDate: paymentDate,
-                        payments: [...payments, { date: paymentDate, amount: l.monthlyPayment }]
-                    };
-                }
-                return l;
-            });
-            return this.update(item.id, { ...item, loanComponents: updatedLoans });
-        }
-
-        const payments = item.payments || [];
-        const newCount = payments.length + 1;
-        return this.update(item.id, {
-            ...item,
-            manualPaidCount: newCount,
-            lastManualPaymentDate: paymentDate,
-            payments: [...payments, { date: paymentDate, amount: item.monthlyPayment }]
-        });
+    /** מסמן תשלום ספציפי כמשולם (גם לפני המועד, או בסכום/תאריך אחר) */
+    markPaymentPaid(item: Installment, key: string, paymentDate: string, amount?: number, description?: string): Observable<Installment> {
+        const override: PaymentOverride = { key, status: 'paid', date: paymentDate };
+        if (amount !== undefined) override.amount = amount;
+        if (description) override.description = description;
+        return this.saveOverrides(item, overridesAfterPay(item, override));
     }
 
-    // For marking a pre-defined milestone as paid, potentially overriding amount/description
-    markMilestoneAsPaid(item: Installment, milestoneId: string, paymentDate: string, amount?: number, description?: string): Observable<any> {
-        const milestones = item.milestones || [];
-        const milestone = milestones.find(m => m.id === milestoneId);
-        if (!milestone) return of(null); // Milestone not found
-
-        const newMilestonePayment: MilestonePayment = {
-            date: paymentDate,
-            amount: amount !== undefined ? amount : milestone.amount,
-            milestoneId: milestone.id,
-            description: description || milestone.description
-        };
-
-        const updatedMilestonePayments = [...(item.milestonePayments || []), newMilestonePayment];
-        return this.update(item.id, { ...item, milestonePayments: updatedMilestonePayments });
+    /** מסמן תשלום כ"לא שולם" (בוטל / נדחה) */
+    markPaymentUnpaid(item: Installment, key: string): Observable<Installment> {
+        return this.saveOverrides(item, overridesAfterUnpay(item, key));
     }
 
-    // For adding an ad-hoc milestone payment (not necessarily linked to a pre-defined milestone)
-    addAdHocMilestonePayment(item: Installment, paymentId: string, paymentDate: string, amount: number, description: string): Observable<any> {
-        const newMilestonePayment: MilestonePayment = {
-            date: paymentDate,
-            amount: amount,
-            milestoneId: paymentId, // Use the generated paymentId as the milestoneId for ad-hoc payments
-            description: description
-        };
-
-        const updatedMilestonePayments = [...(item.milestonePayments || []), newMilestonePayment];
-        return this.update(item.id, { ...item, milestonePayments: updatedMilestonePayments });
+    /** מחזיר תשלום לחישוב האוטומטי לפי תאריך */
+    resetPayment(item: Installment, key: string): Observable<Installment> {
+        return this.saveOverrides(item, overridesAfterReset(item, key));
     }
 
-    undoMilestonePayment(item: Installment, milestoneId: string): Observable<any> {
-        const updatedMilestonePayments = [...(item.milestonePayments || [])];
-        const indexToRemove = updatedMilestonePayments.findIndex(mp => mp.milestoneId === milestoneId);
-        if (indexToRemove > -1) {
-            updatedMilestonePayments.splice(indexToRemove, 1);
-        }
-        return this.update(item.id, { ...item, milestonePayments: updatedMilestonePayments });
+    /** ✅ : מסמן את התשלום הבא שטרם שולם (של ההלוואה, או של הפריסה) כמשולם */
+    markAsPaid(item: Installment, paymentDate: string, loanId?: string): Observable<Installment | null> {
+        const next = resolvePayments(item).find(p => !p.paid && p.type !== 'down' && (loanId ? p.loanId === loanId : true));
+        return next ? this.markPaymentPaid(item, next.key, paymentDate) : of(null);
     }
 
-    undoPayment(item: Installment, loanId?: string): Observable<any> {
-        if (loanId) {
-            const updatedLoans = (item.loanComponents || []).map(l => {
-                if (l.id === loanId) {
-                    const payments = [...(l.payments || [])];
-                    if (payments.length === 0) return l;
-                    payments.pop(); // הסרת התשלום האחרון
-                    return {
-                        ...l,
-                        paidCount: payments.length,
-                        lastPaidDate: payments.length > 0 ? payments[payments.length - 1].date : undefined,
-                        payments: payments
-                    };
-                }
-                return l;
-            });
-            return this.update(item.id, { ...item, loanComponents: updatedLoans });
-        }
-
-        // ביטול תשלום ברמה הראשית
-        const payments = [...(item.payments || [])];
-        if (payments.length === 0) return this.load();
-
-        payments.pop();
-        return this.update(item.id, {
-            ...item,
-            manualPaidCount: payments.length,
-            lastManualPaymentDate: payments.length > 0 ? payments[payments.length - 1].date : undefined,
-            payments: payments
-        });
+    markMilestoneAsPaid(item: Installment, milestoneId: string, paymentDate: string, amount?: number, description?: string): Observable<Installment | null> {
+        const milestone = (item.milestones || []).find(m => m.id === milestoneId);
+        if (!milestone) return of(null);
+        const changedDescription = description && description !== milestone.description ? description : undefined;
+        return this.markPaymentPaid(item, `ms:${milestoneId}`, paymentDate, amount, changedDescription);
     }
 
-    private isValidDate(d: unknown): d is Date {
-        return d instanceof Date && !isNaN((d as Date).getTime());
+    /** תשלום נוסף שלא מופיע בלוח התשלומים */
+    addAdHocMilestonePayment(item: Installment, paymentId: string, paymentDate: string, amount: number, description: string): Observable<Installment> {
+        return this.markPaymentPaid(item, `x:${paymentId}`, paymentDate, amount, description);
+    }
+
+    undoMilestonePayment(item: Installment, milestoneId: string): Observable<Installment> {
+        const key = (item.milestones || []).some(m => m.id === milestoneId) ? `ms:${milestoneId}` : `x:${milestoneId}`;
+        return this.undoPaymentByKey(item, key);
+    }
+
+    /** ↺ : ביטול התשלום האחרון ששולם (של ההלוואה, או של הפריסה) */
+    undoPayment(item: Installment, loanId?: string): Observable<Installment | null> {
+        const paid = resolvePayments(item).filter(p => p.paid && p.type !== 'down' && (loanId ? p.loanId === loanId : true));
+        const last = paid.sort((a, b) => (a.paidDate || '').localeCompare(b.paidDate || '')).pop();
+        return last ? this.undoPaymentByKey(item, last.key) : of(null);
+    }
+
+    /** ↺ על תשלום ספציפי: תשלום נוסף נמחק, תשלום מהלוח מסומן "לא שולם" */
+    undoPaymentByKey(item: Installment, key: string): Observable<Installment> {
+        return key.startsWith('x:') ? this.resetPayment(item, key) : this.markPaymentUnpaid(item, key);
+    }
+
+    private saveOverrides(item: Installment, paymentOverrides: PaymentOverride[]): Observable<Installment> {
+        // milestonePayments הומרו ל-paymentOverrides (getOverrides), לכן מנקים את המודל הישן
+        return this.update(item.id, { ...item, paymentOverrides, milestonePayments: [] });
+    }
+
+    /** תזרים: פעימה ששולמה בפועל עד תחילת החודש שלה לא נספרת שוב באותו חודש */
+    private isMilestonePaidEarly(item: Installment, milestoneId: string, targetMonthDate: Date): boolean {
+        return getOverrides(item).some(o =>
+            o.key === `ms:${milestoneId}` && o.status === 'paid' && !!o.date && this.parseDate(o.date) <= targetMonthDate);
     }
 
     private parseDate(dateStr: string): Date {
@@ -199,161 +162,75 @@ export class InstallmentService {
         return new Date(trimmed);
     }
 
-    /** מחשב את סטטוס הפריסה נכון להיום */
-    getStatus(item: Installment): InstallmentStatus {
-        const today = new Date();
+    /** מחשב את סטטוס הפריסה נכון להיום: תשלום נחשב כמשולם כשמגיע מועד החיוב שלו, אלא אם תוקן ידנית */
+    getStatus(item: Installment, today: Date = new Date()): InstallmentStatus {
+        const payments = resolvePayments(item, today);
+        const toEntry = (p: ResolvedPayment): InstallmentPaymentEntry => ({
+            key: p.key,
+            date: p.paid ? p.paidDate! : p.dueDate,
+            dueDate: p.dueDate,
+            amount: p.paid ? p.paidAmount : p.amount,
+            type: p.type,
+            source: p.source,
+            skipped: p.skipped || undefined,
+            index: p.index,
+            description: p.description,
+            milestoneId: p.milestoneId,
+            loanId: p.loanId
+        });
+        const byDate = (a: InstallmentPaymentEntry, b: InstallmentPaymentEntry) => a.date.localeCompare(b.date);
+        const progressOf = (paid: number, total: number) => total > 0 ? Math.min(100, Math.round((paid / total) * 100)) : 0;
 
-        // 1. חישוב סטטוס עבור כל הלוואה בנפרד
+        // 1. סטטוס לכל הלוואה
         const loanStatuses: LoanComponentStatus[] = (item.loanComponents || []).map(loan => {
-            const loanStart = new Date(loan.startDate);
-            const monthsSinceLoanStart = Math.max(0,
-                (today.getFullYear() - loanStart.getFullYear()) * 12 +
-                (today.getMonth() - loanStart.getMonth())
-            );
-            // עדיפות מוחלטת להיסטוריית תשלומים אם המערך קיים (אפילו אם הוא ריק)
-            const manualCount = loan.payments ? loan.payments.length : (loan.paidCount || 0);
-            const paidCount = Math.min(loan.installmentsCount, loan.payments ? manualCount : Math.max(monthsSinceLoanStart, manualCount));
-
-            // חישוב סכום ששולם: אם יש היסטוריה - סוכמים את הסכומים, אם לא - חישוב לפי כמות
-            const paidAmount = loan.payments
-                ? loan.payments.reduce((sum, p) => sum + p.amount, 0)
-                : paidCount * loan.monthlyPayment;
-
-            const progressPct = loan.totalLoanAmount > 0
-                ? Math.min(100, Math.round((paidAmount / loan.totalLoanAmount) * 100))
-                : 0;
-
+            const loanPayments = payments.filter(p => p.loanId === loan.id);
+            const paidAmount = loanPayments.reduce((sum, p) => sum + p.paidAmount, 0);
+            const scheduledTotal = loanPayments.reduce((sum, p) => sum + p.amount, 0);
+            const unpaid = loanPayments.filter(p => !p.paid);
             return {
                 loan,
                 paidAmount,
-                remainingAmount: Math.max(0, loan.totalLoanAmount - paidAmount),
-                progressPct,
-                paidInstallments: paidCount,
-                monthsLeft: Math.max(0, loan.installmentsCount - paidCount),
-                isCompleted: paidAmount >= loan.totalLoanAmount - 0.1
+                remainingAmount: Math.max(0, scheduledTotal - paidAmount),
+                progressPct: progressOf(paidAmount, scheduledTotal),
+                paidInstallments: loanPayments.filter(p => p.paid).length,
+                monthsLeft: unpaid.length,
+                isCompleted: loanPayments.length > 0 && unpaid.length === 0,
+                history: loanPayments.filter(p => p.paid).map(toEntry).sort(byDate),
+                upcoming: unpaid.map(toEntry)
             };
         });
 
-        // 2. חישוב לוגיקה כללית של הפריט
-        const totalLoansPaid = loanStatuses.reduce((sum, s) => sum + s.paidAmount, 0);
+        // 2. סטטוס כללי: התקדמות = מה ששולם מתוך כל הלוח (כולל מקדמה ותשלומים נוספים)
+        const scheduled = payments.filter(p => p.type !== 'extra');
+        const installmentsOnly = scheduled.filter(p => p.type !== 'down');
+        const paidAmount = payments.reduce((sum, p) => sum + p.paidAmount, 0);
+        const scheduledTotal = scheduled.length > 0 ? scheduled.reduce((sum, p) => sum + p.amount, 0) : (Number(item.totalAmount) || 0);
+        const remainingAmount = Math.max(0, scheduledTotal - paidAmount);
+        const progressPct = progressOf(paidAmount, scheduledTotal);
+        const isCompleted = scheduled.length > 0 ? scheduled.every(p => p.paid) : remainingAmount === 0;
+        const monthsLeft = loanStatuses.length > 0
+            ? Math.max(...loanStatuses.map(s => s.monthsLeft))
+            : installmentsOnly.filter(p => !p.paid).length;
 
-        // חישוב פעימות ששולמו (לפי תאריך שעבר)
-        const totalMilestonesPaid = (item.milestonePayments || []).reduce((sum, mp) => sum + mp.amount, 0);
-        const paidMilestonesCount = (item.milestonePayments || []).length;
-
-        // תמיכה בפריסות ישנות ללא הלוואות מפורטות
-        const itemStart = new Date(item.startDate);
-        const monthsSinceItemStart = Math.max(0,
-            (today.getFullYear() - itemStart.getFullYear()) * 12 +
-            (today.getMonth() - itemStart.getMonth())
-        );
-
-        // חישוב תשלומים ידניים לרמה הראשית (עבור פריסות ללא הלוואות משנה, או תשלומים כלליים שבוצעו)
-        const manualCount = item.payments ? item.payments.length : (item.manualPaidCount || 0);
-        const legacyPaidCount = item.payments
-            ? item.payments.length
-            : (item.paymentType !== 'manual' ? 0 : Math.min(item.installmentsCount, Math.max(monthsSinceItemStart, manualCount)));
-
-        const legacyPaidAmount = item.payments
-            ? item.payments.reduce((sum, p) => sum + p.amount, 0)
-            : (item.paymentType !== 'manual' ? 0 : legacyPaidCount * item.monthlyPayment);
-
-        const paidAmount = item.downPayment + totalLoansPaid + legacyPaidAmount + totalMilestonesPaid;
-        const remainingAmount = Math.max(0, item.totalAmount - paidAmount);
-        const progressPct = item.totalAmount > 0
-            ? Math.min(100, Math.round((paidAmount / item.totalAmount) * 100))
-            : 0;
-
-        let totalInstallments = item.installmentsCount;
-        if (item.loanComponents?.length > 0) {
-            totalInstallments = Math.max(...item.loanComponents.map(l => l.installmentsCount));
-        } else if (item.milestones && item.milestones.length > 0) {
-            // אם יש פעימות, משך הזמן הוא עד הפעימה האחרונה
-            const milestoneTimes = item.milestones.map(m => this.parseDate(m.date).getTime());
-            const validTimes = milestoneTimes.filter(t => !isNaN(t));
-            const maxDate = validTimes.length > 0 ? new Date(Math.max(...validTimes)) : today;
-            totalInstallments = Math.max(0, (maxDate.getFullYear() - itemStart.getFullYear()) * 12 + (maxDate.getMonth() - itemStart.getMonth()));
-        }
-
-        // חישוב חודשים שנותרו לפי ההלוואה שנשאר לה הכי הרבה זמן
-        const maxMonthsLeftInLoans = loanStatuses.length > 0 ? Math.max(...loanStatuses.map(s => s.monthsLeft)) : 0;
-        const paidMilestoneIds = new Set((item.milestonePayments || []).map(mp => mp.milestoneId));
-        const upcomingMilestones = (item.milestones || []).filter(m => !paidMilestoneIds.has(m.id) && new Date(m.date + '-01') > today);
-
-        let monthsLeft = 0;
-        if (item.paymentType === 'loan' && loanStatuses.length > 0) {
-            monthsLeft = maxMonthsLeftInLoans;
-        } else if (item.paymentType === 'milestone' && upcomingMilestones.length > 0) {
-            // For milestones, monthsLeft could be the count of remaining milestones, or the duration to the last one
-            monthsLeft = upcomingMilestones.length; // Simple count for now
-        } else { // manual or fallback
-            monthsLeft = Math.max(0, totalInstallments - monthsSinceItemStart);
-        }
-        const isCompleted = remainingAmount === 0;
-
-        // Combine all payment types into a single history for display
-        const combinedPaymentHistory: { date: string, amount: number, type: 'manual' | 'loan' | 'milestone', description?: string, milestoneId?: string, loanId?: string }[] = [];
-        const upcomingPayments: { date: string, amount: number, type: 'manual' | 'loan' | 'milestone', description?: string, milestoneId?: string, loanId?: string }[] = [];
-
-        // Add manual payments (main installment)
-        (item.payments || []).forEach(p => combinedPaymentHistory.push({ ...p, type: 'manual', description: `תשלום חודשי` }));
-
-        // Add loan payments from each loan component to combined history
-        loanStatuses.forEach(ls => {
-            (ls.loan.payments || []).forEach(p => combinedPaymentHistory.push({ ...p, type: 'loan', description: ls.loan.description, loanId: ls.loan.id }));
-        });
-
-        // Add recorded milestone payments to combined history
-        (item.milestonePayments || []).forEach(mp => {
-            combinedPaymentHistory.push({ date: mp.date, amount: mp.amount, type: 'milestone', description: mp.description, milestoneId: mp.milestoneId });
-        });
-
-        // Add upcoming milestones (not yet paid) to upcoming payments
-        (item.milestones || []).filter(m => !paidMilestoneIds.has(m.id)).forEach(m => {
-            const mDate = m.date.length === 7 ? `${m.date}-01` : m.date; // Ensure YYYY-MM-DD format for consistency
-            const entry = { date: mDate, amount: m.amount, type: 'milestone' as const, description: m.description, milestoneId: m.id };
-            upcomingPayments.push(entry);
-        });
-
-        // Calculate expected end date based on payment type
-        let expectedEndDate: string;
-        if (item.paymentType === 'milestone' && item.milestones && item.milestones.length > 0) {
-            const milestoneTimes = item.milestones.map(m => this.parseDate(m.date).getTime()).filter(t => !isNaN(t));
-            const lastMilestoneDate = milestoneTimes.length > 0 ? new Date(Math.max(...milestoneTimes)) : today;
-            expectedEndDate = this.isValidDate(lastMilestoneDate) ? lastMilestoneDate.toISOString().slice(0, 7) : item.startDate.slice(0, 7);
-        } else if (item.paymentType === 'loan' && item.loanComponents?.length > 0) {
-            const loanEndTimes = item.loanComponents.map(l => {
-                const d = new Date(l.startDate);
-                d.setMonth(d.getMonth() + l.installmentsCount);
-                return d.getTime();
-            });
-            const maxEndDate = new Date(Math.max(...loanEndTimes));
-            expectedEndDate = this.isValidDate(maxEndDate) ? maxEndDate.toISOString().slice(0, 7) : item.startDate.slice(0, 7);
-        } else {
-            const endDateCalc = new Date(itemStart);
-            endDateCalc.setMonth(endDateCalc.getMonth() + (Number(totalInstallments) || 0));
-            expectedEndDate = this.isValidDate(endDateCalc) ? endDateCalc.toISOString().slice(0, 7) : item.startDate.slice(0, 7);
-        }
-
-        // Sort the combined history by date
-        combinedPaymentHistory.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-        upcomingPayments.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        // 3. תאריך סיום צפוי = מועד התשלום האחרון בלוח
+        const lastDue = installmentsOnly.reduce((max, p) => p.dueDate > max ? p.dueDate : max, '');
 
         return {
             installment: item,
             paidAmount,
             remainingAmount,
-            paidInstallments: (loanStatuses.length > 0 ? loanStatuses.reduce((sum, s) => sum + s.paidInstallments, 0) : legacyPaidCount) + paidMilestonesCount,
-            paidMilestonesCount,
-            totalInstallments,
-            progressPct: progressPct,
-            endDate: expectedEndDate, // YYYY-MM
+            paidInstallments: installmentsOnly.filter(p => p.paid).length,
+            paidMilestonesCount: payments.filter(p => p.type === 'milestone' && p.paid).length,
+            totalInstallments: loanStatuses.length > 0
+                ? Math.max(...loanStatuses.map(s => s.paidInstallments + s.monthsLeft))
+                : installmentsOnly.length,
+            progressPct,
+            endDate: (lastDue || item.startDate || '').slice(0, 7), // YYYY-MM
             isCompleted,
             monthsLeft,
             loanStatuses,
-            combinedPaymentHistory,
-            upcomingPayments,
-            milestonePayments: item.milestonePayments // Include actual milestone payments in status
+            combinedPaymentHistory: payments.filter(p => p.paid).map(toEntry).sort(byDate),
+            upcomingPayments: payments.filter(p => !p.paid).map(toEntry)
         };
     }
 
@@ -381,14 +258,7 @@ export class InstallmentService {
                     return y === target.getFullYear() && (mStr - 1) === target.getMonth();
                 });
                 if (milestoneForMonth) {
-                    // Check if this milestone has already been paid
-                    const isPaid = (item.milestonePayments || []).some(mp => {
-                        // Check if the milestone payment exists for this specific milestone ID
-                        // and if its payment date is before or in the target month.
-                        const paymentDate = this.parseDate(mp.date);
-                        return mp.milestoneId === milestoneForMonth.id && paymentDate <= targetMonthDate;
-                    });
-                    if (!isPaid) {
+                    if (!this.isMilestonePaidEarly(item, milestoneForMonth.id, targetMonthDate)) {
                         installments += milestoneForMonth.amount;
                     }
                 }
@@ -483,11 +353,7 @@ export class InstallmentService {
                     return y === target.getFullYear() && (mStr - 1) === target.getMonth();
                 });
                 if (milestoneForMonth) {
-                    const isPaid = (item.milestonePayments || []).some(mp => {
-                        const paymentDate = this.parseDate(mp.date);
-                        return mp.milestoneId === milestoneForMonth.id && paymentDate <= targetMonthDate;
-                    });
-                    if (!isPaid) {
+                    if (!this.isMilestonePaidEarly(item, milestoneForMonth.id, targetMonthDate)) {
                         breakdown.push({ name: `${item.name} (${milestoneForMonth.description})`, amount: milestoneForMonth.amount, isLoan: false });
                     }
                 }

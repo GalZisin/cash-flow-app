@@ -81,25 +81,35 @@
                   <!-- Payment History -->
                   <div class="col-md-6 border-start">
                     <h6 class="small fw-bold mb-2 text-muted uppercase">{{ 'INSTALLMENTS.PAYMENT_HISTORY' | translate }}</h6>
-                    @if (st.combinedPaymentHistory?.length) {
+                    @if (st.combinedPaymentHistory.length) {
                       <div class="inst-history-list bg-light p-2 rounded">
-                        @for (p of st.combinedPaymentHistory; track $index) {
+                        @for (p of st.combinedPaymentHistory; track p.key) {
                           <div class="text-muted border-bottom-dashed py-1 d-flex justify-content-between">
                             <span>
                               ✓ {{ p.date | date:'shortDate' }}
-                              @if (p.type === 'manual') { (תשלום {{ $index + 1 }}) }
-                              @if (p.type === 'loan') { (הלוואה: {{ p.description }}) }
-                              @if (p.type === 'milestone') { (פעימה: {{ p.description }})
-                                @if (p.milestoneId) { <button class="btn btn-link p-0 text-muted" (click)="emitUndoMilestonePayment(st.installment, p.milestoneId!)" [attr.title]="'INSTALLMENTS.UNDO_PAYMENT' | translate" [matTooltip]="'INSTALLMENTS.UNDO_PAYMENT' | translate" [attr.aria-label]="'INSTALLMENTS.UNDO_PAYMENT' | translate">↺</button> }
+                              @switch (p.type) {
+                                @case ('down') { ({{ 'INSTALLMENTS.DOWN_PAYMENT' | translate }}) }
+                                @case ('manual') { ({{ 'INSTALLMENTS.PAYMENT_NO' | translate }} {{ p.index }}) }
+                                @case ('loan') { ({{ p.description || ('INSTALLMENTS.LOAN' | translate) }}@if (p.index) { #{{ p.index }} }) }
+                                @default { ({{ p.description }}) }
+                              }
+                              <span class="extra-small" [matTooltip]="(p.source === 'auto' ? 'INSTALLMENTS.AUTO_PAID_HINT' : 'INSTALLMENTS.MANUAL_PAID_HINT') | translate">
+                                {{ (p.source === 'auto' ? 'INSTALLMENTS.AUTO_PAID' : 'INSTALLMENTS.MANUAL_PAID') | translate }}
+                              </span>
+                              @if (p.type !== 'down') {
+                                <button class="btn btn-link p-0 text-muted" type="button" (click)="undoPayment.emit({ item: st.installment, key: p.key })" [attr.title]="'INSTALLMENTS.UNDO_PAYMENT' | translate" [matTooltip]="'INSTALLMENTS.UNDO_PAYMENT' | translate" [attr.aria-label]="'INSTALLMENTS.UNDO_PAYMENT' | translate">↺</button>
                               }
                             </span>
                             <span class="fw-bold">{{ p.amount | number:'1.0-0' }} ₪</span>
                           </div>
                         }
+                        @if (st.upcomingPayments.length > upcomingLimit) {
+                          <div class="small text-muted text-center pt-1">+{{ st.upcomingPayments.length - upcomingLimit }} {{ 'INSTALLMENTS.MORE_PAYMENTS' | translate }}</div>
+                        }
                       </div>
-                    } 
+                    }
                     @else {
-                      <span class="text-muted small">אין היסטוריית תשלומים ידנית</span>
+                      <span class="text-muted small">{{ 'INSTALLMENTS.NO_PAYMENTS_YET' | translate }}</span>
                     }
                   </div>
 
@@ -133,11 +143,11 @@
                           </div>
 
                           <!-- Loan Payment History inside Table Expanded Row -->
-                          @if (expandedLoans[ls.loan.id] && ls.loan.payments?.length) {
+                          @if (expandedLoans[ls.loan.id] && ls.history.length) {
                             <div class="bg-white inst-history-text p-2 mt-2 rounded shadow-sm border">
-                              @for (p of ls.loan.payments; track $index) {
+                              @for (p of ls.history; track p.key) {
                                 <div class="text-muted border-bottom-dashed py-1 d-flex justify-content-between">
-                                  <span>✓ {{ p.date | date:'shortDate' }} (תשלום {{ $index + 1 }})</span>
+                                  <span>✓ {{ p.date | date:'shortDate' }} @if (p.index) { ({{ 'INSTALLMENTS.PAYMENT_NO' | translate }} {{ p.index }}) }</span>
                                   <span class="fw-bold">{{ p.amount | number:'1.0-0' }} ₪</span>
                                 </div>
                               }
@@ -147,16 +157,25 @@
                       }
                     }
 
-                    @if (st.upcomingPayments?.length) {
+                    @if (st.upcomingPayments.length) {
                       <h6 class="small fw-bold mt-3 mb-2 text-primary uppercase">{{ 'INSTALLMENTS.UPCOMING_PAYMENTS' | translate }}</h6>
                       <div class="inst-history-list bg-light p-2 rounded">
-                        @for (p of st.upcomingPayments; track $index) {
+                        @for (p of st.upcomingPayments | slice:0:upcomingLimit; track p.key) {
                           <div class="d-flex justify-content-between py-1 border-bottom-dashed small align-items-center">
                             <span>
-                              📅 {{ p.date | date:'shortDate' }}
-                              @if (p.type === 'milestone') { (פעימה: {{ p.description }}) }
+                              📅 {{ p.dueDate | date:'shortDate' }}
+                              @switch (p.type) {
+                                @case ('down') { ({{ 'INSTALLMENTS.DOWN_PAYMENT' | translate }}) }
+                                @case ('manual') { ({{ 'INSTALLMENTS.PAYMENT_NO' | translate }} {{ p.index }}) }
+                                @case ('loan') { ({{ p.description || ('INSTALLMENTS.LOAN' | translate) }}@if (p.index) { #{{ p.index }} }) }
+                                @default { ({{ p.description }}) }
+                              }
+                              @if (p.skipped) { <span class="extra-small">{{ 'INSTALLMENTS.SKIPPED' | translate }}</span> }
                             </span>
                             <div class="d-flex gap-1">
+                              @if (p.skipped) {
+                                <button class="btn btn-link p-0 text-muted" type="button" (click)="resetPayment.emit({ item: st.installment, key: p.key })" [title]="'INSTALLMENTS.RESET_AUTO' | translate" [matTooltip]="'INSTALLMENTS.RESET_AUTO' | translate" [attr.aria-label]="'INSTALLMENTS.RESET_AUTO' | translate">⟲</button>
+                              }
                               @if (p.type === 'milestone' && p.milestoneId) {
                                 <button class="btn btn-link p-0 text-success" (click)="emitMarkMilestoneAsPaid(st.installment, p.milestoneId!)" [title]="'INSTALLMENTS.MARK_PAID' | translate" [matTooltip]="'INSTALLMENTS.MARK_PAID' | translate" [attr.aria-label]="'INSTALLMENTS.MARK_PAID' | translate">✅</button>
                               }
