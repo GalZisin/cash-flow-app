@@ -13,10 +13,15 @@ const DB_NAME = 'CashFlowDB';
 
 let poolPromise = null;
 
+const needsOdbc = (connectionString) => /trusted_connection|integrated security|driver\s*=/i.test(connectionString);
+
 function loadDriver(connectionString) {
     // Windows Authentication / ODBC style strings need the optional msnodesqlv8 driver.
-    if (/trusted_connection|integrated security|driver\s*=/i.test(connectionString)) {
+    if (needsOdbc(connectionString)) {
         try {
+            // Each mssql entry point registers itself as the shared driver the first time it loads
+            // (db/helpers.js loads "mssql" for the types): load "mssql" first so msnodesqlv8 wins.
+            require('mssql');
             return require('mssql/msnodesqlv8');
         } catch (err) {
             throw new Error(
@@ -38,7 +43,9 @@ async function getPool() {
         }
 
         const driver = loadDriver(connectionString);
-        const pool = new driver.ConnectionPool(connectionString);
+        // ODBC strings go to msnodesqlv8 untouched: given a plain string, mssql parses it and rebuilds it
+        // with "SQL Server Native Client 11.0" on Windows, which is usually not installed.
+        const pool = new driver.ConnectionPool(needsOdbc(connectionString) ? { connectionString } : connectionString);
         pool.on('error', (err) => logger.error(`SQL pool error: ${err.message}`));
 
         poolPromise = pool.connect().then((connected) => {

@@ -102,7 +102,8 @@ async function insertMany(executor, table, columns, records) {
 async function insertReturningId(executor, table, columns, record, idColumn = 'id') {
     const request = executor.request();
     const refs = columns.map((column, c) => {
-        const name = `p${c}`;
+        // not "p<n>": with msnodesqlv8 the ODBC driver adds its own @P1..@Pn and T-SQL names ignore case
+        const name = `v${c}`;
         request.input(name, column.type, record[column.name] === undefined ? null : record[column.name]);
         return paramRef(column, name);
     });

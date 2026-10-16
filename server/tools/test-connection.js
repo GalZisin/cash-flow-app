@@ -44,7 +44,8 @@ async function testConnection() {
         console.log('✅ Driver loaded successfully\n');
         
         console.log('🔌 Attempting to connect...');
-        const pool = new sql.ConnectionPool(connectionString);
+        // ODBC strings must reach msnodesqlv8 untouched (same as db/connection.js)
+        const pool = new sql.ConnectionPool(isWindowsAuth ? { connectionString } : connectionString);
         await pool.connect();
         
         console.log('✅ Connection successful!\n');
