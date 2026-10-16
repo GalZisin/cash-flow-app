@@ -18,6 +18,8 @@ import { TranslateModule, TranslateService, LangChangeEvent } from '@ngx-transla
 import { CashFlowService } from '../../../services/cash-flow.service';
 import { CashFlowCalculationService, MonthValues } from '../../../services/cash-flow-calculation.service';
 import { InstallmentService } from '../../../services/installment.service';
+import { CashFlowExcelExportService } from '../../../services/cash-flow-excel-export.service';
+import { ExportMonthInput } from '../../../utils/cash-flow-export.util';
 import { ExpenseCategorySelectorComponent } from '../expense-category-selector/expense-category-selector.component';
 import { CashFlowDefaultsDialogComponent } from '../cash-flow-defaults-dialog/cash-flow-defaults-dialog.component';
 import { CashFlowTableSkeletonComponent } from '../cash-flow-table-skeleton/cash-flow-table-skeleton.component';
@@ -76,6 +78,7 @@ export class CashFlowTableComponent implements OnInit, AfterViewInit, OnChanges 
   private installmentService = inject(InstallmentService);
   private decimalPipe = inject(DecimalPipe);
   private calc = inject(CashFlowCalculationService);
+  private excelExport = inject(CashFlowExcelExportService);
   /** Maps the stored row color (a hex kept for backwards compatibility) to the
    *  data-row-color key the SCSS styles through the theme's status tokens. */
   rowColorKey(hexColor: string | null | undefined): RowColorKey | null {
@@ -826,6 +829,23 @@ export class CashFlowTableComponent implements OnInit, AfterViewInit, OnChanges 
 
   print() {
     window.print();
+  }
+
+  isExportingExcel = false;
+
+  /** ייצוא הטבלה כפי שהיא כרגע בטופס (כולל שינויים שעוד לא נשמרו) לקובץ xlsx. */
+  async exportExcel() {
+    if (this.isExportingExcel || this.months.length === 0) return;
+    this.isExportingExcel = true;
+    this.cdr.detectChanges();
+    try {
+      await this.excelExport.exportToFile(this.months.getRawValue() as ExportMonthInput[]);
+    } catch {
+      this.snackBar.open(this.translate.instant('CASH_FLOW.EXPORT_EXCEL_FAILED'), '', { duration: 4000 });
+    } finally {
+      this.isExportingExcel = false;
+      this.cdr.detectChanges();
+    }
   }
 
 }
