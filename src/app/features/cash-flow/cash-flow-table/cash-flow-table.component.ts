@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef, inject, AfterViewInit, ViewChild, ElementRef, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, inject, AfterViewInit, ViewChild, ElementRef, Input, OnChanges, SimpleChanges, HostListener } from '@angular/core';
 import { FormBuilder, FormGroup, FormArray, ReactiveFormsModule, FormControl, AbstractControl } from '@angular/forms';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
@@ -19,7 +19,11 @@ import { CashFlowService } from '../../../services/cash-flow.service';
 import { CashFlowCalculationService, MonthValues } from '../../../services/cash-flow-calculation.service';
 import { InstallmentService } from '../../../services/installment.service';
 import { CashFlowExcelExportService } from '../../../services/cash-flow-excel-export.service';
-import { ExportMonthInput } from '../../../utils/cash-flow-export.util';
+import { buildExportMonthRows, ExportMonthInput, ExportMonthRow, rowColorKey, RowColorKey } from '../../../utils/cash-flow-export.util';
+import { CashFlowPrintReportComponent } from '../cash-flow-print-report/cash-flow-print-report.component';
+import { CashFlowPdfDialogComponent, ReportMonthOption } from '../cash-flow-pdf-dialog/cash-flow-pdf-dialog.component';
+import { filterRowsByRange, ReportOptions } from '../../../utils/cash-flow-report.util';
+import { monthKey } from '../../../utils/cash-flow-chart.util';
 import { ExpenseCategorySelectorComponent } from '../expense-category-selector/expense-category-selector.component';
 import { CashFlowDefaultsDialogComponent } from '../cash-flow-defaults-dialog/cash-flow-defaults-dialog.component';
 import { CashFlowTableSkeletonComponent } from '../cash-flow-table-skeleton/cash-flow-table-skeleton.component';
@@ -34,15 +38,6 @@ import gsap from 'gsap';
 
 registerLocaleData(localeHe);
 
-type RowColorKey = 'red' | 'yellow' | 'green';
-
-/** Stored hex -> display key. The hex values are what older saved data holds. */
-const ROW_COLOR_KEYS: Record<string, RowColorKey> = {
-  '#fee2e2': 'red',
-  '#fef9c3': 'yellow',
-  '#dcfce7': 'green',
-};
-
 @Component({
   selector: 'app-cash-flow-table',
   imports: [
@@ -53,6 +48,8 @@ const ROW_COLOR_KEYS: Record<string, RowColorKey> = {
     ExpenseCategorySelectorComponent,
     CashFlowDefaultsDialogComponent,
     CashFlowTableSkeletonComponent,
+    CashFlowPrintReportComponent,
+    CashFlowPdfDialogComponent,
     // GSAP Directives
     AnimateNumberDirective,
     StaggerFadeInDirective,
@@ -82,7 +79,7 @@ export class CashFlowTableComponent implements OnInit, AfterViewInit, OnChanges 
   /** Maps the stored row color (a hex kept for backwards compatibility) to the
    *  data-row-color key the SCSS styles through the theme's status tokens. */
   rowColorKey(hexColor: string | null | undefined): RowColorKey | null {
-    return hexColor ? ROW_COLOR_KEYS[hexColor] ?? null : null;
+    return rowColorKey(hexColor);
   }
 
   cashFlowForm!: FormGroup;
@@ -827,8 +824,70 @@ export class CashFlowTableComponent implements OnInit, AfterViewInit, OnChanges 
     this.cdr.detectChanges();
   }
 
+  // --- PDF (print) report: CashFlowPrintReportComponent replaces the table in print ---
+  printRows: ExportMonthRow[] = [];
+  printedAt = new Date();
+  printIncludeCharts = true;
+  printIncludeDetails = true;
+  showPdfDialog = false;
+  pdfMonthOptions: ReportMonthOption[] = [];
+  /** The last range picked in the dialog (pre-fills the next opening). */
+  lastPdfOptions: ReportOptions | null = null;
+  /** The range for the print that is about to start; Ctrl+P without the dialog prints everything. */
+  private pendingPdfOptions: ReportOptions | null = null;
+  private restoreThemeAfterPrint: (() => void) | null = null;
+
+  /** "Export PDF" opens the range dialog; the dialog's confirm starts the print. */
   print() {
-    window.print();
+    const label = new Intl.DateTimeFormat('he-IL', { month: 'long', year: 'numeric' });
+    this.pdfMonthOptions = buildExportMonthRows(this.months.getRawValue())
+      .map(r => ({ key: monthKey(r.month), label: label.format(r.month) }))
+      .sort((a, b) => a.key.localeCompare(b.key));
+    this.showPdfDialog = true;
+  }
+
+  closePdfDialog() { this.showPdfDialog = false; }
+
+  onPdfConfirmed(options: ReportOptions) {
+    this.lastPdfOptions = options;
+    this.pendingPdfOptions = options;
+    this.showPdfDialog = false;
+    this.cdr.detectChanges();
+    // Let the dialog leave the DOM before the browser's print dialog freezes the page.
+    setTimeout(() => window.print(), 50);
+  }
+
+  /** Runs for the PDF button and for Ctrl+P alike: rebuilds the report from the table as shown. */
+  @HostListener('window:beforeprint')
+  onBeforePrint() {
+    const all = this.cashFlowForm ? buildExportMonthRows(this.months.getRawValue()) : [];
+    const options = this.pendingPdfOptions;
+    this.printRows = filterRowsByRange(all, options);
+    this.printIncludeCharts = options?.includeCharts ?? true;
+    this.printIncludeDetails = options?.includeDetails ?? true;
+    this.printedAt = new Date();
+    this.useLightModeWhilePrinting();
+    this.cdr.detectChanges();
+  }
+
+  @HostListener('window:afterprint')
+  onAfterPrint() {
+    this.pendingPdfOptions = null;
+    this.restoreThemeAfterPrint?.();
+    this.restoreThemeAfterPrint = null;
+  }
+
+  /** A dark-mode PDF is unreadable on paper, so the report always prints with the light tokens. */
+  private useLightModeWhilePrinting() {
+    const root = document.documentElement;
+    if (this.restoreThemeAfterPrint || !root.classList.contains('dark-mode')) return;
+    const bsTheme = root.getAttribute('data-bs-theme');
+    root.classList.remove('dark-mode');
+    root.setAttribute('data-bs-theme', 'light');
+    this.restoreThemeAfterPrint = () => {
+      root.classList.add('dark-mode');
+      if (bsTheme) root.setAttribute('data-bs-theme', bsTheme);
+    };
   }
 
   isExportingExcel = false;

@@ -1,0 +1,174 @@
+// "Export PDF" dialog: date range + report content. Same overlay/card recipe as
+// the defaults dialog; all colors are theme tokens.
+
+.cf-overlay {
+  background: rgba(15, 23, 42, 0.5);
+  z-index: 1050;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.cf-pdf-card {
+  border-radius: 16px;
+  border: none;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  width: 480px;
+  max-width: 95vw;
+  max-height: 90vh;
+  overflow: hidden;
+  background: var(--cf-surface);
+  color: var(--cf-text);
+}
+
+.cf-pdf-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--cf-border);
+}
+
+.cf-pdf-title {
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--cf-text-strong);
+}
+
+.cf-pdf-subtitle {
+  font-size: 0.8rem;
+  color: var(--cf-text-3);
+  margin-top: 2px;
+}
+
+.cf-pdf-body {
+  padding: 18px 20px 0;
+  overflow-y: auto;
+}
+
+.cf-field-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--cf-text-3);
+  letter-spacing: 0.4px;
+  display: block;
+  margin-bottom: 6px;
+}
+
+// ── Quick ranges ──
+.presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.preset {
+  border: 1px solid var(--cf-border);
+  background: var(--cf-surface-2);
+  color: var(--cf-text-2);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+
+  &:hover:not(:disabled) {
+    border-color: var(--cf-primary-border);
+    color: var(--cf-primary-text);
+  }
+
+  &.active {
+    background: var(--cf-primary-soft);
+    border-color: var(--cf-primary-border);
+    color: var(--cf-primary-text);
+    font-weight: 600;
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: default;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--cf-primary);
+    outline-offset: 2px;
+  }
+}
+
+// ── From / to ──
+.range {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.range-field {
+  flex: 1;
+
+  .form-select {
+    background-color: var(--cf-surface);
+    color: var(--cf-text);
+    border-color: var(--cf-border-strong);
+  }
+}
+
+.range-arrow {
+  color: var(--cf-text-4);
+  margin-bottom: 4px;
+}
+
+.range-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  font-size: 0.82rem;
+  color: var(--cf-text-2);
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    color: var(--cf-primary-text);
+  }
+
+  &.error {
+    color: var(--cf-danger);
+
+    mat-icon { color: var(--cf-danger); }
+  }
+}
+
+// ── Content options ──
+.option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--cf-border);
+  border-radius: 10px;
+  margin-bottom: 8px;
+  cursor: pointer;
+
+  .form-check-input {
+    margin-top: 3px;
+    flex-shrink: 0;
+  }
+}
+
+.option-title {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--cf-text);
+}
+
+.option-hint {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--cf-text-3);
+}
+
+.cf-pdf-footer {
+  margin: 14px -20px 0;
+  padding: 12px 20px;
+  border-top: 1px solid var(--cf-border);
+  background: var(--cf-surface-2);
+}

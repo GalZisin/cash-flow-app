@@ -1,0 +1,182 @@
+// Static SVG charts of the PDF report. Colors are theme tokens (the report always
+// prints with the light tokens): income = success, expenses = primary,
+// surplus / deficit = success / danger, magnitude bars = one primary hue.
+
+:host {
+  display: block;
+}
+
+.charts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.chart {
+  margin: 0;
+  padding: 8px 10px 4px;
+  border: 1px solid var(--cf-border);
+  border-radius: 6px;
+  break-inside: avoid;
+
+  svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    // The page is RTL; SVG text follows CSS direction (not the dir attribute), and in
+    // RTL "-10K" renders as "10K-" and text-anchor flips. Charts read left to right.
+    direction: ltr;
+  }
+}
+
+.chart-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.chart-title {
+  font-size: 9.5pt;
+  font-weight: 700;
+  color: var(--cf-text-strong);
+}
+
+.legend {
+  display: flex;
+  gap: 10px;
+  font-size: 7.5pt;
+  color: var(--cf-text-2);
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.swatch {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+}
+
+.swatch-income,
+.swatch-positive { background: var(--cf-success-solid); }
+.swatch-expense { background: var(--cf-primary); }
+.swatch-negative { background: var(--cf-danger-solid); }
+
+// ── SVG marks ──
+.grid {
+  stroke: var(--cf-border);
+  stroke-width: 1;
+}
+
+.baseline {
+  stroke: var(--cf-border-strong);
+  stroke-width: 1.2;
+}
+
+.tick {
+  font-size: 10px;
+  fill: var(--cf-text-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.bar-income,
+.bar-positive { fill: var(--cf-success-solid); }
+.bar-expense { fill: var(--cf-primary); }
+.bar-negative { fill: var(--cf-danger-solid); }
+
+.balance-line {
+  fill: none;
+  stroke: var(--cf-primary);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.balance-area {
+  fill: rgba(var(--cf-primary-rgb), 0.1);
+}
+
+.balance-dot {
+  fill: var(--cf-primary);
+  stroke: var(--cf-surface);
+  stroke-width: 2;
+}
+
+.point-label {
+  font-size: 10px;
+  font-weight: 700;
+  fill: var(--cf-text-strong);
+  font-variant-numeric: tabular-nums;
+  paint-order: stroke;
+  stroke: var(--cf-surface);
+  stroke-width: 3px;
+}
+
+// ── Expense breakdown (horizontal bars, RTL: label on the right, bar grows to the left) ──
+.breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 6px 0 6px;
+}
+
+.breakdown-row {
+  display: grid;
+  grid-template-columns: 26% 1fr 18% 8%;
+  align-items: center;
+  gap: 8px;
+  font-size: 8.5pt;
+}
+
+.breakdown-label {
+  color: var(--cf-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.breakdown-track {
+  height: 10px;
+  border-radius: 3px;
+  background: var(--cf-surface-3);
+  overflow: hidden;
+}
+
+.breakdown-bar {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--cf-primary);
+}
+
+.breakdown-value {
+  font-weight: 600;
+  color: var(--cf-text-strong);
+  text-align: left;
+}
+
+.breakdown-share {
+  color: var(--cf-text-3);
+  text-align: left;
+  font-variant-numeric: tabular-nums;
+}
+
+.breakdown-empty {
+  color: var(--cf-text-3);
+  font-size: 9pt;
+  padding: 20px 0;
+  text-align: center;
+}
+
+.amt {
+  direction: ltr;
+  unicode-bidi: isolate;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}

@@ -1,0 +1,278 @@
+// Print-only cash flow report. Hidden on screen; the table component hides the
+// interactive table in print and this takes its place. All colors are theme
+// tokens; the table component switches to light mode while printing.
+
+:host {
+  display: none;
+}
+
+@media print {
+  :host {
+    display: block;
+  }
+}
+
+.cf-report {
+  color: var(--cf-text);
+  font-size: 9pt;
+  line-height: 1.35;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+// Amounts are LTR inside the RTL report, so "-1,174 ₪" keeps its minus sign in front.
+.amt {
+  direction: ltr;
+  unicode-bidi: isolate;
+  white-space: nowrap;
+}
+
+.negative {
+  color: var(--cf-danger) !important;
+}
+
+// ── Header ──
+.report-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 12px;
+  padding-bottom: 6px;
+  margin-bottom: 10px;
+  border-bottom: 2px solid var(--cf-primary);
+}
+
+.report-title {
+  margin: 0;
+  font-size: 17pt;
+  font-weight: 700;
+  color: var(--cf-primary-text);
+}
+
+.report-period {
+  margin-top: 2px;
+  font-size: 10pt;
+  color: var(--cf-text-2);
+}
+
+.report-meta {
+  font-size: 8.5pt;
+  color: var(--cf-text-3);
+  white-space: nowrap;
+}
+
+// ── Summary cards ──
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+  break-inside: avoid;
+}
+
+.kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 10px;
+  border: 1px solid var(--cf-border);
+  border-radius: 6px;
+  background: var(--cf-surface-2);
+
+  &.kpi-strong {
+    border-color: var(--cf-primary-border);
+    background: var(--cf-primary-soft);
+  }
+}
+
+.kpi-sub {
+  font-size: 7.5pt;
+  color: var(--cf-text-3);
+  white-space: nowrap;
+}
+
+.kpi-label {
+  font-size: 8pt;
+  color: var(--cf-text-3);
+}
+
+.kpi-value {
+  font-size: 12.5pt;
+  font-weight: 700;
+  color: var(--cf-text-strong);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+
+  &.income { color: var(--cf-success); }
+  &.expense { color: var(--cf-text-strong); }
+}
+
+// ── Main table ──
+.report-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-variant-numeric: tabular-nums;
+
+  th,
+  td {
+    padding: 4px 5px;
+    border: 1px solid var(--cf-border);
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  thead {
+    display: table-header-group; // repeat on every printed page
+  }
+
+  thead th {
+    background: var(--cf-primary);
+    color: var(--cf-on-primary);
+    font-size: 8pt;
+    font-weight: 600;
+    white-space: normal;
+    line-height: 1.2;
+    vertical-align: middle;
+  }
+
+  tbody tr {
+    break-inside: avoid;
+  }
+
+  tbody tr:nth-child(even) td {
+    background: var(--cf-surface-2);
+  }
+
+  .col-month {
+    width: 10%;
+    text-align: right;
+    font-weight: 600;
+  }
+
+  .col-ending {
+    font-weight: 700;
+  }
+
+  tfoot {
+    display: table-row-group; // totals once, after the last month (not on every page)
+  }
+
+  tfoot td {
+    background: var(--cf-surface-3) !important;
+    border-top: 2px solid var(--cf-border-strong);
+    font-weight: 700;
+  }
+}
+
+// Row status color: a soft tint plus a stripe on the start edge, as on screen.
+.report-table tbody tr[data-row-color] td {
+  background: rgba(var(--row-rgb), 0.14);
+}
+
+.report-table tbody tr[data-row-color] td.col-month {
+  box-shadow: inset -3px 0 0 0 rgb(var(--row-rgb));
+}
+
+[data-row-color='green'] { --row-rgb: var(--cf-success-solid-rgb); }
+[data-row-color='yellow'] { --row-rgb: var(--cf-warning-solid-rgb); }
+[data-row-color='red'] { --row-rgb: var(--cf-danger-solid-rgb); }
+
+// ── Details by month ──
+.section-title {
+  margin: 16px 0 8px;
+  font-size: 12pt;
+  font-weight: 700;
+  color: var(--cf-primary-text);
+  break-after: avoid;
+
+  // The monthly table starts on its own page after the charts page.
+  &.page-start {
+    break-before: page;
+    margin-top: 0;
+  }
+}
+
+.details {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  align-items: start;
+}
+
+.month-card {
+  border: 1px solid var(--cf-border);
+  border-radius: 6px;
+  overflow: hidden;
+  break-inside: avoid;
+
+  &[data-row-color] {
+    border-inline-start: 3px solid rgb(var(--row-rgb));
+  }
+}
+
+.month-card-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 8px;
+  background: var(--cf-surface-3);
+  font-weight: 700;
+  font-size: 9.5pt;
+}
+
+.month-card-balance {
+  font-weight: 600;
+  font-size: 8.5pt;
+  color: var(--cf-text-2);
+  white-space: nowrap;
+}
+
+.items {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 8pt;
+  font-variant-numeric: tabular-nums;
+
+  th,
+  td {
+    padding: 2px 8px;
+  }
+
+  th {
+    text-align: right;
+    font-weight: 700;
+    color: var(--cf-primary-text);
+    border-bottom: 1px solid var(--cf-border);
+    padding-top: 5px;
+  }
+
+  &.items-income th {
+    color: var(--cf-success);
+  }
+
+  td {
+    border-bottom: 1px dotted var(--cf-border);
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+
+  .desc {
+    width: 55%;
+  }
+
+  .category {
+    color: var(--cf-text-3);
+    white-space: nowrap;
+  }
+
+  .amount {
+    text-align: left;
+    white-space: nowrap;
+    font-weight: 600;
+  }
+}
