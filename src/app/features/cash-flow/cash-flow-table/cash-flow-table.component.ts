@@ -12,7 +12,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { registerLocaleData } from '@angular/common';
 import localeHe from '@angular/common/locales/he'; // Import Hebrew locale data
-import { combineLatest } from 'rxjs';
+import { combineLatest, firstValueFrom } from 'rxjs';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { TranslateModule, TranslateService, LangChangeEvent } from '@ngx-translate/core';
 import { CashFlowService } from '../../../services/cash-flow.service';
@@ -833,13 +833,19 @@ export class CashFlowTableComponent implements OnInit, AfterViewInit, OnChanges 
 
   isExportingExcel = false;
 
-  /** ייצוא הטבלה כפי שהיא כרגע בטופס (כולל שינויים שעוד לא נשמרו) לקובץ xlsx. */
+  /**
+   * ייצוא לקובץ xlsx מהנתונים השמורים ב-MSSQL (קריאה טרייה מהשרת, בלי שינויים שלא נשמרו).
+   * במצב סימולציה הנתונים לא נמצאים בשרת, ולכן מייצאים את מה שבטבלה.
+   */
   async exportExcel() {
-    if (this.isExportingExcel || this.months.length === 0) return;
+    if (this.isExportingExcel) return;
     this.isExportingExcel = true;
     this.cdr.detectChanges();
     try {
-      await this.excelExport.exportToFile(this.months.getRawValue() as ExportMonthInput[]);
+      const months: ExportMonthInput[] = this.isSimulation
+        ? this.months.getRawValue()
+        : (await firstValueFrom(this.cashFlowService.fetchSaved())).months ?? [];
+      await this.excelExport.exportToFile(months);
     } catch {
       this.snackBar.open(this.translate.instant('CASH_FLOW.EXPORT_EXCEL_FAILED'), '', { duration: 4000 });
     } finally {

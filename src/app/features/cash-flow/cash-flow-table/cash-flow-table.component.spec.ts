@@ -1,5 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { of } from 'rxjs';
+import { CashFlowService } from '../../../services/cash-flow.service';
+import { CashFlowExcelExportService } from '../../../services/cash-flow-excel-export.service';
 
 import { CashFlowTableComponent } from './cash-flow-table.component';
 
@@ -44,5 +47,17 @@ describe('CashFlowTableComponent', () => {
 
     const loader = fixture.nativeElement.querySelector('[data-testid="cash-flow-table-loader"]');
     expect(loader).toBeNull();
+  });
+
+  it('exports Excel from the saved server data, not from unsaved table edits', async () => {
+    const saved = [{ month: '2026-10-01T00:00:00.000Z', startingBalance: 0, income: 9000, mortgagePayment: 0, loanPayment: 0, regularExpenses: [], specialExpenses: [], endingBalance: 9000 }];
+    const fetchSaved = spyOn(TestBed.inject(CashFlowService), 'fetchSaved').and.returnValue(of({ months: saved }));
+    const exportToFile = spyOn(TestBed.inject(CashFlowExcelExportService), 'exportToFile').and.resolveTo();
+
+    await component.exportExcel();
+
+    expect(fetchSaved).toHaveBeenCalledTimes(1);
+    expect(exportToFile).toHaveBeenCalledOnceWith(saved);
+    expect(component.isExportingExcel).toBeFalse();
   });
 });

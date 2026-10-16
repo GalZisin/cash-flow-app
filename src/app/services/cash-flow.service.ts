@@ -14,6 +14,8 @@ export interface MonthData {
   mortgagePayment: number;
   loanPayment: number;
   manualLoanPayment?: number;
+  installmentsPayment?: number;
+  additionalIncomes?: { description: string; amount: number }[];
   regularExpenses: ExpenseItem[];
   specialExpenses: ExpenseItem[];
   endingBalance: number;
@@ -51,6 +53,11 @@ export class CashFlowService {
         if (data && data.months) this._months.set(data.months);
       })
     );
+  }
+
+  /** קריאה טרייה מהשרת (MSSQL) בלי לגעת ב-signal, לייצוא: לא כולל שינויים שלא נשמרו. */
+  fetchSaved(): Observable<CashFlowData> {
+    return this.http.get<CashFlowData>(this.apiUrl);
   }
 
   updateMonths(months: MonthData[]) {
