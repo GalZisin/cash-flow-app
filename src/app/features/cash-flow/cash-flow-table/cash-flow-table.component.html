@@ -1,5 +1,6 @@
 <div class="cash-flow-table" dir="rtl">
-  <app-cash-flow-print-report [rows]="printRows" [printedAt]="printedAt" />
+  <app-cash-flow-print-report [rows]="printRows" [printedAt]="printedAt"
+    [includeCharts]="printIncludeCharts" [includeDetails]="printIncludeDetails" />
 
   @if (isLoading) {
     <app-cash-flow-table-skeleton />
@@ -381,4 +382,10 @@
     <!-- Defaults dialog (own component) -->
     @if (showDefaultsDialog) {
       <app-cash-flow-defaults-dialog (closed)="closeDefaultsDialog()" />
+    }
+
+    <!-- PDF export: date range + content -->
+    @if (showPdfDialog) {
+      <app-cash-flow-pdf-dialog [months]="pdfMonthOptions" [initial]="lastPdfOptions"
+        (confirmed)="onPdfConfirmed($event)" (closed)="closePdfDialog()" />
     }

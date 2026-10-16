@@ -1,9 +1,11 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import { DatePipe, DecimalPipe } from '@angular/common';
+import { DatePipe, DecimalPipe, PercentPipe } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 import {
   buildExportTotals, ExportItem, ExportItemKind, ExportMonthRow, rowColorKey, RowColorKey,
 } from '../../../utils/cash-flow-export.util';
+import { summarizeRange } from '../../../utils/cash-flow-report.util';
+import { CashFlowReportChartsComponent } from '../cash-flow-report-charts/cash-flow-report-charts.component';
 
 interface DetailList {
   kind: ExportItemKind;
@@ -27,12 +29,12 @@ const DETAIL_KINDS: { kind: ExportItemKind; labelKey: string }[] = [
 
 /**
  * דוח התזרים להדפסה / שמירה כ-PDF. מוסתר במסך ומוצג רק ב-@media print, במקום הטבלה
- * האינטראקטיבית: כותרת עם התקופה, כרטיסי סיכום, טבלה צפופה שנכנסת ל-A4 לרוחב,
- * שורת סה"כ ופירוט הפריטים לפי חודש.
+ * האינטראקטיבית: כותרת עם התקופה, כרטיסי סיכום וגרפים לטווח שנבחר, טבלה צפופה
+ * שנכנסת ל-A4 לרוחב, שורת סה"כ ופירוט הפריטים לפי חודש.
  */
 @Component({
   selector: 'app-cash-flow-print-report',
-  imports: [TranslateModule, DatePipe, DecimalPipe],
+  imports: [TranslateModule, DatePipe, DecimalPipe, PercentPipe, CashFlowReportChartsComponent],
   templateUrl: './cash-flow-print-report.component.html',
   styleUrl: './cash-flow-print-report.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -40,24 +42,15 @@ const DETAIL_KINDS: { kind: ExportItemKind; labelKey: string }[] = [
 export class CashFlowPrintReportComponent {
   readonly rows = input<ExportMonthRow[]>([]);
   readonly printedAt = input<Date>(new Date());
+  readonly includeCharts = input(true);
+  readonly includeDetails = input(true);
 
   readonly totals = computed(() => buildExportTotals(this.rows()));
   readonly firstMonth = computed(() => this.rows()[0]?.month ?? null);
   readonly lastMonth = computed(() => this.rows().at(-1)?.month ?? null);
 
-  readonly summary = computed(() => {
-    const rows = this.rows();
-    const t = this.totals();
-    const totalIncome = t.income + t.additionalIncomes;
-    const totalExpenses = t.mortgagePayment + t.loanPayment + t.installmentsPayment + t.regularExpenses + t.specialExpenses;
-    return {
-      opening: rows[0]?.startingBalance ?? 0,
-      totalIncome,
-      totalExpenses,
-      net: totalIncome - totalExpenses,
-      closing: rows.at(-1)?.endingBalance ?? 0,
-    };
-  });
+  /** כל הסיכומים על החודשים שהתקבלו בלבד (הטווח שנבחר בדיאלוג). */
+  readonly summary = computed(() => summarizeRange(this.rows()));
 
   /** רק חודשים שיש בהם פריטים, ובכל חודש רק הרשימות שאינן ריקות. */
   readonly details = computed<DetailMonth[]>(() =>

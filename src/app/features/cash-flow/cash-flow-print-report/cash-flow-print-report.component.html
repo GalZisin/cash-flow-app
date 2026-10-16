@@ -19,24 +19,39 @@
     <div class="kpi">
       <span class="kpi-label">{{ 'CASH_FLOW.REPORT_OPENING' | translate }}</span>
       <span class="kpi-value" [class.negative]="summary().opening < 0"><span class="amt">{{ summary().opening | number:'1.0-0' }} ₪</span></span>
+      @if (firstMonth(); as first) {
+        <span class="kpi-sub">{{ 'CASH_FLOW.REPORT_AT_START' | translate }} {{ first | date:'MMMM yyyy':'':'he' }}</span>
+      }
     </div>
     <div class="kpi">
       <span class="kpi-label">{{ 'CASH_FLOW.REPORT_TOTAL_INCOME' | translate }}</span>
       <span class="kpi-value income"><span class="amt">{{ summary().totalIncome | number:'1.0-0' }} ₪</span></span>
+      <span class="kpi-sub">{{ 'CASH_FLOW.REPORT_AVG_MONTH' | translate }}: <span class="amt">{{ summary().avgIncome | number:'1.0-0' }} ₪</span></span>
     </div>
     <div class="kpi">
       <span class="kpi-label">{{ 'CASH_FLOW.REPORT_TOTAL_EXPENSES' | translate }}</span>
       <span class="kpi-value expense"><span class="amt">{{ summary().totalExpenses | number:'1.0-0' }} ₪</span></span>
+      <span class="kpi-sub">{{ 'CASH_FLOW.REPORT_AVG_MONTH' | translate }}: <span class="amt">{{ summary().avgExpenses | number:'1.0-0' }} ₪</span></span>
     </div>
     <div class="kpi">
       <span class="kpi-label">{{ 'CASH_FLOW.REPORT_NET' | translate }}</span>
       <span class="kpi-value" [class.negative]="summary().net < 0" [class.income]="summary().net >= 0"><span class="amt">{{ summary().net | number:'1.0-0' }} ₪</span></span>
+      <span class="kpi-sub">{{ 'CASH_FLOW.REPORT_SAVINGS_RATE' | translate }}: <span class="amt">{{ summary().savingsRate | percent:'1.0-1' }}</span></span>
     </div>
     <div class="kpi kpi-strong">
       <span class="kpi-label">{{ 'CASH_FLOW.REPORT_CLOSING' | translate }}</span>
       <span class="kpi-value" [class.negative]="summary().closing < 0"><span class="amt">{{ summary().closing | number:'1.0-0' }} ₪</span></span>
+      @if (lastMonth(); as last) {
+        <span class="kpi-sub">{{ 'CASH_FLOW.REPORT_AT_END' | translate }} {{ last | date:'MMMM yyyy':'':'he' }}</span>
+      }
     </div>
   </div>
+
+  @if (includeCharts() && rows().length > 0) {
+    <app-cash-flow-report-charts [rows]="rows()" />
+  }
+
+  <h2 class="section-title" [class.page-start]="includeCharts() && rows().length > 0">{{ 'CASH_FLOW.REPORT_TABLE' | translate }}</h2>
 
   <table class="report-table">
     <thead>
@@ -90,7 +105,7 @@
     }
   </table>
 
-  @if (details().length > 0) {
+  @if (includeDetails() && details().length > 0) {
     <h2 class="section-title">{{ 'CASH_FLOW.REPORT_DETAILS' | translate }}</h2>
     <div class="details">
       @for (m of details(); track m.month.getTime()) {

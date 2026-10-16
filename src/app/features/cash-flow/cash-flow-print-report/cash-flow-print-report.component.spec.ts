@@ -24,9 +24,9 @@ describe('CashFlowPrintReportComponent', () => {
   });
 
   it('summarizes the period: opening, income, expenses, net and closing balance', () => {
-    expect(component.summary()).toEqual({
-      opening: 1000, totalIncome: 10000, totalExpenses: 3500, net: 6500, closing: 7500,
-    });
+    expect(component.summary()).toEqual(jasmine.objectContaining({
+      months: 2, opening: 1000, totalIncome: 10000, totalExpenses: 3500, net: 6500, closing: 7500,
+    }));
   });
 
   it('renders one table row per month with its status color, plus a totals row', () => {

@@ -1,0 +1,97 @@
+<div class="charts">
+
+  <!-- הכנסות מול הוצאות -->
+  <figure class="chart">
+    <figcaption class="chart-head">
+      <span class="chart-title">{{ 'CASH_FLOW.REPORT_CHART_INCOME_EXPENSES' | translate }}</span>
+      <span class="legend">
+        <span class="legend-item"><i class="swatch swatch-income"></i>{{ 'CASH_FLOW.REPORT_INCOME' | translate }}</span>
+        <span class="legend-item"><i class="swatch swatch-expense"></i>{{ 'CASH_FLOW.EXPENSES' | translate }}</span>
+      </span>
+    </figcaption>
+    <svg [attr.viewBox]="viewBox" dir="ltr" role="img" [attr.aria-label]="'CASH_FLOW.REPORT_CHART_INCOME_EXPENSES' | translate">
+      @for (t of incomeExpense().ticks; track t.value) {
+        <line class="grid" [attr.x1]="box.left" [attr.x2]="plotRight" [attr.y1]="t.y" [attr.y2]="t.y" />
+        <text class="tick" [attr.x]="box.left - 6" [attr.y]="t.y + 3.5" text-anchor="end">{{ money(t.value) }}</text>
+      }
+      @for (g of incomeExpense().groups; track g.index) {
+        <path class="bar-income" [attr.d]="g.income.path" />
+        <path class="bar-expense" [attr.d]="g.expenses.path" />
+      }
+      <line class="baseline" [attr.x1]="box.left" [attr.x2]="plotRight" [attr.y1]="incomeExpense().zeroY" [attr.y2]="incomeExpense().zeroY" />
+      @for (l of incomeExpense().xLabels; track l.index) {
+        <text class="tick" [attr.x]="l.x" [attr.y]="axisY" text-anchor="middle">{{ monthLabels()[l.index] }}</text>
+      }
+    </svg>
+  </figure>
+
+  <!-- יתרה בסוף החודש -->
+  <figure class="chart">
+    <figcaption class="chart-head">
+      <span class="chart-title">{{ 'CASH_FLOW.REPORT_CHART_BALANCE' | translate }}</span>
+    </figcaption>
+    <svg [attr.viewBox]="viewBox" dir="ltr" role="img" [attr.aria-label]="'CASH_FLOW.REPORT_CHART_BALANCE' | translate">
+      @for (t of balance().ticks; track t.value) {
+        <line class="grid" [attr.x1]="box.left" [attr.x2]="plotRight" [attr.y1]="t.y" [attr.y2]="t.y" />
+        <text class="tick" [attr.x]="box.left - 6" [attr.y]="t.y + 3.5" text-anchor="end">{{ money(t.value) }}</text>
+      }
+      @if (balance().zeroY !== null) {
+        <line class="baseline" [attr.x1]="box.left" [attr.x2]="plotRight" [attr.y1]="balance().zeroY" [attr.y2]="balance().zeroY" />
+      }
+      <path class="balance-area" [attr.d]="balance().area" />
+      <path class="balance-line" [attr.d]="balance().line" />
+      @for (p of balance().labeled; track p.x) {
+        <circle class="balance-dot" [attr.cx]="p.x" [attr.cy]="p.y" r="3.5" />
+        <text class="point-label" [attr.x]="p.x" [attr.y]="p.y - 8" [attr.text-anchor]="p.anchor">{{ p.value | number:'1.0-0' }}</text>
+      }
+      @for (l of balance().xLabels; track l.index) {
+        <text class="tick" [attr.x]="l.x" [attr.y]="axisY" text-anchor="middle">{{ monthLabels()[l.index] }}</text>
+      }
+    </svg>
+  </figure>
+
+  <!-- חיסכון חודשי -->
+  <figure class="chart">
+    <figcaption class="chart-head">
+      <span class="chart-title">{{ 'CASH_FLOW.REPORT_CHART_SAVINGS' | translate }}</span>
+      <span class="legend">
+        <span class="legend-item"><i class="swatch swatch-positive"></i>{{ 'CASH_FLOW.REPORT_SURPLUS' | translate }}</span>
+        <span class="legend-item"><i class="swatch swatch-negative"></i>{{ 'CASH_FLOW.REPORT_DEFICIT' | translate }}</span>
+      </span>
+    </figcaption>
+    <svg [attr.viewBox]="viewBox" dir="ltr" role="img" [attr.aria-label]="'CASH_FLOW.REPORT_CHART_SAVINGS' | translate">
+      @for (t of savings().ticks; track t.value) {
+        <line class="grid" [attr.x1]="box.left" [attr.x2]="plotRight" [attr.y1]="t.y" [attr.y2]="t.y" />
+        <text class="tick" [attr.x]="box.left - 6" [attr.y]="t.y + 3.5" text-anchor="end">{{ money(t.value) }}</text>
+      }
+      @for (b of savings().bars; track $index) {
+        <path [class.bar-positive]="!b.negative" [class.bar-negative]="b.negative" [attr.d]="b.path" />
+      }
+      <line class="baseline" [attr.x1]="box.left" [attr.x2]="plotRight" [attr.y1]="savings().zeroY" [attr.y2]="savings().zeroY" />
+      @for (l of savings().xLabels; track l.index) {
+        <text class="tick" [attr.x]="l.x" [attr.y]="axisY" text-anchor="middle">{{ monthLabels()[l.index] }}</text>
+      }
+    </svg>
+  </figure>
+
+  <!-- התפלגות ההוצאות -->
+  <figure class="chart">
+    <figcaption class="chart-head">
+      <span class="chart-title">{{ 'CASH_FLOW.REPORT_CHART_BREAKDOWN' | translate }}</span>
+    </figcaption>
+    <div class="breakdown">
+      @for (s of breakdown(); track s.key) {
+        <div class="breakdown-row">
+          <span class="breakdown-label">{{ s.labelKey | translate }}</span>
+          <span class="breakdown-track">
+            <span class="breakdown-bar" [style.width.%]="(s.amount / breakdownMax()) * 100"></span>
+          </span>
+          <span class="breakdown-value"><span class="amt">{{ s.amount | number:'1.0-0' }} ₪</span></span>
+          <span class="breakdown-share">{{ s.share | percent:'1.0-0' }}</span>
+        </div>
+      } @empty {
+        <div class="breakdown-empty">{{ 'CASH_FLOW.REPORT_NO_EXPENSES' | translate }}</div>
+      }
+    </div>
+  </figure>
+</div>

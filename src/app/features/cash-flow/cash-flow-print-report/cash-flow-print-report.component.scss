@@ -85,6 +85,12 @@
   }
 }
 
+.kpi-sub {
+  font-size: 7.5pt;
+  color: var(--cf-text-3);
+  white-space: nowrap;
+}
+
 .kpi-label {
   font-size: 8pt;
   color: var(--cf-text-3);
@@ -181,6 +187,12 @@
   font-weight: 700;
   color: var(--cf-primary-text);
   break-after: avoid;
+
+  // The monthly table starts on its own page after the charts page.
+  &.page-start {
+    break-before: page;
+    margin-top: 0;
+  }
 }
 
 .details {

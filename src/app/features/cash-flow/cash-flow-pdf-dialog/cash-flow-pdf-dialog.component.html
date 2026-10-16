@@ -1,0 +1,83 @@
+<div class="cf-overlay position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center no-print"
+  (click)="close()">
+  <div class="cf-pdf-card card" dir="rtl" role="dialog" aria-modal="true" [attr.aria-label]="'CASH_FLOW.PDF_TITLE' | translate"
+    (click)="$event.stopPropagation()">
+
+    <div class="cf-pdf-header d-flex justify-content-between align-items-center">
+      <div>
+        <div class="cf-pdf-title">{{ 'CASH_FLOW.PDF_TITLE' | translate }}</div>
+        <div class="cf-pdf-subtitle">{{ 'CASH_FLOW.PDF_SUBTITLE' | translate }}</div>
+      </div>
+      <button mat-icon-button type="button" (click)="close()"
+        [title]="'INSTALLMENTS.CANCEL' | translate" [matTooltip]="'INSTALLMENTS.CANCEL' | translate" [attr.aria-label]="'INSTALLMENTS.CANCEL' | translate">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    <form class="cf-pdf-body" [formGroup]="form" (ngSubmit)="submit()">
+      <div class="cf-field-label">{{ 'CASH_FLOW.PDF_QUICK_RANGE' | translate }}</div>
+      <div class="presets" role="group" [attr.aria-label]="'CASH_FLOW.PDF_QUICK_RANGE' | translate">
+        @for (p of presets; track p.id) {
+          <button type="button" class="preset" [class.active]="activePreset() === p.id"
+            [disabled]="!presetAvailable(p.id)" (click)="applyPreset(p.id)">
+            {{ p.labelKey | translate }}
+          </button>
+        }
+      </div>
+
+      <div class="range">
+        <div class="range-field">
+          <label class="cf-field-label" for="pdf-from">{{ 'CASH_FLOW.PDF_FROM' | translate }}</label>
+          <select id="pdf-from" class="form-select form-select-sm" formControlName="from" (change)="onRangeEdited()">
+            @for (m of months(); track m.key) {
+              <option [value]="m.key">{{ m.label }}</option>
+            }
+          </select>
+        </div>
+        <mat-icon class="range-arrow" aria-hidden="true">arrow_back</mat-icon>
+        <div class="range-field">
+          <label class="cf-field-label" for="pdf-to">{{ 'CASH_FLOW.PDF_TO' | translate }}</label>
+          <select id="pdf-to" class="form-select form-select-sm" formControlName="to" (change)="onRangeEdited()">
+            @for (m of months(); track m.key) {
+              <option [value]="m.key">{{ m.label }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      @if (invalidRange()) {
+        <div class="range-status error" role="alert">
+          <mat-icon aria-hidden="true">error_outline</mat-icon>{{ 'CASH_FLOW.PDF_INVALID_RANGE' | translate }}
+        </div>
+      } @else {
+        <div class="range-status">
+          <mat-icon aria-hidden="true">date_range</mat-icon>{{ 'CASH_FLOW.PDF_SELECTED_MONTHS' | translate: { count: selectedCount() } }}
+        </div>
+      }
+
+      <div class="cf-field-label mt-3">{{ 'CASH_FLOW.PDF_CONTENT' | translate }}</div>
+      <label class="option">
+        <input type="checkbox" class="form-check-input" formControlName="includeCharts" />
+        <span>
+          <span class="option-title">{{ 'CASH_FLOW.PDF_INCLUDE_CHARTS' | translate }}</span>
+          <span class="option-hint">{{ 'CASH_FLOW.PDF_INCLUDE_CHARTS_HINT' | translate }}</span>
+        </span>
+      </label>
+      <label class="option">
+        <input type="checkbox" class="form-check-input" formControlName="includeDetails" />
+        <span>
+          <span class="option-title">{{ 'CASH_FLOW.PDF_INCLUDE_DETAILS' | translate }}</span>
+          <span class="option-hint">{{ 'CASH_FLOW.PDF_INCLUDE_DETAILS_HINT' | translate }}</span>
+        </span>
+      </label>
+
+      <div class="cf-pdf-footer d-flex gap-2 justify-content-start">
+        <button mat-raised-button color="primary" type="submit" [disabled]="invalidRange() || selectedCount() === 0">
+          <mat-icon>picture_as_pdf</mat-icon>
+          {{ 'CASH_FLOW.PDF_CREATE' | translate }}
+        </button>
+        <button mat-button type="button" (click)="close()">{{ 'INSTALLMENTS.CANCEL' | translate }}</button>
+      </div>
+    </form>
+  </div>
+</div>
