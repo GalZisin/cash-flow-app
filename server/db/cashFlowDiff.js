@@ -40,10 +40,12 @@ function sameItems(a, b) {
  */
 function planCashFlowWrite(existingMonths, existingItems, incoming) {
     const bySortOrder = new Map(existingMonths.map((m) => [m.sort_order, m]));
+    // Month ids are compared as numbers: msnodesqlv8 returns IDENTITY columns as strings, plain INT as numbers.
     const itemsByMonth = new Map();
     for (const item of existingItems) {
-        if (!itemsByMonth.has(item.month_id)) itemsByMonth.set(item.month_id, []);
-        itemsByMonth.get(item.month_id).push(item);
+        const monthId = Number(item.month_id);
+        if (!itemsByMonth.has(monthId)) itemsByMonth.set(monthId, []);
+        itemsByMonth.get(monthId).push(item);
     }
     // Items are compared in (kind, sort_order) order, the same order they are written.
     for (const list of itemsByMonth.values()) {
@@ -64,7 +66,7 @@ function planCashFlowWrite(existingMonths, existingItems, incoming) {
         }
 
         const rowChanged = !sameRecord(current, row, MONTH_FIELDS);
-        const itemsChanged = !sameItems(itemsByMonth.get(current.id) || [], incomingItems);
+        const itemsChanged = !sameItems(itemsByMonth.get(Number(current.id)) || [], incomingItems);
         if (!rowChanged && !itemsChanged) {
             plan.unchanged += 1;
             return;

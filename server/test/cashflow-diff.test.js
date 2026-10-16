@@ -1,7 +1,7 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { planCashFlowWrite } = require('../db/cashFlowDiff');
-const { monthToRow, monthItemRows } = require('../db/mappers');
+const { monthToRow, monthItemRows, assembleMonths } = require('../db/mappers');
 
 function month(key, overrides = {}) {
     return {
@@ -31,6 +31,23 @@ test('saving identical data writes nothing', () => {
     const plan = planCashFlowWrite(rows, items, toIncoming(months));
     assert.deepEqual({ insert: plan.insert.length, update: plan.update.length, deleteIds: plan.deleteIds, unchanged: plan.unchanged },
         { insert: 0, update: 0, deleteIds: [], unchanged: 2 });
+});
+
+test('identity ids returned as strings (msnodesqlv8) still match month_id numbers', () => {
+    const months = [month('2026-01'), month('2026-02')];
+    const { rows, items } = persisted(months);
+    const stringIds = rows.map((r) => ({ ...r, id: String(r.id) }));
+    const plan = planCashFlowWrite(stringIds, items, toIncoming(months));
+    assert.equal(plan.unchanged, 2);
+    assert.equal(plan.update.length, 0);
+});
+
+test('assembleMonths joins items when the month id is a string (msnodesqlv8)', () => {
+    const { rows, items } = persisted([month('2026-01')]);
+    const monthRows = rows.map((r) => ({ ...r, id: String(r.id) }));
+    const [assembled] = assembleMonths(monthRows, items);
+    assert.equal(assembled.regularExpenses.length, 1);
+    assert.equal(assembled.regularExpenses[0].amount, 5000);
 });
 
 test('a changed amount updates only that month row', () => {

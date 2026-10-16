@@ -81,7 +81,8 @@ function assembleItem(row) {
 }
 
 function assembleMonths(monthRows, itemRows) {
-    const itemsByMonth = groupBy(itemRows, (r) => r.month_id);
+    // compared as numbers: msnodesqlv8 returns the IDENTITY id as a string but month_id (plain INT) as a number
+    const itemsByMonth = groupBy(itemRows, (r) => Number(r.month_id));
     return monthRows.map((r) => {
         const m = {
             rowColor: r.row_color ?? null,
@@ -94,7 +95,7 @@ function assembleMonths(monthRows, itemRows) {
         setIf(m, 'manualLoanPayment', r.manual_loan_payment === null ? null : Number(r.manual_loan_payment));
         setIf(m, 'installmentsPayment', r.installments_payment === null ? null : Number(r.installments_payment));
 
-        const items = itemsByMonth.get(r.id) || [];
+        const items = itemsByMonth.get(Number(r.id)) || [];
         for (const [listName, kind] of ITEM_LISTS) {
             m[listName] = items.filter((i) => i.kind === kind).map(assembleItem);
         }
