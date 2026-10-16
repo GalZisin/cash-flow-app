@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef, inject, AfterViewInit, ViewChild, ElementRef, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, inject, AfterViewInit, ViewChild, ElementRef, Input, OnChanges, SimpleChanges, HostListener } from '@angular/core';
 import { FormBuilder, FormGroup, FormArray, ReactiveFormsModule, FormControl, AbstractControl } from '@angular/forms';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
@@ -19,7 +19,8 @@ import { CashFlowService } from '../../../services/cash-flow.service';
 import { CashFlowCalculationService, MonthValues } from '../../../services/cash-flow-calculation.service';
 import { InstallmentService } from '../../../services/installment.service';
 import { CashFlowExcelExportService } from '../../../services/cash-flow-excel-export.service';
-import { ExportMonthInput } from '../../../utils/cash-flow-export.util';
+import { buildExportMonthRows, ExportMonthInput, ExportMonthRow, rowColorKey, RowColorKey } from '../../../utils/cash-flow-export.util';
+import { CashFlowPrintReportComponent } from '../cash-flow-print-report/cash-flow-print-report.component';
 import { ExpenseCategorySelectorComponent } from '../expense-category-selector/expense-category-selector.component';
 import { CashFlowDefaultsDialogComponent } from '../cash-flow-defaults-dialog/cash-flow-defaults-dialog.component';
 import { CashFlowTableSkeletonComponent } from '../cash-flow-table-skeleton/cash-flow-table-skeleton.component';
@@ -34,15 +35,6 @@ import gsap from 'gsap';
 
 registerLocaleData(localeHe);
 
-type RowColorKey = 'red' | 'yellow' | 'green';
-
-/** Stored hex -> display key. The hex values are what older saved data holds. */
-const ROW_COLOR_KEYS: Record<string, RowColorKey> = {
-  '#fee2e2': 'red',
-  '#fef9c3': 'yellow',
-  '#dcfce7': 'green',
-};
-
 @Component({
   selector: 'app-cash-flow-table',
   imports: [
@@ -53,6 +45,7 @@ const ROW_COLOR_KEYS: Record<string, RowColorKey> = {
     ExpenseCategorySelectorComponent,
     CashFlowDefaultsDialogComponent,
     CashFlowTableSkeletonComponent,
+    CashFlowPrintReportComponent,
     // GSAP Directives
     AnimateNumberDirective,
     StaggerFadeInDirective,
@@ -82,7 +75,7 @@ export class CashFlowTableComponent implements OnInit, AfterViewInit, OnChanges 
   /** Maps the stored row color (a hex kept for backwards compatibility) to the
    *  data-row-color key the SCSS styles through the theme's status tokens. */
   rowColorKey(hexColor: string | null | undefined): RowColorKey | null {
-    return hexColor ? ROW_COLOR_KEYS[hexColor] ?? null : null;
+    return rowColorKey(hexColor);
   }
 
   cashFlowForm!: FormGroup;
@@ -827,8 +820,41 @@ export class CashFlowTableComponent implements OnInit, AfterViewInit, OnChanges 
     this.cdr.detectChanges();
   }
 
+  // --- PDF (print) report: CashFlowPrintReportComponent replaces the table in print ---
+  printRows: ExportMonthRow[] = [];
+  printedAt = new Date();
+  private restoreThemeAfterPrint: (() => void) | null = null;
+
   print() {
     window.print();
+  }
+
+  /** Runs for the PDF button and for Ctrl+P alike: rebuilds the report from the table as shown. */
+  @HostListener('window:beforeprint')
+  onBeforePrint() {
+    this.printRows = this.cashFlowForm ? buildExportMonthRows(this.months.getRawValue()) : [];
+    this.printedAt = new Date();
+    this.useLightModeWhilePrinting();
+    this.cdr.detectChanges();
+  }
+
+  @HostListener('window:afterprint')
+  onAfterPrint() {
+    this.restoreThemeAfterPrint?.();
+    this.restoreThemeAfterPrint = null;
+  }
+
+  /** A dark-mode PDF is unreadable on paper, so the report always prints with the light tokens. */
+  private useLightModeWhilePrinting() {
+    const root = document.documentElement;
+    if (this.restoreThemeAfterPrint || !root.classList.contains('dark-mode')) return;
+    const bsTheme = root.getAttribute('data-bs-theme');
+    root.classList.remove('dark-mode');
+    root.setAttribute('data-bs-theme', 'light');
+    this.restoreThemeAfterPrint = () => {
+      root.classList.add('dark-mode');
+      if (bsTheme) root.setAttribute('data-bs-theme', bsTheme);
+    };
   }
 
   isExportingExcel = false;

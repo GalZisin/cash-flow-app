@@ -71,6 +71,40 @@ body {
         overflow: visible !important;
         height: auto !important;
     }
+
+    .app-navbar {
+        display: none !important;
+    }
+
+    body,
+    .app-content {
+        background: var(--cf-surface) !important;
+    }
+
+    .app-content {
+        height: auto !important;
+        overflow: visible !important;
+    }
+
+    .app-content>app-cash-flow-table {
+        margin: 0;
+    }
+}
+
+// Printed pages (the cash flow PDF report is the only print view): A4 landscape
+// with page numbers. Not a named page: Chrome lays the whole document out at the
+// first page's width, so a named landscape page after a default one comes out narrow.
+@page {
+    size: A4 landscape;
+    margin: 10mm 10mm 12mm;
+
+    @bottom-center {
+        content: counter(page) ' / ' counter(pages);
+        direction: ltr;
+        font-family: 'Inter', 'Roboto', 'Helvetica Neue', sans-serif;
+        font-size: 8pt;
+        color: var(--cf-text-3);
+    }
 }
 
 

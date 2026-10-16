@@ -1,0 +1,127 @@
+<section class="cf-report" dir="rtl">
+  <header class="report-header">
+    <div>
+      <h1 class="report-title">{{ 'CASH_FLOW.REPORT_TITLE' | translate }}</h1>
+      @if (firstMonth(); as first) {
+        <div class="report-period">
+          {{ 'CASH_FLOW.REPORT_PERIOD' | translate }}:
+          {{ first | date:'MMMM yyyy':'':'he' }} – {{ lastMonth() | date:'MMMM yyyy':'':'he' }}
+          · {{ rows().length }} {{ 'CASH_FLOW.REPORT_MONTHS' | translate }}
+        </div>
+      }
+    </div>
+    <div class="report-meta">
+      {{ 'CASH_FLOW.REPORT_PRINTED' | translate }}: {{ printedAt() | date:'dd/MM/yyyy HH:mm' }}
+    </div>
+  </header>
+
+  <div class="kpis">
+    <div class="kpi">
+      <span class="kpi-label">{{ 'CASH_FLOW.REPORT_OPENING' | translate }}</span>
+      <span class="kpi-value" [class.negative]="summary().opening < 0"><span class="amt">{{ summary().opening | number:'1.0-0' }} ₪</span></span>
+    </div>
+    <div class="kpi">
+      <span class="kpi-label">{{ 'CASH_FLOW.REPORT_TOTAL_INCOME' | translate }}</span>
+      <span class="kpi-value income"><span class="amt">{{ summary().totalIncome | number:'1.0-0' }} ₪</span></span>
+    </div>
+    <div class="kpi">
+      <span class="kpi-label">{{ 'CASH_FLOW.REPORT_TOTAL_EXPENSES' | translate }}</span>
+      <span class="kpi-value expense"><span class="amt">{{ summary().totalExpenses | number:'1.0-0' }} ₪</span></span>
+    </div>
+    <div class="kpi">
+      <span class="kpi-label">{{ 'CASH_FLOW.REPORT_NET' | translate }}</span>
+      <span class="kpi-value" [class.negative]="summary().net < 0" [class.income]="summary().net >= 0"><span class="amt">{{ summary().net | number:'1.0-0' }} ₪</span></span>
+    </div>
+    <div class="kpi kpi-strong">
+      <span class="kpi-label">{{ 'CASH_FLOW.REPORT_CLOSING' | translate }}</span>
+      <span class="kpi-value" [class.negative]="summary().closing < 0"><span class="amt">{{ summary().closing | number:'1.0-0' }} ₪</span></span>
+    </div>
+  </div>
+
+  <table class="report-table">
+    <thead>
+      <tr>
+        <th class="col-month">{{ 'CASH_FLOW.MONTH' | translate }}</th>
+        <th>{{ 'CASH_FLOW.STARTING_BALANCE' | translate }}</th>
+        <th>{{ 'CASH_FLOW.INCOME' | translate }}</th>
+        <th>{{ 'CASH_FLOW.ADDITIONAL_INCOMES' | translate }}</th>
+        <th>{{ 'CASH_FLOW.MORTGAGE' | translate }}</th>
+        <th>{{ 'CASH_FLOW.LOAN' | translate }}</th>
+        <th>{{ 'CASH_FLOW.INSTALLMENTS_PAYMENT' | translate }}</th>
+        <th>{{ 'CASH_FLOW.REGULAR_EXPENSES' | translate }}</th>
+        <th>{{ 'CASH_FLOW.SPECIAL_EXPENSES' | translate }}</th>
+        <th>{{ 'CASH_FLOW.SAVINGS' | translate }}</th>
+        <th>{{ 'CASH_FLOW.ENDING_BALANCE' | translate }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (r of rows(); track r.month.getTime()) {
+        <tr [attr.data-row-color]="colorKey(r)">
+          <td class="col-month">{{ r.month | date:'MMMM yyyy':'':'he' }}</td>
+          <td [class.negative]="r.startingBalance < 0"><span class="amt">{{ r.startingBalance | number:'1.0-0' }} ₪</span></td>
+          <td><span class="amt">{{ r.income | number:'1.0-0' }} ₪</span></td>
+          <td><span class="amt">{{ r.additionalIncomes | number:'1.0-0' }} ₪</span></td>
+          <td><span class="amt">{{ r.mortgagePayment | number:'1.0-0' }} ₪</span></td>
+          <td><span class="amt">{{ r.loanPayment | number:'1.0-0' }} ₪</span></td>
+          <td><span class="amt">{{ r.installmentsPayment | number:'1.0-0' }} ₪</span></td>
+          <td><span class="amt">{{ r.regularExpenses | number:'1.0-0' }} ₪</span></td>
+          <td><span class="amt">{{ r.specialExpenses | number:'1.0-0' }} ₪</span></td>
+          <td [class.negative]="r.savings < 0"><span class="amt">{{ r.savings | number:'1.0-0' }} ₪</span></td>
+          <td class="col-ending" [class.negative]="r.endingBalance < 0"><span class="amt">{{ r.endingBalance | number:'1.0-0' }} ₪</span></td>
+        </tr>
+      }
+    </tbody>
+    @if (rows().length > 0) {
+      <tfoot>
+        <tr>
+          <td class="col-month">{{ 'CASH_FLOW.EXPORT_TOTAL' | translate }}</td>
+          <td><span class="amt">{{ summary().opening | number:'1.0-0' }} ₪</span></td>
+          <td><span class="amt">{{ totals().income | number:'1.0-0' }} ₪</span></td>
+          <td><span class="amt">{{ totals().additionalIncomes | number:'1.0-0' }} ₪</span></td>
+          <td><span class="amt">{{ totals().mortgagePayment | number:'1.0-0' }} ₪</span></td>
+          <td><span class="amt">{{ totals().loanPayment | number:'1.0-0' }} ₪</span></td>
+          <td><span class="amt">{{ totals().installmentsPayment | number:'1.0-0' }} ₪</span></td>
+          <td><span class="amt">{{ totals().regularExpenses | number:'1.0-0' }} ₪</span></td>
+          <td><span class="amt">{{ totals().specialExpenses | number:'1.0-0' }} ₪</span></td>
+          <td [class.negative]="totals().savings < 0"><span class="amt">{{ totals().savings | number:'1.0-0' }} ₪</span></td>
+          <td class="col-ending" [class.negative]="summary().closing < 0"><span class="amt">{{ summary().closing | number:'1.0-0' }} ₪</span></td>
+        </tr>
+      </tfoot>
+    }
+  </table>
+
+  @if (details().length > 0) {
+    <h2 class="section-title">{{ 'CASH_FLOW.REPORT_DETAILS' | translate }}</h2>
+    <div class="details">
+      @for (m of details(); track m.month.getTime()) {
+        <article class="month-card" [attr.data-row-color]="m.colorKey">
+          <header class="month-card-header">
+            <span>{{ m.month | date:'MMMM yyyy':'':'he' }}</span>
+            <span class="month-card-balance" [class.negative]="m.endingBalance < 0">
+              {{ 'CASH_FLOW.ENDING_BALANCE' | translate }}: <span class="amt">{{ m.endingBalance | number:'1.0-0' }} ₪</span>
+            </span>
+          </header>
+          @for (list of m.lists; track list.kind) {
+            <table class="items" [class.items-income]="list.kind === 'additionalIncome'">
+              <thead>
+                <tr>
+                  <th colspan="2">{{ list.labelKey | translate }}</th>
+                  <th class="amount"><span class="amt">{{ list.total | number:'1.0-0' }} ₪</span></th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (item of list.items; track $index) {
+                  <tr>
+                    <td class="desc">{{ item.description || '-' }}</td>
+                    <td class="category">{{ item.category ? ('CATEGORIES.' + item.category | translate) : '' }}</td>
+                    <td class="amount"><span class="amt">{{ item.amount | number:'1.0-0' }} ₪</span></td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
+        </article>
+      }
+    </div>
+  }
+</section>

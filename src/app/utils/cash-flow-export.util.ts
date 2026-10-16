@@ -62,6 +62,20 @@ export interface ExportTotals {
   savings: number;
 }
 
+export type RowColorKey = 'red' | 'yellow' | 'green';
+
+/** Stored hex -> display key. The hex values are what older saved data holds. */
+const ROW_COLOR_KEYS: Record<string, RowColorKey> = {
+  '#fee2e2': 'red',
+  '#fef9c3': 'yellow',
+  '#dcfce7': 'green',
+};
+
+/** מיפוי צבע השורה השמור (hex) למפתח שה-SCSS צובע דרך טוקני הסטטוס של ה-theme. */
+export function rowColorKey(hexColor: string | null | undefined): RowColorKey | null {
+  return hexColor ? ROW_COLOR_KEYS[hexColor] ?? null : null;
+}
+
 const num = (v: unknown): number => Number(v) || 0;
 const ITEM_KINDS: ExportItemKind[] = ['additionalIncome', 'regular', 'special'];
 

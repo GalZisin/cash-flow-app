@@ -49,6 +49,24 @@ describe('CashFlowTableComponent', () => {
     expect(loader).toBeNull();
   });
 
+  it('rebuilds the print report from the table and prints in light mode', () => {
+    const root = document.documentElement;
+    root.classList.add('dark-mode');
+    root.setAttribute('data-bs-theme', 'dark');
+    try {
+      window.dispatchEvent(new Event('beforeprint'));
+      expect(component.printRows.length).toBe(component.months.length);
+      expect(root.classList.contains('dark-mode')).toBeFalse();
+
+      window.dispatchEvent(new Event('afterprint'));
+      expect(root.classList.contains('dark-mode')).toBeTrue();
+      expect(root.getAttribute('data-bs-theme')).toBe('dark');
+    } finally {
+      root.classList.remove('dark-mode');
+      root.setAttribute('data-bs-theme', 'light');
+    }
+  });
+
   it('exports Excel from the saved server data, not from unsaved table edits', async () => {
     const saved = [{ month: '2026-10-01T00:00:00.000Z', startingBalance: 0, income: 9000, mortgagePayment: 0, loanPayment: 0, regularExpenses: [], specialExpenses: [], endingBalance: 9000 }];
     const fetchSaved = spyOn(TestBed.inject(CashFlowService), 'fetchSaved').and.returnValue(of({ months: saved }));

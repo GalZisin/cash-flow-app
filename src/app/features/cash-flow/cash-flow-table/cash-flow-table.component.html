@@ -1,4 +1,6 @@
 <div class="cash-flow-table" dir="rtl">
+  <app-cash-flow-print-report [rows]="printRows" [printedAt]="printedAt" />
+
   @if (isLoading) {
     <app-cash-flow-table-skeleton />
   }
@@ -148,14 +150,6 @@
             </div>
           }
 
-          <div class="print-only">
-            @for (expCtrl of getAdditionalIncomes(i).controls; track expCtrl; let j = $index) {
-              <div>
-                <span class="label">{{ getAdditionalIncomeDescription(i, j).value }}:</span>
-                <span class="amount">{{ getAdditionalIncomeAmount(i, j).value | number:'1.0-0' }} ₪</span>
-              </div>
-            }
-          </div>
         </td>
       </ng-container>
 
@@ -259,14 +253,6 @@
               </div>
             }
 
-            <div class="print-only">
-              @for (expCtrl of getRegularExpenses(i).controls; track expCtrl; let j = $index) {
-                <div>
-                  <span class="label">{{ getExpenseDescription(i, j).value }}:</span>
-                  <span class="amount">{{ getExpenseAmount(i, j).value | number:'1.0-0' }} ₪</span>
-                </div>
-              }
-            </div>
           </td>
         </ng-container>
 
@@ -319,14 +305,6 @@
                 </div>
               }
 
-              <div class="print-only">
-                @for (expCtrl of getSpecialExpenses(i).controls; track expCtrl; let j = $index) {
-                  <div>
-                    <span class="label">{{ getSpecialExpenseDescription(i, j).value }}:</span>
-                    <span class="amount">{{ getSpecialExpenseAmount(i, j).value | number:'1.0-0' }} ₪</span>
-                  </div>
-                }
-              </div>
             </td>
           </ng-container>
 

@@ -497,80 +497,18 @@ $white: var(--cf-surface);
 
 @include status.status-pills;
 
-.print-only {
-  display: none;
-  font-size: 11px;
-  line-height: 1.6;
-
-  div {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 2px 6px;
-
-    span.label {
-      white-space: nowrap;
-    }
-
-    span.amount {
-      white-space: nowrap;
-      font-weight: 600;
-    }
-  }
-}
-
+// PDF export: the print report (CashFlowPrintReportComponent) replaces the
+// interactive table, its toolbar and overlays.
 @media print {
-  .no-print {
-    display: none !important;
-  }
-
-  .print-only {
-    display: block !important;
-  }
-
-  button {
-    display: none !important;
-  }
-
-  input {
-    border: none !important;
-    background: transparent !important;
-  }
-
   .cash-flow-table {
-    width: 100%;
+    height: auto;
+    min-height: 0;
     padding: 0;
-    background: white;
+    background: var(--cf-surface);
   }
 
-  .table-container {
-    overflow: visible !important;
-    max-height: none !important;
-    height: auto !important;
-    padding-bottom: 0 !important;
-  }
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    page-break-inside: auto;
-  }
-
-  tr {
-    page-break-inside: avoid;
-    page-break-after: auto;
-  }
-
-  th,
-  td {
-    border: 1px solid #000;
-    padding: 4px;
-    font-size: 11px;
-  }
-
-  * {
-    overflow: visible !important;
-    height: auto !important;
-    min-height: 0 !important;
+  .cash-flow-table > :not(app-cash-flow-print-report) {
+    display: none !important;
   }
 }
 
