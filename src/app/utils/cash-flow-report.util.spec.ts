@@ -1,7 +1,7 @@
 import { buildExportMonthRows, ExportMonthInput } from './cash-flow-export.util';
 import {
   barPath, buildBalanceChart, buildExpenseBreakdown, buildIncomeExpenseChart, buildSavingsChart,
-  compactMoney, filterRowsByRange, presetRange, REPORT_CHART_BOX, summarizeRange,
+  compactMoney, filterRowsByRange, presetRange, REPORT_CHART_BOX, reportFileName, summarizeRange,
 } from './cash-flow-report.util';
 
 const month = (y: number, m: number, extra: Partial<ExportMonthInput> = {}): ExportMonthInput => ({
@@ -25,6 +25,13 @@ describe('cash-flow-report.util', () => {
     expect(filterRowsByRange(rows, { from: '2026-02', to: '2026-03' }).length).toBe(2);
     expect(filterRowsByRange(rows, { from: '2026-02', to: '2026-02' })[0].startingBalance).toBe(8000);
     expect(filterRowsByRange(rows, null).length).toBe(3);
+  });
+
+  it('reportFileName names the PDF after the first and last month of the report', () => {
+    expect(reportFileName(rows)).toBe('cash-flow-report-2026-01_2026-03');
+    expect(reportFileName([rows[2], rows[0]])).toBe('cash-flow-report-2026-01_2026-03');
+    expect(reportFileName(filterRowsByRange(rows, { from: '2026-02', to: '2026-02' }))).toBe('cash-flow-report-2026-02');
+    expect(reportFileName([])).toBe('cash-flow-report');
   });
 
   it('presetRange clips the wanted range to the months that exist', () => {

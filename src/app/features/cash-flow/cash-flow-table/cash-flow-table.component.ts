@@ -22,7 +22,7 @@ import { CashFlowExcelExportService } from '../../../services/cash-flow-excel-ex
 import { buildExportMonthRows, ExportMonthInput, ExportMonthRow, rowColorKey, RowColorKey } from '../../../utils/cash-flow-export.util';
 import { CashFlowPrintReportComponent } from '../cash-flow-print-report/cash-flow-print-report.component';
 import { CashFlowPdfDialogComponent, ReportMonthOption } from '../cash-flow-pdf-dialog/cash-flow-pdf-dialog.component';
-import { filterRowsByRange, ReportOptions } from '../../../utils/cash-flow-report.util';
+import { filterRowsByRange, ReportOptions, reportFileName } from '../../../utils/cash-flow-report.util';
 import { monthKey } from '../../../utils/cash-flow-chart.util';
 import { ExpenseCategorySelectorComponent } from '../expense-category-selector/expense-category-selector.component';
 import { CashFlowDefaultsDialogComponent } from '../cash-flow-defaults-dialog/cash-flow-defaults-dialog.component';
@@ -836,6 +836,7 @@ export class CashFlowTableComponent implements OnInit, AfterViewInit, OnChanges 
   /** The range for the print that is about to start; Ctrl+P without the dialog prints everything. */
   private pendingPdfOptions: ReportOptions | null = null;
   private restoreThemeAfterPrint: (() => void) | null = null;
+  private titleBeforePrint: string | null = null;
 
   /** "Export PDF" opens the range dialog; the dialog's confirm starts the print. */
   print() {
@@ -867,11 +868,16 @@ export class CashFlowTableComponent implements OnInit, AfterViewInit, OnChanges 
     this.printIncludeDetails = options?.includeDetails ?? true;
     this.printedAt = new Date();
     this.useLightModeWhilePrinting();
+    // "שמור כ-PDF" מציע את כותרת הדף כשם הקובץ
+    this.titleBeforePrint ??= document.title;
+    document.title = reportFileName(this.printRows);
     this.cdr.detectChanges();
   }
 
   @HostListener('window:afterprint')
   onAfterPrint() {
+    if (this.titleBeforePrint !== null) document.title = this.titleBeforePrint;
+    this.titleBeforePrint = null;
     this.pendingPdfOptions = null;
     this.restoreThemeAfterPrint?.();
     this.restoreThemeAfterPrint = null;

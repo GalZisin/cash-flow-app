@@ -50,6 +50,17 @@ export function filterRowsByRange(rows: ExportMonthRow[], range: ReportRange | n
   });
 }
 
+/**
+ * שם קובץ ה-PDF לפי החודשים שבדוח: cash-flow-report-YYYY-MM_YYYY-MM (חודש אחד: cash-flow-report-YYYY-MM).
+ * הדפדפן לוקח את השם מ-document.title בזמן ההדפסה ומוסיף .pdf בעצמו.
+ */
+export function reportFileName(rows: ExportMonthRow[]): string {
+  const keys = rows.map(r => monthKey(r.month)).sort();
+  if (!keys.length) return 'cash-flow-report';
+  const from = keys[0], to = keys[keys.length - 1];
+  return from === to ? `cash-flow-report-${from}` : `cash-flow-report-${from}_${to}`;
+}
+
 /** טווח של חזרה מהירה, חתוך לחודשים שקיימים בטבלה. null כשאין חודשים בטווח. */
 export function presetRange(preset: ReportPreset, availableKeys: string[], today: Date = new Date()): ReportRange | null {
   if (availableKeys.length === 0) return null;
