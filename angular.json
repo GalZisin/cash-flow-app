@@ -46,7 +46,10 @@
                 "inject": false
               }
             ],
-            "scripts": []
+            "scripts": [],
+            "allowedCommonJsDependencies": [
+              "exceljs"
+            ]
           },
           "configurations": {
             "production": {

@@ -22,6 +22,10 @@
     <button mat-raised-button color="accent" (click)="print()" [title]="'CASH_FLOW.EXPORT_PDF' | translate" [attr.aria-label]="'CASH_FLOW.EXPORT_PDF' | translate">
       {{ 'CASH_FLOW.EXPORT_PDF' | translate }}
     </button>
+    <button mat-raised-button color="accent" (click)="exportExcel()" [disabled]="isExportingExcel" [title]="'CASH_FLOW.EXPORT_EXCEL' | translate" [attr.aria-label]="'CASH_FLOW.EXPORT_EXCEL' | translate">
+      <mat-icon>table_view</mat-icon>
+      {{ 'CASH_FLOW.EXPORT_EXCEL' | translate }}
+    </button>
   </div>
   
   <!-- הודעה למצב סימולציה -->

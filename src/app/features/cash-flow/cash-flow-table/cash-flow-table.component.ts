@@ -12,12 +12,14 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { registerLocaleData } from '@angular/common';
 import localeHe from '@angular/common/locales/he'; // Import Hebrew locale data
-import { combineLatest } from 'rxjs';
+import { combineLatest, firstValueFrom } from 'rxjs';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { TranslateModule, TranslateService, LangChangeEvent } from '@ngx-translate/core';
 import { CashFlowService } from '../../../services/cash-flow.service';
 import { CashFlowCalculationService, MonthValues } from '../../../services/cash-flow-calculation.service';
 import { InstallmentService } from '../../../services/installment.service';
+import { CashFlowExcelExportService } from '../../../services/cash-flow-excel-export.service';
+import { ExportMonthInput } from '../../../utils/cash-flow-export.util';
 import { ExpenseCategorySelectorComponent } from '../expense-category-selector/expense-category-selector.component';
 import { CashFlowDefaultsDialogComponent } from '../cash-flow-defaults-dialog/cash-flow-defaults-dialog.component';
 import { CashFlowTableSkeletonComponent } from '../cash-flow-table-skeleton/cash-flow-table-skeleton.component';
@@ -76,6 +78,7 @@ export class CashFlowTableComponent implements OnInit, AfterViewInit, OnChanges 
   private installmentService = inject(InstallmentService);
   private decimalPipe = inject(DecimalPipe);
   private calc = inject(CashFlowCalculationService);
+  private excelExport = inject(CashFlowExcelExportService);
   /** Maps the stored row color (a hex kept for backwards compatibility) to the
    *  data-row-color key the SCSS styles through the theme's status tokens. */
   rowColorKey(hexColor: string | null | undefined): RowColorKey | null {
@@ -826,6 +829,29 @@ export class CashFlowTableComponent implements OnInit, AfterViewInit, OnChanges 
 
   print() {
     window.print();
+  }
+
+  isExportingExcel = false;
+
+  /**
+   * ייצוא לקובץ xlsx מהנתונים השמורים ב-MSSQL (קריאה טרייה מהשרת, בלי שינויים שלא נשמרו).
+   * במצב סימולציה הנתונים לא נמצאים בשרת, ולכן מייצאים את מה שבטבלה.
+   */
+  async exportExcel() {
+    if (this.isExportingExcel) return;
+    this.isExportingExcel = true;
+    this.cdr.detectChanges();
+    try {
+      const months: ExportMonthInput[] = this.isSimulation
+        ? this.months.getRawValue()
+        : (await firstValueFrom(this.cashFlowService.fetchSaved())).months ?? [];
+      await this.excelExport.exportToFile(months);
+    } catch {
+      this.snackBar.open(this.translate.instant('CASH_FLOW.EXPORT_EXCEL_FAILED'), '', { duration: 4000 });
+    } finally {
+      this.isExportingExcel = false;
+      this.cdr.detectChanges();
+    }
   }
 
 }
