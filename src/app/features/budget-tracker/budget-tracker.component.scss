@@ -121,6 +121,8 @@
     overflow-x: hidden;
     padding-right: 8px;
     padding-top: 10px;
+    // space after the last item: the shell is taller than the window, so the column's end sits below the fold
+    padding-bottom: 40px;
 
     // Custom scrollbar styling
     &::-webkit-scrollbar {
@@ -147,6 +149,7 @@
     overflow-y: auto;
     overflow-x: hidden;
     padding-right: 8px;
+    padding-bottom: 40px;
     min-height: 0;
 
     // Custom scrollbar styling
