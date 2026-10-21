@@ -1,6 +1,8 @@
 :host {
     font-family: 'Heebo', sans-serif;
     display: block;
+    // .app-content has a fixed height and overflow hidden, so the page scrolls itself
+    height: 100%;
 }
 
 .goals-page {
@@ -9,9 +11,24 @@
     margin: 0 auto;
     padding: 28px 32px 32px;
     color: var(--cf-text);
-    min-height: 100%;
+    height: 100%;
     box-sizing: border-box;
     overflow-y: auto;
+}
+
+// Goals tab: header and status cards stay put, only the workspace scrolls
+.goals-page:not(.simulation-mode) {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+
+    >* {
+        flex-shrink: 0;
+    }
+
+    >.workspace {
+        flex: 1 1 auto;
+    }
 }
 
 .top-switch-bar {
@@ -169,6 +186,8 @@ h1 {
 .workspace {
     display: grid;
     grid-template-columns: minmax(340px, 750px) minmax(0, 1fr);
+    // single row capped at the workspace height so the form and the list scroll inside it
+    grid-template-rows: minmax(0, 1fr);
     gap: 24px;
     align-items: start;
     min-height: 0;
@@ -197,6 +216,8 @@ h1 {
     gap: 13px;
     box-sizing: border-box;
     height: fit-content;
+    max-height: 100%;
+    overflow-y: auto;
     padding-bottom: 24px;
 }
 
@@ -270,7 +291,7 @@ textarea {
     grid-auto-rows: min-content;
     gap: 14px;
     height: auto;
-    max-height: calc(100vh - 240px);
+    max-height: 100%;
     overflow-y: auto;
     padding: 2px 8px 18px 2px;
     scrollbar-width: thin;
@@ -804,17 +825,17 @@ h3 {
 @media (max-width: 760px) {
     .goals-page {
         padding: 24px 14px 40px;
-        overflow-y: auto;
-        height: 100vh;
     }
 
     .overview {
         grid-template-columns: repeat(2, 1fr);
     }
 
+    // one column: form and cards scroll together inside the workspace
     .workspace {
         grid-template-columns: 1fr;
-        overflow-y: visible;
+        grid-template-rows: none;
+        overflow-y: auto;
         height: auto;
         min-height: 0;
     }
