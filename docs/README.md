@@ -16,7 +16,7 @@
 | [ARCHITECTURE.md](architecture/ARCHITECTURE.md) | השכבות, זרימת הנתונים, מי פונה למי, החלטות עיצוב |
 | [../ARCHITECTURE_DIAGRAM.html](../ARCHITECTURE_DIAGRAM.html) | תרשים אינטראקטיבי: מבט-על + תרשים מפורט של כל רכיב וחיבור. לפתוח בדפדפן |
 | [OPTIMIZATIONS.md](architecture/OPTIMIZATIONS.md) | 20 הצעות הייעול, מה יושם, באגים שנמצאו, מה נשאר |
-| [PROJECT_SPECIFICATION.html](architecture/PROJECT_SPECIFICATION.html) | אפיון המערכת המקורי (HTML) |
+| [PROJECT_SPECIFICATION.html](architecture/PROJECT_SPECIFICATION.html) | אפיון המערכת (HTML, גרסה 3.0.0, אוקטובר 2026): סקירה, ארכיטקטורה, סטאק, מודלים, פיצ'רים, API, קומפוננטות, שירותים, תהליכים, הפעלה, אבטחה. מתעדכן ידנית |
 
 ## שרת (server)
 
@@ -30,7 +30,9 @@
 | קובץ | מה יש בו |
 | --- | --- |
 | [BUDGET_TRACKER.md](frontend/BUDGET_TRACKER.md) | מסך מעקב התקציב: תכונות, API, קבצים |
-| [CASH_FLOW_CHARTS.md](frontend/CASH_FLOW_CHARTS.md) | גרפי מגמות התזרים בדאשבורד יועץ ה-AI: תקופות, תחזית, חישובים |
+| [CASH_FLOW_CHARTS.md](frontend/CASH_FLOW_CHARTS.md) | גרפי מגמות התזרים בדאשבורד יועץ ה-AI: תצוגות הדאשבורד, תקופות, תחזית, חישובים |
+| [CASH_FLOW_EXPORT.md](frontend/CASH_FLOW_EXPORT.md) | ייצוא טבלת התזרים ל-Excel ודוח PDF לטווח חודשים עם גרפי סיכום |
+| [INSTALLMENTS.md](frontend/INSTALLMENTS.md) | פריסות: תשלום נחשב שולם לפי מועד החיוב, תיקונים ידניים (`paymentOverrides`), פעולות במסך |
 | [GOALS_INTEGRATION.md](frontend/GOALS_INTEGRATION.md) | אינטגרציה בין יעדים, תזרים ופריסות |
 | [GOALS_INTEGRATION_EXAMPLE.md](frontend/GOALS_INTEGRATION_EXAMPLE.md) | דוגמה מעשית צעד אחר צעד |
 | [GSAP_ANIMATIONS.md](frontend/GSAP_ANIMATIONS.md) | שלוש דירקטיבות האנימציה ואיך משתמשים בהן |

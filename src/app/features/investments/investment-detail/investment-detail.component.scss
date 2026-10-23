@@ -117,7 +117,68 @@
 
     .yearly-chart-svg {
         display: block;
-        height: 500px;
+        width: 100%;
+        max-width: 720px;
+        height: auto;
+        max-height: 260px;
+        margin: 0 auto;
+        overflow: visible;
+    }
+
+    .yc-grid {
+        stroke: var(--cf-border);
+        stroke-dasharray: 3 4;
+    }
+
+    .yc-grid.yc-zero {
+        stroke: var(--cf-border-strong);
+        stroke-dasharray: none;
+    }
+
+    .yc-axis,
+    .yc-year {
+        font-size: 11px;
+        fill: var(--cf-text-3);
+    }
+
+    .yc-year {
+        font-weight: 600;
+        fill: var(--cf-text-2);
+    }
+
+    .yc-value {
+        font-size: 11px;
+        font-weight: 700;
+        fill: var(--cf-primary-text);
+    }
+
+    .yc-bar {
+        fill: var(--cf-primary);
+        transition: opacity 0.15s;
+    }
+
+    .yc-bar.neg {
+        fill: var(--cf-danger);
+    }
+
+    .yc-value.neg {
+        fill: var(--cf-danger);
+    }
+
+    .yc-hit {
+        fill: transparent;
+    }
+
+    .yc-bar-group {
+        cursor: pointer;
+    }
+
+    .yc-bar-group:hover .yc-hit {
+        fill: rgba(var(--cf-primary-rgb), 0.06);
+    }
+
+    .yc-bar-group:hover .yc-bar {
+        opacity: 0.85;
     }
 
     .section-title {
@@ -285,14 +346,10 @@
 
     .yearly-chart {
         background: var(--cf-surface);
-        border-radius: 8px;
-        padding: 8px;
+        border-radius: 10px;
+        padding: 12px 12px 4px;
         border: 1px solid var(--cf-border);
         overflow: hidden;
-    }
-
-    .bar-rect {
-        transition: height 0.3s;
     }
 
     .edit-name-input {

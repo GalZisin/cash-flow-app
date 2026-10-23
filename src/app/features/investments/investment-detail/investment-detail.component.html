@@ -103,26 +103,36 @@
 
       <!-- Yearly XIRR bar chart -->
       @if (xirrYears.length > 0) {
-      <div class="yearly-chart mb-2">
-        <svg [attr.viewBox]="'-110 40 ' + (xirrYears.length * 100 + 50) + ' 100'" class="w-100 yearly-chart-svg">
-          @for (yr of xirrYears; track yr.year; let i = $index) {
-          @let barH = yr.value !== null ? Math.min(Math.abs(yr.value) * 2, 70) : 0;
-          @let barY = yr.value !== null && yr.value >= 0 ? 75 - barH : 75;
-          @let barColor = yr.value === null ? '#e2e8f0' : yr.value >= 0 ? '#4f6ef7' : '#ef4444';
-          @let x = i * 60 + 20;
-          <rect [attr.x]="x" [attr.y]="barY" width="32" [attr.height]="barH || 2" [attr.fill]="barColor" rx="4"
-            class="bar-rect"
-            [matTooltip]="yr.year + ': ' + (yr.value !== null ? (yr.value | number:'1.1-1') + '%' : '-') + (yr.profit !== null ? ' | ' + (yr.profit | number:'1.0-0') + ' ₪' : '')" />
-          <text [attr.x]="x + 16" y="92" text-anchor="middle" font-size="9" fill="#94a3b8">{{ yr.year }}</text>
-          @if (yr.value !== null) {
-          <text [attr.x]="x + 16" [attr.y]="barY - 3" text-anchor="middle" font-size="8" [attr.fill]="barColor">{{
-            yr.value | number:'1.0-0' }}%</text>
+      @if (yearlyChart; as c) {
+      <div class="yearly-chart mb-2" dir="ltr">
+        <svg [attr.viewBox]="'0 0 ' + c.width + ' ' + c.height" class="yearly-chart-svg" role="img"
+          [attr.aria-label]="'XIRR ' + ('INVESTMENTS.YEAR' | translate)">
+          @for (t of c.ticks; track t.y) {
+          <line class="yc-grid" [class.yc-zero]="t.y === c.zeroY" [attr.x1]="c.margin.left"
+            [attr.x2]="c.width - c.margin.right" [attr.y1]="t.y" [attr.y2]="t.y" />
+          <text class="yc-axis" [attr.x]="c.margin.left - 8" [attr.y]="t.y" text-anchor="end"
+            dominant-baseline="middle">{{ t.label }}</text>
           }
+          @for (b of c.bars; track b.year) {
+          <g class="yc-bar-group"
+            [matTooltip]="b.year + ': ' + (b.value !== null ? (b.value | number:'1.1-1') + '%' : '-') + (b.profit !== null ? ' | ' + (b.profit | number:'1.0-0') + ' ₪' : '')">
+            <rect class="yc-hit" [attr.x]="b.cx - c.barWidth / 2 - 6" [attr.y]="c.margin.top"
+              [attr.width]="c.barWidth + 12" [attr.height]="c.height - c.margin.top - c.margin.bottom" />
+            @if (b.d) {
+            <path class="yc-bar" [class.neg]="!b.positive" [attr.d]="b.d" />
+            }
+            @if (b.value !== null) {
+            <text class="yc-value" [class.neg]="!b.positive" [attr.x]="b.cx" [attr.y]="b.labelY"
+              text-anchor="middle">{{ b.value | number:'1.1-1' }}%</text>
+            } @else {
+            <text class="yc-axis" [attr.x]="b.cx" [attr.y]="c.zeroY - 6" text-anchor="middle">-</text>
+            }
+            <text class="yc-year" [attr.x]="b.cx" [attr.y]="c.height - 8" text-anchor="middle">{{ b.year }}</text>
+          </g>
           }
-          <!-- baseline -->
-          <line x1="10" y1="75" [attr.x2]="xirrYears.length * 60 + 30" y2="75" stroke="#e8eaed" stroke-width="1" />
         </svg>
       </div>
+      }
 
       <!-- Yearly table -->
       <div class="table-scroll table-scroll-sm" dir="ltr">

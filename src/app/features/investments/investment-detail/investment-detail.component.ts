@@ -5,6 +5,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Investment, Snapshot, Transaction, SimulationRule } from '../../../models/investment.model';
 import { InvestmentService } from '../../../services/investment.service';
+import { buildYearlyXirrChart, YearlyChart } from './yearly-xirr-chart.util';
 
 const W = 600, H = 360, PAD = { top: 24, right: 24, bottom: 48, left: 70 };
 const CW = W - PAD.left - PAD.right;
@@ -31,6 +32,7 @@ export class InvestmentDetailComponent implements OnChanges {
   currentValue: number | null = null;
   totalDeposits: number | null = null;
   xirrYears: { year: number; value: number | null; profit: number | null }[] = [];
+  yearlyChart: YearlyChart | null = null;
 
   // Chart
   chartData: { x: number; y: number; date: string; value: number }[] = [];
@@ -113,6 +115,7 @@ export class InvestmentDetailComponent implements OnChanges {
         ? endVal - startVal - yearDeposits : null;
       return { year, value, profit };
     });
+    this.yearlyChart = this.xirrYears.length ? buildYearlyXirrChart(this.xirrYears) : null;
 
     this.buildChart(snaps);
     this.runSimulation(inv);
