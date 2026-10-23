@@ -113,6 +113,11 @@ export class InvestmentService {
     flows.push({ date: new Date(lastSnap.date), amount: lastSnap.value });
     flows.sort((a, b) => a.date.getTime() - b.date.getTime());
 
+    return this._solveXirr(flows);
+  }
+
+  /** מנסה כמה נקודות התחלה ומחזיר רק תוצאה סבירה (בין -99% ל-500%) */
+  private _solveXirr(flows: { date: Date; amount: number }[]): number | null {
     const hasPos = flows.some(f => f.amount > 0);
     const hasNeg = flows.some(f => f.amount < 0);
     if (!hasPos || !hasNeg) return null;
@@ -150,37 +155,40 @@ export class InvestmentService {
     return null;
   }
 
-  xirrByYear(investment: Investment): { year: number; value: number | null }[] {
+  /**
+   * XIRR ורווח לכל שנה שיש בה צילום ערך.
+   * חלון השנה: מהצילום האחרון לפני השנה (או, בשנה הראשונה, מהצילום הראשון בתוכה)
+   * ועד הצילום האחרון בשנה, בתאריכים האמיתיים. ערך הפתיחה נכנס כהשקעה, ונספרות
+   * רק תנועות שאחרי צילום הפתיחה ועד צילום הסיום. בלי חלון אמיתי (צילום יחיד
+   * בשנה הראשונה) התוצאה null.
+   */
+  xirrByYear(investment: Investment): { year: number; value: number | null; profit: number | null }[] {
     const snaps = this.sortedSnapshots(investment.snapshots ?? []);
     const txs = investment.transactions ?? [];
+    const time = (d: string) => new Date(d).getTime();
 
     const years = [...new Set(snaps.map(s => new Date(s.date).getFullYear()))];
 
     return years.map(year => {
-      const startSnap = snaps.find(s => new Date(s.date).getFullYear() === year - 1)?.value;
-      const endSnap = snaps.find(s => new Date(s.date).getFullYear() === year)?.value;
+      const inYear = snaps.filter(s => new Date(s.date).getFullYear() === year);
+      const startSnap = snaps.filter(s => new Date(s.date).getFullYear() < year).at(-1) ?? inYear[0];
+      const endSnap = inYear.at(-1)!;
+      if (time(startSnap.date) >= time(endSnap.date)) return { year, value: null, profit: null };
 
-      if (!endSnap) return { year, value: null };
+      const windowTxs = txs.filter(t => time(t.date) > time(startSnap.date) && time(t.date) <= time(endSnap.date));
+      const txFlows = windowTxs.map(t => ({
+        date: new Date(t.date),
+        amount: t.type === 'deposit' ? -Math.abs(t.amount) : Math.abs(t.amount)
+      }));
+      const flows = [
+        { date: new Date(startSnap.date), amount: -startSnap.value },
+        ...txFlows,
+        { date: new Date(endSnap.date), amount: endSnap.value },
+      ].sort((a, b) => a.date.getTime() - b.date.getTime());
 
-      const flows: { date: Date; amount: number }[] = [];
-
-      if (startSnap != null) {
-        flows.push({ date: new Date(`${year}-01-01`), amount: -startSnap });
-      }
-
-      txs
-        .filter(t => new Date(t.date).getFullYear() === year)
-        .forEach(t => {
-          flows.push({
-            date: new Date(t.date),
-            amount: t.type === 'deposit' ? -Math.abs(t.amount) : Math.abs(t.amount)
-          });
-        });
-
-      flows.push({ date: new Date(`${year}-12-31`), amount: endSnap });
-
-      const result = this._xirrCalc(flows, 0.1);
-      return { year, value: result };
+      // רווח = ערך סיום - ערך פתיחה - הפקדות + משיכות
+      const profit = endSnap.value - startSnap.value + txFlows.reduce((s, f) => s + f.amount, 0);
+      return { year, value: this._solveXirr(flows), profit };
     });
   }
 
