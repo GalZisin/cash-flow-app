@@ -95,3 +95,89 @@ test('simulateScenario with a purchase beyond the forecast window leaves the for
     assert.deepEqual(result.forecast.map(f => f.projectedBalance), summary.forecast.map(f => f.projectedBalance));
     assert.equal(result.balanceAfterPurchase, summary.currentBalance - 500000);
 });
+
+test('buildSummary loans carry components, interest, dates and the next payment', () => {
+    const installments = [{
+        name: 'Car', paymentType: 'loan', totalAmount: 30000, startDate: '2026-01-01',
+        loanComponents: [
+            { id: 'A', description: 'Bank', totalLoanAmount: 20000, monthlyPayment: 1000, installmentsCount: 20, startDate: '2026-01-01', interestRate: 5.5 },
+            { id: 'B', description: 'Fund', totalLoanAmount: 5000, monthlyPayment: 500, installmentsCount: 10, startDate: '2026-02-01', payoffDate: '2026-06', payoffAmount: 2000 }
+        ]
+    }];
+    const [loan] = buildSummary({ cashFlow: sampleCashFlow(), installments, today: '2026-04-10' }).loans;
+
+    assert.equal(loan.startDate, '2026-01-01');
+    assert.equal(loan.endDate, '2027-08-01');
+    assert.deepEqual(loan.nextPayment, { date: '2026-05-01', amount: 1000 });
+    // A: Jan..Apr paid (4); B: Feb..Apr paid (3)
+    assert.equal(loan.paidPayments, 7);
+    assert.deepEqual(loan.components, [
+        { description: 'Bank', amount: 20000, monthlyPayment: 1000, interestRate: 5.5, startDate: '2026-01-01', endDate: '2027-08-01', remainingPayments: 16, payoffDate: undefined, payoffAmount: undefined },
+        { description: 'Fund', amount: 5000, monthlyPayment: 500, interestRate: undefined, startDate: '2026-02-01', endDate: '2026-06-01', remainingPayments: 2, payoffDate: '2026-06', payoffAmount: 2000 }
+    ]);
+});
+
+test('buildSummary installments: manual end date / next payment, milestone remaining schedule', () => {
+    const installments = [
+        { name: 'TV', paymentType: 'manual', totalAmount: 6000, monthlyPayment: 500, installmentsCount: 12, startDate: '2026-01-10' },
+        {
+            name: 'Kitchen', paymentType: 'milestone', totalAmount: 600,
+            milestones: [
+                { id: 'a', description: 'A', amount: 100, date: '2026-01' },
+                { id: 'b', description: 'B', amount: 200, date: '2026-06' },
+                { id: 'c', amount: 300, date: '2026-09' }
+            ]
+        }
+    ];
+    const [tv, kitchen] = buildSummary({ cashFlow: sampleCashFlow(), installments, today: '2026-04-10' }).installments;
+
+    assert.equal(tv.endDate, '2026-12-10');
+    assert.deepEqual(tv.nextPayment, { date: '2026-05-10', amount: 500 });
+    assert.equal(tv.remainingAmount, 4000);
+    assert.deepEqual(kitchen.remainingSchedule, [
+        { date: '2026-06-01', amount: 200, description: 'B' },
+        { date: '2026-09-01', amount: 300, description: undefined }
+    ]);
+});
+
+test('buildSummary averages expenses per category (past months) and lists upcoming special expenses', () => {
+    const cashFlow = sampleCashFlow();
+    cashFlow.months.forEach(m => {
+        m.regularExpenses = [{ description: 'food', amount: 3000, category: 'FOOD' }, { description: 'misc', amount: 600 }];
+    });
+    cashFlow.months[0].specialExpenses = [{ description: 'Flight', amount: 3600, category: 'VACATION' }];
+    cashFlow.months[4].specialExpenses = [{ description: 'Insurance', amount: 4800, category: 'CAR' }];
+    const summary = buildSummary({ cashFlow });
+
+    // 3 months up to the current one: 2 past + current
+    assert.deepEqual(summary.expensesByCategory, {
+        from: monthKey(-2), to: monthKey(0), months: 3,
+        avgMonthly: { FOOD: 3000, VACATION: 1200, OTHER: 600 }
+    });
+    assert.deepEqual(summary.upcomingSpecialExpenses, [
+        { month: monthKey(2), description: 'Insurance', category: 'CAR', amount: 4800 }
+    ]);
+    assert.equal(summary.asOf.length, 10);
+});
+
+test('buildSummary investments: latest value by date, 12-month change and net deposits', () => {
+    const investments = [{
+        name: 'Fund', type: 'fund', initialValue: 80000, annualReturn: 6,
+        snapshots: [
+            { date: '2026-06-30', value: 110000 },
+            { date: '2025-01-31', value: 90000 },
+            { date: '2025-06-30', value: 100000 }
+        ],
+        transactions: [{ date: '2025-03-01', amount: 5000, type: 'deposit' }, { date: '2025-09-01', amount: 1000, type: 'withdraw' }]
+    }, { name: 'Empty', type: 'other' }];
+    const [fund, empty] = buildSummary({ cashFlow: sampleCashFlow(), investments }).investments;
+
+    assert.equal(fund.currentValue, 110000);
+    assert.equal(fund.lastUpdated, '2026-06-30');
+    assert.equal(fund.expectedAnnualReturn, 6);
+    assert.deepEqual(fund.change, { since: '2025-06-30', amount: 10000, percent: 10 });
+    assert.equal(fund.deposits, 5000);
+    assert.equal(fund.withdrawals, 1000);
+    assert.equal(empty.currentValue, null);
+    assert.equal(empty.change, undefined);
+});

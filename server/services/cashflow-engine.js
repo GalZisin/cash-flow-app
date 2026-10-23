@@ -3,10 +3,107 @@
  * All calculations here; AI only gets the summarized output.
  */
 const traceMethods = require('../utils/traceMethods');
-const { getPaymentProgress, resolvePaymentType } = require('../utils/installmentSchedule');
+const { getPaymentProgress, resolvePaymentType, toDateStr } = require('../utils/installmentSchedule');
+
+/** How many months the category averages and the upcoming special expenses cover. */
+const CATEGORY_MONTHS = 12;
+const UPCOMING_MONTHS = 12;
+const MAX_UPCOMING_SPECIAL = 15;
 
 function sumExpenses(items = []) {
   return items.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+}
+
+const round = (v) => Math.round(Number(v) || 0);
+
+/** Due date of the last scheduled entry (schedule entries are sorted by date). */
+const lastDueDate = (entries) => {
+  const dated = entries.filter(e => e.dueDate);
+  return dated.length ? dated[dated.length - 1].dueDate : undefined;
+};
+
+/** { date, amount } of the next unpaid entry, or undefined. */
+const nextPaymentOf = (entries) => {
+  const next = entries.find(e => !e.paid);
+  return next ? { date: next.dueDate, amount: round(next.amount) } : undefined;
+};
+
+/** Average monthly spend per category over the last CATEGORY_MONTHS months up to the current one. */
+function expensesByCategory(months, nowStr) {
+  const window = months.filter(m => (m.month || '').substring(0, 7) <= nowStr).slice(-CATEGORY_MONTHS);
+  if (!window.length) return undefined;
+
+  const totals = {};
+  for (const m of window) {
+    for (const e of [...(m.regularExpenses || []), ...(m.specialExpenses || [])]) {
+      const category = e.category || 'OTHER';
+      totals[category] = (totals[category] || 0) + (Number(e.amount) || 0);
+    }
+  }
+  const avgMonthly = Object.fromEntries(
+    Object.entries(totals)
+      .map(([category, total]) => [category, round(total / window.length)])
+      .filter(([, avg]) => avg > 0)
+      .sort((a, b) => b[1] - a[1])
+  );
+  return {
+    from: window[0].month.substring(0, 7),
+    to: window[window.length - 1].month.substring(0, 7),
+    months: window.length,
+    avgMonthly
+  };
+}
+
+/** Special (one-time) expenses planned after the current month, within UPCOMING_MONTHS months. */
+function upcomingSpecialExpenses(months, nowStr) {
+  return months
+    .filter(m => (m.month || '').substring(0, 7) > nowStr)
+    .slice(0, UPCOMING_MONTHS)
+    .flatMap(m => (m.specialExpenses || []).map(e => ({
+      month: m.month.substring(0, 7),
+      description: e.description,
+      category: e.category || undefined,
+      amount: round(e.amount)
+    })))
+    .filter(e => e.amount > 0)
+    .slice(0, MAX_UPCOMING_SPECIAL);
+}
+
+/** Investment entry: latest value, trend over the last 12 months and net deposits. */
+function investmentSummaryOf(inv) {
+  const snaps = [...(inv.snapshots || [])].sort((a, b) => String(a.date).localeCompare(String(b.date)));
+  const latestSnap = snaps.length ? snaps[snaps.length - 1] : null;
+
+  // Baseline: the last snapshot at least 12 months before the latest one, else the oldest snapshot.
+  let change;
+  if (latestSnap && snaps.length > 1) {
+    const d = new Date(String(latestSnap.date).substring(0, 10));
+    const yearBefore = isNaN(d) ? '' : `${d.getFullYear() - 1}${String(latestSnap.date).substring(4, 10)}`;
+    const base = [...snaps].reverse().find(s => String(s.date) <= yearBefore) || snaps[0];
+    change = {
+      since: String(base.date).substring(0, 10),
+      amount: round(latestSnap.value - base.value),
+      percent: base.value ? Math.round(((latestSnap.value - base.value) / base.value) * 1000) / 10 : undefined
+    };
+  }
+
+  const tx = inv.transactions || [];
+  const sumOf = (type) => round(tx.filter(t => (t.type || 'deposit') === type).reduce((s, t) => s + (Number(t.amount) || 0), 0));
+  const deposits = sumOf('deposit');
+  const withdrawals = sumOf('withdraw');
+
+  return {
+    name: inv.name,
+    type: inv.type,
+    currentValue: latestSnap?.value ?? null,
+    lastUpdated: latestSnap ? String(latestSnap.date).substring(0, 10) : undefined,
+    snapshotsCount: snaps.length,
+    initialValue: inv.initialValue ?? undefined,
+    expectedAnnualReturn: inv.annualReturn ?? undefined,
+    change,
+    deposits: deposits || undefined,
+    withdrawals: withdrawals || undefined
+  };
 }
 
 /**
@@ -66,7 +163,25 @@ function buildSummary({ cashFlow, installments = [], investments = [], defaults 
       monthlyPayment: Number(i.monthlyPayment) ||
         (i.loanComponents || []).reduce((s, l) => s + (Number(l.monthlyPayment) || 0), 0),
       remainingPayments: progress.remainingCount,
-      remainingBalance: progress.remainingAmount
+      remainingBalance: progress.remainingAmount,
+      paidPayments: progress.paidCount,
+      startDate: i.startDate || undefined,
+      endDate: lastDueDate(progress.entries),
+      nextPayment: nextPaymentOf(progress.entries),
+      components: (i.loanComponents || []).map(l => {
+        const own = progress.entries.filter(e => e.loanId === l.id);
+        return {
+          description: l.description || undefined,
+          amount: l.totalLoanAmount ?? undefined,
+          monthlyPayment: l.monthlyPayment,
+          interestRate: l.interestRate ?? undefined,
+          startDate: l.startDate || undefined,
+          endDate: lastDueDate(own),
+          remainingPayments: own.filter(e => !e.paid).length,
+          payoffDate: l.payoffDate || undefined,
+          payoffAmount: l.payoffAmount ?? undefined
+        };
+      })
     }));
 
   const activeInstallments = withProgress
@@ -82,29 +197,28 @@ function buildSummary({ cashFlow, installments = [], investments = [], defaults 
           paymentType: 'milestone',
           remainingMilestones: unpaidMilestones.length,
           remainingAmount: progress.remainingAmount,
-          nextMilestone: next ? (i.milestones || []).find(m => m.id === next.milestoneId) : undefined
+          nextMilestone: next ? (i.milestones || []).find(m => m.id === next.milestoneId) : undefined,
+          remainingSchedule: unpaidMilestones.map(e => ({
+            date: e.dueDate, amount: round(e.amount), description: e.description || undefined
+          }))
         };
       }
 
+      const manual = progress.entries.filter(e => e.kind === 'manual');
       return {
         name: i.name,
         totalAmount: i.totalAmount,
         monthlyPayment: i.monthlyPayment,
-        remainingPayments: progress.entries.filter(e => e.kind === 'manual' && !e.paid).length
+        remainingPayments: manual.filter(e => !e.paid).length,
+        remainingAmount: progress.remainingAmount,
+        startDate: i.startDate || undefined,
+        endDate: lastDueDate(manual),
+        nextPayment: nextPaymentOf(manual)
       };
     });
 
   // --- Investments ---
-  const investmentSummary = investments.map(inv => {
-    const snaps = inv.snapshots || [];
-    const latestSnap = snaps.length ? snaps[snaps.length - 1] : null;
-    return {
-      name: inv.name,
-      type: inv.type,
-      currentValue: latestSnap?.value ?? null,
-      snapshotsCount: snaps.length
-    };
-  });
+  const investmentSummary = investments.map(investmentSummaryOf);
 
   // --- 6-month Forecast (simple linear projection) ---
   const forecast = [];
@@ -133,6 +247,7 @@ function buildSummary({ cashFlow, installments = [], investments = [], defaults 
   }));
 
   return {
+    asOf: toDateStr(today),
     periodCovered: {
       from: oldest.month?.substring(0, 7),
       to: latest.month?.substring(0, 7),
@@ -152,6 +267,8 @@ function buildSummary({ cashFlow, installments = [], investments = [], defaults 
       avgInstallments: Math.round(totalInstallments / monthCount),
       avgRegular: Math.round(totalExpenses / monthCount)
     },
+    expensesByCategory: expensesByCategory(months, nowStr),
+    upcomingSpecialExpenses: upcomingSpecialExpenses(months, nowStr),
     monthlySavingsAvg: Math.round(avgMonthlySavings),
     loans: activeLoans,
     installments: activeInstallments,
