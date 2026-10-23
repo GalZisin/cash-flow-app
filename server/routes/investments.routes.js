@@ -33,4 +33,21 @@ router.delete('/:id', asyncHandler(async (req, res) => {
     res.json(result);
 }));
 
+// Child items: /:id/snapshot, /:id/transaction, /:id/simulation-rule (each answers with the updated investment)
+const CHILD_PATHS = { snapshot: 'snapshot', transaction: 'transaction', rule: 'simulation-rule' };
+
+for (const [kind, path] of Object.entries(CHILD_PATHS)) {
+    router.post(`/:id/${path}`, asyncHandler(async (req, res) => {
+        res.json(await investmentsService.addChild(kind, req.params.id, req.body));
+    }));
+
+    router.put(`/:id/${path}/:childId`, asyncHandler(async (req, res) => {
+        res.json(await investmentsService.updateChild(kind, req.params.id, req.params.childId, req.body));
+    }));
+
+    router.delete(`/:id/${path}/:childId`, asyncHandler(async (req, res) => {
+        res.json(await investmentsService.deleteChild(kind, req.params.id, req.params.childId));
+    }));
+}
+
 module.exports = router;

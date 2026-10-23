@@ -81,8 +81,14 @@ Base URL: `http://localhost:3000/api`. כל הגופים הם JSON. מזהים �
 | GET | `/investments` | כל ההשקעות (כולל `transactions`, `snapshots`, `simulationRules`) |
 | GET | `/investments/:id` | השקעה אחת |
 | POST | `/investments` | יצירה. חובה `name`. `201` |
-| PUT | `/investments/:id` | עדכון (כולל מערכי העסקאות/הצילומים/החוקים) |
+| PUT | `/investments/:id` | עדכון חלקי: רק השדות שנשלחו (`name, type, initialValue, annualReturn` ומערכי העסקאות/הצילומים/החוקים) |
 | DELETE | `/investments/:id` | `{ success: true }` |
+| POST | `/investments/:id/transaction` | הוספת עסקה `{ date, amount, type: 'deposit' \| 'withdraw' }`. מחזיר את ההשקעה המעודכנת |
+| PUT / DELETE | `/investments/:id/transaction/:txId` | עדכון / מחיקת עסקה. מחזיר את ההשקעה המעודכנת, `404` אם ה-id לא קיים |
+| POST | `/investments/:id/snapshot` | הוספת צילום שווי `{ date, value }` |
+| PUT / DELETE | `/investments/:id/snapshot/:snapshotId` | עדכון / מחיקת צילום |
+| POST | `/investments/:id/simulation-rule` | הוספת חוק סימולציה `{ fromMonth, toMonth, monthlyAmount, oneTimeAmount, description }` |
+| PUT / DELETE | `/investments/:id/simulation-rule/:ruleId` | עדכון / מחיקת חוק |
 
 ## תקציב
 
