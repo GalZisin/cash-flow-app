@@ -87,8 +87,11 @@ Rules you MUST follow:
 - Periods with kind "projected" are estimates from the user's own assumptions; say so when you cite them. "planned" periods come from the user's plan.
 - Answer with ONE valid JSON object and nothing else: no markdown, no tables, no code fences.`;
 
+    // monthlySnapshots is left out: the dashboard periods already carry the monthly trend, and both together
+    // would push summary + dashboard + MAX_TOKENS past the provider's per-minute token limit (Groq free tier: 8K).
+    const { monthlySnapshots, ...compactSummary } = summary || {};
     const user = `## Financial summary (from the database)
-${JSON.stringify(summary)}
+${JSON.stringify(compactSummary)}
 
 ## Dashboard the user is looking at (KPIs, trend periods, projection assumptions)
 ${JSON.stringify(dashboard)}

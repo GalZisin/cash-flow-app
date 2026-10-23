@@ -239,11 +239,16 @@ Rules you MUST follow:
 - Be concise, clear, and practical.
 - Respond in the same language the user writes in.
 - Always cite the relevant numbers from the data when making a point.
-- Format your response with clear sections using markdown.`;
+- Format your response with clear sections using markdown.
+Data notes: amounts are ILS; asOf = today; payments due on/before asOf count as paid.
+loans[].components = the loan's parts (interestRate = annual %, payoffDate/payoffAmount = planned early payoff).
+installments[].remainingSchedule = unpaid milestones. expensesByCategory.avgMonthly = average per category over its months.
+investments[].change = value change since that date; expectedAnnualReturn = user's estimate (%).`;
 
+// Compact JSON (no indentation): the summary goes with every request, and indentation alone is ~30% of its tokens.
 const summaryBlock = (summary) => `## Financial Data Summary
 \`\`\`json
-${JSON.stringify(summary, null, 2)}
+${JSON.stringify(summary)}
 \`\`\``;
 
 function buildAnalysisPrompt(summary) {
@@ -321,5 +326,5 @@ function describe() {
 module.exports = traceMethods({
   getAnalysis, getChat, getScenario, getChatStream, describe,
   // exported for tests
-  getConfig, toServiceError, stripThinking, thinkFilter, providers, generate, streamGenerate
+  getConfig, toServiceError, stripThinking, thinkFilter, providers, generate, streamGenerate, buildChatPrompt
 }, 'aiService');
