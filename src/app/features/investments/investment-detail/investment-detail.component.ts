@@ -101,20 +101,8 @@ export class InvestmentDetailComponent implements OnChanges {
     this.totalProfit = this.currentValue !== null && this.totalDeposits !== null
       ? this.currentValue - this.totalDeposits : null;
 
-    // yearly XIRR + profit per year
-    const byYear = this.svc.xirrByYear(inv);
-    this.xirrYears = byYear.map(({ year, value }) => {
-      const yearSnaps = sorted.filter(s => new Date(s.date).getFullYear() === year);
-      const prevSnap = sorted.filter(s => new Date(s.date).getFullYear() < year).at(-1);
-      const endVal = yearSnaps.at(-1)?.value ?? null;
-      const startVal = prevSnap?.value ?? null;
-      const yearDeposits = txs
-        .filter(t => t.type === 'deposit' && new Date(t.date).getFullYear() === year)
-        .reduce((s, t) => s + t.amount, 0);
-      const profit = endVal !== null && startVal !== null
-        ? endVal - startVal - yearDeposits : null;
-      return { year, value, profit };
-    });
+    // yearly XIRR + profit per year (same window for both)
+    this.xirrYears = this.svc.xirrByYear(inv);
     this.yearlyChart = this.xirrYears.length ? buildYearlyXirrChart(this.xirrYears) : null;
 
     this.buildChart(snaps);
