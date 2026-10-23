@@ -4,8 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>אפיון מערכת תזרים מזומנים - Cash Flow Application</title>
+    <script>
+        // Apply the saved theme before first paint, so a dark page never flashes light
+        try {
+            const saved = localStorage.getItem('spec-theme');
+            if (saved === 'light' || saved === 'dark') document.documentElement.setAttribute('data-theme', saved);
+        } catch (e) { /* storage blocked: follow the system setting */ }
+    </script>
     <style>
         :root {
+            color-scheme: light;
             --primary-color: #2563eb;
             --secondary-color: #7c3aed;
             --success-color: #10b981;
@@ -13,13 +21,104 @@
             --danger-color: #ef4444;
             --dark-bg: #1e293b;
             --card-bg: #ffffff;
+            --surface-muted: #f8fafc;
+            --code-bg: #f1f5f9;
+            --code-text: #7c3aed;
+            --pre-bg: #1e293b;
+            --pre-text: #e2e8f0;
             --border-color: #e2e8f0;
             --text-primary: #1e293b;
             --text-secondary: #64748b;
+            --on-accent: #ffffff;
+            --page-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --highlight-bg: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            --highlight-title: #b45309;
+            --flow-blue: #dbeafe;
+            --flow-green: #dcfce7;
+            --flow-indigo: #e0e7ff;
+            --flow-purple: #f3e8ff;
+            --flow-pink: #fce7f3;
+            --flow-amber: #fef3c7;
+            --status-active-bg: #dcfce7; --status-active-text: #166534;
+            --status-simulation-bg: #fef3c7; --status-simulation-text: #92400e;
+            --status-readonly-bg: #f3e8ff; --status-readonly-text: #6b21a8;
             --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
             --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
             --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
             --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Dark tokens: the system setting decides unless the toggle chose explicitly */
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) {
+                color-scheme: dark;
+                --primary-color: #60a5fa;
+                --secondary-color: #a78bfa;
+                --success-color: #34d399;
+                --warning-color: #fbbf24;
+                --danger-color: #f87171;
+                --card-bg: #1e293b;
+                --surface-muted: #172033;
+                --code-bg: #0f172a;
+                --code-text: #c4b5fd;
+                --pre-bg: #0b1120;
+                --pre-text: #e2e8f0;
+                --border-color: #334155;
+                --text-primary: #e2e8f0;
+                --text-secondary: #94a3b8;
+                --on-accent: #0f172a;
+                --page-bg: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+                --highlight-bg: linear-gradient(135deg, #3a2e0b 0%, #422f06 100%);
+                --highlight-title: #fbbf24;
+                --flow-blue: #172554;
+                --flow-green: #052e1f;
+                --flow-indigo: #1e1b4b;
+                --flow-purple: #2e1065;
+                --flow-pink: #4a0d2e;
+                --flow-amber: #3a2a06;
+                --status-active-bg: #052e1f; --status-active-text: #86efac;
+                --status-simulation-bg: #3a2a06; --status-simulation-text: #fcd34d;
+                --status-readonly-bg: #2e1065; --status-readonly-text: #d8b4fe;
+                --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
+                --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+                --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+                --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.6);
+            }
+        }
+
+        :root[data-theme="dark"] {
+            color-scheme: dark;
+            --primary-color: #60a5fa;
+            --secondary-color: #a78bfa;
+            --success-color: #34d399;
+            --warning-color: #fbbf24;
+            --danger-color: #f87171;
+            --card-bg: #1e293b;
+            --surface-muted: #172033;
+            --code-bg: #0f172a;
+            --code-text: #c4b5fd;
+            --pre-bg: #0b1120;
+            --pre-text: #e2e8f0;
+            --border-color: #334155;
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --on-accent: #0f172a;
+            --page-bg: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+            --highlight-bg: linear-gradient(135deg, #3a2e0b 0%, #422f06 100%);
+            --highlight-title: #fbbf24;
+            --flow-blue: #172554;
+            --flow-green: #052e1f;
+            --flow-indigo: #1e1b4b;
+            --flow-purple: #2e1065;
+            --flow-pink: #4a0d2e;
+            --flow-amber: #3a2a06;
+            --status-active-bg: #052e1f; --status-active-text: #86efac;
+            --status-simulation-bg: #3a2a06; --status-simulation-text: #fcd34d;
+            --status-readonly-bg: #2e1065; --status-readonly-text: #d8b4fe;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.6);
         }
 
         * {
@@ -32,7 +131,8 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
             color: var(--text-primary);
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--page-bg);
+            background-attachment: fixed;
             min-height: 100vh;
             padding: 2rem;
         }
@@ -47,8 +147,10 @@
         }
 
         header {
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-            color: white;
+            position: relative;
+            /* header gradient stays in the light-mode hues: white text reads on it in both modes */
+            background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+            color: #ffffff;
             padding: 3rem 2rem;
             text-align: center;
         }
@@ -64,12 +166,34 @@
             opacity: 0.9;
         }
 
+        .theme-toggle {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.45rem 0.9rem;
+            border: 1px solid rgba(255, 255, 255, 0.45);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.15);
+            color: #ffffff;
+            font: inherit;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .theme-toggle:hover { background: rgba(255, 255, 255, 0.28); }
+        .theme-toggle:focus-visible { outline: 2px solid #ffffff; outline-offset: 2px; }
+
         .meta-info {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 1rem;
             padding: 2rem;
-            background: #f8fafc;
+            background: var(--surface-muted);
             border-bottom: 2px solid var(--border-color);
         }
 
@@ -96,7 +220,7 @@
         nav {
             position: sticky;
             top: 0;
-            background: white;
+            background: var(--card-bg);
             border-bottom: 2px solid var(--border-color);
             padding: 1rem 2rem;
             display: flex;
@@ -115,9 +239,13 @@
             font-weight: 500;
         }
 
-        nav a:hover {
+        nav a:hover,
+        nav a.active {
             background: var(--primary-color);
-            color: white;
+            color: var(--on-accent);
+        }
+
+        nav a:hover {
             transform: translateY(-2px);
             box-shadow: var(--shadow-md);
         }
@@ -162,7 +290,7 @@
         }
 
         .card {
-            background: white;
+            background: var(--card-bg);
             border: 1px solid var(--border-color);
             border-radius: 12px;
             padding: 1.5rem;
@@ -193,6 +321,11 @@
             margin-bottom: 2rem;
         }
 
+        /* grid items default to min-width: auto, so a wide <pre> would stretch the page on phones */
+        .grid > * {
+            min-width: 0;
+        }
+
         .tech-stack {
             display: flex;
             flex-wrap: wrap;
@@ -204,8 +337,8 @@
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-            color: white;
+            background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+            color: #ffffff;
             padding: 0.5rem 1rem;
             border-radius: 20px;
             font-size: 0.875rem;
@@ -214,7 +347,7 @@
         }
 
         .flow-diagram {
-            background: #f8fafc;
+            background: var(--surface-muted);
             border: 2px solid var(--border-color);
             border-radius: 12px;
             padding: 2rem;
@@ -223,7 +356,7 @@
         }
 
         .flow-box {
-            background: white;
+            background: var(--card-bg);
             border: 2px solid var(--primary-color);
             border-radius: 8px;
             padding: 1rem;
@@ -233,6 +366,13 @@
             box-shadow: var(--shadow-sm);
         }
 
+        .flow-box.flow-blue { background: var(--flow-blue); border-color: var(--primary-color); }
+        .flow-box.flow-green { background: var(--flow-green); border-color: var(--success-color); }
+        .flow-box.flow-indigo { background: var(--flow-indigo); border-color: var(--primary-color); }
+        .flow-box.flow-purple { background: var(--flow-purple); border-color: var(--secondary-color); }
+        .flow-box.flow-pink { background: var(--flow-pink); border-color: var(--secondary-color); }
+        .flow-box.flow-amber { background: var(--flow-amber); border-color: var(--warning-color); }
+
         .flow-arrow {
             text-align: center;
             font-size: 1.5rem;
@@ -241,7 +381,7 @@
         }
 
         .api-endpoint {
-            background: #f8fafc;
+            background: var(--surface-muted);
             border-left: 4px solid var(--primary-color);
             padding: 1rem;
             margin: 1rem 0;
@@ -255,25 +395,26 @@
             font-weight: 700;
             font-size: 0.875rem;
             margin-left: 0.5rem;
+            color: var(--on-accent);
         }
 
-        .method-get { background: var(--success-color); color: white; }
-        .method-post { background: var(--primary-color); color: white; }
-        .method-put { background: var(--warning-color); color: white; }
-        .method-delete { background: var(--danger-color); color: white; }
+        .method-get { background: var(--success-color); }
+        .method-post { background: var(--primary-color); }
+        .method-put { background: var(--warning-color); }
+        .method-delete { background: var(--danger-color); }
 
         code {
-            background: #f1f5f9;
+            background: var(--code-bg);
             padding: 0.2rem 0.5rem;
             border-radius: 4px;
             font-family: 'Courier New', monospace;
-            color: var(--secondary-color);
+            color: var(--code-text);
             font-size: 0.9em;
         }
 
         pre {
-            background: #1e293b;
-            color: #e2e8f0;
+            background: var(--pre-bg);
+            color: var(--pre-text);
             padding: 1.5rem;
             border-radius: 8px;
             overflow-x: auto;
@@ -295,15 +436,15 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            background: white;
+            background: var(--card-bg);
             box-shadow: var(--shadow-sm);
             border-radius: 8px;
             overflow: hidden;
         }
 
         thead {
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-            color: white;
+            background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+            color: #ffffff;
         }
 
         th, td {
@@ -320,7 +461,7 @@
         }
 
         tbody tr:hover {
-            background: #f8fafc;
+            background: var(--surface-muted);
         }
 
         .feature-list {
@@ -351,9 +492,9 @@
             font-weight: 600;
         }
 
-        .status-active { background: #dcfce7; color: #166534; }
-        .status-simulation { background: #fef3c7; color: #92400e; }
-        .status-readonly { background: #f3e8ff; color: #6b21a8; }
+        .status-active { background: var(--status-active-bg); color: var(--status-active-text); }
+        .status-simulation { background: var(--status-simulation-bg); color: var(--status-simulation-text); }
+        .status-readonly { background: var(--status-readonly-bg); color: var(--status-readonly-text); }
 
         .icon {
             display: inline-block;
@@ -362,8 +503,10 @@
             vertical-align: middle;
         }
 
+        .muted { color: var(--text-secondary); }
+
         footer {
-            background: #f8fafc;
+            background: var(--surface-muted);
             padding: 2rem;
             text-align: center;
             color: var(--text-secondary);
@@ -371,7 +514,7 @@
         }
 
         .highlight-box {
-            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            background: var(--highlight-bg);
             border-right: 4px solid var(--warning-color);
             padding: 1.5rem;
             border-radius: 8px;
@@ -379,7 +522,7 @@
         }
 
         .highlight-box strong {
-            color: var(--warning-color);
+            color: var(--highlight-title);
             display: block;
             margin-bottom: 0.5rem;
             font-size: 1.1rem;
@@ -388,6 +531,10 @@
         @media (max-width: 768px) {
             body {
                 padding: 1rem;
+            }
+
+            header {
+                padding-top: 4rem;
             }
 
             header h1 {
@@ -405,7 +552,7 @@
 
         @media print {
             body {
-                background: white;
+                background: #ffffff;
                 padding: 0;
             }
 
@@ -413,7 +560,8 @@
                 box-shadow: none;
             }
 
-            nav {
+            nav,
+            .theme-toggle {
                 display: none;
             }
         }
@@ -422,6 +570,7 @@
 <body>
     <div class="container">
         <header>
+            <button type="button" class="theme-toggle" id="theme-toggle" aria-label="החלפה בין מצב בהיר לכהה / Toggle light and dark mode"></button>
             <h1>📊 אפיון מערכת תזרים מזומנים</h1>
             <p>Cash Flow Application - Technical Specification Document</p>
         </header>
@@ -429,11 +578,11 @@
         <div class="meta-info">
             <div class="meta-item">
                 <span class="meta-label">גרסה / Version</span>
-                <span class="meta-value">2.1.0</span>
+                <span class="meta-value">3.0.0</span>
             </div>
             <div class="meta-item">
                 <span class="meta-label">תאריך עדכון / Last Updated</span>
-                <span class="meta-value">ספטמבר 2026 / September 2026</span>
+                <span class="meta-value">אוקטובר 2026 / October 2026</span>
             </div>
             <div class="meta-item">
                 <span class="meta-label">מצב / Status</span>
@@ -441,7 +590,7 @@
             </div>
             <div class="meta-item">
                 <span class="meta-label">סביבה / Environment</span>
-                <span class="meta-value">Development & Production</span>
+                <span class="meta-value">מקומי, משתמש יחיד / Local, single user</span>
             </div>
         </div>
 
@@ -455,39 +604,43 @@
             <a href="#components">קומפוננטות</a>
             <a href="#services">שירותים</a>
             <a href="#flow">תהליכים</a>
+            <a href="#structure">מבנה</a>
+            <a href="#development">פיתוח</a>
+            <a href="#security">אבטחה</a>
+            <a href="#changes">שינויים</a>
         </nav>
 
         <div class="content">
             <!-- Overview Section -->
             <section id="overview">
                 <h2>📋 סקירה כללית - Overview</h2>
-                
+
                 <div class="card">
                     <div class="card-header">🎯 מטרת המערכת</div>
-                    <p>מערכת לניהול תזרים מזומנים אישי/משפחתי בעברית, המאפשרת מעקב אחר הכנסות, הוצאות, השקעות, פריסות תשלומים ויעדים פיננסיים. המערכת כוללת סימולציה מתקדמת לבדיקת השפעת יעדים על תזרים המזומנים לפני יישומם.</p>
+                    <p>מערכת לניהול תזרים מזומנים אישי/משפחתי, בעברית קודם (RTL) ובאנגלית. מעקב אחר הכנסות, הוצאות, פריסות תשלומים והלוואות, השקעות, תקציב ויעדים פיננסיים, עם סימולציה לבדיקת השפעת יעדים לפני שמחליטים ועם יועץ AI שמקבל סיכום פיננסי מחושב של הנתונים.</p>
                 </div>
 
                 <div class="card">
                     <div class="card-header">👥 משתמשי קצה</div>
                     <ul class="feature-list">
-                        <li>משתמשים פרטיים המנהלים תקציב אישי</li>
-                        <li>משפחות המתכננות רכישות גדולות</li>
-                        <li>אנשים המעוניינים בתכנון פיננסי מתקדם</li>
-                        <li>משתמשים דוברי עברית (ממשק RTL מלא)</li>
+                        <li>משתמש יחיד שמריץ את האפליקציה על המחשב שלו (אין אימות משתמשים)</li>
+                        <li>משפחות המתכננות רכישות גדולות, הלוואות ושיפוצים</li>
+                        <li>מי שרוצה תחזית לשנים קדימה ולא רק מעקב על העבר</li>
+                        <li>דוברי עברית ואנגלית (החלפת שפה וכיוון בלחיצה)</li>
                     </ul>
                 </div>
 
                 <div class="card">
                     <div class="card-header">✨ יכולות מרכזיות</div>
                     <ul class="feature-list">
-                        <li>ניהול תזרים מזומנים חודשי עם תצוגה טבלאית</li>
-                        <li>מעקב אחר פריסות תשלומים והשקעות</li>
-                        <li>ניהול יעדים פיננסיים עם ניתוח היתכנות</li>
-                        <li>סימולציה של תזרים מזומנים לבדיקת יעדים</li>
-                        <li>ויזואליזציות גרפיות (D3, Charts)</li>
-                        <li>אנימציות חכמות (GSAP)</li>
-                        <li>דוחות AI וצ'אט עם בינה מלאכותית</li>
-                        <li>ממשק רספונסיבי בעברית</li>
+                        <li>טבלת תזרים חודשית עם חישוב יתרות, צביעת שורות וברירות מחדל לחודש חדש</li>
+                        <li>ייצוא ל-Excel ודוח PDF לטווח חודשים עם גרפי סיכום</li>
+                        <li>פריסות, הלוואות ופעימות: התקדמות אוטומטית לפי מועד החיוב, עם תיקונים ידניים</li>
+                        <li>השקעות: עסקאות, צילומי שווי, תשואה (CAGR, XIRR) וסימולציה</li>
+                        <li>מעקב תקציב לפי קטגוריה עם התראות חריגה</li>
+                        <li>יעדים פיננסיים עם ניתוח היתכנות וסימולציה נפרדת שלא משנה את התזרים</li>
+                        <li>יועץ AI: צ'אט בזרימה, ניתוח, סימולטור תרחישים, דאשבורד עם גרפי מגמות ותובנות, ארכיון</li>
+                        <li>6 ערכות צבע, כל אחת במצב בהיר וכהה</li>
                     </ul>
                 </div>
             </section>
@@ -495,74 +648,75 @@
             <!-- Architecture Section -->
             <section id="architecture">
                 <h2>🏗️ ארכיטקטורה - Architecture</h2>
-                
+
                 <div class="card">
                     <div class="card-header">📐 מבנה האפליקציה</div>
-                    <p><strong>Client-Server Architecture</strong> עם הפרדה מלאה בין Frontend ו-Backend:</p>
+                    <p>שלוש שכבות שמדברות רק דרך ממשקים מוגדרים: <strong>לקוח Angular</strong> (פורט 4300 בפיתוח), <strong>שרת Express</strong> (פורט 3000, מגיש גם את הלקוח הבנוי מ-<code>dist/</code>), ו-<strong>SQL Server</strong> (מסד <code>CashFlowDB</code>). הלקוח לא ניגש למסד ולא למודל השפה; הכל עובר דרך השרת. תרשים אינטראקטיבי: <code>ARCHITECTURE_DIAGRAM.html</code> בשורש הפרויקט.</p>
                 </div>
 
                 <div class="grid">
                     <div class="card">
-                        <div class="card-header">🎨 Frontend (Angular)</div>
+                        <div class="card-header">🎨 Frontend (Angular 21)</div>
                         <ul class="feature-list">
-                            <li>Angular 21 Standalone Components</li>
-                            <li>Lazy Loading לכל המודולים</li>
-                            <li>Signal-based State Management</li>
-                            <li>RxJS לניהול אסינכרוני</li>
-                            <li>Angular Material UI Components</li>
-                            <li>Bootstrap 5 לסטיילינג</li>
+                            <li>Standalone Components, 6 מסכים ב-lazy loading</li>
+                            <li>State ב-signals (<code>signal</code> / <code>computed</code>), <code>toObservable</code> רק לצרכני rxjs</li>
+                            <li><code>inject()</code> ל-DI, OnPush בקומפוננטות תצוגה</li>
+                            <li>Reactive Forms בלבד, <code>@if</code> / <code>@for</code></li>
+                            <li>Angular Material + Bootstrap 5, ngx-translate (he / en)</li>
+                            <li>ערכות צבע דרך tokens (<code>var(--cf-*)</code>), בלי צבעים קשיחים ב-SCSS</li>
                         </ul>
                     </div>
 
                     <div class="card">
-                        <div class="card-header">⚙️ Backend (Node.js)</div>
+                        <div class="card-header">⚙️ Backend (Node 24 + Express 5)</div>
                         <ul class="feature-list">
-                            <li>Express.js REST API</li>
-                            <li>File-based Data Storage (JSON)</li>
-                            <li>Repository Pattern</li>
-                            <li>Centralized Error Handling</li>
-                            <li>Logging System (Winston)</li>
-                            <li>CORS Support</li>
+                            <li>routes (ולידציה) → services (לוגיקה) → repositories (SQL בלבד)</li>
+                            <li>SQL Server דרך <code>mssql</code> + <code>msnodesqlv8</code>, פרמטרים מוקלדים</li>
+                            <li>שגיאות מוקלדות + error middleware עם מעטפת אחידה</li>
+                            <li>logger לקבצים + טבלת לוג גישה ל-API</li>
+                            <li>CORS מוגבל, גבול גוף בקשה, rate limit לנתיבי AI</li>
+                            <li>מודול AI עם ספק מתחלף: Groq (ברירת מחדל) או Ollama</li>
                         </ul>
                     </div>
                 </div>
 
-                <div class="flow-diagram">
-                    <h3>🔄 תרשים זרימת מידע - Data Flow Diagram</h3>
-                    <div class="flow-box" style="background: #dbeafe; border-color: var(--primary-color);">
-                        <strong>User Interface (Browser)</strong><br>
-                        Angular Components + Material UI
+                <div class="card">
+                    <div class="card-header">🔄 תרשים זרימת מידע - Data Flow Diagram</div>
+                    <div class="flow-diagram">
+                        <div class="flow-box flow-blue">
+                            <strong>מסכים (Angular Components)</strong><br>
+                            cashflow, installments, investments, budget, goals, ai
+                        </div>
+                        <div class="flow-arrow">⬇️ קריאה לשירות, אף פעם לא HTTP ישירות</div>
+                        <div class="flow-box flow-amber">
+                            <strong>שירותי Angular (signals)</strong><br>
+                            CashFlowService, InstallmentService, GoalsService, AiService ...
+                        </div>
+                        <div class="flow-arrow">⬇️ HttpClient + interceptor (לוג, הודעת שגיאה מהשרת)</div>
+                        <div class="flow-box flow-pink">
+                            <strong>Express (Port 3000)</strong><br>
+                            CORS, JSON limit, לוג בקשות, /health, apiAccessLog, /api, errorHandler
+                        </div>
+                        <div class="flow-arrow">⬇️ routes/ → asyncHandler</div>
+                        <div class="flow-box flow-indigo">
+                            <strong>services/</strong><br>
+                            לוגיקה עסקית, ניתוח יעדים, תקציב, סיכום פיננסי, AI
+                        </div>
+                        <div class="flow-arrow">⬇️ גישה לנתונים</div>
+                        <div class="flow-box flow-purple">
+                            <strong>repositories/</strong><br>
+                            כל ה-SQL, דרך db/helpers.js + db/mappers.js, טרנזקציות
+                        </div>
+                        <div class="flow-arrow">⬇️ Persistence</div>
+                        <div class="flow-box flow-green">
+                            <strong>SQL Server (CashFlowDB)</strong><br>
+                            19 טבלאות ב-dbo + log.cash_flow_api_access
+                        </div>
                     </div>
-                    <div class="flow-arrow">⬇️ HTTP Requests</div>
-                    <div class="flow-box" style="background: #fef3c7; border-color: var(--warning-color);">
-                        <strong>Angular Services</strong><br>
-                        CashFlowService, GoalsService, SimulationService, etc.
-                    </div>
-                    <div class="flow-arrow">⬇️ HTTP Client (RxJS Observables)</div>
-                    <div class="flow-box" style="background: #dcfce7; border-color: var(--success-color);">
-                        <strong>HTTP Interceptors</strong><br>
-                        Error Handling, Logging
-                    </div>
-                    <div class="flow-arrow">⬇️ REST API Calls</div>
-                    <div class="flow-box" style="background: #fce7f3; border-color: var(--secondary-color);">
-                        <strong>Express.js Server (Port 3000)</strong><br>
-                        Routes + Middleware + Error Handler
-                    </div>
-                    <div class="flow-arrow">⬇️ Business Logic</div>
-                    <div class="flow-box" style="background: #e0e7ff; border-color: var(--primary-color);">
-                        <strong>Services Layer</strong><br>
-                        CashFlowService, InstallmentService, etc.
-                    </div>
-                    <div class="flow-arrow">⬇️ Data Access</div>
-                    <div class="flow-box" style="background: #f3e8ff; border-color: var(--secondary-color);">
-                        <strong>Repository Layer</strong><br>
-                        File I/O Operations
-                    </div>
-                    <div class="flow-arrow">⬇️ Persistence</div>
-                    <div class="flow-box" style="background: #fef3c7; border-color: var(--warning-color);">
-                        <strong>JSON Files (Data Storage)</strong><br>
-                        /server/data/*.json
-                    </div>
+                </div>
+
+                <div class="highlight-box">
+                    <strong>🤖 מודול ה-AI:</strong> <code>routes/ai.routes.js</code> → <code>financialSummary.service.js</code> (סיכום קומפקטי שמחושב ב-<code>cashflow-engine.js</code>, cache של 60 שניות שמתאפס בכל בקשת שינוי) → <code>ai.service.js</code> → מודל השפה. רק הסיכום נשלח למודל, לא הנתונים הגולמיים: פרומפט קטן ופרטיות טובה יותר.
                 </div>
             </section>
 
@@ -573,27 +727,28 @@
                 <div class="card">
                     <div class="card-header">Frontend Technologies</div>
                     <div class="tech-stack">
-                        <span class="tech-badge">🅰️ Angular 21.2.17</span>
-                        <span class="tech-badge">🎨 Angular Material 21.2.14</span>
-                        <span class="tech-badge">💅 Bootstrap 5.3.8</span>
-                        <span class="tech-badge">📊 D3.js 7.9.0</span>
-                        <span class="tech-badge">🎬 GSAP 3.15.0</span>
-                        <span class="tech-badge">🔄 RxJS 7.8.0</span>
-                        <span class="tech-badge">🌐 ngx-translate 17.0.0</span>
-                        <span class="tech-badge">📄 jsPDF 4.2.1</span>
-                        <span class="tech-badge">📑 TypeScript 5.9.3</span>
+                        <span class="tech-badge">🅰️ Angular 21.2</span>
+                        <span class="tech-badge">🎨 Angular Material 21.2</span>
+                        <span class="tech-badge">💅 Bootstrap 5.3 + Bootstrap Icons</span>
+                        <span class="tech-badge">📊 d3-shape / d3-sankey</span>
+                        <span class="tech-badge">🎬 GSAP 3.15</span>
+                        <span class="tech-badge">📗 ExcelJS 4.4</span>
+                        <span class="tech-badge">🌐 ngx-translate 17</span>
+                        <span class="tech-badge">🔄 RxJS 7.8</span>
+                        <span class="tech-badge">📑 TypeScript 5.9</span>
                     </div>
                 </div>
 
                 <div class="card">
                     <div class="card-header">Backend Technologies</div>
                     <div class="tech-stack">
-                        <span class="tech-badge">🟢 Node.js</span>
-                        <span class="tech-badge">🚂 Express.js</span>
-                        <span class="tech-badge">📝 Winston (Logging)</span>
-                        <span class="tech-badge">🔄 CORS</span>
-                        <span class="tech-badge">📦 JSON File Storage</span>
-                        <span class="tech-badge">🤖 Ollama AI Integration</span>
+                        <span class="tech-badge">🟢 Node.js 24+</span>
+                        <span class="tech-badge">🚂 Express 5.2</span>
+                        <span class="tech-badge">🗄️ SQL Server (mssql 12 + msnodesqlv8)</span>
+                        <span class="tech-badge">🔑 uuid v4</span>
+                        <span class="tech-badge">⚙️ dotenv</span>
+                        <span class="tech-badge">🤖 Groq / OpenAI-compatible API</span>
+                        <span class="tech-badge">🦙 Ollama (offline)</span>
                     </div>
                 </div>
 
@@ -601,10 +756,10 @@
                     <div class="card-header">Development Tools</div>
                     <div class="tech-stack">
                         <span class="tech-badge">🔧 Angular CLI</span>
-                        <span class="tech-badge">🧪 Jasmine + Karma</span>
+                        <span class="tech-badge">🧪 Jasmine + Karma (ChromeHeadless)</span>
+                        <span class="tech-badge">🧪 node:test (שרת)</span>
                         <span class="tech-badge">🔁 Concurrently</span>
-                        <span class="tech-badge">📦 NPM</span>
-                        <span class="tech-badge">🔍 Chrome DevTools</span>
+                        <span class="tech-badge">🎨 themes:check (ניגודיות)</span>
                     </div>
                 </div>
 
@@ -620,40 +775,46 @@
                         </thead>
                         <tbody>
                             <tr>
-                                <td>Angular 21</td>
-                                <td>21.2.17</td>
+                                <td><strong>Angular</strong></td>
+                                <td>21.2</td>
                                 <td>Framework Frontend</td>
-                                <td>Standalone Components, Signals, Performance</td>
+                                <td>Standalone Components, Signals, Lazy Loading</td>
                             </tr>
                             <tr>
-                                <td>Angular Material</td>
-                                <td>21.2.14</td>
+                                <td><strong>Angular Material</strong></td>
+                                <td>21.2</td>
                                 <td>UI Components</td>
-                                <td>RTL Support, Accessibility, Modern Design</td>
+                                <td>תמיכה ב-RTL, נגישות, טבלאות ודיאלוגים</td>
                             </tr>
                             <tr>
-                                <td>D3.js</td>
-                                <td>7.9.0</td>
+                                <td><strong>d3-shape / d3-sankey</strong></td>
+                                <td>3.2 / 0.12</td>
                                 <td>Data Visualization</td>
-                                <td>Flexible Charts, Sankey Diagrams</td>
+                                <td>נתיבי קו ושטח לגרפי ה-SVG, תרשים זרימה (Sankey)</td>
                             </tr>
                             <tr>
-                                <td>GSAP</td>
-                                <td>3.15.0</td>
-                                <td>Animations</td>
-                                <td>Smooth UI Transitions, Performance</td>
+                                <td><strong>ExcelJS</strong></td>
+                                <td>4.4</td>
+                                <td>ייצוא xlsx</td>
+                                <td>RTL, הערות על תאים, עיצוב; נטען רק בלחיצה (dynamic import)</td>
                             </tr>
                             <tr>
-                                <td>Express.js</td>
-                                <td>Latest</td>
+                                <td><strong>Express</strong></td>
+                                <td>5.2</td>
                                 <td>Backend Framework</td>
-                                <td>Simple, Fast, Popular</td>
+                                <td>פשוט, async errors מובנים</td>
                             </tr>
                             <tr>
-                                <td>RxJS</td>
-                                <td>7.8.0</td>
-                                <td>Reactive Programming</td>
-                                <td>Built-in with Angular, Stream Management</td>
+                                <td><strong>SQL Server</strong></td>
+                                <td>Express / Developer</td>
+                                <td>אחסון</td>
+                                <td>טבלאות מנורמלות, טרנזקציות, <code>DECIMAL(18,2)</code> לכסף, <code>extra_json</code> לשדות עתידיים</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Groq</strong></td>
+                                <td>API</td>
+                                <td>מודל שפה (ברירת מחדל)</td>
+                                <td>חינמי, מהיר, OpenAI-compatible; מספיק <code>AI_API_KEY</code></td>
                             </tr>
                         </tbody>
                     </table>
@@ -669,59 +830,33 @@
                     <pre><code>interface MonthData {
   month: string;                 // תאריך החודש (ISO)
   startingBalance: number;       // יתרת פתיחה
-  income: number;                // הכנסות
-  mortgagePayment?: number;      // תשלום משכנתא
-  loanPayment?: number;          // תשלום הלוואה
-  installmentsPayment?: number;  // סך פריסות
-  additionalIncomes?: {          // הכנסות נוספות
-    description: string;
-    amount: number;
-  }[];
-  regularExpenses?: ExpenseItem[]; // הוצאות קבועות
-  specialExpenses?: ExpenseItem[]; // הוצאות חד-פעמיות
+  income: number;                // הכנסה
+  mortgagePayment?: number;      // משכנתא
+  loanPayment?: number;          // הלוואות (ידני + אוטומטי מהפריסות)
+  installmentsPayment?: number;  // פריסות, מחושב מ-InstallmentService
+  additionalIncomes?: { description: string; amount: number }[];
+  regularExpenses?: ExpenseItem[];  // הוצאות שוטפות
+  specialExpenses?: ExpenseItem[];  // הוצאות מיוחדות
   endingBalance: number;         // יתרת סגירה
-  savings?: number;              // חיסכון מצטבר
-  rowColor?: string;             // צבע שורה (UI)
+  savings?: number;
+  rowColor?: string | null;      // צבע שורה שבוחר המשתמש (ירוק / צהוב / אדום)
 }</code></pre>
                 </div>
 
                 <div class="card">
-                    <div class="card-header">🎯 FinancialGoal - יעד פיננסי</div>
-                    <pre><code>interface FinancialGoal {
-  id: string;
-  name: string;
-  description?: string;
-  type: GoalType;               // PURCHASE | LOAN_PAYOFF | SAVINGS | PROJECT
-  targetAmount: number;         // סכום יעד
-  targetDate: string;           // תאריך יעד (YYYY-MM)
-  loanDetails?: LoanDetails;    // פרטי הלוואה (אם רלוונטי)
-  schedule?: GoalSchedule;      // סוג לוח תשלומים
-  priority: number;             // עדיפות (1 = הכי חשוב)
-  analysis?: GoalAnalysis;      // ניתוח היתכנות
-  completed: boolean;
-  createdDate: string;
-  updatedDate: string;
-}</code></pre>
-                </div>
-
-                <div class="card">
-                    <div class="card-header">📅 GoalSchedule - לוח תשלומים ליעד</div>
-                    <pre><code>type GoalScheduleType = 'single' | 'loan' | 'milestone';
-
-interface GoalSchedule {
-  type: GoalScheduleType;
-  amount?: number;              // תשלום חד-פעמי
-  date?: string;                // תאריך תשלום
-  loan?: LoanDetails;           // פרטי הלוואה
-  milestones?: GoalMilestone[]; // אבני דרך
+                    <div class="card-header">🏷️ ExpenseItem - פריט הוצאה</div>
+                    <pre><code>interface ExpenseItem {
+  description: string;
+  amount: number;
+  category: ExpenseCategory;
+  goalRelated?: boolean;         // ההוצאה נוספה מיעד (בסימולציה)
+  goalId?: string;
 }
 
-interface GoalMilestone {
-  id: string;
-  description: string;
-  percentage: number;           // אחוז מהסכום הכולל
-  amount: number;               // סכום
-  date: string;                 // תאריך
+enum ExpenseCategory {           // ערך לא מוכר מנורמל ל-OTHER
+  FOOD, DINING_OUT, CAR, HOME, HOME_IMPROVEMENT, FURNITURE, APPLIANCES,
+  VACATION, ENTERTAINMENT, GIFTS, HEALTH, PROFESSIONAL, INVESTMENTS,
+  EDUCATION, SHOPPING, OTHER
 }</code></pre>
                 </div>
 
@@ -734,14 +869,24 @@ interface GoalMilestone {
   downPayment: number;
   monthlyPayment: number;
   installmentsCount: number;
-  startDate: string;
+  startDate: string;              // YYYY-MM או YYYY-MM-DD
   color: string;
-  notes?: string;
-  manualPaidCount?: number;
-  paymentType: 'manual' | 'loan' | 'milestone';
-  loanComponents?: any[];
-  milestones?: any[];
-  payments?: any[];
+  notes: string;
+  paymentType?: 'manual' | 'loan' | 'milestone';
+  loanComponents: LoanComponent[];   // הלוואות: החזר, ריבית, פירעון מוקדם
+  milestones?: Milestone[];          // פעימות לפי אחוזים
+  paymentOverrides?: PaymentOverride[];  // תיקונים ללוח האוטומטי
+  linkedGoalId?: string;
+  // תאימות לנתונים ישנים, לא משפיעים על ההתקדמות:
+  manualPaidCount: number; payments?: ...; milestonePayments?: ...;
+}
+
+interface PaymentOverride {
+  key: string;      // 'down' | 'm:&lt;n&gt;' | 'l:&lt;loanId&gt;:&lt;n&gt;' | 'l:&lt;loanId&gt;:payoff' | 'ms:&lt;id&gt;' | 'x:&lt;id&gt;'
+  status: 'paid' | 'skipped';
+  date?: string;    // YYYY-MM-DD
+  amount?: number;
+  description?: string;
 }</code></pre>
                 </div>
 
@@ -750,36 +895,52 @@ interface GoalMilestone {
                     <pre><code>interface Investment {
   id: string;
   name: string;
-  initialAmount: number;
-  currentAmount: number;
-  currency: string;             // ILS, USD, EUR
-  type: string;                 // savings, stocks, crypto, etc.
-  startDate: string;
-  notes?: string;
+  type: 'pension' | 'fund' | 'stock' | 'other';
+  transactions: { id?: string; date: string; amount: number; type: 'deposit' | 'withdraw' }[];
+  snapshots: { id?: string; date: string; value: number }[];   // צילומי שווי
+  initialValue?: number;
+  annualReturn?: number;
+  simulationRules?: SimulationRule[];   // הפקדות חודשיות / חד-פעמיות לפי טווח חודשים
 }</code></pre>
                 </div>
 
                 <div class="card">
-                    <div class="card-header">🏷️ ExpenseItem - פריט הוצאה</div>
-                    <pre><code>interface ExpenseItem {
-  description: string;
-  amount: number;
-  category: ExpenseCategory;    // housing, food, transportation, etc.
-  goalRelated?: boolean;        // סימון שההוצאה מיעד
-  goalId?: string;              // ID של היעד
-}
-
-enum ExpenseCategory {
-  HOUSING = 'housing',
-  FOOD = 'food',
-  TRANSPORTATION = 'transportation',
-  HEALTH = 'health',
-  EDUCATION = 'education',
-  ENTERTAINMENT = 'entertainment',
-  INSURANCE = 'insurance',
-  SAVINGS = 'savings',
-  OTHER = 'other'
+                    <div class="card-header">🎯 FinancialGoal - יעד פיננסי</div>
+                    <pre><code>interface FinancialGoal {
+  id: string;
+  name: string;
+  description?: string;
+  type: 'PURCHASE' | 'LOAN_PAYOFF' | 'SAVINGS' | 'PROJECT';
+  targetAmount: number;
+  targetDate: string;              // YYYY-MM
+  loanDetails?: LoanDetails;
+  schedule?: { type: 'single' | 'loan' | 'milestone'; amount?; date?; loan?; milestones? };
+  linkedInstallmentId?: string;
+  priority: number;                // 1 = הכי חשוב
+  isFixed?: boolean;               // יעד שלא זז בתרחיש
+  analysis?: GoalAnalysis;         // status: ACHIEVABLE | WARNING | NOT_ACHIEVABLE,
+                                   // projectedBalance, monthlySavingsNeeded, suggestedDate,
+                                   // reasons[], recommendations[], conflicts[] ...
+  completed: boolean;
+  createdDate: string;
+  updatedDate: string;
 }</code></pre>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">💵 BudgetSettings / MonthlyBudget - תקציב</div>
+                    <pre><code>type BudgetSettings = Record&lt;ExpenseCategory, number&gt;;   // תקרה חודשית לקטגוריה
+
+interface MonthlyBudget {
+  month: string;                   // YYYY-MM
+  totalBudget: number; totalSpent: number; totalRemaining: number;
+  overallPercentage: number;
+  categories: { category; monthlyLimit; spent; remaining; percentage; isOverBudget }[];
+}</code></pre>
+                </div>
+
+                <div class="highlight-box">
+                    <strong>🗄️ במסד:</strong> 19 טבלאות ב-<code>server/db/schema.sql</code>: חודשי תזרים ופריטים, ברירות מחדל, הגדרות תקציב, פריסות (+ רכיבי הלוואה, תשלומים, פעימות), השקעות (+ עסקאות, צילומים, חוקי סימולציה), יעדים, שיחות והודעות, דוחות AI. כל טבלה כוללת <code>extra_json</code> לשדות שאין להם עמודה (למשל <code>paymentOverrides</code>). המיפוי אובייקט↔שורה ב-<code>db/mappers.js</code>.
                 </div>
             </section>
 
@@ -789,78 +950,85 @@ enum ExpenseCategory {
 
                 <div class="grid">
                     <div class="card">
-                        <div class="card-header">💰 תזרים מזומנים (Cash Flow)</div>
+                        <div class="card-header">💰 תזרים מזומנים</div>
                         <ul class="feature-list">
-                            <li>טבלה חודשית עם חישובים אוטומטיים</li>
-                            <li>הוספה/עריכה/מחיקה של הוצאות והכנסות</li>
-                            <li>ברירות מחדל להעתקה לחודשים חדשים</li>
-                            <li>צביעת שורות לפי מצב היתרה</li>
-                            <li>ייצוא לקובץ PDF</li>
-                            <li>עריכה inline בטבלה</li>
+                            <li>טבלה חודשית עם חישוב יתרת סגירה אוטומטי</li>
+                            <li>הכנסות נוספות, הוצאות שוטפות ומיוחדות עם קטגוריות</li>
+                            <li>פריסות והלוואות נכנסות אוטומטית מהמסך שלהן</li>
+                            <li>ברירות מחדל לחודש חדש</li>
+                            <li>צביעת שורה ירוק / צהוב / אדום (ירוק = שורה מצומצמת)</li>
+                            <li>שמירה דיפרנציאלית: רק חודשים שהשתנו נכתבים</li>
+                            <li>ייצוא Excel (שני גיליונות) ודוח PDF לטווח חודשים</li>
                         </ul>
                     </div>
 
                     <div class="card">
-                        <div class="card-header">🎯 יעדים פיננסיים (Goals)</div>
+                        <div class="card-header">💳 פריסות והלוואות</div>
                         <ul class="feature-list">
-                            <li>יצירת יעדים עם סוגי תשלום שונים</li>
-                            <li>תשלום חד-פעמי / הלוואה / אבני דרך</li>
-                            <li>ניתוח אוטומטי של היתכנות</li>
-                            <li>תצוגת סטטוס (ירוק/כתום/אדום)</li>
-                            <li>עדיפויות ליעדים</li>
-                            <li>המלצות לשיפור</li>
+                            <li>שלושה סוגים: תשלומים קבועים / הלוואה / פעימות</li>
+                            <li>תשלום נחשב שולם כשמועד החיוב שלו הגיע</li>
+                            <li>תיקון ידני: שולם מוקדם, בסכום אחר, או "לא שולם"</li>
+                            <li>פירעון מוקדם של הלוואה, תשלום נוסף שלא בלוח</li>
+                            <li>התראה אם פריסה חדשה מורידה את היתרה מתחת לסף</li>
+                            <li>אותו כלל בלקוח ובשרת (סיכום ה-AI)</li>
                         </ul>
                     </div>
 
                     <div class="card">
-                        <div class="card-header">🔄 סימולציה (Simulation)</div>
+                        <div class="card-header">📈 השקעות</div>
                         <ul class="feature-list">
-                            <li>טבלת תזרים מזומנים נפרדת לסימולציה</li>
-                            <li>יעדים משפיעים **רק** על הסימולציה, לא על התזרים המקורי</li>
-                            <li>עריכה חופשית של נתוני הסימולציה</li>
-                            <li>כפתור רענון - מעדכן את הסימולציה מהתזרים המקורי</li>
-                            <li>רענון מאפס את כל היעדים (דורש אישור)</li>
-                            <li>הסימולציה לעולם לא משנה את התזרים המקורי</li>
+                            <li>הפקדות ומשיכות, צילומי שווי לאורך זמן</li>
+                            <li>שינוי באחוזים, CAGR, XIRR כולל ולפי שנה</li>
+                            <li>סימולציית צמיחה עם חוקי הפקדה לפי טווח חודשים</li>
+                            <li>סוגים: פנסיה, קרן, מניה, אחר</li>
                         </ul>
                     </div>
 
                     <div class="card">
-                        <div class="card-header">💳 פריסות תשלומים (Installments)</div>
+                        <div class="card-header">💵 מעקב תקציב</div>
                         <ul class="feature-list">
-                            <li>ניהול פריסות עם תשלומים חודשיים</li>
-                            <li>מעקב אחר תשלומים שבוצעו</li>
-                            <li>שלושה סוגי פריסות: ידני/הלוואה/אבני דרך</li>
-                            <li>אינטגרציה אוטומטית לתזרים המזומנים</li>
-                            <li>גרפים ותצוגות חזותיות</li>
+                            <li>תקרה חודשית לכל אחת מ-16 הקטגוריות</li>
+                            <li>ההוצאה בפועל מחושבת מהתזרים של החודש</li>
+                            <li>התראות: warning ב-90-100%, danger מעל 100%</li>
+                            <li>מגמה לעומת חודשים קודמים</li>
                         </ul>
                     </div>
 
                     <div class="card">
-                        <div class="card-header">📈 השקעות (Investments)</div>
+                        <div class="card-header">🎯 יעדים וסימולציה</div>
                         <ul class="feature-list">
-                            <li>מעקב אחר השקעות מרובות</li>
-                            <li>תמיכה במטבעות שונים</li>
-                            <li>גרף Sankey של זרימת כספים</li>
-                            <li>חישוב תשואות</li>
-                            <li>סוגי השקעות שונים</li>
+                            <li>יעדי רכישה / פירעון הלוואה / חיסכון / פרויקט</li>
+                            <li>תשלום חד-פעמי, הלוואה או פעימות</li>
+                            <li>ניתוח היתכנות, תאריך מוצע, התנגשויות בין יעדים</li>
+                            <li>ניתוח מחדש של כל היעדים אחרי כל שמירת תזרים</li>
+                            <li>טבלת סימולציה נפרדת; התזרים המקורי לא משתנה</li>
                         </ul>
                     </div>
 
                     <div class="card">
-                        <div class="card-header">🤖 עוזר AI</div>
+                        <div class="card-header">🤖 יועץ AI</div>
                         <ul class="feature-list">
-                            <li>צ'אט עם בינה מלאכותית (Ollama)</li>
-                            <li>ניתוח נתונים פיננסיים</li>
-                            <li>המלצות והצעות</li>
-                            <li>יצירת דוחות אוטומטית</li>
-                            <li>שמירת שיחות</li>
+                            <li>צ'אט עם תשובה בזרימה (streaming) ושמירת שיחות</li>
+                            <li>ניתוח מלא וסימולטור "מה אם" לתרחיש</li>
+                            <li>דאשבורד: סקירה כללית (KPI, תובנות AI, גרפי מגמות ותחזית), תרשים זרימה, תרשים הוצאות</li>
+                            <li>ארכיון דוחות (ניתוח, תרחיש, תובנות) עם סינון</li>
+                            <li>תשובה בעברית או באנגלית</li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">🎨 ממשק</div>
+                        <ul class="feature-list">
+                            <li>עברית (RTL) ואנגלית (LTR), החלפה בלחיצה</li>
+                            <li>6 ערכות צבע (קלאסי, אוקיינוס, אמרלד, סגול, שקיעה, גרפיט) × בהיר / כהה</li>
+                            <li>אנימציות GSAP (3 דירקטיבות)</li>
+                            <li>פריסה רספונסיבית למחשב, טאבלט ונייד</li>
                         </ul>
                     </div>
                 </div>
 
                 <div class="highlight-box">
-                    <strong>🆕 פיצ'ר מיוחד: מערכת סימולציה</strong>
-                    <p>המערכת כוללת מנגנון ייחודי של סימולציה המאפשר למשתמשים לבדוק את ההשפעה של יעדים פיננסיים על תזרים המזומנים בטבלה נפרדת. <strong>חשוב:</strong> היעדים משפיעים רק על טבלת הסימולציה, ולא על התזרים המקורי. כפתור "רענן מהתזרים המקורי" מאפס את כל הסימולציה והיעדים, ומעתיק מחדש את הנתונים מהטבלה המקורית.</p>
+                    <strong>🆕 פיצ'ר מיוחד: מערכת סימולציה.</strong> במסך היעדים יש טבלת תזרים נפרדת (<code>isSimulation</code>). <code>CashFlowSimulationService</code> משכפל את התזרים המקורי ומוסיף לו את ההוצאות של היעדים, כך שרואים את ההשפעה לפני שמחליטים. התזרים המקורי לעולם לא משתנה מהיעדים. "רענן מתזרים מקורי" (אחרי אישור) מוחק את כל היעדים וטוען מחדש את המקור.
                 </div>
             </section>
 
@@ -871,145 +1039,105 @@ enum ExpenseCategory {
                 <div class="card">
                     <div class="card-header">🌐 Base URL</div>
                     <code>http://localhost:3000/api</code>
+                    <p style="margin-top: 0.5rem;">הפירוט המלא (גופים, שדות, דוגמאות): <code>docs/server/API.md</code>. בריאות: <code>GET /health</code> (ללא <code>/api</code>), <code>200</code> או <code>503</code> כשה-DB לא זמין.</p>
                 </div>
 
-                <h3>💰 Cash Flow Endpoints</h3>
-
+                <h3>💰 Cash Flow</h3>
                 <div class="api-endpoint">
                     <span class="api-method method-get">GET</span>
                     <strong>/api/cash-flow</strong>
-                    <p>קבלת כל נתוני תזרים המזומנים</p>
-                    <p><strong>Response:</strong> <code>{ months: MonthData[] }</code></p>
+                    <p>כל חודשי התזרים: <code>{ months: MonthData[] }</code>, או <code>null</code> אם עוד לא נשמר</p>
                 </div>
-
                 <div class="api-endpoint">
                     <span class="api-method method-post">POST</span>
                     <strong>/api/cash-flow</strong>
-                    <p>שמירת נתוני תזרים מזומנים</p>
-                    <p><strong>Body:</strong> <code>{ months: MonthData[] }</code></p>
-                    <p><strong>Response:</strong> <code>{ success: true }</code></p>
+                    <p>שמירת הטבלה (כתיבה דיפרנציאלית), ואחריה ניתוח כל היעדים. <code>{ success: true }</code></p>
                 </div>
-
                 <div class="api-endpoint">
-                    <span class="api-method method-get">GET</span>
+                    <span class="api-method method-get">GET</span> <span class="api-method method-post">POST</span>
                     <strong>/api/cash-flow-defaults</strong>
-                    <p>קבלת ברירות מחדל</p>
+                    <p>ברירות מחדל לחודש חדש</p>
                 </div>
 
+                <h3>💳 Installments / 📈 Investments</h3>
                 <div class="api-endpoint">
-                    <span class="api-method method-post">POST</span>
-                    <strong>/api/cash-flow-defaults</strong>
-                    <p>שמירת ברירות מחדל</p>
+                    <span class="api-method method-get">GET</span> <span class="api-method method-post">POST</span>
+                    <strong>/api/installments</strong> · <strong>/api/investments</strong>
+                    <p>רשימה / יצירה (חובה <code>name</code>, מחזיר <code>201</code>)</p>
+                </div>
+                <div class="api-endpoint">
+                    <span class="api-method method-get">GET</span> <span class="api-method method-put">PUT</span> <span class="api-method method-delete">DELETE</span>
+                    <strong>/api/installments/:id</strong> · <strong>/api/investments/:id</strong>
+                    <p>פריט אחד / עדכון / מחיקה (<code>404</code> אם לא קיים)</p>
                 </div>
 
-                <h3>🎯 Goals Endpoints</h3>
-
+                <h3>💵 Budget</h3>
+                <div class="api-endpoint">
+                    <span class="api-method method-get">GET</span> <span class="api-method method-post">POST</span>
+                    <strong>/api/budget/settings</strong>
+                    <p>תקרה לכל קטגוריה</p>
+                </div>
                 <div class="api-endpoint">
                     <span class="api-method method-get">GET</span>
+                    <strong>/api/budget/monthly/:month</strong> · <strong>/api/budget/alerts/:month</strong>
+                    <p>תקציב מחושב לחודש <code>YYYY-MM</code> / התראות חריגה</p>
+                </div>
+
+                <h3>🎯 Goals</h3>
+                <div class="api-endpoint">
+                    <span class="api-method method-get">GET</span> <span class="api-method method-post">POST</span>
                     <strong>/api/goals</strong>
-                    <p>קבלת כל היעדים</p>
+                    <p>כל היעדים עם <code>analysis</code> / יצירה (<code>name, type, targetAmount &gt; 0, targetDate</code>)</p>
                 </div>
-
                 <div class="api-endpoint">
                     <span class="api-method method-get">GET</span>
+                    <strong>/api/goals/overview</strong> · <strong>/api/goals/timeline</strong> · <strong>/api/goals/:id/integration</strong>
+                    <p>ספירות לפי סטטוס / ציר זמן / הוצאות, פריסות והתחייבויות שקשורות ליעד</p>
+                </div>
+                <div class="api-endpoint">
+                    <span class="api-method method-get">GET</span> <span class="api-method method-put">PUT</span> <span class="api-method method-delete">DELETE</span>
                     <strong>/api/goals/:id</strong>
-                    <p>קבלת יעד לפי ID</p>
+                    <p>יעד אחד / עדכון (וניתוח מחדש של כולם) / מחיקה</p>
                 </div>
-
                 <div class="api-endpoint">
                     <span class="api-method method-post">POST</span>
-                    <strong>/api/goals</strong>
-                    <p>יצירת יעד חדש</p>
+                    <strong>/api/goals/analyze-all</strong> · <strong>/api/goals/:id/analyze</strong>
+                    <p>ניתוח מחדש של כל היעדים הפעילים / של יעד אחד</p>
                 </div>
 
-                <div class="api-endpoint">
-                    <span class="api-method method-put">PUT</span>
-                    <strong>/api/goals/:id</strong>
-                    <p>עדכון יעד קיים</p>
-                </div>
-
-                <div class="api-endpoint">
-                    <span class="api-method method-delete">DELETE</span>
-                    <strong>/api/goals/:id</strong>
-                    <p>מחיקת יעד</p>
-                </div>
-
-                <h3>💳 Installments Endpoints</h3>
-
+                <h3>🤖 AI (rate limit, ברירת מחדל 30 לדקה)</h3>
                 <div class="api-endpoint">
                     <span class="api-method method-get">GET</span>
-                    <strong>/api/installments</strong>
-                    <p>קבלת כל הפריסות</p>
+                    <strong>/api/ai/summary</strong>
+                    <p>הסיכום הפיננסי המחושב, בלי מודל</p>
                 </div>
-
                 <div class="api-endpoint">
                     <span class="api-method method-post">POST</span>
-                    <strong>/api/installments</strong>
-                    <p>יצירת פריסה חדשה</p>
+                    <strong>/api/ai/chat</strong> · <strong>/api/ai/chat-stream</strong>
+                    <p><code>{ question }</code> → תשובה אחת / <code>text/plain</code> ב-chunks</p>
                 </div>
-
-                <div class="api-endpoint">
-                    <span class="api-method method-put">PUT</span>
-                    <strong>/api/installments/:id</strong>
-                    <p>עדכון פריסה</p>
-                </div>
-
-                <div class="api-endpoint">
-                    <span class="api-method method-delete">DELETE</span>
-                    <strong>/api/installments/:id</strong>
-                    <p>מחיקת פריסה</p>
-                </div>
-
-                <h3>📈 Investments Endpoints</h3>
-
-                <div class="api-endpoint">
-                    <span class="api-method method-get">GET</span>
-                    <strong>/api/investments</strong>
-                    <p>קבלת כל ההשקעות</p>
-                </div>
-
                 <div class="api-endpoint">
                     <span class="api-method method-post">POST</span>
-                    <strong>/api/investments</strong>
-                    <p>יצירת השקעה חדשה</p>
+                    <strong>/api/ai/analysis</strong> · <strong>/api/ai/scenario</strong> · <strong>/api/ai/insights</strong>
+                    <p>ניתוח מלא / תרחיש <code>{ description, amount, date }</code> / תובנות לדאשבורד (נשמרות בארכיון)</p>
+                </div>
+                <div class="api-endpoint">
+                    <span class="api-method method-get">GET</span> <span class="api-method method-post">POST</span> <span class="api-method method-put">PUT</span> <span class="api-method method-delete">DELETE</span>
+                    <strong>/api/conversations</strong> · <strong>/api/ai-reports</strong>
+                    <p>שיחות שמורות / ארכיון דוחות (<code>analysis</code>, <code>insights</code>, <code>scenario</code>). בדוחות אין PUT</p>
                 </div>
 
-                <div class="api-endpoint">
-                    <span class="api-method method-put">PUT</span>
-                    <strong>/api/investments/:id</strong>
-                    <p>עדכון השקעה</p>
-                </div>
-
-                <div class="api-endpoint">
-                    <span class="api-method method-delete">DELETE</span>
-                    <strong>/api/investments/:id</strong>
-                    <p>מחיקת השקעה</p>
-                </div>
-
-                <h3>🤖 AI Endpoints</h3>
-
-                <div class="api-endpoint">
-                    <span class="api-method method-post">POST</span>
-                    <strong>/api/ai/chat</strong>
-                    <p>שליחת הודעה לצ'אט AI</p>
-                </div>
-
-                <div class="api-endpoint">
-                    <span class="api-method method-get">GET</span>
-                    <strong>/api/conversations</strong>
-                    <p>קבלת כל השיחות</p>
-                </div>
-
-                <div class="api-endpoint">
-                    <span class="api-method method-post">POST</span>
-                    <strong>/api/ai-reports/generate</strong>
-                    <p>יצירת דוח AI</p>
+                <div class="card">
+                    <div class="card-header">⚠️ פורמט שגיאות</div>
+                    <pre><code>{ "success": false, "error": { "name": "ValidationError", "message": "...", "code": "..." } }</code></pre>
+                    <p><code>400</code> ValidationError · <code>404</code> NotFoundError · <code>429</code> TooManyRequestsError (<code>RATE_LIMITED</code>, <code>Retry-After</code>) · <code>503</code> ServiceUnavailableError (<code>AI_UNAVAILABLE</code> / <code>AI_TIMEOUT</code> / <code>AI_AUTH</code>) · <code>500</code> שגיאה לא צפויה</p>
                 </div>
             </section>
 
             <!-- Components Section -->
             <section id="components">
                 <h2>🧩 קומפוננטות - Components</h2>
+                <p>30 קומפוננטות standalone תחת <code>src/app/features/&lt;feature&gt;/</code>. העיקריות:</p>
 
                 <div class="table-wrapper">
                     <table>
@@ -1018,85 +1146,75 @@ enum ExpenseCategory {
                                 <th>קומפוננטה</th>
                                 <th>נתיב</th>
                                 <th>תפקיד</th>
-                                <th>Standalone</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
                                 <td><strong>AppComponent</strong></td>
                                 <td>app/app.component.ts</td>
-                                <td>קומפוננטת שורש, ניווט ראשי</td>
-                                <td>✅</td>
+                                <td>מעטפת: ניווט, שפה (RTL/LTR), מצב כהה, בורר ערכות צבע</td>
                             </tr>
                             <tr>
                                 <td><strong>CashFlowTableComponent</strong></td>
-                                <td>features/cash-flow/cash-flow-table</td>
-                                <td>טבלת תזרים מזומנים + סימולציה</td>
-                                <td>✅</td>
+                                <td>cash-flow/cash-flow-table</td>
+                                <td>טבלת התזרים (גם במצב סימולציה), שמירה, ייצוא Excel ו-PDF</td>
+                            </tr>
+                            <tr>
+                                <td><strong>CashFlowCards / ExpenseList / ExpenseCategorySelector / ExpensePieChart</strong></td>
+                                <td>cash-flow/*</td>
+                                <td>תצוגת כרטיסים, רשימות פריטים, בחירת קטגוריה, עוגת הוצאות</td>
+                            </tr>
+                            <tr>
+                                <td><strong>CashFlowDefaultsDialog / CashFlowTableSkeleton</strong></td>
+                                <td>cash-flow/*</td>
+                                <td>עריכת ברירות מחדל, שלד בזמן טעינה</td>
+                            </tr>
+                            <tr>
+                                <td><strong>CashFlowPdfDialog / CashFlowPrintReport / CashFlowReportCharts</strong></td>
+                                <td>cash-flow/*</td>
+                                <td>בחירת טווח לדוח, הדוח המודפס, ארבעת גרפי הסיכום (SVG)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>InstallmentsComponent</strong> + Card / Table / Form / Header / EmptyState / ConfirmDialogs</td>
+                                <td>installments/*</td>
+                                <td>מסך הפריסות: כרטיסים או טבלה, טופס, אישורי תשלום ומחיקה</td>
+                            </tr>
+                            <tr>
+                                <td><strong>InvestmentDashboard</strong> + List / Detail / Simulation</td>
+                                <td>investments/*</td>
+                                <td>תיק ההשקעות, פרטי השקעה, סימולציית צמיחה</td>
+                            </tr>
+                            <tr>
+                                <td><strong>BudgetTrackerComponent</strong> + Summary / CategoryCard</td>
+                                <td>budget-tracker/*</td>
+                                <td>מעקב תקציב חודשי</td>
                             </tr>
                             <tr>
                                 <td><strong>GoalsComponent</strong></td>
-                                <td>features/goals</td>
-                                <td>ניהול יעדים פיננסיים</td>
-                                <td>✅</td>
+                                <td>goals</td>
+                                <td>יעדים, ניתוח, וטבלת הסימולציה</td>
                             </tr>
                             <tr>
-                                <td><strong>InstallmentsComponent</strong></td>
-                                <td>features/installments</td>
-                                <td>ניהול פריסות תשלומים</td>
-                                <td>✅</td>
+                                <td><strong>AiAssistantComponent</strong> + AiSankeyDiagram</td>
+                                <td>ai-assistant/ai-assistant</td>
+                                <td>טאבים: צ'אט, ניתוח, סימולטור, דאשבורד, ארכיון</td>
                             </tr>
                             <tr>
-                                <td><strong>InvestmentDashboardComponent</strong></td>
-                                <td>features/investments/investment-dashboard</td>
-                                <td>דשבורד השקעות</td>
-                                <td>✅</td>
-                            </tr>
-                            <tr>
-                                <td><strong>BudgetTrackerComponent</strong></td>
-                                <td>features/budget-tracker</td>
-                                <td>מעקב תקציב</td>
-                                <td>✅</td>
-                            </tr>
-                            <tr>
-                                <td><strong>AiAssistantComponent</strong></td>
-                                <td>features/ai-assistant</td>
-                                <td>צ'אט עם AI</td>
-                                <td>✅</td>
-                            </tr>
-                            <tr>
-                                <td><strong>ExpenseCategorySelectorComponent</strong></td>
-                                <td>features/cash-flow/expense-category-selector</td>
-                                <td>בחירת קטגוריית הוצאה</td>
-                                <td>✅</td>
-                            </tr>
-                            <tr>
-                                <td><strong>ExpensePieChartComponent</strong></td>
-                                <td>features/cash-flow/expense-pie-chart</td>
-                                <td>גרף עוגה של הוצאות</td>
-                                <td>✅</td>
+                                <td><strong>CashFlowCharts / CashFlowChart</strong></td>
+                                <td>ai-assistant/cash-flow-charts</td>
+                                <td>גרפי מגמות ותחזית בדאשבורד (SVG, tooltip, מקלדת)</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
 
-                <h3>🔄 תקשורת בין קומפוננטות</h3>
-
                 <div class="card">
-                    <p><strong>GoalsComponent ↔ CashFlowTableComponent</strong></p>
+                    <div class="card-header">🔄 תקשורת בין קומפוננטות</div>
                     <ul class="feature-list">
-                        <li>GoalsComponent שולח נתונים דרך @Input isSimulation</li>
-                        <li>GoalsComponent מעביר נתוני סימולציה דרך @Input simulationData</li>
-                        <li>CashFlowTableComponent מציג את הנתונים בהתאם למצב</li>
-                    </ul>
-                </div>
-
-                <div class="card">
-                    <p><strong>Services ← Components</strong></p>
-                    <ul class="feature-list">
-                        <li>כל קומפוננטה עובדת עם שירות ייעודי (Dependency Injection)</li>
-                        <li>השירותים מחזירים RxJS Observables</li>
-                        <li>הקומפוננטות מאזינות לשינויים דרך async pipe או subscribe</li>
+                        <li>קומפוננטה פונה לשירות, אף פעם לא ל-HTTP ישירות</li>
+                        <li>השירותים חושפים signals; הקומפוננטות קוראות אותם בתבנית או ב-<code>computed</code></li>
+                        <li><code>GoalsComponent</code> מרנדר את <code>CashFlowTableComponent</code> עם <code>isSimulation</code> ונתוני הסימולציה</li>
+                        <li>חישובים טהורים ב-<code>src/app/utils/</code> (גרפים, ייצוא, דוח, לוח פריסות), כל אחד עם spec</li>
                     </ul>
                 </div>
             </section>
@@ -1105,6 +1223,7 @@ enum ExpenseCategory {
             <section id="services">
                 <h2>⚙️ שירותים - Services</h2>
 
+                <h3>שירותי Angular (<code>src/app/services/</code>)</h3>
                 <div class="table-wrapper">
                     <table>
                         <thead>
@@ -1117,290 +1236,253 @@ enum ExpenseCategory {
                         <tbody>
                             <tr>
                                 <td><strong>CashFlowService</strong></td>
-                                <td>ניהול תזרים מזומנים</td>
-                                <td>getCashFlow(), saveCashFlow(), getDefaults(), saveDefaults()</td>
-                            </tr>
-                            <tr>
-                                <td><strong>CashFlowSimulationService</strong></td>
-                                <td>ניהול סימולציית תזרים</td>
-                                <td>getSimulationData(), applyGoalToSimulation(), resetSimulation()</td>
+                                <td>חודשי התזרים וברירות מחדל</td>
+                                <td>load(), fetchSaved(), updateMonths(), save(), loadDefaults(), saveDefaults()</td>
                             </tr>
                             <tr>
                                 <td><strong>CashFlowCalculationService</strong></td>
-                                <td>חישובי תזרים</td>
-                                <td>calculateEndingBalance(), getTotalExpenses(), getTotalIncome()</td>
+                                <td>חישובי חודש (משותף לטבלה ולגרפים)</td>
+                                <td>totalIncome(), totalExpenses(), endingBalance(), calculateSavings()</td>
                             </tr>
                             <tr>
-                                <td><strong>GoalsService</strong></td>
-                                <td>ניהול יעדים פיננסיים</td>
-                                <td>getGoals(), createGoal(), updateGoal(), deleteGoal(), analyzeGoal()</td>
+                                <td><strong>CashFlowSimulationService</strong></td>
+                                <td>תזרים מדומה עם היעדים</td>
+                                <td>loadOriginal(), getCurrentSimulation(), hasGoalExpenses(), refreshFromOriginal()</td>
+                            </tr>
+                            <tr>
+                                <td><strong>CashFlowExcelExportService</strong></td>
+                                <td>ייצוא xlsx</td>
+                                <td>exportToFile(), buildWorkbook()</td>
+                            </tr>
+                            <tr>
+                                <td><strong>CashFlowAnimationService</strong></td>
+                                <td>אנימציות GSAP לטבלה ולדיאלוגים</td>
+                                <td>animateTableRows(), animateNewRow(), animateSaveButton()</td>
                             </tr>
                             <tr>
                                 <td><strong>InstallmentService</strong></td>
-                                <td>ניהול פריסות</td>
-                                <td>getInstallments(), createInstallment(), updateInstallment(), deleteInstallment()</td>
+                                <td>פריסות, התקדמות, השפעה על התזרים</td>
+                                <td>load(), add(), update(), delete(), getStatus(), markPaymentPaid(), markPaymentUnpaid(), resetPayment(), getMonthlyInstallmentsForMonth(), simulateInstallmentImpact()</td>
                             </tr>
                             <tr>
                                 <td><strong>InvestmentService</strong></td>
-                                <td>ניהול השקעות</td>
-                                <td>getInvestments(), createInvestment(), updateInvestment(), deleteInvestment()</td>
-                            </tr>
-                            <tr>
-                                <td><strong>AiService</strong></td>
-                                <td>תקשורת עם AI</td>
-                                <td>sendMessage(), getConversations(), createReport()</td>
-                            </tr>
-                            <tr>
-                                <td><strong>LanguageService</strong></td>
-                                <td>ניהול שפה</td>
-                                <td>setLanguage(), getCurrentLanguage(), translate()</td>
-                            </tr>
-                            <tr>
-                                <td><strong>ThemeService</strong></td>
-                                <td>ניהול ערכת נושא</td>
-                                <td>toggleTheme(), setTheme(), getCurrentTheme()</td>
+                                <td>השקעות ותשואות</td>
+                                <td>load(), add(), update(), delete(), add/update/deleteSnapshot(), add/update/deleteTransaction(), cagr(), xirr(), calculateSimulation()</td>
                             </tr>
                             <tr>
                                 <td><strong>BudgetService</strong></td>
-                                <td>ניהול תקציבים</td>
-                                <td>getBudget(), updateBudget(), compareToBudget()</td>
+                                <td>תקציב והתראות</td>
+                                <td>loadBudgetSettings(), saveBudgetSettings(), getMonthlyBudget(), alerts (computed)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>GoalsService</strong></td>
+                                <td>יעדים</td>
+                                <td>goals / overview (signals), load(), create(), update(), remove(), analyze()</td>
+                            </tr>
+                            <tr>
+                                <td><strong>AiService</strong></td>
+                                <td>נתיבי ה-AI</td>
+                                <td>getSummary(), getAnalysis(), chat(), chatStream(), simulate(), insights()</td>
+                            </tr>
+                            <tr>
+                                <td><strong>ConversationService / AiReportService</strong></td>
+                                <td>שיחות שמורות, ארכיון דוחות</td>
+                                <td>load(), create(), update(), delete() / save(), loadAll(), delete()</td>
+                            </tr>
+                            <tr>
+                                <td><strong>ThemeService / LanguageService</strong></td>
+                                <td>ערכת צבע ומצב, שפה</td>
+                                <td>setTheme(), setMode(), toggleTheme(), isDarkMode / toggle()</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
 
-                <h3>🔄 תהליך עבודה טיפוסי של שירות</h3>
+                <h3>שירותי שרת (<code>server/services/</code>)</h3>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>שירות</th>
+                                <th>תפקיד</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><strong>cashFlow / installments / investments / budget / conversations / aiReports</strong></td><td>נורמליזציה וולידציה, קריאה ל-repository המתאים</td></tr>
+                            <tr><td><strong>goals / goals-analyzer / goals-integration</strong></td><td>CRUD, ניתוח היתכנות (טעינה אחת, כתיבה אחת ב-<code>updateMany</code>), קשרים לתזרים ולפריסות</td></tr>
+                            <tr><td><strong>cashflow-engine</strong></td><td>לוגיקה דטרמיניסטית בלי AI: בניית הסיכום הפיננסי, תחזית, התקדמות פריסות</td></tr>
+                            <tr><td><strong>financialSummary</strong></td><td>הסיכום עם cache (<code>AI_SUMMARY_CACHE_MS</code>)</td></tr>
+                            <tr><td><strong>ai</strong></td><td>חיבור לספק: OpenAI-compatible <code>/chat/completions</code> (Groq) או Ollama <code>/api/generate</code></td></tr>
+                            <tr><td><strong>insights</strong></td><td>תובנות לדאשבורד: סינון נתוני הלקוח (<code>sanitizeDashboard</code>), פענוח JSON, שמירה בארכיון</td></tr>
+                        </tbody>
+                    </table>
+                </div>
 
                 <div class="card">
-                    <div class="card-header">דוגמה: CashFlowService.getCashFlow()</div>
-                    <pre><code>// 1. קומפוננטה מבקשת נתונים
-this.cashFlowService.getCashFlow()
-  .subscribe(data => this.months = data.months);
+                    <div class="card-header">🔄 תהליך עבודה טיפוסי: טעינת התזרים</div>
+                    <pre><code>// 1. הקומפוננטה מבקשת מהשירות
+this.cashFlowService.load().subscribe();          // השירות מעדכן signal של החודשים
 
-// 2. השירות שולח HTTP Request
-this.http.get&lt;{months: MonthData[]}&gt;('http://localhost:3000/api/cash-flow')
+// 2. השירות שולח HTTP
+this.http.get&lt;CashFlowData&gt;(`${environment.apiUrl}/cash-flow`)
 
-// 3. השרת מעבד את הבקשה
-app.get('/api/cash-flow', cashFlowRoutes);
+// 3. route → service → repository
+router.get('/cash-flow', asyncHandler(async (req, res) =&gt; res.json(await cashFlowService.getCashFlow())));
 
-// 4. Repository קורא את הקובץ
-const data = await fs.readFile('data/cash-flow.json');
+// 4. repository מריץ SQL עם פרמטרים מוקלדים (db/helpers.js) וממפה שורות (db/mappers.js)
 
-// 5. Response חוזר דרך כל השכבות
-return { months: JSON.parse(data) };</code></pre>
+// 5. שגיאה בכל שכבה → errorHandler → { success:false, error:{ name, message, code? } }</code></pre>
                 </div>
 
                 <div class="highlight-box">
-                    <strong>🎯 מיוחד: CashFlowSimulationService</strong>
-                    <p>שירות זה מנהל מצב סימולציה נפרד המאפשר:</p>
-                    <ul class="feature-list">
-                        <li>שכפול נתוני תזרים מקוריים</li>
-                        <li>יישום יעדים על הסימולציה בלבד</li>
-                        <li>שמירת השינויים רק כשהמשתמש מחליט</li>
-                        <li>איפוס הסימולציה בכל עת</li>
-                    </ul>
+                    <strong>🔍 לוג גישה ל-API:</strong> כל service ו-repository מיוצא דרך <code>utils/traceMethods.js</code>, שרושם כל קריאה ב-request context. <code>middleware/apiAccessLog.js</code> כותב שורה אחת לכל בקשת <code>/api</code> ל-<code>log.cash_flow_api_access</code>: request, response, שגיאה, זמנים ו-<code>inner_method_name</code> עם שרשרת המתודות.
                 </div>
             </section>
 
-            <!-- Flow Section -->
+            <!-- Process Flows Section -->
             <section id="flow">
                 <h2>🔄 תהליכים - Process Flows</h2>
 
-                <h3>📝 תהליך יצירת יעד חדש</h3>
+                <h3>💾 שמירת תזרים</h3>
                 <div class="flow-diagram">
-                    <div class="flow-box" style="background: #dbeafe;">
-                        <strong>1. משתמש מלא טופס יעד חדש</strong><br>
-                        GoalsComponent - Form Validation
+                    <div class="flow-box flow-blue">
+                        <strong>1. המשתמש לוחץ "שמור"</strong><br>
+                        CashFlowTableComponent → CashFlowService.save()
                     </div>
                     <div class="flow-arrow">⬇️</div>
-                    <div class="flow-box" style="background: #fef3c7;">
-                        <strong>2. שליחת יעד חדש לשירות</strong><br>
-                        GoalsService.createGoal(newGoal)
+                    <div class="flow-box flow-amber">
+                        <strong>2. POST /api/cash-flow</strong><br>
+                        cashFlow.routes → cashFlow.service (נורמליזציה)
                     </div>
                     <div class="flow-arrow">⬇️</div>
-                    <div class="flow-box" style="background: #dcfce7;">
-                        <strong>3. HTTP POST Request</strong><br>
-                        POST /api/goals + Body: FinancialGoal
+                    <div class="flow-box flow-purple">
+                        <strong>3. כתיבה דיפרנציאלית</strong><br>
+                        cashFlow.repository.write() + db/cashFlowDiff.js: רק חודשים שהשתנו, בטרנזקציה אחת
                     </div>
                     <div class="flow-arrow">⬇️</div>
-                    <div class="flow-box" style="background: #fce7f3;">
-                        <strong>4. שרת מאמת ושומר</strong><br>
-                        goals.routes.js → GoalService → Repository
+                    <div class="flow-box flow-indigo">
+                        <strong>4. ניתוח יעדים</strong><br>
+                        goals.service.analyzeAllGoals(): טעינה אחת, ניתוח בזיכרון, כתיבה אחת
                     </div>
                     <div class="flow-arrow">⬇️</div>
-                    <div class="flow-box" style="background: #e0e7ff;">
-                        <strong>5. Response עם היעד החדש</strong><br>
-                        Status 201 + Created Goal Object
-                    </div>
-                    <div class="flow-arrow">⬇️</div>
-                    <div class="flow-box" style="background: #f3e8ff;">
-                        <strong>6. עדכון UI</strong><br>
-                        GoalsComponent מציג את היעד החדש + Toast הצלחה
+                    <div class="flow-box flow-green">
+                        <strong>5. תשובה + עדכון UI</strong><br>
+                        <code>{ success: true }</code>, תג "נשמר לאחרונה", ה-cache של הסיכום מתאפס
                     </div>
                 </div>
 
-                <h3>🎯 תהליך עבודה עם סימולציה ויעדים</h3>
+                <h3>🤖 שאלה ליועץ ה-AI</h3>
                 <div class="flow-diagram">
-                    <div class="flow-box" style="background: #dbeafe;">
-                        <strong>1. משתמש יוצר יעדים חדשים</strong><br>
-                        GoalsComponent - טופס יעדים
+                    <div class="flow-box flow-blue">
+                        <strong>1. AiService.chatStream(question)</strong><br>
+                        fetch עם קריאת הזרם
+                    </div>
+                    <div class="flow-arrow">⬇️ POST /api/ai/chat-stream (rate limit)</div>
+                    <div class="flow-box flow-amber">
+                        <strong>2. financialSummary.getSummary()</strong><br>
+                        מה-cache, או בנייה מחדש ב-cashflow-engine מהמסד
                     </div>
                     <div class="flow-arrow">⬇️</div>
-                    <div class="flow-box" style="background: #fef3c7;">
-                        <strong>2. יעדים נשמרים ב-GoalsService</strong><br>
-                        POST /api/goals
+                    <div class="flow-box flow-pink">
+                        <strong>3. ai.service.getChatStream()</strong><br>
+                        prompt = סיכום + שאלה → Groq (או Ollama)
                     </div>
                     <div class="flow-arrow">⬇️</div>
-                    <div class="flow-box" style="background: #dcfce7;">
-                        <strong>3. CashFlowSimulationService מעדכן אוטומטית</strong><br>
-                        combineLatest מאזין לשינויים ביעדים
-                    </div>
-                    <div class="flow-arrow">⬇️</div>
-                    <div class="flow-box" style="background: #fce7f3;">
-                        <strong>4. הסימולציה מתעדכנת</strong><br>
-                        updateSimulation() - שכפול תזרים + הוספת יעדים
-                    </div>
-                    <div class="flow-arrow">⬇️</div>
-                    <div class="flow-box" style="background: #e0e7ff;">
-                        <strong>5. טבלת הסימולציה מציגה את התוצאה</strong><br>
-                        CashFlowTableComponent (isSimulation=true)
-                    </div>
-                    <div class="flow-arrow">⬇️</div>
-                    <div class="flow-box" style="background: #f3e8ff;">
-                        <strong>6. "רענן מתזרים מקורי" - איפוס הכל</strong><br>
-                        מחיקת יעדים + טעינה מחדש מהמקור
+                    <div class="flow-box flow-green">
+                        <strong>4. טוקנים זורמים חזרה</strong><br>
+                        chunked text/plain. מודל לא זמין → 503 <code>AI_UNAVAILABLE</code>
                     </div>
                 </div>
 
-                <div class="highlight-box">
-                    <strong>⚠️ הערה חשובה:</strong>
-                    <p>התזרים המקורי <strong>אף פעם לא משתנה</strong> מהיעדים. רק הסימולציה מושפעת. כדי לעדכן את התזרים המקורי, משתמשים צריכים לערוך אותו ידנית בטאב "תזרים מזומנים".</p>
-                </div>
-
-                <h3>💾 תהליך שמירת נתונים</h3>
+                <h3>🎯 יעד חדש וסימולציה</h3>
                 <div class="flow-diagram">
-                    <div class="flow-box" style="background: #dbeafe;">
-                        <strong>1. משתמש מסיים עריכה ולוחץ "שמור"</strong><br>
-                        Any Component
+                    <div class="flow-box flow-blue">
+                        <strong>1. טופס יעד</strong><br>
+                        GoalsComponent → GoalsService.create()
+                    </div>
+                    <div class="flow-arrow">⬇️ POST /api/goals</div>
+                    <div class="flow-box flow-purple">
+                        <strong>2. שמירה וניתוח</strong><br>
+                        goals.repository.create() → analyzeAllGoals() → 201 עם היעד המנותח
                     </div>
                     <div class="flow-arrow">⬇️</div>
-                    <div class="flow-box" style="background: #fef3c7;">
-                        <strong>2. אימות נתונים בצד לקוח</strong><br>
-                        Form Validation + TypeScript Types
+                    <div class="flow-box flow-indigo">
+                        <strong>3. הסימולציה מתעדכנת</strong><br>
+                        CashFlowSimulationService (combineLatest על התזרים והיעדים) משכפל את התזרים ומוסיף את הוצאות היעדים
                     </div>
                     <div class="flow-arrow">⬇️</div>
-                    <div class="flow-box" style="background: #dcfce7;">
-                        <strong>3. שליחת PUT/POST Request</strong><br>
-                        Service → HttpClient → Server
-                    </div>
-                    <div class="flow-arrow">⬇️</div>
-                    <div class="flow-box" style="background: #fce7f3;">
-                        <strong>4. אימות נתונים בשרת</strong><br>
-                        Express Middleware + Service Validation
-                    </div>
-                    <div class="flow-arrow">⬇️</div>
-                    <div class="flow-box" style="background: #e0e7ff;">
-                        <strong>5. שמירה בקובץ JSON</strong><br>
-                        Repository → fs.writeFile
-                    </div>
-                    <div class="flow-arrow">⬇️</div>
-                    <div class="flow-box" style="background: #f3e8ff;">
-                        <strong>6. Response + עדכון UI</strong><br>
-                        Success Message + Data Refresh
+                    <div class="flow-box flow-green">
+                        <strong>4. טבלת הסימולציה</strong><br>
+                        CashFlowTableComponent (isSimulation=true). התזרים המקורי לא משתנה
                     </div>
                 </div>
 
-                <h3>📊 תהליך חישוב יתרת סגירה</h3>
+                <h3>📄 דוח PDF</h3>
+                <div class="card">
+                    <ul class="feature-list">
+                        <li>"ייצא PDF" → דיאלוג: טווח (כל התקופה / השנה / 12 אחרונים / 12 הבאים / ידני), עמוד גרפים, פירוט לפי חודש</li>
+                        <li>כל הסיכומים מחושבים על הטווח בלבד: פתיחה, סגירה, סה"כ, ממוצעים, שיעור חיסכון</li>
+                        <li>בזמן ההדפסה הדוח מחליף את הטבלה, במצב בהיר, ושם הקובץ הוא <code>cash-flow-report-YYYY-MM_YYYY-MM</code></li>
+                    </ul>
+                </div>
+
+                <h3>📊 חישוב יתרת סגירה</h3>
                 <div class="card">
                     <div class="card-header">CashFlowCalculationService</div>
-                    <pre><code>endingBalance = startingBalance 
-              + totalIncome 
-              - mortgagePayment 
-              - loanPayment 
-              - installmentsPayment 
-              - totalRegularExpenses 
-              - totalSpecialExpenses
+                    <pre><code>totalIncome   = income + Σ additionalIncomes
+totalExpenses = mortgagePayment + loanPayment + installmentsPayment
+              + Σ regularExpenses + Σ specialExpenses
+endingBalance = startingBalance + totalIncome - totalExpenses
 
-// התוצאה קובעת את צבע השורה:
-// > 50,000 ₪    → ירוק (#dcfce7)
-// > 10,000 ₪    → כתום (#fef3c7)
-// <= 10,000 ₪   → אדום (#fee2e2)</code></pre>
+// יתרת הפתיחה של כל חודש = יתרת הסגירה של החודש הקודם.
+// צבע השורה (ירוק / צהוב / אדום) נבחר ידנית ומוצג דרך tokens של ערכת הצבע.</code></pre>
                 </div>
             </section>
 
             <!-- Project Structure -->
             <section id="structure">
                 <h2>📁 מבנה הפרויקט - Project Structure</h2>
-
                 <div class="card">
                     <pre><code>cash-flow-app/
 ├── src/
 │   ├── app/
-│   │   ├── features/              # Feature modules
-│   │   │   ├── cash-flow/
-│   │   │   │   ├── cash-flow-table/
-│   │   │   │   ├── cash-flow-cards/
-│   │   │   │   ├── expense-category-selector/
-│   │   │   │   ├── expense-pie-chart/
-│   │   │   │   └── defaults-dialog/
-│   │   │   ├── goals/             # יעדים פיננסיים
-│   │   │   ├── installments/      # פריסות תשלומים
-│   │   │   ├── investments/       # השקעות
-│   │   │   ├── budget-tracker/    # מעקב תקציב
-│   │   │   └── ai-assistant/      # עוזר AI
-│   │   ├── services/              # Angular Services
-│   │   │   ├── cash-flow.service.ts
-│   │   │   ├── cash-flow-simulation.service.ts
-│   │   │   ├── cash-flow-calculation.service.ts
-│   │   │   ├── goals.service.ts
-│   │   │   ├── installment.service.ts
-│   │   │   ├── investment.service.ts
-│   │   │   ├── ai.service.ts
-│   │   │   ├── language.service.ts
-│   │   │   └── theme.service.ts
-│   │   ├── models/                # TypeScript Interfaces
-│   │   │   ├── cash-flow.model.ts
-│   │   │   ├── goal.model.ts
-│   │   │   ├── expense.model.ts
-│   │   │   ├── installment.model.ts
-│   │   │   └── investment.model.ts
-│   │   ├── interceptors/          # HTTP Interceptors
-│   │   ├── directives/            # Custom Directives
-│   │   ├── utils/                 # Utility Functions
-│   │   ├── app.routes.ts          # Routing
-│   │   └── app.component.ts       # Root Component
-│   ├── assets/                    # Static Assets
-│   │   ├── i18n/                  # Translation Files
-│   │   └── images/
-│   └── styles.scss                # Global Styles
-│
-├── server/                        # Node.js Backend
-│   ├── routes/                    # API Routes
-│   │   ├── cashFlow.routes.js
-│   │   ├── goals.routes.js
-│   │   ├── installments.routes.js
-│   │   ├── investments.routes.js
-│   │   └── index.js
-│   ├── services/                  # Business Logic
-│   ├── repositories/              # Data Access Layer
-│   ├── middleware/                # Express Middleware
-│   ├── models/                    # Data Models
-│   ├── data/                      # JSON Data Files
-│   │   ├── cash-flow.json
-│   │   ├── goals.json
-│   │   ├── installments.json
-│   │   └── investments.json
-│   ├── utils/                     # Utility Functions
-│   ├── logs/                      # Log Files
-│   └── index.js                   # Server Entry Point
-│
-├── docs/                          # Documentation
-│   ├── PROJECT_SPECIFICATION.html # ⭐ This File
-│   └── archive/
-│
-├── angular.json                   # Angular Configuration
-├── package.json                   # Dependencies
-└── tsconfig.json                  # TypeScript Config</code></pre>
+│   │   ├── features/              # מסך לכל תחום
+│   │   │   ├── cash-flow/         # טבלה, כרטיסים, דיאלוגים, דוח PDF
+│   │   │   ├── installments/
+│   │   │   ├── investments/
+│   │   │   ├── budget-tracker/
+│   │   │   ├── goals/
+│   │   │   └── ai-assistant/      # יועץ AI + cash-flow-charts
+│   │   ├── services/              # 14 שירותים, אחד לכל תחום
+│   │   ├── models/                # cash-flow, expense, expense-category, installment,
+│   │   │                          # investment, goal, budget
+│   │   ├── utils/                 # פונקציות טהורות + spec
+│   │   ├── interceptors/  directives/
+│   │   ├── app.routes.ts          # 6 נתיבים ב-lazy loading
+│   │   └── app.component.ts
+│   ├── themes/                    # palettes/, theme.registry.ts, README.md
+│   └── styles.scss
+├── public/assets/i18n/            # he.json, en.json
+├── server/
+│   ├── app.js  index.js           # בניית Express / חיבור ל-DB והאזנה
+│   ├── routes/                    # 8 מודולים + index.js
+│   ├── services/                  # 13 שירותים
+│   ├── repositories/              # 8, כל ה-SQL
+│   ├── middleware/                # apiAccessLog, errorMiddleware, rateLimit
+│   ├── utils/                     # errors, asyncHandler, logger, traceMethods,
+│   │                              # requestContext, installmentSchedule
+│   ├── db/                        # schema.sql, log-schema.sql, connection, helpers,
+│   │                              # mappers, cashFlowDiff, migrate-json-to-sql
+│   ├── test/                      # node:test
+│   ├── logs/                      # error.log, combined.log (git-ignored)
+│   └── .env.example
+├── scripts/                       # start-ollama.js, check-theme-contrast.js
+├── docs/                          # README.md = אינדקס התיעוד
+│   └── architecture/PROJECT_SPECIFICATION.html   # ⭐ This File
+├── ARCHITECTURE_DIAGRAM.html  AI_OPTIONS.html
+├── run-all.bat  run-all-ai.bat  run-client.bat  run-server.bat
+├── CLAUDE.md  README.md
+└── angular.json  package.json</code></pre>
                 </div>
             </section>
 
@@ -1410,55 +1492,76 @@ return { months: JSON.parse(data) };</code></pre>
 
                 <div class="grid">
                     <div class="card">
-                        <div class="card-header">🚀 הפעלת הפרויקט</div>
-                        <pre><code># הרצה מלאה (Frontend + Backend)
-npm run dev
+                        <div class="card-header">📦 התקנה</div>
+                        <pre><code># Node 24+ לשני החלקים (.nvmrc)
+npm install
+npm install --prefix server
 
-# רק Frontend (Port 4300)
-npm start
-
-# רק Backend (Port 3000)
-npm run server
-
-# הכול כולל Ollama AI
-npm run dev:ai</code></pre>
+# server/.env לפי server/.env.example:
+# DB_CONNECTION_STRING, AI_API_KEY</code></pre>
                     </div>
 
                     <div class="card">
-                        <div class="card-header">📦 התקנה</div>
-                        <pre><code># התקנת תלויות Frontend
-npm install
+                        <div class="card-header">🚀 הפעלה</div>
+                        <pre><code># שרת + לקוח (AI דרך Groq)
+npm run dev
 
-# התקנת תלויות Backend
-cd server
-npm install</code></pre>
+# Ollama + שרת + לקוח (offline)
+npm run dev:ai
+
+npm start          # לקוח בלבד (4300)
+npm run server     # שרת בלבד (3000)</code></pre>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">🧪 בדיקות</div>
+                        <pre><code># Angular (Karma + ChromeHeadless)
+npx ng test --watch=false --browsers=ChromeHeadless
+
+# שרת, בלי DB ובלי AI
+npm test --prefix server
+
+# בדיקת חיבור ל-SQL Server
+npm run test:db --prefix server
+
+# ניגודיות ערכות הצבע
+npm run themes:check</code></pre>
                     </div>
 
                     <div class="card">
                         <div class="card-header">🔨 Build</div>
-                        <pre><code># Build לפרודקשן
-npm run build
+                        <pre><code>npm run build
+# → dist/cash-flow-app/browser
+# השרת מגיש אותו כשהוא קיים
 
-# Build עם watch mode
-npm run watch</code></pre>
+npm run watch      # build בפיתוח עם watch</code></pre>
                     </div>
+                </div>
 
-                    <div class="card">
-                        <div class="card-header">🧪 Testing</div>
-                        <pre><code># הרצת טסטים
-npm test
-
-# Test coverage
-npm run test:coverage</code></pre>
+                <div class="card">
+                    <div class="card-header">⚙️ הגדרות (server/.env)</div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr><th>משתנה</th><th>תפקיד</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td><code>DB_CONNECTION_STRING</code></td><td>חיבור ל-SQL Server (חובה; בלעדיו השרת יוצא עם הודעה ברורה)</td></tr>
+                                <tr><td><code>AI_PROVIDER</code>, <code>AI_BASE_URL</code>, <code>AI_MODEL</code>, <code>AI_API_KEY</code></td><td>ספק המודל. ברירת מחדל OpenAI-compatible מול Groq; <code>ollama</code> לגיבוי offline</td></tr>
+                                <tr><td><code>AI_TIMEOUT_MS</code>, <code>AI_REASONING_EFFORT</code></td><td>timeout לקריאה למודל, effort למודלי gpt-oss (ברירת מחדל <code>low</code>)</td></tr>
+                                <tr><td><code>AI_RATE_LIMIT_PER_MINUTE</code>, <code>AI_SUMMARY_CACHE_MS</code></td><td>rate limit לנתיבי AI, זמן ה-cache של הסיכום</td></tr>
+                                <tr><td><code>PORT</code>, <code>CORS_ORIGIN</code>, <code>JSON_BODY_LIMIT</code>, <code>LOG_LEVEL</code></td><td>פורט (3000), origin מותר (<code>http://localhost:4300</code>), גבול גוף (1mb), רמת לוג</td></tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
                 <div class="card">
                     <div class="card-header">🌐 URLs</div>
                     <ul class="feature-list">
-                        <li><strong>Frontend:</strong> http://localhost:4300</li>
-                        <li><strong>Backend API:</strong> http://localhost:3000/api</li>
-                        <li><strong>Health Check:</strong> http://localhost:3000/health</li>
+                        <li>Frontend: <code>http://localhost:4300</code></li>
+                        <li>Backend API: <code>http://localhost:3000/api</code></li>
+                        <li>Health Check: <code>http://localhost:3000/health</code></li>
                     </ul>
                 </div>
             </section>
@@ -1471,29 +1574,30 @@ npm run test:coverage</code></pre>
                     <div class="card">
                         <div class="card-header">🛡️ אמצעי אבטחה נוכחיים</div>
                         <ul class="feature-list">
-                            <li>CORS מוגדר לבקשות מהאפליקציה בלבד</li>
-                            <li>Validation של נתונים בשרת</li>
-                            <li>TypeScript Type Safety</li>
-                            <li>Error Handling מרכזי</li>
-                            <li>Logging של כל הבקשות</li>
+                            <li>CORS מוגבל ל-<code>CORS_ORIGIN</code></li>
+                            <li>גבול גוף בקשה (<code>JSON_BODY_LIMIT</code>)</li>
+                            <li>Rate limit לנתיבי AI (<code>429</code> + <code>Retry-After</code>)</li>
+                            <li>ולידציה בשרת, פרמטרי SQL מוקלדים (אין שרשור מחרוזות)</li>
+                            <li>למודל נשלח רק סיכום מחושב; מהלקוח נשמרים רק שדות מספריים מוכרים</li>
+                            <li>סודות רק ב-<code>server/.env</code> (git-ignored)</li>
+                            <li>לוג גישה לכל בקשת API</li>
                         </ul>
                     </div>
 
                     <div class="card">
-                        <div class="card-header">⚠️ שיפורי אבטחה מומלצים</div>
+                        <div class="card-header">⚠️ לפני חשיפה לרשת</div>
                         <ul class="feature-list">
-                            <li>הוספת Authentication (JWT)</li>
-                            <li>Rate Limiting על ה-API</li>
-                            <li>Input Sanitization מתקדם</li>
-                            <li>HTTPS בפרודקשן</li>
-                            <li>Database במקום File Storage</li>
-                            <li>Encryption של נתונים רגישים</li>
+                            <li>אימות משתמשים (היום: משתמש יחיד, מקומי)</li>
+                            <li>HTTPS</li>
+                            <li>CORS לדומיין האמיתי</li>
+                            <li>rate limit גם לשאר ה-API</li>
+                            <li>משתמש DB עם הרשאות מינימליות (<code>create-app-user.sql</code>)</li>
                         </ul>
                     </div>
                 </div>
             </section>
 
-            <!-- Future Section -->
+            <!-- Future Features -->
             <section id="future">
                 <h2>🚀 תכונות עתידיות - Future Features</h2>
 
@@ -1502,62 +1606,64 @@ npm run test:coverage</code></pre>
                         <div class="card-header">🎯 בתכנון</div>
                         <ul class="feature-list">
                             <li>מצב multi-user עם אימות</li>
-                            <li>סנכרון ענן (Cloud Sync)</li>
-                            <li>אפליקציית מובייל (PWA/Native)</li>
-                            <li>תמיכה בקריפטו ומטבעות זרים</li>
-                            <li>התראות אוטומטיות (Notifications)</li>
-                            <li>אינטגרציה עם בנקים (Open Banking)</li>
+                            <li>אפליקציית מובייל (PWA)</li>
+                            <li>התראות אוטומטיות</li>
+                            <li>יבוא תנועות מהבנק / מקובץ (Open Banking, CSV)</li>
                         </ul>
                     </div>
 
                     <div class="card">
                         <div class="card-header">💡 רעיונות</div>
                         <ul class="feature-list">
-                            <li>שיתוף פעולה משפחתי (Shared Budgets)</li>
-                            <li>יבוא/יצוא CSV, Excel</li>
-                            <li>דוחות מתקדמים ו-BI</li>
-                            <li>תחזיות AI מתקדמות</li>
-                            <li>תמיכה בשפות נוספות</li>
-                            <li>גיבוי אוטומטי (Automated Backups)</li>
+                            <li>שיתוף תקציב משפחתי</li>
+                            <li>יבוא מקובץ Excel (הייצוא כבר קיים)</li>
+                            <li>תמיכה במטבעות זרים</li>
+                            <li>גיבוי אוטומטי של המסד</li>
                         </ul>
                     </div>
                 </div>
             </section>
 
-            <!-- Changelog Section -->
-            <section id="changelog">
+            <!-- Recent Changes -->
+            <section id="changes">
                 <h2>📝 שינויים אחרונים - Recent Changes</h2>
 
                 <div class="card">
-                    <h3>גרסה 2.1.0 (ספטמבר 2026)</h3>
+                    <div class="card-header">גרסה 3.0.0 (אוקטובר 2026)</div>
                     <ul class="feature-list">
-                        <li>🔄 שינוי ארכיטקטורת הסימולציה - יעדים משפיעים רק על הסימולציה</li>
-                        <li>🗑️ הסרת כפתור "החל על תזרים מקורי"</li>
-                        <li>✨ הוספת כפתור "רענן מתזרים מקורי" עם מחיקת יעדים</li>
-                        <li>⚠️ הודעת אישור לפני איפוס הסימולציה</li>
-                        <li>📋 עדכון מסמך אפיון מלא</li>
+                        <li>🗄️ מעבר מקובצי JSON ל-SQL Server (19 טבלאות, שמירה דיפרנציאלית, סקריפט ייבוא)</li>
+                        <li>🏗️ שרת בשכבות routes / services / repositories, שגיאות מוקלדות, Node 24 אחד לכל הפרויקט</li>
+                        <li>🤖 ספק AI מתחלף: Groq כברירת מחדל, Ollama כגיבוי offline; צ'אט בזרימה, rate limit, cache לסיכום</li>
+                        <li>📊 דאשבורד AI: גרפי מגמות ותחזית, תובנות AI שנשמרות בארכיון, תצוגות סקירה / זרימה / הוצאות</li>
+                        <li>🎨 6 ערכות צבע × בהיר / כהה, צבעי סטטוס דרך tokens, Bootstrap Icons, מצב כהה בארכיון</li>
+                        <li>🔍 טבלת לוג גישה ל-API עם שרשרת המתודות הפנימיות</li>
+                        <li>📗 ייצוא Excel, 📄 דוח PDF לטווח חודשים עם גרפי סיכום ושם קובץ לפי הטווח</li>
+                        <li>💳 התקדמות פריסות אוטומטית לפי מועד החיוב, עם תיקונים ידניים (<code>paymentOverrides</code>)</li>
+                        <li>📐 גלילה במסכי היעדים והתקציב במסכי מחשב נייד וטאבלט</li>
                     </ul>
                 </div>
 
                 <div class="card">
-                    <h3>גרסה 2.0.0 (ספטמבר 2026)</h3>
+                    <div class="card-header">גרסה 2.1.0 (ספטמבר 2026)</div>
                     <ul class="feature-list">
-                        <li>✨ הוספת מערכת סימולציה מלאה לתזרים מזומנים</li>
-                        <li>🔧 תיקון תצוגת שדות באבני דרך (Milestones)</li>
-                        <li>🐛 תיקון הודעות ולידציה שלא נעלמו</li>
-                        <li>🎨 שיפור UI בטבלת תזרים מזומנים</li>
-                        <li>📊 שיפור ניתוח יעדים פיננסיים</li>
-                        <li>🔄 עדכון לAngular 21</li>
+                        <li>🔄 יעדים משפיעים רק על הסימולציה; הוסר "החל על תזרים מקורי"</li>
+                        <li>✨ "רענן מתזרים מקורי" עם מחיקת יעדים והודעת אישור</li>
                     </ul>
                 </div>
 
                 <div class="card">
-                    <h3>גרסה 1.5.0 (יולי 2026)</h3>
+                    <div class="card-header">גרסה 2.0.0 (ספטמבר 2026)</div>
                     <ul class="feature-list">
-                        <li>🎯 הוספת מערכת יעדים פיננסיים</li>
-                        <li>💳 שיפור ניהול פריסות תשלומים</li>
-                        <li>🤖 אינטגרציה עם Ollama AI</li>
-                        <li>📈 הוספת דשבורד השקעות</li>
+                        <li>✨ מערכת סימולציה לתזרים</li>
+                        <li>🔧 תיקוני תצוגה באבני דרך והודעות ולידציה</li>
+                        <li>🔄 עדכון ל-Angular 21</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">גרסה 1.5.0 (יולי 2026)</div>
+                    <ul class="feature-list">
+                        <li>🎯 יעדים פיננסיים, 💳 שיפור פריסות, 🤖 Ollama, 📈 דשבורד השקעות</li>
                     </ul>
                 </div>
             </section>
@@ -1565,15 +1671,51 @@ npm run test:coverage</code></pre>
 
         <footer>
             <p><strong>Cash Flow Application</strong> - מערכת ניהול תזרים מזומנים</p>
-            <p>נוצר עם ❤️ בעברית | Created with Angular 21 + Node.js</p>
-            <p>📄 מסמך זה מתעדכן אוטומטית עם שינויים במערכת</p>
-            <p style="margin-top: 1rem; color: var(--text-secondary);">
-                תאריך יצירה: ספטמבר 2026 | Last Updated: September 3, 2026
+            <p>Angular 21 + Node 24 / Express 5 + SQL Server</p>
+            <p>📄 מסמך זה מתעדכן ידנית. התיעוד המפורט והעדכני ביותר: <code>docs/README.md</code></p>
+            <p class="muted" style="margin-top: 1rem;">
+                תאריך יצירה: ספטמבר 2026 | Last Updated: October 23, 2026
             </p>
         </footer>
     </div>
 
     <script>
+        // Light / dark toggle: an explicit choice is saved; without one the system setting decides
+        const root = document.documentElement;
+        const toggle = document.getElementById('theme-toggle');
+        const systemDark = window.matchMedia('(prefers-color-scheme: dark)');
+
+        function isDark() {
+            const explicit = root.getAttribute('data-theme');
+            return explicit ? explicit === 'dark' : systemDark.matches;
+        }
+
+        function renderToggle() {
+            const dark = isDark();
+            toggle.textContent = dark ? '☀️ מצב בהיר / Light' : '🌙 מצב כהה / Dark';
+            toggle.setAttribute('aria-pressed', String(dark));
+        }
+
+        toggle.addEventListener('click', () => {
+            const next = isDark() ? 'light' : 'dark';
+            root.setAttribute('data-theme', next);
+            try { localStorage.setItem('spec-theme', next); } catch (e) { /* storage blocked: choice lasts for this visit */ }
+            renderToggle();
+        });
+        systemDark.addEventListener('change', renderToggle);
+        renderToggle();
+
+        // Paper is white: print with the light tokens and restore the mode afterwards
+        let themeBeforePrint = null;
+        window.addEventListener('beforeprint', () => {
+            themeBeforePrint = root.getAttribute('data-theme');
+            root.setAttribute('data-theme', 'light');
+        });
+        window.addEventListener('afterprint', () => {
+            if (themeBeforePrint) root.setAttribute('data-theme', themeBeforePrint);
+            else root.removeAttribute('data-theme');
+        });
+
         // Smooth scroll for navigation links
         document.querySelectorAll('nav a').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
@@ -1597,12 +1739,7 @@ npm run test:coverage</code></pre>
             });
 
             navLinks.forEach(link => {
-                link.style.background = '';
-                link.style.color = '';
-                if (link.getAttribute('href') === `#${current}`) {
-                    link.style.background = 'var(--primary-color)';
-                    link.style.color = 'white';
-                }
+                link.classList.toggle('active', link.getAttribute('href') === `#${current}`);
             });
         });
     </script>

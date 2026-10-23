@@ -28,7 +28,7 @@
 | הגדרות | `src/app/app.config.ts` | HttpClient + interceptor, ngx-translate, Material defaults |
 | מסכים | `src/app/features/<feature>/` | קומפוננטות standalone. המסך הגדול ביותר הוא טבלת התזרים |
 | שירותי נתונים | `src/app/services/` | אחד לכל תחום. HttpClient לקריאות, signals ל-state. `cash-flow-simulation.service.ts` מחשב בלקוח את השפעת היעדים על התזרים |
-| תשתית | `interceptors/`, `directives/`, `models/`, `utils/` | לוג ושגיאות HTTP, אנימציות GSAP, טיפוסים, אנליטיקה |
+| תשתית | `interceptors/`, `directives/`, `models/`, `utils/` | לוג ושגיאות HTTP, אנימציות GSAP, טיפוסים. ב-`utils/` פונקציות טהורות עם spec: גרפי התזרים, ייצוא Excel ודוח PDF ([CASH_FLOW_EXPORT.md](../frontend/CASH_FLOW_EXPORT.md)), לוח תשלומי הפריסות ([INSTALLMENTS.md](../frontend/INSTALLMENTS.md)), אנליטיקה |
 
 כללים: קומפוננטה פונה לשירות, לא ל-HTTP ישירות. state בשירות הוא signal (עם `toObservable` רק למי שעדיין צורך rxjs). קומפוננטות תצוגה ב-OnPush.
 
@@ -60,4 +60,4 @@
 
 ## מספרים
 
-6 מסכים, 22 קומפוננטות, 13 שירותי Angular, 8 מודולי routes, 12 שירותי שרת, 7 repositories, 19 טבלאות. בדיקות: 13 (Angular) + 34 (שרת).
+6 מסכים, 30 קומפוננטות, 14 שירותי Angular, 8 מודולי routes, 13 שירותי שרת, 8 repositories, 19 טבלאות (+ טבלת לוג). בדיקות: 21 קובצי spec (Angular) + 11 קובצי בדיקה (שרת).
