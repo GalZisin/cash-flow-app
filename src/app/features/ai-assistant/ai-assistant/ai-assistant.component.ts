@@ -138,12 +138,11 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
   chatContext = computed(() => {
     const usage = this.ai.usage();
     if (!usage) return null;
-    const chars = this.messages().reduce((sum, m) => sum + m.content.length, 0) + this.typedText().trim().length;
-    return contextMeter(usage.context, chars);
+    return contextMeter(usage.context, this.messages().map(m => m.content), this.typedText().trim());
   });
   chatQuota = computed(() => {
     const usage = this.ai.usage();
-    return usage ? quotaMeter(usage, this.chatContext()?.usedTokens ?? 0) : null;
+    return usage ? quotaMeter(usage, this.chatContext()?.requestTokens ?? 0) : null;
   });
 
   // Convert Observables to Signals
@@ -402,7 +401,7 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
 
     let assistantMsg: ChatMessage | null = null;
 
-    // כל השיחה עד השאלה הנוכחית. השרת מוסיף את הסיכום הפיננסי ובודק שהבקשה בתוך תקציב ההקשר.
+    // כל השיחה עד השאלה הנוכחית. השרת מוסיף את הסיכום הפיננסי ושולח מההיסטוריה רק את ההודעות האחרונות שנכנסות לתקציב.
     const history = this.messages().slice(0, -1);
 
     this.currentStreamSubscription = this.ai.chatStream(q, history, this.aiResponseLang()).subscribe({
@@ -420,7 +419,7 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
         this.chatControl.enable(); // Re-enable on error
         // Ensure assistantMsg is initialized if error occurs before first token, and update messages signal
         const errorMessage = err instanceof AiChatError && err.code === 'AI_CONTEXT_FULL'
-          ? this.translate.instant('AI.CONTEXT_FULL')
+          ? this.translate.instant('AI.QUESTION_TOO_LONG')
           : this.translate.instant('AI.PARTIAL_RESPONSE_ERROR', { error: extractServerMessage(err) || 'Failed to get response' });
 
         if (!assistantMsg) {

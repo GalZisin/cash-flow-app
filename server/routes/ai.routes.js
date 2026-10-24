@@ -71,12 +71,15 @@ router.post('/chat', asyncHandler(async (req, res) => {
 
 /**
  * POST /api/ai/chat-stream   Body: { question, history?, lang? }
- * Streams the answer as chunked plain text. A conversation over the context budget gets 400 AI_CONTEXT_FULL.
+ * Streams the answer as chunked plain text. History that does not fit the context budget is trimmed from the
+ * oldest message (header X-AI-History-Dropped); only a question larger than the whole budget gets 400 AI_CONTEXT_FULL.
  */
 router.post('/chat-stream', asyncHandler(async (req, res) => {
-    const { question, options } = chatInput(req.body);
+    const { question, options: requested } = chatInput(req.body);
     const summary = await financialSummary.getSummary();
-    aiService.assertChatFits(summary, question, options);
+    const { options, context } = aiService.fitChat(summary, question, requested);
+
+    res.setHeader('X-AI-History-Dropped', String(context.historyDropped));
 
     res.setHeader('Content-Type', 'text/plain; charset=utf-8');
     res.setHeader('Transfer-Encoding', 'chunked');

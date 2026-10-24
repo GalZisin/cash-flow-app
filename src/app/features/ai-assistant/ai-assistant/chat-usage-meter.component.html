@@ -1,9 +1,9 @@
-<div class="usage" [class.warn]="context().level === 'warn'" [class.full]="context().level === 'full'">
+<div class="usage" [class.warn]="context().level === 'warn' || context().level === 'trimmed'" [class.full]="context().level === 'full'">
   <div class="usage-row">
     <span class="usage-label">{{ 'AI.CONTEXT_LABEL' | translate }}</span>
     <div class="usage-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100"
          [attr.aria-valuenow]="context().percent" [attr.aria-label]="'AI.CONTEXT_LABEL' | translate"
-         [matTooltip]="'AI.CONTEXT_TOOLTIP' | translate: { used: context().usedTokens, limit: context().limitTokens }">
+         [matTooltip]="'AI.CONTEXT_TOOLTIP' | translate: { used: context().conversationTokens, space: context().spaceTokens }">
       <div class="usage-fill" [style.width.%]="context().percent"></div>
     </div>
     <span class="usage-value">{{ context().percent }}%</span>
@@ -20,11 +20,22 @@
     }
   </div>
 
-  @if (context().level !== 'ok') {
-    <div class="usage-warning" role="status">
-      <span>{{ (context().level === 'full' ? 'AI.CONTEXT_FULL' : 'AI.CONTEXT_WARN') | translate: { percent: context().percent } }}</span>
-      <button type="button" class="btn btn-link btn-sm p-0" (click)="newChat.emit()">{{ 'AI.NEW_CHAT' | translate }}</button>
-    </div>
+  @switch (context().level) {
+    @case ('warn') {
+      <div class="usage-warning" role="status">
+        <span>{{ 'AI.CONTEXT_WARN' | translate: { percent: context().percent } }}</span>
+        <button type="button" class="btn btn-link btn-sm p-0" (click)="newChat.emit()">{{ 'AI.NEW_CHAT' | translate }}</button>
+      </div>
+    }
+    @case ('trimmed') {
+      <div class="usage-warning" role="status">
+        <span>{{ 'AI.CONTEXT_TRIMMED' | translate: { sent: context().sentMessages, total: context().totalMessages } }}</span>
+        <button type="button" class="btn btn-link btn-sm p-0" (click)="newChat.emit()">{{ 'AI.NEW_CHAT' | translate }}</button>
+      </div>
+    }
+    @case ('full') {
+      <div class="usage-warning" role="status">{{ 'AI.QUESTION_TOO_LONG' | translate }}</div>
+    }
   }
   @if (quota(); as q) {
     @if (q.waitSeconds) {

@@ -7,9 +7,10 @@ const { buildInsightsPrompt, sanitizeDashboard } = require('../services/insights
 /**
  * Guard for the provider's per-minute token limit (Groq free tier: 8K tokens/min, the answer's max_tokens included).
  * Compact JSON with numbers and Hebrew runs at ~3 chars per token, so these caps keep a chat prompt
- * under ~5K tokens (+1024 answer) and an insights prompt under ~5K tokens (+2048 answer).
+ * under ~3K tokens (+1024 answer, the rest of the 8K is the conversation history) and an insights prompt
+ * under ~5K tokens (+2048 answer). The large household below measures ~7,100 chat prompt chars.
  */
-const MAX_CHAT_PROMPT_CHARS = 15000;
+const MAX_CHAT_PROMPT_CHARS = 9000;
 const MAX_INSIGHTS_PROMPT_CHARS = 15000;
 
 const sumOf = (items) => items.reduce((s, e) => s + e.amount, 0);
