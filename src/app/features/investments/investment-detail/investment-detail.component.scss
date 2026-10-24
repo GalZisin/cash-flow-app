@@ -239,6 +239,18 @@
         font-weight: 600;
     }
 
+    .info-tip {
+        cursor: help;
+        color: var(--cf-text-3);
+        font-size: 0.8rem;
+        text-transform: none;
+    }
+
+    .snap-value {
+        cursor: help;
+        border-bottom: 1px dotted var(--cf-border-strong);
+    }
+
     .add-row {
         background: var(--cf-surface-2);
         border-top: 1px solid var(--cf-border);

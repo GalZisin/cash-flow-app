@@ -210,7 +210,7 @@
     "DELETE_TX_CONFIRM_TITLE": "Delete Transaction",
     "DELETE_TX_CONFIRM_MSG": "Are you sure you want to permanently delete this transaction?",
     "DELETE_TX_TOOLTIP": "Delete this transaction",
-    "CAGR_TOOLTIP": "Compound Annual Growth Rate",
+    "CAGR_TOOLTIP": "Average yearly growth of the value (compounded). Ignores deposits, so it is inflated when you deposit regularly. Full explanation in the glossary",
     "COLLAPSE": "Click to collapse",
     "EXPAND": "Click to expand",
     "SIMULATION_TITLE": "Future Value Simulation",
@@ -227,7 +227,80 @@
     "TOTAL_PROFIT": "Total Profit",
     "CURRENT_VALUE": "Current Value",
     "TOTAL_DEPOSITS": "Total Deposits",
-    "PROFIT_YEAR": "Yearly Profit"
+    "PROFIT_YEAR": "Yearly Profit",
+    "PERIOD_DEPOSITS": "Deposits in period",
+    "PERIOD_PROFIT": "Profit in period",
+    "PERIOD_RETURN": "Return in period",
+    "VALUE_CHANGE_TIP": "Change in value since the previous snapshot: {{amount}} ₪ ({{pct}}%). Includes deposits, so it is not a return",
+    "XIRR_TOOLTIP": "True yearly return based on the amount and date of every deposit and withdrawal. Full explanation in the glossary",
+    "TOTAL_PROFIT_TOOLTIP": "Current value minus all deposits, plus withdrawals",
+    "XIRR_YEARLY_TOOLTIP": "XIRR for one calendar year: from the previous year-end value to the last snapshot of the year, as a yearly rate",
+    "PROFIT_YEAR_TOOLTIP": "Year-end value minus previous year-end value minus the deposits of the year",
+    "PERIOD_DEPOSITS_TOOLTIP": "Deposits minus withdrawals between the previous snapshot and this one",
+    "PERIOD_PROFIT_TOOLTIP": "Value now minus previous value minus deposits in the period. What the portfolio earned by itself",
+    "PERIOD_RETURN_TOOLTIP": "Profit in the period divided by the money actually invested (Modified Dietz). For the period, not yearly",
+    "GLOSSARY": {
+      "TITLE": "Glossary",
+      "SUBTITLE": "What each number means and how it is calculated",
+      "FORMULA": "Formula",
+      "EXAMPLE": "Example",
+      "ITEMS": {
+        "XIRR": {
+          "TITLE": "Total XIRR",
+          "DESC": "The true yearly return of the investment. It accounts for both the amount and the date of every deposit and withdrawal: money deposited a month ago should not \"earn\" like money that has been invested for five years. This is the right number for comparing investments.",
+          "FORMULA": "Find r such that:\nΣ flow ÷ (1 + r) ^ (days since start ÷ 365) = 0\nDeposit = negative flow, withdrawal and current value = positive flow",
+          "EXAMPLE": "You deposited 10,000 ₪ a year ago and 10,000 ₪ half a year ago, and the value today is 21,500 ₪. Profit is 1,500 ₪, but half the money was invested for only half a year, so XIRR ≈ 10%, not 7.5%."
+        },
+        "XIRR_YEARLY": {
+          "TITLE": "XIRR by year",
+          "DESC": "The same calculation as total XIRR, for one calendar year. The previous year-end value counts as if deposited at the start of the year, and only that year's deposits are counted. A first year with a single snapshot has no period to measure and shows \"-\". A year that has not ended yet is shown as a yearly rate.",
+          "FORMULA": "Flows: −previous year-end value, −deposits of the year, +withdrawals of the year, +year-end value\nthen solve as in XIRR",
+          "EXAMPLE": "Value at end of 2024: 40,000 ₪, no deposits in 2025, value at end of 2025: 44,000 ₪. XIRR for 2025 = 10% and yearly profit = 4,000 ₪."
+        },
+        "CAGR": {
+          "TITLE": "CAGR",
+          "DESC": "Average yearly growth of the value, compounded, from the first snapshot to the last. It only looks at the value and knows nothing about deposits, so it fits only an investment you do not deposit into. With regular deposits it is heavily inflated; use XIRR instead.",
+          "FORMULA": "CAGR = (last value ÷ first value) ^ (1 ÷ years) − 1",
+          "EXAMPLE": "100,000 ₪ that grew to 121,000 ₪ in two years with no deposits: (1.21)^(1/2) − 1 = 10% a year."
+        },
+        "TOTAL_PROFIT": {
+          "TITLE": "Total profit",
+          "DESC": "How much the investment earned in shekels beyond the money you put in.",
+          "FORMULA": "Total profit = current value − total deposits + total withdrawals",
+          "EXAMPLE": "You deposited 35,000 ₪, withdrew nothing, and the value today is 51,000 ₪: total profit 16,000 ₪."
+        },
+        "PERIOD_DEPOSITS": {
+          "TITLE": "Deposits in period",
+          "DESC": "The money you put in (minus what you withdrew) between the previous snapshot and this one. This is the part of the value change that is not profit.",
+          "FORMULA": "Deposits in period = Σ deposits − Σ withdrawals\n(after the previous snapshot, up to and including this one)",
+          "EXAMPLE": "11 deposits of 1,024 ₪ and one of 1,424 ₪ during the year: 12,688 ₪."
+        },
+        "PERIOD_PROFIT": {
+          "TITLE": "Profit in period",
+          "DESC": "How much the portfolio itself gained or lost between two snapshots, after removing deposits.",
+          "FORMULA": "Profit in period = current value − previous value − deposits in period",
+          "EXAMPLE": "Previous value 233 ₪, 12,688 ₪ deposited, current value 11,143 ₪: 11,143 − 233 − 12,688 = −1,778 ₪."
+        },
+        "PERIOD_RETURN": {
+          "TITLE": "Return in period (Modified Dietz)",
+          "DESC": "The profit in the period as a percentage of the money actually invested. Each deposit counts by the part of the period it was invested, so a mid-period deposit counts as half. The percentage is for the period itself, not yearly, so it also works for snapshots close together.",
+          "FORMULA": "Return = profit ÷ (previous value + Σ deposit × weight)\nweight = days from deposit to end of period ÷ days in period",
+          "EXAMPLE": "Previous value 1,000 ₪, a 1,000 ₪ deposit mid-period, current value 2,100 ₪. Profit 100 ₪, invested 1,000 + 1,000 × 0.5 = 1,500 ₪, return 6.7%."
+        },
+        "VALUE_CHANGE": {
+          "TITLE": "Change in value",
+          "DESC": "The raw change in value between two snapshots. It includes deposits, so it is not a return: when the previous value is small and you deposited a lot, it can reach thousands of percent. Shown when hovering the value in the table.",
+          "FORMULA": "Change in value = (current value − previous value) ÷ previous value",
+          "EXAMPLE": "From 233 ₪ to 11,143 ₪: +4,682%, even though the portfolio actually lost 1,778 ₪."
+        },
+        "SNAPSHOT": {
+          "TITLE": "Value snapshot",
+          "DESC": "The value of the portfolio on a given date, as shown in the provider's statement. Every calculation relies on snapshots, so one wrong snapshot distorts two periods: the one ending at it (profit too low or too high) and the one starting at it (the opposite way).",
+          "FORMULA": "Snapshot = (date, portfolio value on that date)\nDeposits are not entered here; they go in \"Transactions\"",
+          "EXAMPLE": "If a year-end snapshot holds the yearly deposit total by mistake instead of the value, that year looks like a big loss and the next year like a big gain."
+        }
+      }
+    }
   },
   "AI": {
     "TAB_CHAT": "💬 Chat",

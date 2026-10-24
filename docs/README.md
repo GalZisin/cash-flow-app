@@ -32,6 +32,7 @@
 | [BUDGET_TRACKER.md](frontend/BUDGET_TRACKER.md) | מסך מעקב התקציב: תכונות, API, קבצים |
 | [CASH_FLOW_CHARTS.md](frontend/CASH_FLOW_CHARTS.md) | גרפי מגמות התזרים בדאשבורד יועץ ה-AI: תצוגות הדאשבורד, תקופות, תחזית, חישובים |
 | [CASH_FLOW_EXPORT.md](frontend/CASH_FLOW_EXPORT.md) | ייצוא טבלת התזרים ל-Excel ודוח PDF לטווח חודשים עם גרפי סיכום |
+| [INVESTMENTS.md](frontend/INVESTMENTS.md) | השקעות: XIRR, CAGR, תשואה בתקופה (Modified Dietz), מילון המושגים במסך |
 | [INSTALLMENTS.md](frontend/INSTALLMENTS.md) | פריסות: תשלום נחשב שולם לפי מועד החיוב, תיקונים ידניים (`paymentOverrides`), פעולות במסך |
 | [GOALS_INTEGRATION.md](frontend/GOALS_INTEGRATION.md) | אינטגרציה בין יעדים, תזרים ופריסות |
 | [GOALS_INTEGRATION_EXAMPLE.md](frontend/GOALS_INTEGRATION_EXAMPLE.md) | דוגמה מעשית צעד אחר צעד |

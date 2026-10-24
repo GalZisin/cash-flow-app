@@ -89,3 +89,57 @@ describe('InvestmentService.xirrByYear', () => {
     expect(service.xirrByYear(inv)[0].value).toBeNull();
   });
 });
+
+describe('InvestmentService.periodReturns', () => {
+  let service: InvestmentService;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+    service = TestBed.inject(InvestmentService);
+  });
+
+  it('separates deposits from profit so a small opening value does not inflate the return', () => {
+    const inv = makeInvestment(
+      [{ date: '2021-12-31', value: 233 }, { date: '2022-12-31', value: 11143 }],
+      monthlyDeposits(['2022-01-01', '2022-04-01', '2022-07-01', '2022-10-01'], 3172)
+    );
+    const [first, p] = service.periodReturns(inv);
+    expect(first).toBeNull();
+    expect(p!.deposits).toBe(12688);
+    expect(p!.profit).toBe(-1778);
+    expect(p!.valueChangePct!).toBeCloseTo(4682.4, 1);
+    // invested ≈ 233 + 3172 × (1 + 0.75 + 0.5 + 0.25) ≈ 8163
+    expect(p!.returnPct!).toBeCloseTo(-21.8, 0);
+  });
+
+  it('weights a deposit by the part of the period it was invested', () => {
+    const inv = makeInvestment(
+      [{ date: '2025-01-01', value: 1000 }, { date: '2025-01-11', value: 2100 }],
+      [{ date: '2025-01-06', amount: 1000, type: 'deposit' }]
+    );
+    const p = service.periodReturns(inv)[1]!;
+    expect(p.profit).toBe(100);
+    expect(p.returnPct!).toBeCloseTo(100 / 1500 * 100, 6);
+  });
+
+  it('counts withdrawals as negative deposits and ignores transactions outside the period', () => {
+    const inv = makeInvestment(
+      [{ date: '2025-01-01', value: 1000 }, { date: '2026-01-01', value: 700 }],
+      [
+        { date: '2024-06-01', amount: 999, type: 'deposit' },
+        { date: '2026-01-01', amount: 400, type: 'withdraw' },
+      ]
+    );
+    const p = service.periodReturns(inv)[1]!;
+    expect(p.deposits).toBe(-400);
+    expect(p.profit).toBe(100);
+    expect(p.returnPct!).toBeCloseTo(10, 6);
+  });
+
+  it('returns null return when nothing was invested', () => {
+    const inv = makeInvestment([{ date: '2025-01-01', value: 0 }, { date: '2025-06-01', value: 0 }], []);
+    const p = service.periodReturns(inv)[1]!;
+    expect(p.returnPct).toBeNull();
+    expect(p.valueChangePct).toBeNull();
+  });
+});

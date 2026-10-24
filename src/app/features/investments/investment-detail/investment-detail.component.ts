@@ -3,9 +3,10 @@ import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { Investment, Snapshot, Transaction, SimulationRule } from '../../../models/investment.model';
+import { Investment, Snapshot, Transaction, SimulationRule, PeriodReturn } from '../../../models/investment.model';
 import { InvestmentService } from '../../../services/investment.service';
 import { buildYearlyXirrChart, YearlyChart } from './yearly-xirr-chart.util';
+import { InvestmentGlossaryComponent } from './investment-glossary.component';
 
 const W = 600, H = 360, PAD = { top: 24, right: 24, bottom: 48, left: 70 };
 const CW = W - PAD.left - PAD.right;
@@ -14,7 +15,7 @@ const CH = H - PAD.top - PAD.bottom;
 @Component({
   selector: 'app-investment-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, MatTooltipModule, DecimalPipe],
+  imports: [CommonModule, FormsModule, TranslateModule, MatTooltipModule, DecimalPipe, InvestmentGlossaryComponent],
   templateUrl: './investment-detail.component.html',
   styleUrl: './investment-detail.component.scss'
 })
@@ -33,6 +34,8 @@ export class InvestmentDetailComponent implements OnChanges {
   totalDeposits: number | null = null;
   xirrYears: { year: number; value: number | null; profit: number | null }[] = [];
   yearlyChart: YearlyChart | null = null;
+  /** מקביל ל-sortedSnapshots: הפקדות, רווח ותשואה מהצילום הקודם */
+  periodRows: (PeriodReturn | null)[] = [];
 
   // Chart
   chartData: { x: number; y: number; date: string; value: number }[] = [];
@@ -98,12 +101,14 @@ export class InvestmentDetailComponent implements OnChanges {
     const sorted = [...snaps].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     this.currentValue = sorted.at(-1)?.value ?? null;
     this.totalDeposits = txs.filter(t => t.type === 'deposit').reduce((s, t) => s + t.amount, 0) || null;
+    const withdrawals = txs.filter(t => t.type === 'withdraw').reduce((s, t) => s + t.amount, 0);
     this.totalProfit = this.currentValue !== null && this.totalDeposits !== null
-      ? this.currentValue - this.totalDeposits : null;
+      ? this.currentValue - this.totalDeposits + withdrawals : null;
 
     // yearly XIRR + profit per year (same window for both)
     this.xirrYears = this.svc.xirrByYear(inv);
     this.yearlyChart = this.xirrYears.length ? buildYearlyXirrChart(this.xirrYears) : null;
+    this.periodRows = this.svc.periodReturns(inv);
 
     this.buildChart(snaps);
     this.runSimulation(inv);
@@ -177,14 +182,6 @@ export class InvestmentDetailComponent implements OnChanges {
     this.pendingDeleteTransaction = null;
     if (!tx.id) { console.error('Transaction missing id', tx); return; }
     this.svc.deleteTransaction(this.investment.id, tx.id).subscribe(updated => this.recalc(updated));
-  }
-
-  snapChange(i: number): number | null {
-    if (i <= 0) return null;
-    const s = this.sortedSnapshots;
-    const prev = s[i - 1].value;
-    if (prev === 0) return null;
-    return ((s[i].value - prev) / prev) * 100;
   }
 
   // --- Transactions ---

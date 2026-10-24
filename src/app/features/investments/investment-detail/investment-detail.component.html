@@ -12,7 +12,7 @@
       </span>
       }
       @if (xirr !== null) {
-      <span class="badge-xirr" matTooltip="Internal Rate of Return (XIRR)">
+      <span class="badge-xirr" [matTooltip]="'INVESTMENTS.XIRR_TOOLTIP' | translate">
         XIRR {{ xirr | number:'1.1-1' }}%
       </span>
       }
@@ -77,14 +77,14 @@
       <!-- KPI cards -->
       <div class="d-flex gap-2 flex-wrap mb-3">
         <div class="kpi-card kpi-main">
-          <div class="kpi-label">XIRR {{ 'INVESTMENTS.TOTAL' | translate }}</div>
+          <div class="kpi-label">XIRR {{ 'INVESTMENTS.TOTAL' | translate }} <span class="info-tip" [matTooltip]="'INVESTMENTS.XIRR_TOOLTIP' | translate">ⓘ</span></div>
           <div class="kpi-value" [class.pos]="xirr && xirr > 0" [class.neg]="xirr && xirr < 0">
             @if (xirr !== null) { {{ xirr > 0 ? '▲' : '▼' }} {{ xirr | number:'1.1-1' }}% }
             @else { - }
           </div>
         </div>
         <div class="kpi-card">
-          <div class="kpi-label">{{ 'INVESTMENTS.TOTAL_PROFIT' | translate }}</div>
+          <div class="kpi-label">{{ 'INVESTMENTS.TOTAL_PROFIT' | translate }} <span class="info-tip" [matTooltip]="'INVESTMENTS.TOTAL_PROFIT_TOOLTIP' | translate">ⓘ</span></div>
           <div class="kpi-value" [class.pos]="totalProfit && totalProfit > 0"
             [class.neg]="totalProfit && totalProfit < 0">
             @if (totalProfit !== null) { {{ totalProfit | number:'1.0-0' }} ₪ }
@@ -140,8 +140,8 @@
           <thead>
             <tr>
               <th>{{ 'INVESTMENTS.YEAR' | translate }}</th>
-              <th>XIRR %</th>
-              <th>{{ 'INVESTMENTS.PROFIT_YEAR' | translate }}</th>
+              <th>XIRR % <span class="info-tip" [matTooltip]="'INVESTMENTS.XIRR_YEARLY_TOOLTIP' | translate">ⓘ</span></th>
+              <th>{{ 'INVESTMENTS.PROFIT_YEAR' | translate }} <span class="info-tip" [matTooltip]="'INVESTMENTS.PROFIT_YEAR_TOOLTIP' | translate">ⓘ</span></th>
             </tr>
           </thead>
           <tbody>
@@ -170,6 +170,8 @@
       }
     </div>
 
+    <app-investment-glossary />
+
     <!-- ═══ SNAPSHOTS TABLE ═══ -->
     <div class="section-title">📈 {{ 'INVESTMENTS.SNAPSHOTS_SECTION' | translate }}</div>
     <div class="table-scroll" dir="ltr">
@@ -178,7 +180,9 @@
           <tr>
             <th>{{ 'INVESTMENTS.DATE' | translate }}</th>
             <th>{{ 'INVESTMENTS.VALUE' | translate }}</th>
-            <th>{{ 'INVESTMENTS.CHANGE' | translate }}</th>
+            <th>{{ 'INVESTMENTS.PERIOD_DEPOSITS' | translate }} <span class="info-tip" [matTooltip]="'INVESTMENTS.PERIOD_DEPOSITS_TOOLTIP' | translate">ⓘ</span></th>
+            <th>{{ 'INVESTMENTS.PERIOD_PROFIT' | translate }} <span class="info-tip" [matTooltip]="'INVESTMENTS.PERIOD_PROFIT_TOOLTIP' | translate">ⓘ</span></th>
+            <th>{{ 'INVESTMENTS.PERIOD_RETURN' | translate }} <span class="info-tip" [matTooltip]="'INVESTMENTS.PERIOD_RETURN_TOOLTIP' | translate">ⓘ</span></th>
             <th></th>
           </tr>
         </thead>
@@ -191,6 +195,8 @@
             <td><input aria-label="value" type="number" class="form-control form-control-sm"
                 [(ngModel)]="editSnap.value" /></td>
             <td></td>
+            <td></td>
+            <td></td>
             <td>
               <div class="d-flex gap-1">
                 <button class="row-save-btn" (click)="saveSnapshot(i)">✓</button>
@@ -199,16 +205,30 @@
             </td>
             } @else {
             <td>{{ s.date }}</td>
-            <td>{{ s.value | number:'1.0-0' }} ₪</td>
+            @let p = periodRows[i];
             <td>
-              @if (i > 0) {
-              @let change = snapChange(i);
-              @if (change !== null) {
-              <span [class]="change > 0 ? 'pct-pos' : 'pct-neg'">
-                {{ change > 0 ? '▲' : '▼' }} {{ change | number:'1.1-1' }}%
+              @if (p) {
+              <span class="snap-value" [matTooltip]="'INVESTMENTS.VALUE_CHANGE_TIP' | translate: { amount: (p.valueChange | number:'1.0-0'), pct: p.valueChangePct !== null ? (p.valueChangePct | number:'1.1-1') : '-' }">
+                {{ s.value | number:'1.0-0' }} ₪</span>
+              } @else { {{ s.value | number:'1.0-0' }} ₪ }
+            </td>
+            <td>
+              @if (p) { {{ p.deposits > 0 ? '+' : '' }}{{ p.deposits | number:'1.0-0' }} ₪ }
+              @else { <span class="text-muted">-</span> }
+            </td>
+            <td>
+              @if (p) {
+              <span [class]="p.profit >= 0 ? 'pct-pos' : 'pct-neg'">
+                {{ p.profit > 0 ? '+' : '' }}{{ p.profit | number:'1.0-0' }} ₪
               </span>
-              }
-              }
+              } @else { <span class="text-muted">-</span> }
+            </td>
+            <td>
+              @if (p && p.returnPct !== null) {
+              <span [class]="p.returnPct >= 0 ? 'pct-pos' : 'pct-neg'">
+                {{ p.returnPct >= 0 ? '▲' : '▼' }} {{ p.returnPct | number:'1.1-1' }}%
+              </span>
+              } @else { <span class="text-muted">-</span> }
             </td>
             <td>
               <div class="d-flex gap-1">
