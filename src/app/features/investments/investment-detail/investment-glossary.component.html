@@ -1,0 +1,22 @@
+<details class="glossary" dir="rtl">
+  <summary class="glossary-summary">
+    📘 {{ 'INVESTMENTS.GLOSSARY.TITLE' | translate }}
+    <span class="glossary-hint">{{ 'INVESTMENTS.GLOSSARY.SUBTITLE' | translate }}</span>
+  </summary>
+  <div class="glossary-list">
+    @for (term of terms; track term) {
+    <section class="glossary-term" [id]="'glossary-' + term">
+      <h4 class="glossary-term-title">{{ 'INVESTMENTS.GLOSSARY.ITEMS.' + term + '.TITLE' | translate }}</h4>
+      <p class="glossary-desc">{{ 'INVESTMENTS.GLOSSARY.ITEMS.' + term + '.DESC' | translate }}</p>
+      <div class="glossary-formula">
+        <span class="glossary-label">{{ 'INVESTMENTS.GLOSSARY.FORMULA' | translate }}</span>
+        <bdi class="glossary-formula-text">{{ 'INVESTMENTS.GLOSSARY.ITEMS.' + term + '.FORMULA' | translate }}</bdi>
+      </div>
+      <p class="glossary-example">
+        <span class="glossary-label">{{ 'INVESTMENTS.GLOSSARY.EXAMPLE' | translate }}</span>
+        {{ 'INVESTMENTS.GLOSSARY.ITEMS.' + term + '.EXAMPLE' | translate }}
+      </p>
+    </section>
+    }
+  </div>
+</details>

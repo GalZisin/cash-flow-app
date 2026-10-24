@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, tap } from 'rxjs';
-import { Investment, Snapshot, Transaction, SimulationRule } from '../models/investment.model';
+import { Investment, Snapshot, Transaction, SimulationRule, PeriodReturn } from '../models/investment.model';
 import { environment } from '../../environments/environment';
 
 const MS_YEAR = 365.25 * 24 * 3600 * 1000;
@@ -189,6 +189,43 @@ export class InvestmentService {
       // רווח = ערך סיום - ערך פתיחה - הפקדות + משיכות
       const profit = endSnap.value - startSnap.value + txFlows.reduce((s, f) => s + f.amount, 0);
       return { year, value: this._solveXirr(flows), profit };
+    });
+  }
+
+  /**
+   * פירוק השינוי בין כל צילום לצילום הקודם: כמה הופקד (נטו), כמה הרווח,
+   * ותשואה לתקופה (Modified Dietz) - הרווח חלקי הכסף שהיה בתיק בפועל, כשכל
+   * הפקדה נספרת לפי החלק מהתקופה שבו הייתה בתיק. לא מתורגם לשנה.
+   * מערך מקביל לצילומים הממוינים; לצילום הראשון null.
+   */
+  periodReturns(investment: Investment): (PeriodReturn | null)[] {
+    const snaps = this.sortedSnapshots(investment.snapshots ?? []);
+    const txs = investment.transactions ?? [];
+    const time = (d: string) => new Date(d).getTime();
+
+    return snaps.map((end, i) => {
+      if (i === 0) return null;
+      const start = snaps[i - 1];
+      const t0 = time(start.date), t1 = time(end.date);
+      const span = t1 - t0;
+
+      // הפקדה חיובית, משיכה שלילית
+      const flows = txs
+        .filter(t => time(t.date) > t0 && time(t.date) <= t1)
+        .map(t => ({ t: time(t.date), amount: t.type === 'deposit' ? Math.abs(t.amount) : -Math.abs(t.amount) }));
+
+      const deposits = flows.reduce((s, f) => s + f.amount, 0);
+      const profit = end.value - start.value - deposits;
+      const invested = start.value + flows.reduce((s, f) => s + f.amount * (span > 0 ? (t1 - f.t) / span : 0), 0);
+      const valueChange = end.value - start.value;
+
+      return {
+        deposits,
+        profit,
+        returnPct: span > 0 && invested > 0 ? (profit / invested) * 100 : null,
+        valueChange,
+        valueChangePct: start.value !== 0 ? (valueChange / start.value) * 100 : null,
+      };
     });
   }
 

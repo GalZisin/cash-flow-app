@@ -1,0 +1,80 @@
+.glossary {
+    margin: 0 16px 12px;
+    border: 1px solid var(--cf-border);
+    border-radius: 12px;
+    background: var(--cf-surface-2);
+    direction: rtl;
+}
+
+.glossary-summary {
+    cursor: pointer;
+    padding: 10px 14px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--cf-text);
+    list-style-position: inside;
+}
+
+.glossary-hint {
+    font-weight: 400;
+    font-size: 0.75rem;
+    color: var(--cf-text-3);
+    margin-inline-start: 6px;
+}
+
+.glossary-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 10px;
+    padding: 0 14px 14px;
+}
+
+.glossary-term {
+    background: var(--cf-surface);
+    border: 1px solid var(--cf-border);
+    border-radius: 10px;
+    padding: 10px 12px;
+}
+
+.glossary-term-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--cf-primary-text);
+    margin: 0 0 6px;
+}
+
+.glossary-desc,
+.glossary-example {
+    font-size: 0.8rem;
+    line-height: 1.55;
+    color: var(--cf-text-2);
+    margin: 0 0 8px;
+}
+
+.glossary-example {
+    margin: 0;
+}
+
+.glossary-formula {
+    background: var(--cf-surface-3);
+    border-radius: 8px;
+    padding: 6px 10px;
+    margin-bottom: 8px;
+}
+
+.glossary-formula-text {
+    display: block;
+    font-family: Consolas, 'Courier New', monospace;
+    font-size: 0.8rem;
+    color: var(--cf-text);
+    unicode-bidi: plaintext;
+    white-space: pre-line;
+}
+
+.glossary-label {
+    display: block;
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--cf-text-4);
+    margin-bottom: 2px;
+}
