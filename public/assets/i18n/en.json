@@ -83,6 +83,7 @@
     "TOGGLE_SIMULATION": "🔍 View Simulation Flow"
   },
   "CASH_FLOW": {
+    "GO_TO_CURRENT_MONTH": "Current Month",
     "ADD_MONTH": "Add Month",
     "SAVE": "Save",
     "EXPORT_PDF": "Export PDF",
