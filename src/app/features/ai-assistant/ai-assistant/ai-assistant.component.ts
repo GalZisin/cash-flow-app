@@ -4,7 +4,9 @@ import { FormsModule, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { extractServerMessage } from '../../../interceptors/http.interceptor';
-import { AiInsight, AiService, ChatMessage, FinancialSummary, InsightType, InsightsDashboard, ScenarioRequest, ScenarioResult } from '../../../services/ai.service';
+import { AiChatError, AiInsight, AiService, AiUsage, ChatMessage, FinancialSummary, InsightType, InsightsDashboard, ScenarioRequest, ScenarioResult } from '../../../services/ai.service';
+import { ChatUsageMeterComponent } from './chat-usage-meter.component';
+import { contextMeter, quotaMeter } from './chat-usage';
 import { ConversationService, Conversation } from '../../../services/conversation.service';
 import { LanguageService } from '../../../services/language.service';
 import { CashFlowService } from '../../../services/cash-flow.service';
@@ -26,7 +28,7 @@ type DashboardView = 'overview' | 'sankey' | 'pie';
   selector: 'app-ai-assistant',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, TranslateModule, MatTooltipModule, AiSankeyDiagramComponent, ExpensePieChartComponent, CashFlowChartsComponent], // ReactiveFormsModule already here
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, TranslateModule, MatTooltipModule, AiSankeyDiagramComponent, ExpensePieChartComponent, CashFlowChartsComponent, ChatUsageMeterComponent], // ReactiveFormsModule already here
   templateUrl: './ai-assistant.component.html',
   styleUrl: './ai-assistant.component.scss'
 })
@@ -130,6 +132,20 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
 
   private shouldScroll = false; // Moved here to be consistent
 
+  // Chat usage meters: context of the open conversation (incl. the text being typed) and the AI provider quota
+  private typedText = toSignal(this.chatControl.valueChanges, { initialValue: '' });
+  private usageTimer: ReturnType<typeof setTimeout> | undefined;
+  chatContext = computed(() => {
+    const usage = this.ai.usage();
+    if (!usage) return null;
+    const chars = this.messages().reduce((sum, m) => sum + m.content.length, 0) + this.typedText().trim().length;
+    return contextMeter(usage.context, chars);
+  });
+  chatQuota = computed(() => {
+    const usage = this.ai.usage();
+    return usage ? quotaMeter(usage, this.chatContext()?.usedTokens ?? 0) : null;
+  });
+
   // Convert Observables to Signals
   conversationsSignal = this.convService.items;
   cashFlowMonthsSignal = toSignal(this.cashFlowService.cashFlowMonths$, { initialValue: [] });
@@ -138,8 +154,23 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
   ngOnInit() {
     this.loadSummary();
     this.convService.load().subscribe();
+    this.refreshUsage();
+    this.destroyRef.onDestroy(() => clearTimeout(this.usageTimer));
 
     this.loadDashboardData(); // Initial load for dashboard data
+  }
+
+  /** Reloads the meters; while the per-minute token window is partly used, reloads again when it resets. */
+  refreshUsage() {
+    clearTimeout(this.usageTimer);
+    this.ai.loadUsage().subscribe({
+      next: (usage: AiUsage) => {
+        const tokens = usage.quota?.tokens;
+        const wait = tokens && tokens.remaining < tokens.limit ? Date.parse(tokens.resetAt) - Date.now() : 0;
+        if (wait > 0) this.usageTimer = setTimeout(() => this.refreshUsage(), wait + 500);
+      },
+      error: () => { /* meters stay hidden; the interceptor already reported the error */ }
+    });
   }
 
   setTab(tab: ActiveTab) {
@@ -337,42 +368,6 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
     return result.slice(0, 6);
   }
 
-  /**
-   * Reduces the financial summary to essential data based on the user's question.
-   * This implements a RAG-like filtering to minimize token usage and improve response accuracy.
-   */
-  private prepareRelevantContext(query: string): Record<string, unknown> | null {
-    const summary = this.summary();
-    if (!summary) return null;
-
-    const q = query.toLowerCase();
-    const context: Record<string, unknown> = {
-      currentBalance: this.realCurrentBalance(),
-      monthlySavings: summary.monthlySavingsAvg
-    };
-
-    // Semantic matching for intent-based filtering (supports Hebrew and English)
-    const isExpenseQuery = /expense|spend|cost|buying|הוצאות|קנייה|כמה עולה/i.test(q);
-    const isIncomeQuery = /income|salary|earn|הכנסות|שכר|משכורת/i.test(q);
-    const isForecastQuery = /forecast|future|reach|predict|תחזית|מתי אגיע|עתיד/i.test(q);
-    const isDebtQuery = /loan|debt|mortgage|payment|הלוואה|משכנתא|תשלום/i.test(q);
-
-    if (isExpenseQuery) context['expenses'] = summary.expenses; // Access with bracket notation
-    if (isIncomeQuery) context['income'] = summary.income;     // Access with bracket notation
-    if (isForecastQuery) context['forecast'] = this.displayForecast; // Access with bracket notation
-    if (isDebtQuery) context['loans'] = summary.loans.map(l => ({ name: l.name, payment: l.monthlyPayment })); // Access with bracket notation
-
-    // Provide a high-level summary if no specific intent is detected
-    if (!isExpenseQuery && !isIncomeQuery && !isForecastQuery && !isDebtQuery) {
-      context['overview'] = {
-        avgIncome: summary.income.average,
-        avgExpenses: summary.expenses.averageTotal
-      };
-    }
-
-    return context;
-  }
-
   handleSuggestion(key: string) {
     // שליפת התרגום עבור המפתח שנבחר והזנתו לשדה הקלט
     this.translate.get(key).subscribe(translatedValue => {
@@ -382,7 +377,7 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
 
   sendMessage(questionToAsk?: string) {
     const q = questionToAsk || this.chatControl.value.trim();
-    if (!q || this.chatLoading()) return;
+    if (!q || this.chatLoading() || this.chatContext()?.level === 'full') return;
 
     // Cancel any previous ongoing stream
     if (this.currentStreamSubscription) {
@@ -407,26 +402,10 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
 
     let assistantMsg: ChatMessage | null = null;
 
-    // בניית היסטוריית השיחה כטקסט עבור המודל (לוקחים למשל את 5 ההודעות האחרונות)
-    const historyContext = this.messages()
-      .slice(-6, -1) // מוציאים את ההודעות האחרונות לפני השאלה הנוכחית
-      .map(m => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`)
-      .join('\n');
+    // כל השיחה עד השאלה הנוכחית. השרת מוסיף את הסיכום הפיננסי ובודק שהבקשה בתוך תקציב ההקשר.
+    const history = this.messages().slice(0, -1);
 
-    // שילוב הקשר פיננסי + היסטוריית שיחה + שאלה נוכחית
-    // this.summary is a signal, so summary()
-    const context = this.prepareRelevantContext(q);
-    const langText = this.aiResponseLang() === 'he' ? 'Hebrew' : 'English';
-
-    const enrichedPrompt = `
-      System Financial Context: ${JSON.stringify(context)}
-      ${historyContext ? '\nRecent Conversation History:\n' + historyContext : ''}
-      
-      User Question: ${q}
-      
-      Respond strictly in ${langText}.`;
-
-    this.currentStreamSubscription = this.ai.chatStream(enrichedPrompt).subscribe({
+    this.currentStreamSubscription = this.ai.chatStream(q, history, this.aiResponseLang()).subscribe({
       next: (token: string) => {
         if (!assistantMsg) {
           this.chatLoading.set(false);
@@ -440,7 +419,9 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
         this.chatLoading.set(false);
         this.chatControl.enable(); // Re-enable on error
         // Ensure assistantMsg is initialized if error occurs before first token, and update messages signal
-        const errorMessage = this.translate.instant('AI.PARTIAL_RESPONSE_ERROR', { error: extractServerMessage(err) || 'Failed to get response' });
+        const errorMessage = err instanceof AiChatError && err.code === 'AI_CONTEXT_FULL'
+          ? this.translate.instant('AI.CONTEXT_FULL')
+          : this.translate.instant('AI.PARTIAL_RESPONSE_ERROR', { error: extractServerMessage(err) || 'Failed to get response' });
 
         if (!assistantMsg) {
           assistantMsg = { role: 'assistant', content: '', timestamp: new Date() };
@@ -448,7 +429,9 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
         }
 
         assistantMsg.content += `\n\n**${errorMessage}**`;
+        this.messages.update(msgs => [...msgs]); // the streamed text was appended in place: let the context meter see it
         this.saveConversation();
+        this.refreshUsage();
         this.currentStreamSubscription = null; // Clear subscription on error
       },
       complete: () => {
@@ -458,7 +441,9 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked {
         this.chatLoading.set(false);
         this.chatControl.enable(); // Re-enable on complete
         this.shouldScroll = true;
+        this.messages.update(msgs => [...msgs]); // the streamed text was appended in place: let the context meter see it
         this.saveConversation();
+        this.refreshUsage();
         this.lastUserQuestion = null; // Clear on successful completion
         this.currentStreamSubscription = null; // Clear subscription on completion
       }

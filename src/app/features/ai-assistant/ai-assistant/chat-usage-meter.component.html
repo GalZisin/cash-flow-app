@@ -1,0 +1,37 @@
+<div class="usage" [class.warn]="context().level === 'warn'" [class.full]="context().level === 'full'">
+  <div class="usage-row">
+    <span class="usage-label">{{ 'AI.CONTEXT_LABEL' | translate }}</span>
+    <div class="usage-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100"
+         [attr.aria-valuenow]="context().percent" [attr.aria-label]="'AI.CONTEXT_LABEL' | translate"
+         [matTooltip]="'AI.CONTEXT_TOOLTIP' | translate: { used: context().usedTokens, limit: context().limitTokens }">
+      <div class="usage-fill" [style.width.%]="context().percent"></div>
+    </div>
+    <span class="usage-value">{{ context().percent }}%</span>
+
+    @if (quota(); as q) {
+      <span class="usage-quota" [matTooltip]="'AI.QUOTA_TOOLTIP' | translate: { model: q.model }">
+        @if (q.tokensPercent !== null) {
+          <span>{{ 'AI.QUOTA_TOKENS' | translate: { percent: q.tokensPercent } }}</span>
+        }
+        @if (q.requestsLimit !== null) {
+          <span>{{ 'AI.QUOTA_REQUESTS' | translate: { used: q.requestsUsed, limit: q.requestsLimit } }}</span>
+        }
+      </span>
+    }
+  </div>
+
+  @if (context().level !== 'ok') {
+    <div class="usage-warning" role="status">
+      <span>{{ (context().level === 'full' ? 'AI.CONTEXT_FULL' : 'AI.CONTEXT_WARN') | translate: { percent: context().percent } }}</span>
+      <button type="button" class="btn btn-link btn-sm p-0" (click)="newChat.emit()">{{ 'AI.NEW_CHAT' | translate }}</button>
+    </div>
+  }
+  @if (quota(); as q) {
+    @if (q.waitSeconds) {
+      <div class="usage-warning quota" role="status">{{ 'AI.QUOTA_WAIT' | translate: { seconds: q.waitSeconds } }}</div>
+    }
+    @if (q.requestsLow) {
+      <div class="usage-warning quota" role="status">{{ 'AI.QUOTA_DAY_LOW' | translate: { remaining: q.requestsRemaining } }}</div>
+    }
+  }
+</div>

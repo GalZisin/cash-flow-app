@@ -34,25 +34,49 @@ router.post('/analysis', asyncHandler(async (req, res) => {
 }));
 
 /**
- * POST /api/ai/chat   Body: { question }
+ * GET /api/ai/usage
+ * Provider quota (from the last AI response headers) and the chat context budget, for the chat tab meters.
+ */
+router.get('/usage', asyncHandler(async (req, res) => {
+    res.json(aiService.getUsage(await financialSummary.getSummary()));
+}));
+
+const MAX_HISTORY_MESSAGES = 200;
+
+/** { question, history?: [{ role: 'user' | 'assistant', content }], lang?: 'he' | 'en' } -> { question, options } */
+function chatInput(body) {
+    const question = String(body?.question ?? '').trim();
+    if (!question) throw new ValidationError('question is required');
+    const history = body?.history ?? [];
+    if (!Array.isArray(history) || history.length > MAX_HISTORY_MESSAGES) {
+        throw new ValidationError(`history must be an array of up to ${MAX_HISTORY_MESSAGES} messages`);
+    }
+    const messages = history.map((m) => {
+        if (!m || !['user', 'assistant'].includes(m.role) || typeof m.content !== 'string') {
+            throw new ValidationError('history items need role "user" or "assistant" and a string content');
+        }
+        return { role: m.role, content: m.content };
+    });
+    return { question, options: { history: messages, lang: ['he', 'en'].includes(body?.lang) ? body.lang : undefined } };
+}
+
+/**
+ * POST /api/ai/chat   Body: { question, history?, lang? }
  */
 router.post('/chat', asyncHandler(async (req, res) => {
-    const question = String(req.body?.question ?? '').trim();
-    if (!question) throw new ValidationError('question is required');
-
+    const { question, options } = chatInput(req.body);
     const summary = await financialSummary.getSummary();
-    res.json(await aiService.getChat(summary, question));
+    res.json(await aiService.getChat(summary, question, options));
 }));
 
 /**
- * POST /api/ai/chat-stream   Body: { question }
- * Streams the answer as chunked plain text.
+ * POST /api/ai/chat-stream   Body: { question, history?, lang? }
+ * Streams the answer as chunked plain text. A conversation over the context budget gets 400 AI_CONTEXT_FULL.
  */
 router.post('/chat-stream', asyncHandler(async (req, res) => {
-    const question = String(req.body?.question ?? '').trim();
-    if (!question) throw new ValidationError('question is required');
-
+    const { question, options } = chatInput(req.body);
     const summary = await financialSummary.getSummary();
+    aiService.assertChatFits(summary, question, options);
 
     res.setHeader('Content-Type', 'text/plain; charset=utf-8');
     res.setHeader('Transfer-Encoding', 'chunked');
@@ -64,7 +88,8 @@ router.post('/chat-stream', asyncHandler(async (req, res) => {
         (err) => {
             // Headers are already out: finish the body with a readable note instead of a second status.
             res.end(`\n[${err.message}]`);
-        }
+        },
+        options
     );
 }));
 

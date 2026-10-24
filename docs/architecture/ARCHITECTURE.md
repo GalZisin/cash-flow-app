@@ -46,7 +46,7 @@
 
 **שמירת תזרים**: טבלה → `CashFlowService.save()` → `POST /api/cash-flow` → `cashFlow.service` → `cashFlow.repository.write()` משווה למצב הקיים וכותב רק חודשים שהשתנו בטרנזקציה אחת → `goals.service.analyzeAllGoals()` טוען תזרים ויעדים פעם אחת, מנתח בזיכרון וכותב פעם אחת.
 
-**שאלה ל-AI**: `AiService.chatStream()` (fetch) → `POST /api/ai/chat-stream` → `financialSummary.getSummary()` (cache 60 שניות, מתאפס בכל בקשת שינוי) → `ai.service.getChatStream()` → המודל → טוקנים זורמים חזרה כ-chunked text. אם המודל לא זמין: 503 עם `code: AI_UNAVAILABLE`.
+**שאלה ל-AI**: `AiService.chatStream(question, history, lang)` (fetch) → `POST /api/ai/chat-stream` → `financialSummary.getSummary()` → `ai.service.assertChatFits()` (תקציב `AI_CONTEXT_TOKENS`, אחרת 400 `AI_CONTEXT_FULL`) (cache 60 שניות, מתאפס בכל בקשת שינוי) → `ai.service.getChatStream()` → המודל → טוקנים זורמים חזרה כ-chunked text. אם המודל לא זמין: 503 עם `code: AI_UNAVAILABLE`.
 
 **יצירת יעד**: `POST /api/goals` → `goals.service.createGoal()` → `goals.repository.create()` → `analyzeAllGoals()` → הלקוח מעדכן signal → `CashFlowSimulation` מחשב תזרים מדומה בצד הלקוח.
 

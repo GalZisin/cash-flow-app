@@ -8,15 +8,19 @@
  *                      AI_PROVIDER=groq is accepted as another name for it.
  *   ollama             Ollama's /api/generate            e.g. AI_BASE_URL=http://localhost:11434  (or another machine)
  *
- * Other settings: AI_MODEL, AI_TIMEOUT_MS (default 60000). Configuration is read per call so tests can change it.
+ * Other settings: AI_MODEL, AI_TIMEOUT_MS (default 60000), AI_CONTEXT_TOKENS (default 8000: budget of one chat request,
+ * prompt + answer, = Groq free tier tokens/min). Configuration is read per call so tests can change it.
  */
 const http = require('http');
 const https = require('https');
-const { ServiceUnavailableError, TooManyRequestsError } = require('../utils/errors');
+const { ServiceUnavailableError, TooManyRequestsError, ValidationError } = require('../utils/errors');
 const traceMethods = require('../utils/traceMethods');
 
 const OPTIONS = { temperature: 0.3, num_ctx: 2048, num_predict: 1024 };
 const MAX_TOKENS = 1024;
+// Token estimates measured on Groq gpt-oss-20b: the compact JSON prompt runs ~3.2 chars/token, Hebrew chat text ~2.4.
+const PROMPT_CHARS_PER_TOKEN = 3;
+const MESSAGE_CHARS_PER_TOKEN = 2.4;
 
 function getConfig() {
   const provider = (process.env.AI_PROVIDER || '').trim().toLowerCase() === 'ollama' ? 'ollama' : 'openai';
@@ -26,7 +30,8 @@ function getConfig() {
   return {
     provider, baseUrl, model,
     apiKey: process.env.AI_API_KEY || '',
-    timeoutMs: Number(process.env.AI_TIMEOUT_MS ?? 60_000)
+    timeoutMs: Number(process.env.AI_TIMEOUT_MS ?? 60_000),
+    contextTokens: Number(process.env.AI_CONTEXT_TOKENS ?? 8000)
   };
 }
 
@@ -57,13 +62,53 @@ function toServiceError(err, cfg = getConfig()) {
   if (code === 'AI_TIMEOUT') return new ServiceUnavailableError(`AI request timed out after ${cfg.timeoutMs / 1000}s`, 'AI_TIMEOUT');
   if (code === 'AI_AUTH') return new ServiceUnavailableError('AI provider rejected the API key (AI_API_KEY).', 'AI_AUTH');
   if (code === 'AI_RATE_LIMIT') return new TooManyRequestsError('AI provider rate limit reached, try again in a minute.');
+  if (code === 'AI_TOO_LARGE') return new ValidationError('The conversation is too long for the AI provider. Start a new chat.', 'AI_CONTEXT_FULL');
   return err;
 }
 
 function httpErrorFor(status, text) {
   if (status === 401 || status === 403) return Object.assign(new Error(`AI provider auth failed (${status})`), { code: 'AI_AUTH' });
   if (status === 429) return Object.assign(new Error('AI provider rate limit (429)'), { code: 'AI_RATE_LIMIT' });
+  if (status === 413) return Object.assign(new Error('AI request too large (413)'), { code: 'AI_TOO_LARGE' });
   return new Error(`AI provider error ${status}: ${String(text).substring(0, 300)}`);
+}
+
+// ---------------------------------------------------------------- provider quota
+
+/** "1m26.4s", "659ms", "2h3m" (x-ratelimit-reset-* values) -> milliseconds. */
+function parseDuration(text) {
+  let ms = 0;
+  for (const [, n, unit] of String(text || '').matchAll(/(\d+(?:\.\d+)?)(ms|h|m|s)/g)) {
+    ms += Number(n) * { h: 3_600_000, m: 60_000, s: 1000, ms: 1 }[unit];
+  }
+  return Math.round(ms);
+}
+
+/** x-ratelimit-* response headers (Groq, OpenAI, ...) -> { requests, tokens } with absolute reset times, or null. */
+function parseQuota(headers, now = Date.now()) {
+  const part = (kind) => {
+    const limit = headers[`x-ratelimit-limit-${kind}`], remaining = headers[`x-ratelimit-remaining-${kind}`];
+    if (limit === undefined || remaining === undefined || !Number.isFinite(Number(limit))) return null;
+    const resetAt = new Date(now + parseDuration(headers[`x-ratelimit-reset-${kind}`])).toISOString();
+    return { limit: Number(limit), remaining: Number(remaining), resetAt };
+  };
+  const requests = part('requests'), tokens = part('tokens');
+  return requests || tokens ? { requests, tokens, updatedAt: new Date(now).toISOString() } : null;
+}
+
+// Last quota the provider reported (per server process). Ollama sends no such headers, so it stays null there.
+let lastQuota = null;
+
+function recordQuota(headers) {
+  const quota = parseQuota(headers);
+  if (quota) lastQuota = quota;
+}
+
+/** The last reported quota; a window whose reset time has passed is shown as full again (approximation). */
+function currentQuota(now = Date.now()) {
+  if (!lastQuota) return null;
+  const fresh = (q) => (q && Date.parse(q.resetAt) <= now ? { ...q, remaining: q.limit } : q);
+  return { ...lastQuota, requests: fresh(lastQuota.requests), tokens: fresh(lastQuota.tokens) };
 }
 
 /** Opens a POST to <baseUrl><path>; the caller consumes the response stream. */
@@ -79,6 +124,7 @@ function openRequest(cfg, path, body, onResponse, onError) {
   const req = client.request(
     { hostname: cfg.baseUrl.hostname, port: cfg.baseUrl.port || (cfg.baseUrl.protocol === 'https:' ? 443 : 80), path: basePath + path, method: 'POST', headers },
     (res) => {
+      recordQuota(res.headers);
       if (res.statusCode >= 400) {
         let text = '';
         res.on('data', (c) => (text += c));
@@ -140,7 +186,9 @@ const providers = {
     path: '/api/generate',
     body(cfg, prompt, stream, maxTokens = MAX_TOKENS) {
       const options = { ...OPTIONS, num_predict: maxTokens };
-      return JSON.stringify({ model: cfg.model, prompt: prompt.system + '\n\n' + prompt.user, stream, options, ...(stream ? {} : { think: false }) });
+      const history = (prompt.history || []).map((m) => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`).join('\n\n');
+      const text = [prompt.system, history && `## Conversation so far\n${history}`, prompt.user].filter(Boolean).join('\n\n');
+      return JSON.stringify({ model: cfg.model, prompt: text, stream, options, ...(stream ? {} : { think: false }) });
     },
     parseFull(data) {
       const parsed = JSON.parse(data);
@@ -161,7 +209,11 @@ const providers = {
       return JSON.stringify({
         model: cfg.model, stream, temperature: OPTIONS.temperature, max_tokens: maxTokens,
         ...reasoningParams(cfg),
-        messages: [{ role: 'system', content: prompt.system }, { role: 'user', content: prompt.user }]
+        messages: [
+          { role: 'system', content: prompt.system },
+          ...(prompt.history || []).map((m) => ({ role: m.role, content: m.content })),
+          { role: 'user', content: prompt.user }
+        ]
       });
     },
     parseFull(data) {
@@ -266,8 +318,10 @@ Provide a complete financial health analysis covering:
 Be specific with numbers. Do not add generic advice not supported by the data.` };
 }
 
-function buildChatPrompt(summary, userQuestion) {
-  return { system: SYSTEM_PERSONA, user: `${summaryBlock(summary)}
+/** options.history = earlier turns of this conversation ({ role, content }), options.lang = 'he' | 'en' answer language. */
+function buildChatPrompt(summary, userQuestion, options = {}) {
+  const language = options.lang ? `\nRespond in ${options.lang === 'en' ? 'English' : 'Hebrew'}.` : '';
+  return { system: SYSTEM_PERSONA, history: options.history || [], user: `${summaryBlock(summary)}
 
 ## User Question
 ${userQuestion}
@@ -275,7 +329,35 @@ ${userQuestion}
 ## Instructions
 Answer the question directly and accurately using only the data above.
 If the answer requires a calculation, show the math step by step.
-If the data doesn't contain enough information to answer, say so clearly.` };
+If the data doesn't contain enough information to answer, say so clearly.${language}` };
+}
+
+/**
+ * Estimated size of a chat request against AI_CONTEXT_TOKENS. The provider counts the prompt plus the answer budget
+ * (max_tokens), so: baseTokens (persona + summary) + reserveTokens + message text / charsPerToken.
+ * The client repeats this sum live (history + the text being typed) from baseTokens, reserveTokens and charsPerToken.
+ */
+function chatContext(summary, options = {}) {
+  const base = buildChatPrompt(summary, '');
+  const baseTokens = Math.ceil((base.system.length + base.user.length) / PROMPT_CHARS_PER_TOKEN);
+  const messageChars = (options.history || []).reduce((sum, m) => sum + m.content.length, 0) + (options.question || '').length;
+  const usedTokens = baseTokens + MAX_TOKENS + Math.ceil(messageChars / MESSAGE_CHARS_PER_TOKEN);
+  const limitTokens = getConfig().contextTokens;
+  return {
+    usedTokens, limitTokens, percent: Math.round((usedTokens / limitTokens) * 100),
+    baseTokens, reserveTokens: MAX_TOKENS, charsPerToken: MESSAGE_CHARS_PER_TOKEN
+  };
+}
+
+/** Rejects a chat request that would not fit the context budget (the client offers a new chat). */
+function assertChatFits(summary, question, options = {}) {
+  const context = chatContext(summary, { ...options, question });
+  if (context.usedTokens > context.limitTokens) {
+    throw new ValidationError(
+      `The conversation is full (${context.percent}% of ${context.limitTokens} tokens). Start a new chat.`, 'AI_CONTEXT_FULL'
+    );
+  }
+  return context;
 }
 
 function buildScenarioPrompt(summary, scenario, simulationResult) {
@@ -304,11 +386,13 @@ Analyze this scenario and explain:
 async function getAnalysis(summary) {
   return { model: getConfig().model, analysis: await generate(buildAnalysisPrompt(summary)) };
 }
-async function getChat(summary, userQuestion) {
-  return { model: getConfig().model, answer: await generate(buildChatPrompt(summary, userQuestion)) };
+async function getChat(summary, userQuestion, options = {}) {
+  assertChatFits(summary, userQuestion, options);
+  return { model: getConfig().model, answer: await generate(buildChatPrompt(summary, userQuestion, options)) };
 }
-function getChatStream(summary, userQuestion, onToken, onDone, onError) {
-  streamGenerate(buildChatPrompt(summary, userQuestion), onToken, onDone, onError);
+/** The route calls assertChatFits first, while it can still answer with a JSON error. */
+function getChatStream(summary, userQuestion, onToken, onDone, onError, options = {}) {
+  streamGenerate(buildChatPrompt(summary, userQuestion, options), onToken, onDone, onError);
 }
 async function getScenario(summary, scenario, simulationResult) {
   return { model: getConfig().model, scenarioAnalysis: await generate(buildScenarioPrompt(summary, scenario, simulationResult)) };
@@ -323,8 +407,15 @@ function describe() {
   };
 }
 
+/** What the chat tab shows in its meters: the provider quota (null until the provider reports one) and the context budget. */
+function getUsage(summary) {
+  const cfg = getConfig();
+  return { provider: cfg.provider, model: cfg.model, quota: currentQuota(), context: chatContext(summary) };
+}
+
 module.exports = traceMethods({
-  getAnalysis, getChat, getScenario, getChatStream, describe,
+  getAnalysis, getChat, getScenario, getChatStream, describe, getUsage, assertChatFits,
   // exported for tests
-  getConfig, toServiceError, stripThinking, thinkFilter, providers, generate, streamGenerate, buildChatPrompt
+  getConfig, toServiceError, stripThinking, thinkFilter, providers, generate, streamGenerate, buildChatPrompt,
+  chatContext, parseDuration, parseQuota, currentQuota
 }, 'aiService');
