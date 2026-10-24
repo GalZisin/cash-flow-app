@@ -24,7 +24,9 @@
     .scroll-body {
         flex: 1;
         overflow-y: auto;
-        padding: 20px 24px;
+        // extra bottom space: .app-content is sized for a 57px navbar but the real one
+        // is taller, so the last ~35px of the page would otherwise sit below the window
+        padding: 20px 24px 64px;
         direction: ltr;
     }
 
