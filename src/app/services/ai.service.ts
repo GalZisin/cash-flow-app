@@ -1,7 +1,39 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
+
+/** חלון מכסה של ספק ה-AI (מתוך כותרות x-ratelimit-* של התשובה האחרונה). */
+export interface AiQuotaWindow {
+  limit: number;
+  remaining: number;
+  resetAt: string;
+}
+
+/** GET /api/ai/usage: מכסת הספק (null עד הקריאה הראשונה / ב-Ollama) ותקציב ההקשר של שיחה. */
+export interface AiUsage {
+  provider: 'openai' | 'ollama';
+  model: string;
+  quota: { requests: AiQuotaWindow | null; tokens: AiQuotaWindow | null; updatedAt: string } | null;
+  context: {
+    usedTokens: number;
+    limitTokens: number;
+    percent: number;
+    /** פרסונה + סיכום פיננסי */
+    baseTokens: number;
+    /** תקציב התשובה (max_tokens), נספר במכסה */
+    reserveTokens: number;
+    /** תווים לטוקן בטקסט ההודעות */
+    charsPerToken: number;
+  };
+}
+
+/** שגיאה מ-chat-stream עם הקוד מהשרת (למשל AI_CONTEXT_FULL). */
+export class AiChatError extends Error {
+  constructor(message: string, readonly code?: string) {
+    super(message);
+  }
+}
 
 export interface FinancialSummary {
   periodCovered: { from: string; to: string; months: number };
@@ -73,8 +105,14 @@ export interface ScenarioResult {
 @Injectable({ providedIn: 'root' })
 export class AiService {
   private readonly base = `${environment.apiUrl}/ai`;
+  private readonly _usage = signal<AiUsage | null>(null);
+  readonly usage = this._usage.asReadonly();
 
   constructor(private http: HttpClient) {}
+
+  loadUsage(): Observable<AiUsage> {
+    return this.http.get<AiUsage>(`${this.base}/usage`).pipe(tap(u => this._usage.set(u)));
+  }
 
   getSummary(): Observable<FinancialSummary> {
     return this.http.get<FinancialSummary>(`${this.base}/summary`);
@@ -97,20 +135,25 @@ export class AiService {
     return this.http.post<ScenarioResult>(`${this.base}/scenario`, req);
   }
 
-  chatStream(question: string): Observable<string> {
+  /** history = ההודעות הקודמות בשיחה (בלי השאלה הנוכחית); השרת דוחה שיחה מעבר לתקציב עם AI_CONTEXT_FULL. */
+  chatStream(question: string, history: Pick<ChatMessage, 'role' | 'content'>[] = [], lang?: 'he' | 'en'): Observable<string> {
     return new Observable<string>(observer => {
       const controller = new AbortController();
 
       fetch(`${this.base}/chat-stream`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question }),
+        body: JSON.stringify({ question, history: history.map(m => ({ role: m.role, content: m.content })), lang }),
         signal: controller.signal
       })
         .then(async (response) => {
           if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+            const error = errorData.error;
+            throw new AiChatError(
+              (typeof error === 'string' ? error : error?.message) || `HTTP error! status: ${response.status}`,
+              error?.code
+            );
           }
 
           const reader = response.body?.getReader();

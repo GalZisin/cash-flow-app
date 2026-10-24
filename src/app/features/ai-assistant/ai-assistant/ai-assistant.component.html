@@ -106,6 +106,11 @@
           }
         </div>
 
+        <!-- Context + provider quota -->
+        @if (chatContext(); as ctx) {
+          <app-chat-usage-meter [context]="ctx" [quota]="chatQuota()" (newChat)="newConversation()" />
+        }
+
         <!-- Input -->
         <div class="chat-input-bar">
           <textarea
@@ -116,7 +121,7 @@
             [formControl]="chatControl"
             (keydown)="onEnter($event)">
           </textarea>
-          <button class="btn btn-primary ms-2" (click)="sendMessage()" [disabled]="chatLoading() || chatControl.invalid" [attr.aria-label]="'AI.INPUT_PLACEHOLDER' | translate">
+          <button class="btn btn-primary ms-2" (click)="sendMessage()" [disabled]="chatLoading() || chatControl.invalid || chatContext()?.level === 'full'" [attr.aria-label]="'AI.INPUT_PLACEHOLDER' | translate">
             @if (chatLoading()) { <span class="spinner-border spinner-border-sm"></span> }
             @else { ➤ }
           </button>

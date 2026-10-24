@@ -133,8 +133,11 @@ Base URL: `http://localhost:3000/api`. כל הגופים הם JSON. מזהים �
 | --- | --- | --- | --- |
 | GET | `/ai/summary` | | הסיכום הפיננסי המחושב (ללא מודל): תקופה, יתרה, ממוצעים, הלוואות, פריסות, השקעות, תחזית 6 חודשים |
 | POST | `/ai/analysis` | `{}` | ניתוח מלא: `{ summary, model, analysis }` |
-| POST | `/ai/chat` | `{ question }` | תשובה אחת: `{ model, answer }` |
-| POST | `/ai/chat-stream` | `{ question }` | `text/plain` ב-chunks. אם המודל נופל באמצע, הגוף מסתיים בשורה `[...]` עם ההודעה |
+| GET | `/ai/usage` | | מדי הצ'אט: `{ provider, model, quota, context }`. `quota` = `{ requests, tokens }` (כל אחד `{ limit, remaining, resetAt }`) מכותרות `x-ratelimit-*` של התשובה האחרונה מהספק, `null` עד הקריאה הראשונה וב-Ollama. `context` = `{ usedTokens, limitTokens, percent, baseTokens, reserveTokens, charsPerToken }` |
+| POST | `/ai/chat` | `{ question, history?, lang? }` | תשובה אחת: `{ model, answer }` |
+| POST | `/ai/chat-stream` | `{ question, history?, lang? }` | `text/plain` ב-chunks. אם המודל נופל באמצע, הגוף מסתיים בשורה `[...]` עם ההודעה |
+
+**היסטוריית שיחה והקשר**: `history` = ההודעות הקודמות בשיחה (`[{ role: 'user' \| 'assistant', content }]`, עד 200), `lang` = `he` / `en` לשפת התשובה. השרת שולח אותן למודל בין הודעת המערכת לשאלה. לפני הקריאה הוא מעריך את גודל הבקשה: הפרסונה והסיכום (כ-3 תווים לטוקן) + `max_tokens` של התשובה + טקסט ההודעות (כ-2.4 תווים לטוקן). את זה הוא משווה ל-`AI_CONTEXT_TOKENS` (ברירת מחדל 8000 = מכסת הטוקנים לדקה של Groq החינמי). בקשה מעבר לתקציב, או `413` מהספק, מקבלת `400` עם `code: AI_CONTEXT_FULL`. הלקוח מחשב את אותו סכום בזמן ההקלדה (`chat-usage.ts`), מציג אחוזים, מזהיר מ-80% וחוסם שליחה ב-100% עם הצעה לפתוח שיחה חדשה.
 | POST | `/ai/scenario` | `{ description, amount, date: 'YYYY-MM-DD' }` | `{ simulation, model, scenarioAnalysis }` |
 | POST | `/ai/insights` | `{ dashboard?: { kpis, trends }, lang?: 'he' \| 'en' }` | תובנות לדאשבורד: `{ model, insights: [{ type, title, text }], report, archived }` |
 
