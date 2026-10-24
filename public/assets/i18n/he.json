@@ -94,6 +94,7 @@
     "MILESTONE_AMOUNT_TOTAL_ERROR": "סכום כל הפעימות חייב להיות שווה לסכום היעד"
   },
   "CASH_FLOW": {
+    "GO_TO_CURRENT_MONTH": "חודש נוכחי",
     "ADD_MONTH": "הוסף חודש",
     "SAVE": "שמור",
     "EXPORT_PDF": "ייצא PDF",

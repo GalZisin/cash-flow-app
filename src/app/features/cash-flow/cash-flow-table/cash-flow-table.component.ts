@@ -750,6 +750,33 @@ export class CashFlowTableComponent implements OnInit, AfterViewInit, OnChanges 
   blurField(key: string) { this.focusedField[key] = false; }
 
   /**
+   * גולל את הטבלה לשורת החודש הנוכחי.
+   * אם החודש הנוכחי לא קיים ברשימה - לא עושה כלום.
+   */
+  scrollToCurrentMonth(): void {
+    const now = new Date();
+    const currentMonthIndex = this.months.controls.findIndex(ctrl => {
+      const d: Date = ctrl.get('month')?.value;
+      return d instanceof Date &&
+        d.getFullYear() === now.getFullYear() &&
+        d.getMonth() === now.getMonth();
+    });
+
+    if (currentMonthIndex === -1) return;
+
+    const container = this.tableContainer?.nativeElement as HTMLElement;
+    if (!container) return;
+
+    const targetCell = container.querySelector(
+      `td[data-month-index="${currentMonthIndex}"]`
+    ) as HTMLElement | null;
+
+    if (targetCell) {
+      targetCell.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }
+
+  /**
    * טעינת נתוני סימולציה מקלט חיצוני
    */
   private loadSimulationData(data: any[]): void {
