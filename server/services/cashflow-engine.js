@@ -9,12 +9,41 @@ const { getPaymentProgress, resolvePaymentType, toDateStr } = require('../utils/
 const CATEGORY_MONTHS = 12;
 const UPCOMING_MONTHS = 12;
 const MAX_UPCOMING_SPECIAL = 15;
+/** Monthly detail only for the last RECENT_MONTHS months; older history and the plan ahead (up to PLANNED_YEARS) go by year. */
+const RECENT_MONTHS = 12;
+const PLANNED_YEARS = 5;
 
 function sumExpenses(items = []) {
   return items.reduce((s, e) => s + (Number(e.amount) || 0), 0);
 }
 
 const round = (v) => Math.round(Number(v) || 0);
+
+/** Income, all outgoings (expenses + mortgage + loan + installments) and the closing balance of one month. */
+function monthTotals(m) {
+  return {
+    income: (Number(m.income) || 0) + sumExpenses(m.additionalIncomes || []),
+    expenses: sumExpenses(m.regularExpenses || []) + sumExpenses(m.specialExpenses || []) +
+      (Number(m.mortgagePayment) || 0) + (Number(m.loanPayment) || 0) + (Number(m.installmentsPayment) || 0),
+    endingBalance: m.endingBalance || 0
+  };
+}
+
+/** Months grouped by calendar year: { year, months, income, expenses, endingBalance (of the year's last month) }. */
+function byYear(months) {
+  const years = new Map();
+  for (const m of months) {
+    const year = Number(m.month.substring(0, 4));
+    const t = monthTotals(m);
+    const y = years.get(year) || { year, months: 0, income: 0, expenses: 0, endingBalance: 0 };
+    y.months += 1;
+    y.income += t.income;
+    y.expenses += t.expenses;
+    y.endingBalance = t.endingBalance;
+    years.set(year, y);
+  }
+  return [...years.values()].map(y => ({ ...y, income: round(y.income), expenses: round(y.expenses), endingBalance: round(y.endingBalance) }));
+}
 
 /** Due date of the last scheduled entry (schedule entries are sorted by date). */
 const lastDueDate = (entries) => {
@@ -235,16 +264,14 @@ function buildSummary({ cashFlow, installments = [], investments = [], defaults 
     });
   }
 
-  // --- Monthly Snapshots (for dashboard charts) ---
-  const monthlySnapshots = months.map(m => ({
-    month: m.month?.substring(0, 7),
-    startingBalance: m.startingBalance || 0,
-    endingBalance: m.endingBalance || 0,
-    income: (Number(m.income) || 0) + sumExpenses(m.additionalIncomes || []),
-    expenses: sumExpenses(m.regularExpenses || []) + sumExpenses(m.specialExpenses || []) +
-      (Number(m.mortgagePayment) || 0) + (Number(m.loanPayment) || 0) +
-      (Number(m.installmentsPayment) || 0)
-  }));
+  // --- Cash flow by period ---
+  // The summary goes with every AI request, so its size must not grow with every month in the cash flow:
+  // the last RECENT_MONTHS months up to now in detail, older history by year, the plan ahead by year (PLANNED_YEARS max).
+  const pastMonths = months.filter(m => (m.month || '').substring(0, 7) <= nowStr);
+  const plannedMonths = months.filter(m => (m.month || '').substring(0, 7) > nowStr).slice(0, PLANNED_YEARS * 12);
+  const recentMonths = pastMonths.slice(-RECENT_MONTHS).map(m => ({ month: m.month.substring(0, 7), ...monthTotals(m) }));
+  const pastYears = byYear(pastMonths.slice(0, Math.max(0, pastMonths.length - RECENT_MONTHS)));
+  const plannedYears = byYear(plannedMonths);
 
   return {
     asOf: toDateStr(today),
@@ -253,7 +280,9 @@ function buildSummary({ cashFlow, installments = [], investments = [], defaults 
       to: latest.month?.substring(0, 7),
       months: monthCount
     },
-    monthlySnapshots,
+    recentMonths,
+    pastYears,
+    plannedYears,
     currentBalance: currentBalance,
     balanceGrowth: Math.round(balanceDelta),
     income: {

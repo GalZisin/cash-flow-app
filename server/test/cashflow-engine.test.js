@@ -23,6 +23,37 @@ test('buildSummary computes averages, balance and a 6-month forecast', () => {
     assert.equal(summary.forecast[0].month, monthKey(1));
 });
 
+test('buildSummary: last 12 months in detail, older history by year, the plan ahead by year for up to 5 years', () => {
+    // 30 past months, the current one and 80 planned months, each saving 5,000
+    const months = [];
+    let balance = 0;
+    for (let i = -30; i <= 80; i++) {
+        balance += 5000;
+        months.push({
+            month: `${monthKey(i)}-01T00:00:00.000Z`, startingBalance: balance - 5000, endingBalance: balance,
+            income: 20000, additionalIncomes: [], mortgagePayment: 6000, loanPayment: 1000, installmentsPayment: 0,
+            regularExpenses: [{ description: 'food', amount: 8000 }], specialExpenses: []
+        });
+    }
+    const summary = buildSummary({ cashFlow: { months } });
+    const sum = (rows, key) => rows.reduce((s, r) => s + r[key], 0);
+
+    assert.equal(summary.monthlySnapshots, undefined, 'no per-month list of the whole cash flow');
+    assert.equal(summary.recentMonths.length, 12);
+    assert.equal(summary.recentMonths[0].month, monthKey(-11));
+    assert.deepEqual(summary.recentMonths[11], { month: monthKey(0), income: 20000, expenses: 15000, endingBalance: 31 * 5000 });
+
+    assert.equal(sum(summary.pastYears, 'months'), 19, 'months -30 .. -12');
+    assert.equal(sum(summary.pastYears, 'income'), 19 * 20000);
+    assert.equal(summary.pastYears.at(-1).endingBalance, 19 * 5000);
+
+    assert.equal(sum(summary.plannedYears, 'months'), 60, 'only 5 years of the 80 planned months');
+    assert.equal(sum(summary.plannedYears, 'expenses'), 60 * 15000);
+    assert.equal(summary.plannedYears[0].year, Number(monthKey(1).slice(0, 4)));
+    assert.equal(summary.plannedYears.at(-1).endingBalance, (31 + 60) * 5000);
+    assert.ok(summary.plannedYears.length <= 6, 'calendar years: a partial first and last year at most');
+});
+
 test('buildSummary lists only active loans and installments (payments count as paid by due date)', () => {
     const today = '2026-04-10';
     const installments = [

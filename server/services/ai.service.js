@@ -293,6 +293,9 @@ Rules you MUST follow:
 - Always cite the relevant numbers from the data when making a point.
 - Format your response with clear sections using markdown.
 Data notes: amounts are ILS; asOf = today; payments due on/before asOf count as paid.
+recentMonths = the last 12 months up to this month; pastYears = older months by calendar year;
+plannedYears = the user's planned cash flow after this month by calendar year, up to 5 years (months = months of that year included).
+expenses there include mortgage, loan and installment payments; endingBalance = balance at the end of the period.
 loans[].components = the loan's parts (interestRate = annual %, payoffDate/payoffAmount = planned early payoff).
 installments[].remainingSchedule = unpaid milestones. expensesByCategory.avgMonthly = average per category over its months.
 investments[].change = value change since that date; expectedAnnualReturn = user's estimate (%).`;
@@ -332,32 +335,51 @@ If the answer requires a calculation, show the math step by step.
 If the data doesn't contain enough information to answer, say so clearly.${language}` };
 }
 
+const messageTokens = (text) => Math.ceil(text.length / MESSAGE_CHARS_PER_TOKEN);
+
 /**
- * Estimated size of a chat request against AI_CONTEXT_TOKENS. The provider counts the prompt plus the answer budget
- * (max_tokens), so: baseTokens (persona + summary) + reserveTokens + message text / charsPerToken.
- * The client repeats this sum live (history + the text being typed) from baseTokens, reserveTokens and charsPerToken.
+ * Fits a chat request into AI_CONTEXT_TOKENS. The provider counts the prompt plus the answer budget (max_tokens),
+ * so the conversation gets what is left after baseTokens (persona + summary) + reserveTokens: spaceTokens.
+ * The question always goes; the history is sent from the newest message back while it fits, older messages are left out.
+ * The client repeats this per-message sum live (chat-usage.ts) from baseTokens, reserveTokens and charsPerToken.
  */
 function chatContext(summary, options = {}) {
   const base = buildChatPrompt(summary, '');
   const baseTokens = Math.ceil((base.system.length + base.user.length) / PROMPT_CHARS_PER_TOKEN);
-  const messageChars = (options.history || []).reduce((sum, m) => sum + m.content.length, 0) + (options.question || '').length;
-  const usedTokens = baseTokens + MAX_TOKENS + Math.ceil(messageChars / MESSAGE_CHARS_PER_TOKEN);
   const limitTokens = getConfig().contextTokens;
+  const spaceTokens = Math.max(0, limitTokens - baseTokens - MAX_TOKENS);
+  const history = options.history || [];
+  const questionTokens = messageTokens(options.question || '');
+
+  let conversationTokens = questionTokens, historySent = 0;
+  for (let i = history.length - 1; i >= 0; i--) {
+    const tokens = messageTokens(history[i].content);
+    if (conversationTokens + tokens > spaceTokens) break;
+    conversationTokens += tokens;
+    historySent += 1;
+  }
   return {
-    usedTokens, limitTokens, percent: Math.round((usedTokens / limitTokens) * 100),
+    usedTokens: baseTokens + MAX_TOKENS + conversationTokens, limitTokens, spaceTokens, conversationTokens,
+    percent: spaceTokens ? Math.min(100, Math.floor((conversationTokens / spaceTokens) * 100)) : 100,
+    historySent, historyDropped: history.length - historySent, questionFits: questionTokens <= spaceTokens,
     baseTokens, reserveTokens: MAX_TOKENS, charsPerToken: MESSAGE_CHARS_PER_TOKEN
   };
 }
 
-/** Rejects a chat request that would not fit the context budget (the client offers a new chat). */
-function assertChatFits(summary, question, options = {}) {
+/**
+ * Keeps the newest history messages that fit (see chatContext) and returns the options to send.
+ * Only a question that alone is larger than the conversation space is rejected (400 AI_CONTEXT_FULL).
+ */
+function fitChat(summary, question, options = {}) {
   const context = chatContext(summary, { ...options, question });
-  if (context.usedTokens > context.limitTokens) {
+  if (!context.questionFits) {
     throw new ValidationError(
-      `The conversation is full (${context.percent}% of ${context.limitTokens} tokens). Start a new chat.`, 'AI_CONTEXT_FULL'
+      `The question is too long for the AI request budget (${context.spaceTokens} tokens left after the financial summary). Shorten it.`,
+      'AI_CONTEXT_FULL'
     );
   }
-  return context;
+  const history = options.history || [];
+  return { options: { ...options, history: history.slice(history.length - context.historySent) }, context };
 }
 
 function buildScenarioPrompt(summary, scenario, simulationResult) {
@@ -387,10 +409,14 @@ async function getAnalysis(summary) {
   return { model: getConfig().model, analysis: await generate(buildAnalysisPrompt(summary)) };
 }
 async function getChat(summary, userQuestion, options = {}) {
-  assertChatFits(summary, userQuestion, options);
-  return { model: getConfig().model, answer: await generate(buildChatPrompt(summary, userQuestion, options)) };
+  const fitted = fitChat(summary, userQuestion, options);
+  return {
+    model: getConfig().model,
+    answer: await generate(buildChatPrompt(summary, userQuestion, fitted.options)),
+    historyDropped: fitted.context.historyDropped
+  };
 }
-/** The route calls assertChatFits first, while it can still answer with a JSON error. */
+/** The route calls fitChat first (it can still answer with a JSON error then) and passes the fitted options. */
 function getChatStream(summary, userQuestion, onToken, onDone, onError, options = {}) {
   streamGenerate(buildChatPrompt(summary, userQuestion, options), onToken, onDone, onError);
 }
@@ -414,7 +440,7 @@ function getUsage(summary) {
 }
 
 module.exports = traceMethods({
-  getAnalysis, getChat, getScenario, getChatStream, describe, getUsage, assertChatFits,
+  getAnalysis, getChat, getScenario, getChatStream, describe, getUsage, fitChat,
   // exported for tests
   getConfig, toServiceError, stripThinking, thinkFilter, providers, generate, streamGenerate, buildChatPrompt,
   chatContext, parseDuration, parseQuota, currentQuota

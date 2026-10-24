@@ -10,19 +10,43 @@ describe('chat usage meters', () => {
   const window = (limit: number, remaining: number, resetInMs: number) =>
     ({ limit, remaining, resetAt: new Date(now + resetInMs).toISOString() });
 
-  it('adds the base prompt, the answer reserve and the message text', () => {
-    const m = contextMeter(context, 2000); // 1000 tokens of messages
-    expect(m.usedTokens).toBe(4400);
-    expect(m.percent).toBe(55);
+  // space for the chat = 8000 - 2400 (summary) - 1000 (answer) = 4600 tokens; 2 chars per token
+  const text = (tokens: number) => 'x'.repeat(tokens * 2);
+
+  it('a new chat starts at 0% of the space left after the summary and the answer', () => {
+    const m = contextMeter(context, [], '');
+    expect(m.percent).toBe(0);
+    expect(m.spaceTokens).toBe(4600);
+    expect(m.requestTokens).toBe(3400);
     expect(m.level).toBe('ok');
   });
 
-  it('warns from 80% and is full only above the limit', () => {
-    expect(contextMeter(context, 2 * (6400 - 3400)).level).toBe('warn');        // 6400 = 80%
-    expect(contextMeter(context, 2 * (8000 - 3400)).level).toBe('warn');        // exactly the limit still fits
-    const full = contextMeter(context, 2 * (8000 - 3400) + 2);
-    expect(full.level).toBe('full');
-    expect(full.percent).toBe(100);
+  it('counts the history and the text being typed', () => {
+    const m = contextMeter(context, [text(1000), text(1000)], text(300));
+    expect(m.conversationTokens).toBe(2300);
+    expect(m.percent).toBe(50);
+    expect(m.requestTokens).toBe(3400 + 2300);
+    expect(m.sentMessages).toBe(2);
+  });
+
+  it('warns from 80% while everything still fits', () => {
+    const m = contextMeter(context, [text(2000), text(1700)], '');
+    expect(m.percent).toBe(80);
+    expect(m.level).toBe('warn');
+  });
+
+  it('over the space: keeps the newest messages that fit and reports the trimmed ones', () => {
+    const m = contextMeter(context, [text(2000), text(2000), text(2000)], text(100));
+    expect(m.sentMessages).toBe(2);
+    expect(m.totalMessages).toBe(3);
+    expect(m.percent).toBe(100);
+    expect(m.requestTokens).toBe(3400 + 4100);
+    expect(m.level).toBe('trimmed');
+  });
+
+  it('is full only when the question alone does not fit', () => {
+    expect(contextMeter(context, [], text(4600)).level).toBe('warn'); // fills the space exactly: still sent
+    expect(contextMeter(context, [text(10)], text(4601)).level).toBe('full');
   });
 
   it('has no quota meter until the provider reports one', () => {

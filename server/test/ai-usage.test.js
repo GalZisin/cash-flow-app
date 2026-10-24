@@ -107,25 +107,42 @@ test('a 413 from the provider (request over its token limit) becomes 400 AI_CONT
 
 // ---------------------------------------------------------------- context
 
-test('chatContext = base prompt + answer reserve + message text, against AI_CONTEXT_TOKENS', () => {
+test('chatContext: the conversation gets what is left after the summary and the answer reserve, from 0%', () => {
     const empty = ai.chatContext(summary);
     assert.equal(empty.limitTokens, 8000);
     assert.equal(empty.reserveTokens, 1024);
     assert.equal(empty.usedTokens, empty.baseTokens + 1024);
+    assert.equal(empty.spaceTokens, 8000 - empty.baseTokens - 1024);
+    assert.equal(empty.percent, 0);
 
     const history = [{ role: 'user', content: 'א'.repeat(240) }, { role: 'assistant', content: 'ב'.repeat(240) }];
     const ctx = ai.chatContext(summary, { history, question: 'ג'.repeat(24) });
-    assert.equal(ctx.usedTokens, empty.usedTokens + Math.ceil(504 / empty.charsPerToken));
-    assert.equal(ctx.percent, Math.round((ctx.usedTokens / 8000) * 100));
+    assert.equal(ctx.conversationTokens, 100 + 100 + 10); // 2.4 chars per token, rounded up per message
+    assert.equal(ctx.usedTokens, empty.usedTokens + 210);
+    assert.equal(ctx.percent, Math.floor((210 / ctx.spaceTokens) * 100));
+    assert.equal(ctx.historySent, 2);
+    assert.equal(ctx.historyDropped, 0);
 
     process.env.AI_CONTEXT_TOKENS = '16000';
     assert.equal(ai.chatContext(summary).limitTokens, 16000);
 });
 
-test('assertChatFits rejects a conversation over the budget with AI_CONTEXT_FULL', () => {
-    assert.equal(ai.assertChatFits(summary, 'hi').limitTokens, 8000);
+test('fitChat keeps the newest messages that fit and drops the oldest', () => {
+    const space = ai.chatContext(summary).spaceTokens;
+    const quarter = 'x'.repeat(Math.floor((space / 4) * 2.4)); // each message ~1/4 of the space: 3 fit, 4 do not
+    const history = ['old', 'mid', 'new', 'newest'].map((tag, i) => ({ role: i % 2 ? 'assistant' : 'user', content: tag + quarter }));
+    const { options, context } = ai.fitChat(summary, 'hi', { history, lang: 'he' });
+    assert.deepEqual(options.history.map((m) => m.content.slice(0, 6).replace(/x+$/, '')), ['mid', 'new', 'newest']);
+    assert.equal(options.lang, 'he');
+    assert.equal(context.historyDropped, 1);
+    assert.ok(context.usedTokens <= 8000);
+    assert.equal(context.percent, Math.floor((context.conversationTokens / space) * 100));
+});
+
+test('fitChat rejects only a question larger than the whole conversation space', () => {
+    assert.throws(() => ai.fitChat(summary, 'x'.repeat(20_000)), (err) => err.statusCode === 400 && err.code === 'AI_CONTEXT_FULL');
     const history = [{ role: 'assistant', content: 'x'.repeat(20_000) }];
-    assert.throws(() => ai.assertChatFits(summary, 'hi', { history }), (err) => err.statusCode === 400 && err.code === 'AI_CONTEXT_FULL');
+    assert.deepEqual(ai.fitChat(summary, 'hi', { history }).options.history, [], 'an oversized old answer is just left out');
 });
 
 // ---------------------------------------------------------------- history in the providers
@@ -173,14 +190,27 @@ test('POST /api/ai/chat-stream passes history and lang to the service', async (t
     assert.deepEqual(options, { history: [{ role: 'user', content: 'Q1' }, { role: 'assistant', content: 'A1' }], lang: 'he' });
 });
 
-test('POST /api/ai/chat-stream validates history and answers 400 AI_CONTEXT_FULL before streaming', async (t) => {
+test('POST /api/ai/chat-stream trims a long history and reports how many messages were left out', async (t) => {
+    t.mock.method(financialSummary, 'getSummary', async () => summary);
+    const stream = t.mock.method(ai, 'getChatStream', (s, q, onToken, onDone) => { onToken('ok'); onDone(); });
+    const history = [{ role: 'user', content: 'x'.repeat(20_000) }, { role: 'assistant', content: 'A1' }];
+
+    const res = await fetch(`${appBase}/api/ai/chat-stream`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ question: 'Q2', history })
+    });
+    assert.equal(res.status, 200);
+    assert.equal(res.headers.get('x-ai-history-dropped'), '1');
+    assert.deepEqual(stream.mock.calls[0].arguments[5].history, [{ role: 'assistant', content: 'A1' }]);
+});
+
+test('POST /api/ai/chat-stream validates history and answers 400 AI_CONTEXT_FULL for an oversized question', async (t) => {
     t.mock.method(financialSummary, 'getSummary', async () => summary);
     const stream = t.mock.method(ai, 'getChatStream', () => assert.fail('must not stream'));
 
     const bad = await call('POST', '/api/ai/chat-stream', { question: 'hi', history: [{ role: 'system', content: 'x' }] });
     assert.equal(bad.status, 400);
 
-    const full = await call('POST', '/api/ai/chat-stream', { question: 'hi', history: [{ role: 'assistant', content: 'x'.repeat(20_000) }] });
+    const full = await call('POST', '/api/ai/chat-stream', { question: 'x'.repeat(20_000) });
     assert.equal(full.status, 400);
     assert.equal(full.json.error.code, 'AI_CONTEXT_FULL');
     assert.equal(stream.mock.callCount(), 0);
