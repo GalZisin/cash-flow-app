@@ -1,9 +1,14 @@
 // ============================================
 // AI ASSISTANT - MAIN CONTAINER
 // ============================================
+:host {
+  display: block;
+  height: 100%;
+}
+
 .ai-assistant {
   padding: 1rem;
-  height: calc(100vh - 80px);
+  height: 100%;
   display: flex;
   flex-direction: column;
 
