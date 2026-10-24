@@ -2,10 +2,24 @@
 
   <!-- Sticky name bar -->
   @if (!editingName) {
-  <div class="det-name-bar d-flex justify-content-between align-items-center">
-    <span class="det-name">{{ investment.name }}</span>
+  <div class="det-name-bar d-flex justify-content-between align-items-center flex-wrap gap-2">
     <div class="d-flex align-items-center gap-2">
+      <span class="det-name">{{ investment.name }}</span>
       <span class="badge-type">{{ investment.type }}</span>
+      <span class="badge-curr">{{ investment.currency === 'USD' ? '$ USD' : '₪ ILS' }}</span>
+      <button class="edit-btn" [matTooltip]="'INVESTMENTS.EDIT_TOOLTIP' | translate"
+        (click)="startEditName()">✏️</button>
+    </div>
+
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      <!-- Currency display toggle -->
+      <div class="btn-group btn-group-sm curr-toggle-group" role="group" [attr.aria-label]="'INVESTMENTS.VIEW_CURRENCY' | translate">
+        <button type="button" class="btn btn-curr" [class.active]="viewCurrency === 'ILS'"
+          (click)="switchViewCurrency('ILS')">₪ {{ 'INVESTMENTS.CURRENCY_ILS' | translate }}</button>
+        <button type="button" class="btn btn-curr" [class.active]="viewCurrency === 'USD'"
+          (click)="switchViewCurrency('USD')">$ {{ 'INVESTMENTS.CURRENCY_USD' | translate }}</button>
+      </div>
+
       @if (cagr !== null) {
       <span class="badge-cagr" [matTooltip]="'INVESTMENTS.CAGR_TOOLTIP' | translate">
         CAGR {{ cagr | number:'1.1-1' }}%
@@ -16,8 +30,6 @@
         XIRR {{ xirr | number:'1.1-1' }}%
       </span>
       }
-      <button class="edit-btn" [matTooltip]="'INVESTMENTS.EDIT_TOOLTIP' | translate"
-        (click)="startEditName()">✏️</button>
     </div>
   </div>
   }
@@ -32,6 +44,10 @@
         <option value="fund">{{ 'INVESTMENTS.FUND' | translate }}</option>
         <option value="stock">{{ 'INVESTMENTS.STOCK' | translate }}</option>
         <option value="other">{{ 'INVESTMENTS.OTHER' | translate }}</option>
+      </select>
+      <select aria-label="currency" class="form-select form-select-sm edit-curr-select" [(ngModel)]="editCurrencyVal">
+        <option value="ILS">{{ 'INVESTMENTS.CURRENCY_ILS' | translate }}</option>
+        <option value="USD">{{ 'INVESTMENTS.CURRENCY_USD' | translate }}</option>
       </select>
       <button class="row-save-btn" (click)="saveName()">{{ 'INVESTMENTS.SAVE' | translate }}</button>
       <button class="row-cancel-btn" (click)="editingName = false">✕</button>
@@ -64,7 +80,7 @@
           <polyline [attr.points]="linePoints" fill="none" stroke="#4f6ef7" stroke-width="2" stroke-linejoin="round" />
           @for (pt of chartData; track pt.date) {
           <circle class="dot" [attr.cx]="pt.x" [attr.cy]="pt.y" r="4" fill="#fff" stroke="#4f6ef7" stroke-width="2"
-            [matTooltip]="pt.date + ' — ' + (pt.value | number:'1.0-0') + ' ₪'" />
+            [matTooltip]="pt.date + ' — ' + (pt.value | number:'1.0-0') + ' ' + currencySymbol" />
           }
         </g>
       </svg>
@@ -87,17 +103,26 @@
           <div class="kpi-label">{{ 'INVESTMENTS.TOTAL_PROFIT' | translate }} <span class="info-tip" [matTooltip]="'INVESTMENTS.TOTAL_PROFIT_TOOLTIP' | translate">ⓘ</span></div>
           <div class="kpi-value" [class.pos]="totalProfit && totalProfit > 0"
             [class.neg]="totalProfit && totalProfit < 0">
-            @if (totalProfit !== null) { {{ totalProfit | number:'1.0-0' }} ₪ }
+            @if (totalProfit !== null) { {{ totalProfit | number:'1.0-0' }} {{ currencySymbol }} }
             @else { - }
           </div>
+          @if (secondaryProfit !== null) {
+          <div class="kpi-subtext">({{ secondaryProfit | number:'1.0-0' }} {{ secondaryCurrencySymbol }})</div>
+          }
         </div>
         <div class="kpi-card">
           <div class="kpi-label">{{ 'INVESTMENTS.CURRENT_VALUE' | translate }}</div>
-          <div class="kpi-value">{{ currentValue !== null ? (currentValue | number:'1.0-0') + ' ₪' : '-' }}</div>
+          <div class="kpi-value">{{ currentValue !== null ? (currentValue | number:'1.0-0') + ' ' + currencySymbol : '-' }}</div>
+          @if (secondaryCurrentValue !== null) {
+          <div class="kpi-subtext">({{ secondaryCurrentValue | number:'1.0-0' }} {{ secondaryCurrencySymbol }})</div>
+          }
         </div>
         <div class="kpi-card">
           <div class="kpi-label">{{ 'INVESTMENTS.TOTAL_DEPOSITS' | translate }}</div>
-          <div class="kpi-value">{{ totalDeposits !== null ? (totalDeposits | number:'1.0-0') + ' ₪' : '-' }}</div>
+          <div class="kpi-value">{{ totalDeposits !== null ? (totalDeposits | number:'1.0-0') + ' ' + currencySymbol : '-' }}</div>
+          @if (secondaryTotalDeposits !== null) {
+          <div class="kpi-subtext">({{ secondaryTotalDeposits | number:'1.0-0' }} {{ secondaryCurrencySymbol }})</div>
+          }
         </div>
       </div>
 
@@ -115,7 +140,7 @@
           }
           @for (b of c.bars; track b.year) {
           <g class="yc-bar-group"
-            [matTooltip]="b.year + ': ' + (b.value !== null ? (b.value | number:'1.1-1') + '%' : '-') + (b.profit !== null ? ' | ' + (b.profit | number:'1.0-0') + ' ₪' : '')">
+            [matTooltip]="b.year + ': ' + (b.value !== null ? (b.value | number:'1.1-1') + '%' : '-') + (b.profit !== null ? ' | ' + (b.profit | number:'1.0-0') + ' ' + currencySymbol : '')">
             <rect class="yc-hit" [attr.x]="b.cx - c.barWidth / 2 - 6" [attr.y]="c.margin.top"
               [attr.width]="c.barWidth + 12" [attr.height]="c.height - c.margin.top - c.margin.bottom" />
             @if (b.d) {
@@ -141,7 +166,7 @@
             <tr>
               <th>{{ 'INVESTMENTS.YEAR' | translate }}</th>
               <th>XIRR % <span class="info-tip" [matTooltip]="'INVESTMENTS.XIRR_YEARLY_TOOLTIP' | translate">ⓘ</span></th>
-              <th>{{ 'INVESTMENTS.PROFIT_YEAR' | translate }} <span class="info-tip" [matTooltip]="'INVESTMENTS.PROFIT_YEAR_TOOLTIP' | translate">ⓘ</span></th>
+              <th>{{ 'INVESTMENTS.PROFIT_YEAR' | translate }} ({{ currencySymbol }}) <span class="info-tip" [matTooltip]="'INVESTMENTS.PROFIT_YEAR_TOOLTIP' | translate">ⓘ</span></th>
             </tr>
           </thead>
           <tbody>
@@ -158,7 +183,7 @@
               <td>
                 @if (yr.profit !== null) {
                 <span [class]="yr.profit > 0 ? 'pct-pos' : 'pct-neg'">
-                  {{ yr.profit > 0 ? '+' : '' }}{{ yr.profit | number:'1.0-0' }} ₪
+                  {{ yr.profit > 0 ? '+' : '' }}{{ yr.profit | number:'1.0-0' }} {{ currencySymbol }}
                 </span>
                 } @else { <span class="text-muted">-</span> }
               </td>
@@ -179,7 +204,7 @@
         <thead>
           <tr>
             <th>{{ 'INVESTMENTS.DATE' | translate }}</th>
-            <th>{{ 'INVESTMENTS.VALUE' | translate }}</th>
+            <th>{{ 'INVESTMENTS.VALUE' | translate }} ({{ currencySymbol }})</th>
             <th>{{ 'INVESTMENTS.PERIOD_DEPOSITS' | translate }} <span class="info-tip" [matTooltip]="'INVESTMENTS.PERIOD_DEPOSITS_TOOLTIP' | translate">ⓘ</span></th>
             <th>{{ 'INVESTMENTS.PERIOD_PROFIT' | translate }} <span class="info-tip" [matTooltip]="'INVESTMENTS.PERIOD_PROFIT_TOOLTIP' | translate">ⓘ</span></th>
             <th>{{ 'INVESTMENTS.PERIOD_RETURN' | translate }} <span class="info-tip" [matTooltip]="'INVESTMENTS.PERIOD_RETURN_TOOLTIP' | translate">ⓘ</span></th>
@@ -187,13 +212,25 @@
           </tr>
         </thead>
         <tbody>
-          @for (s of sortedSnapshots; track s.id ?? s.date; let i = $index) {
+          @for (item of displaySnapshots; track item.snapshot.id ?? item.snapshot.date; let i = $index) {
           <tr>
             @if (editingSnapIndex === i) {
-            <td><input aria-label="date" type="date" class="form-control form-control-sm" [(ngModel)]="editSnap.date" />
+            <td><input aria-label="date" type="date" class="form-control form-control-sm" [(ngModel)]="editSnapDate" /></td>
+            <td>
+              <div class="d-flex align-items-center gap-1 flex-wrap">
+                <select aria-label="currency" class="form-select form-select-sm table-edit-curr" [(ngModel)]="editSnapCurrency">
+                  <option value="ILS">₪</option>
+                  <option value="USD">$</option>
+                </select>
+                <input aria-label="value" type="number" class="form-control form-control-sm table-edit-num" [(ngModel)]="editSnapAmount" />
+                @if (editSnapCurrency === 'USD') {
+                <div class="input-group input-group-sm edit-rate-grp">
+                  <span class="input-group-text p-1 text-muted fs-8">₪/$</span>
+                  <input aria-label="exchangeRate" type="number" step="0.01" class="form-control form-control-sm table-edit-rate" [(ngModel)]="editSnapExchangeRate" />
+                </div>
+                }
+              </div>
             </td>
-            <td><input aria-label="value" type="number" class="form-control form-control-sm"
-                [(ngModel)]="editSnap.value" /></td>
             <td></td>
             <td></td>
             <td></td>
@@ -204,22 +241,26 @@
               </div>
             </td>
             } @else {
-            <td>{{ s.date }}</td>
+            <td>{{ item.snapshot.date }}</td>
             @let p = periodRows[i];
             <td>
-              @if (p) {
-              <span class="snap-value" [matTooltip]="'INVESTMENTS.VALUE_CHANGE_TIP' | translate: { amount: (p.valueChange | number:'1.0-0'), pct: p.valueChangePct !== null ? (p.valueChangePct | number:'1.1-1') : '-' }">
-                {{ s.value | number:'1.0-0' }} ₪</span>
-              } @else { {{ s.value | number:'1.0-0' }} ₪ }
+              <div class="d-flex flex-column">
+                <span class="snap-value" [matTooltip]="p ? ('INVESTMENTS.VALUE_CHANGE_TIP' | translate: { amount: (p.valueChange | number:'1.0-0'), pct: p.valueChangePct !== null ? (p.valueChangePct | number:'1.1-1') : '-' }) : ''">
+                  {{ item.displayValue | number:'1.0-0' }} {{ currencySymbol }}
+                </span>
+                @if (item.originalNote) {
+                <span class="sub-orig-note">{{ item.originalNote }}</span>
+                }
+              </div>
             </td>
             <td>
-              @if (p) { {{ p.deposits > 0 ? '+' : '' }}{{ p.deposits | number:'1.0-0' }} ₪ }
+              @if (p) { {{ p.deposits > 0 ? '+' : '' }}{{ p.deposits | number:'1.0-0' }} {{ currencySymbol }} }
               @else { <span class="text-muted">-</span> }
             </td>
             <td>
               @if (p) {
               <span [class]="p.profit >= 0 ? 'pct-pos' : 'pct-neg'">
-                {{ p.profit > 0 ? '+' : '' }}{{ p.profit | number:'1.0-0' }} ₪
+                {{ p.profit > 0 ? '+' : '' }}{{ p.profit | number:'1.0-0' }} {{ currencySymbol }}
               </span>
               } @else { <span class="text-muted">-</span> }
             </td>
@@ -235,7 +276,7 @@
                 <button class="edit-btn edit-btn-sm"
                   [matTooltip]="'INVESTMENTS.EDIT_TOOLTIP' | translate" (click)="startEditSnapshot(i)">✏️</button>
                 <button aria-label="del-btn" class="del-btn"
-                  [matTooltip]="'INVESTMENTS.DELETE_SNAPSHOT_TOOLTIP' | translate" (click)="confirmDeleteSnapshot(s)">
+                  [matTooltip]="'INVESTMENTS.DELETE_SNAPSHOT_TOOLTIP' | translate" (click)="confirmDeleteSnapshot(item.snapshot)">
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
                     stroke-linecap="round">
                     <line x1="18" y1="6" x2="6" y2="18" />
@@ -254,17 +295,40 @@
     <!-- Add Snapshot -->
     <div class="add-row">
       <div class="row g-2 align-items-end">
-        <div class="col-md-4">
-          <input aria-label="date" type="date" class="form-control form-control-sm" [(ngModel)]="newSnap.date" />
+        <div class="col-md-3">
+          <label class="form-label fs-8 mb-1 text-muted">{{ 'INVESTMENTS.DATE' | translate }}</label>
+          <input aria-label="date" type="date" class="form-control form-control-sm" [(ngModel)]="newSnapDate" />
         </div>
-        <div class="col-md-4">
-          <input aria-label="value" type="number" class="form-control form-control-sm" [(ngModel)]="newSnap.value"
-            [placeholder]="'INVESTMENTS.VALUE' | translate" />
+        <div class="col-md-2">
+          <label class="form-label fs-8 mb-1 text-muted">{{ 'INVESTMENTS.CURRENCY' | translate }}</label>
+          <select aria-label="currency" class="form-select form-select-sm" [(ngModel)]="newSnapCurrency">
+            <option value="ILS">{{ 'INVESTMENTS.CURRENCY_ILS' | translate }}</option>
+            <option value="USD">{{ 'INVESTMENTS.CURRENCY_USD' | translate }}</option>
+          </select>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
+          <label class="form-label fs-8 mb-1 text-muted">
+            {{ newSnapCurrency === 'USD' ? ('INVESTMENTS.VALUE_USD' | translate) : ('INVESTMENTS.VALUE_ILS' | translate) }}
+          </label>
+          <input aria-label="value" type="number" class="form-control form-control-sm" [(ngModel)]="newSnapAmount"
+            [placeholder]="newSnapCurrency === 'USD' ? '$' : '₪'" />
+        </div>
+        @if (newSnapCurrency === 'USD') {
+        <div class="col-md-2">
+          <label class="form-label fs-8 mb-1 text-muted">{{ 'INVESTMENTS.RATE_USD_ILS' | translate }}</label>
+          <input aria-label="rate" type="number" step="0.01" class="form-control form-control-sm" [(ngModel)]="newSnapExchangeRate"
+            [placeholder]="'INVESTMENTS.EXCHANGE_RATE' | translate" />
+        </div>
+        }
+        <div [class]="newSnapCurrency === 'USD' ? 'col-md-2' : 'col-md-4'">
           <button class="save-btn w-100" (click)="addSnapshot()">{{ 'INVESTMENTS.ADD_SNAPSHOT' | translate }}</button>
         </div>
       </div>
+      @if (newSnapConvertedIls !== null) {
+      <div class="conv-preview-hint mt-1 text-muted">
+        ≈ {{ 'INVESTMENTS.EQUIVALENT_ILS' | translate:{ amount: (newSnapConvertedIls | number:'1.0-0') } }}
+      </div>
+      }
     </div>
 
     <hr class="divider">
@@ -277,24 +341,36 @@
           <tr>
             <th>{{ 'INVESTMENTS.DATE' | translate }}</th>
             <th>{{ 'INVESTMENTS.TX_TYPE' | translate }}</th>
-            <th>{{ 'INVESTMENTS.AMOUNT' | translate }}</th>
+            <th>{{ 'INVESTMENTS.AMOUNT' | translate }} ({{ currencySymbol }})</th>
             <th></th>
           </tr>
         </thead>
         <tbody>
-          @for (t of sortedTransactions; track t.id ?? t.date; let i = $index) {
+          @for (item of displayTransactions; track item.transaction.id ?? item.transaction.date; let i = $index) {
           <tr>
             @if (editingTxIndex === i) {
-            <td><input aria-label="date" type="date" class="form-control form-control-sm" [(ngModel)]="editTx.date" />
-            </td>
+            <td><input aria-label="date" type="date" class="form-control form-control-sm" [(ngModel)]="editTxDate" /></td>
             <td>
-              <select aria-label="type" class="form-select form-select-sm" [(ngModel)]="editTx.type">
+              <select aria-label="type" class="form-select form-select-sm" [(ngModel)]="editTxType">
                 <option value="deposit">{{ 'INVESTMENTS.DEPOSIT' | translate }}</option>
                 <option value="withdraw">{{ 'INVESTMENTS.WITHDRAW' | translate }}</option>
               </select>
             </td>
-            <td><input aria-label="amount" type="number" class="form-control form-control-sm"
-                [(ngModel)]="editTx.amount" /></td>
+            <td>
+              <div class="d-flex align-items-center gap-1 flex-wrap">
+                <select aria-label="currency" class="form-select form-select-sm table-edit-curr" [(ngModel)]="editTxCurrency">
+                  <option value="ILS">₪</option>
+                  <option value="USD">$</option>
+                </select>
+                <input aria-label="amount" type="number" class="form-control form-control-sm table-edit-num" [(ngModel)]="editTxAmount" />
+                @if (editTxCurrency === 'USD') {
+                <div class="input-group input-group-sm edit-rate-grp">
+                  <span class="input-group-text p-1 text-muted fs-8">₪/$</span>
+                  <input aria-label="rate" type="number" step="0.01" class="form-control form-control-sm table-edit-rate" [(ngModel)]="editTxExchangeRate" />
+                </div>
+                }
+              </div>
+            </td>
             <td>
               <div class="d-flex gap-1">
                 <button class="row-save-btn" (click)="saveTransaction()">✓</button>
@@ -302,19 +378,26 @@
               </div>
             </td>
             } @else {
-            <td>{{ t.date }}</td>
+            <td>{{ item.transaction.date }}</td>
             <td>
-              <span [class]="t.type === 'deposit' ? 'badge-deposit' : 'badge-withdraw'">
-                {{ t.type === 'deposit' ? ('INVESTMENTS.DEPOSIT' | translate) : ('INVESTMENTS.WITHDRAW' | translate) }}
+              <span [class]="item.transaction.type === 'deposit' ? 'badge-deposit' : 'badge-withdraw'">
+                {{ item.transaction.type === 'deposit' ? ('INVESTMENTS.DEPOSIT' | translate) : ('INVESTMENTS.WITHDRAW' | translate) }}
               </span>
             </td>
-            <td>{{ t.amount | number:'1.0-0' }} ₪</td>
+            <td>
+              <div class="d-flex flex-column">
+                <span>{{ item.displayAmount | number:'1.0-0' }} {{ currencySymbol }}</span>
+                @if (item.originalNote) {
+                <span class="sub-orig-note">{{ item.originalNote }}</span>
+                }
+              </div>
+            </td>
             <td>
               <div class="d-flex gap-1">
                 <button class="edit-btn edit-btn-sm"
                   [matTooltip]="'INVESTMENTS.EDIT_TOOLTIP' | translate" (click)="startEditTransaction(i)">✏️</button>
                 <button aria-label="del-btn" class="del-btn"
-                  [matTooltip]="'INVESTMENTS.DELETE_TX_TOOLTIP' | translate" (click)="confirmDeleteTransaction(t)">
+                  [matTooltip]="'INVESTMENTS.DELETE_TX_TOOLTIP' | translate" (click)="confirmDeleteTransaction(item.transaction)">
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
                     stroke-linecap="round">
                     <line x1="18" y1="6" x2="6" y2="18" />
@@ -333,23 +416,47 @@
     <!-- Add Transaction -->
     <div class="add-row">
       <div class="row g-2 align-items-end">
-        <div class="col-md-3">
-          <input aria-label="date" type="date" class="form-control form-control-sm" [(ngModel)]="newTx.date" />
+        <div class="col-md-2">
+          <label class="form-label fs-8 mb-1 text-muted">{{ 'INVESTMENTS.DATE' | translate }}</label>
+          <input aria-label="date" type="date" class="form-control form-control-sm" [(ngModel)]="newTxDate" />
         </div>
-        <div class="col-md-3">
-          <select aria-label="type" class="form-select form-select-sm" [(ngModel)]="newTx.type">
+        <div class="col-md-2">
+          <label class="form-label fs-8 mb-1 text-muted">{{ 'INVESTMENTS.TX_TYPE' | translate }}</label>
+          <select aria-label="type" class="form-select form-select-sm" [(ngModel)]="newTxType">
             <option value="deposit">{{ 'INVESTMENTS.DEPOSIT' | translate }}</option>
             <option value="withdraw">{{ 'INVESTMENTS.WITHDRAW' | translate }}</option>
           </select>
         </div>
-        <div class="col-md-3">
-          <input aria-label="amount" type="number" class="form-control form-control-sm" [(ngModel)]="newTx.amount"
-            [placeholder]="'INVESTMENTS.AMOUNT' | translate" />
+        <div class="col-md-2">
+          <label class="form-label fs-8 mb-1 text-muted">{{ 'INVESTMENTS.CURRENCY' | translate }}</label>
+          <select aria-label="currency" class="form-select form-select-sm" [(ngModel)]="newTxCurrency">
+            <option value="ILS">{{ 'INVESTMENTS.CURRENCY_ILS' | translate }}</option>
+            <option value="USD">{{ 'INVESTMENTS.CURRENCY_USD' | translate }}</option>
+          </select>
         </div>
         <div class="col-md-3">
+          <label class="form-label fs-8 mb-1 text-muted">
+            {{ newTxCurrency === 'USD' ? ('INVESTMENTS.AMOUNT_USD' | translate) : ('INVESTMENTS.AMOUNT_ILS' | translate) }}
+          </label>
+          <input aria-label="amount" type="number" class="form-control form-control-sm" [(ngModel)]="newTxAmount"
+            [placeholder]="newTxCurrency === 'USD' ? '$' : '₪'" />
+        </div>
+        @if (newTxCurrency === 'USD') {
+        <div class="col-md-1">
+          <label class="form-label fs-8 mb-1 text-muted">{{ 'INVESTMENTS.RATE_USD_ILS' | translate }}</label>
+          <input aria-label="rate" type="number" step="0.01" class="form-control form-control-sm" [(ngModel)]="newTxExchangeRate"
+            [placeholder]="'INVESTMENTS.EXCHANGE_RATE' | translate" />
+        </div>
+        }
+        <div [class]="newTxCurrency === 'USD' ? 'col-md-2' : 'col-md-3'">
           <button class="save-btn w-100" (click)="addTransaction()">{{ 'INVESTMENTS.ADD_TX' | translate }}</button>
         </div>
       </div>
+      @if (newTxConvertedIls !== null) {
+      <div class="conv-preview-hint mt-1 text-muted">
+        ≈ {{ 'INVESTMENTS.EQUIVALENT_ILS' | translate:{ amount: (newTxConvertedIls | number:'1.0-0') } }}
+      </div>
+      }
     </div>
   </div>
 

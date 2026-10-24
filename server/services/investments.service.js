@@ -16,14 +16,22 @@ function normalizeSnapshot(data, id) {
     if (!data || !data.date || !isNumber(data.value)) {
         throw new ValidationError('Snapshot requires date and a numeric value');
     }
-    return { id, date: String(data.date), value: Number(data.value) };
+    const snap = { id, date: String(data.date), value: Number(data.value) };
+    if (data.currency) snap.currency = String(data.currency);
+    if (isNumber(data.currencyAmount)) snap.currencyAmount = Number(data.currencyAmount);
+    if (isNumber(data.exchangeRate)) snap.exchangeRate = Number(data.exchangeRate);
+    return snap;
 }
 
 function normalizeTransaction(data, id) {
     if (!data || !data.date || !isNumber(data.amount) || !TX_TYPES.includes(data.type)) {
         throw new ValidationError(`Transaction requires date, a numeric amount and type (${TX_TYPES.join(' | ')})`);
     }
-    return { id, date: String(data.date), amount: Number(data.amount), type: data.type };
+    const tx = { id, date: String(data.date), amount: Number(data.amount), type: data.type };
+    if (data.currency) tx.currency = String(data.currency);
+    if (isNumber(data.currencyAmount)) tx.currencyAmount = Number(data.currencyAmount);
+    if (isNumber(data.exchangeRate)) tx.exchangeRate = Number(data.exchangeRate);
+    return tx;
 }
 
 function normalizeRule(data, id, existing = {}) {
@@ -71,6 +79,7 @@ class InvestmentsService {
             snapshots: (data.snapshots || []).map((s) => normalizeSnapshot(s, s.id || uuidv4())).sort(byDate),
             simulationRules: (data.simulationRules || []).map((r) => normalizeRule(r, r.id || uuidv4())).sort(byFromMonth)
         };
+        if (data.currency) investment.currency = String(data.currency);
         if (isNumber(data.initialValue)) investment.initialValue = Number(data.initialValue);
         if (isNumber(data.annualReturn)) investment.annualReturn = Number(data.annualReturn);
 
@@ -87,6 +96,7 @@ class InvestmentsService {
             changes.name = String(data.name).trim();
         }
         if (data.type !== undefined) changes.type = data.type;
+        if (data.currency !== undefined) changes.currency = data.currency ? String(data.currency) : null;
         if (data.initialValue !== undefined) changes.initialValue = isNumber(data.initialValue) ? Number(data.initialValue) : null;
         if (data.annualReturn !== undefined) changes.annualReturn = isNumber(data.annualReturn) ? Number(data.annualReturn) : null;
         if (Array.isArray(data.transactions)) {

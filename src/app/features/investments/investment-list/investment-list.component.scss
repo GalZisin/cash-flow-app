@@ -59,11 +59,29 @@
       margin-top: 2px;
   }
 
+  .badge-currency {
+      font-size: 0.68rem;
+      line-height: 1;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: var(--cf-surface-2);
+      color: var(--cf-text-2);
+      border: 1px solid var(--cf-border);
+      font-weight: 700;
+  }
+
   .inv-value {
       font-weight: 600;
       font-size: 0.9rem;
       color: var(--cf-text);
       text-align: end;
+  }
+
+  .inv-subvalue {
+      font-size: 0.72rem;
+      color: var(--cf-text-3);
+      text-align: end;
+      line-height: 1.2;
   }
 
   .inv-pct-pos {

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, tap } from 'rxjs';
-import { Investment, Snapshot, Transaction, SimulationRule, PeriodReturn } from '../models/investment.model';
+import { Investment, Snapshot, Transaction, SimulationRule, PeriodReturn, InvestmentCurrency } from '../models/investment.model';
 import { environment } from '../../environments/environment';
 
 const MS_YEAR = 365.25 * 24 * 3600 * 1000;
@@ -85,6 +85,54 @@ export class InvestmentService {
   }
 
   // --- Calculations ---
+
+  /** Converts an investment's snapshots and transactions values to the desired currency for calculations */
+  toCurrency(inv: Investment, targetCurrency: InvestmentCurrency, defaultRate = 3.70): Investment {
+    const snaps = (inv.snapshots ?? []).map(s => {
+      let val: number;
+      if (targetCurrency === 'USD') {
+        if (s.currency === 'USD' && s.currencyAmount != null) {
+          val = s.currencyAmount;
+        } else {
+          const rate = s.exchangeRate && s.exchangeRate > 0 ? s.exchangeRate : defaultRate;
+          val = Math.round((s.value / rate) * 100) / 100;
+        }
+      } else {
+        // ILS
+        if (s.currency === 'USD' && s.currencyAmount != null) {
+          const rate = s.exchangeRate && s.exchangeRate > 0 ? s.exchangeRate : defaultRate;
+          val = s.value ?? Math.round(s.currencyAmount * rate * 100) / 100;
+        } else {
+          val = s.value;
+        }
+      }
+      return { ...s, value: val };
+    });
+
+    const txs = (inv.transactions ?? []).map(t => {
+      let amt: number;
+      if (targetCurrency === 'USD') {
+        if (t.currency === 'USD' && t.currencyAmount != null) {
+          amt = t.currencyAmount;
+        } else {
+          const rate = t.exchangeRate && t.exchangeRate > 0 ? t.exchangeRate : defaultRate;
+          amt = Math.round((t.amount / rate) * 100) / 100;
+        }
+      } else {
+        // ILS
+        if (t.currency === 'USD' && t.currencyAmount != null) {
+          const rate = t.exchangeRate && t.exchangeRate > 0 ? t.exchangeRate : defaultRate;
+          amt = t.amount ?? Math.round(t.currencyAmount * rate * 100) / 100;
+        } else {
+          amt = t.amount;
+        }
+      }
+      return { ...t, amount: amt };
+    });
+
+    return { ...inv, snapshots: snaps, transactions: txs };
+  }
+
   percentChange(snapshots: Snapshot[]): number | null {
     if (!snapshots || snapshots.length < 2) return null;
     const sorted = this.sortedSnapshots(snapshots);

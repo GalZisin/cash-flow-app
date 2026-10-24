@@ -72,12 +72,16 @@ test('PUT and DELETE /:id/transaction/:txId edit and remove by id; unknown id is
 });
 
 test('snapshot routes add / update / delete', async () => {
-    let res = await call('POST', `/${INV_ID}/snapshot`, { date: '2025-06-01', value: 1200 });
+    let res = await call('POST', `/${INV_ID}/snapshot`, { date: '2025-06-01', value: 1200, currency: 'USD', currencyAmount: 320, exchangeRate: 3.75 });
     assert.equal(res.json.snapshots.length, 2);
     const added = res.json.snapshots[1];
+    assert.equal(added.currency, 'USD');
+    assert.equal(added.currencyAmount, 320);
+    assert.equal(added.exchangeRate, 3.75);
 
-    res = await call('PUT', `/${INV_ID}/snapshot/${added.id}`, { date: '2025-06-01', value: 1300 });
+    res = await call('PUT', `/${INV_ID}/snapshot/${added.id}`, { date: '2025-06-01', value: 1300, currency: 'USD', currencyAmount: 350, exchangeRate: 3.71 });
     assert.equal(res.json.snapshots[1].value, 1300);
+    assert.equal(res.json.snapshots[1].currencyAmount, 350);
 
     res = await call('DELETE', `/${INV_ID}/snapshot/s1`);
     assert.deepEqual(res.json.snapshots.map((s) => s.id), [added.id]);

@@ -143,3 +143,47 @@ describe('InvestmentService.periodReturns', () => {
     expect(p.valueChangePct).toBeNull();
   });
 });
+
+describe('InvestmentService.toCurrency', () => {
+  let service: InvestmentService;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+    service = TestBed.inject(InvestmentService);
+  });
+
+  it('converts USD snapshots and transactions into ILS and back to USD accurately', () => {
+    const stock: Investment = {
+      id: 'stock1',
+      name: 'Apple',
+      type: 'stock',
+      currency: 'USD',
+      snapshots: [
+        { date: '2025-01-01', value: 3700, currency: 'USD', currencyAmount: 1000, exchangeRate: 3.7 },
+        { date: '2026-01-01', value: 5550, currency: 'USD', currencyAmount: 1500, exchangeRate: 3.7 }
+      ],
+      transactions: [
+        { date: '2025-06-01', amount: 370, currency: 'USD', currencyAmount: 100, exchangeRate: 3.7, type: 'deposit' }
+      ]
+    };
+
+    const inUsd = service.toCurrency(stock, 'USD');
+    expect(inUsd.snapshots[0].value).toBe(1000);
+    expect(inUsd.snapshots[1].value).toBe(1500);
+    expect(inUsd.transactions[0].amount).toBe(100);
+
+    const periodReturnUsd = service.periodReturns(inUsd)[1]!;
+    // Profit in USD: 1500 - 1000 - 100 = 400
+    expect(periodReturnUsd.profit).toBe(400);
+
+    const inIls = service.toCurrency(stock, 'ILS');
+    expect(inIls.snapshots[0].value).toBe(3700);
+    expect(inIls.snapshots[1].value).toBe(5550);
+    expect(inIls.transactions[0].amount).toBe(370);
+
+    const periodReturnIls = service.periodReturns(inIls)[1]!;
+    // Profit in ILS: 5550 - 3700 - 370 = 1480 (which is 400 * 3.7)
+    expect(periodReturnIls.profit).toBe(1480);
+  });
+});
+

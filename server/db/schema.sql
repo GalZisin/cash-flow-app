@@ -252,6 +252,7 @@ BEGIN
         investment_type VARCHAR(20)   NOT NULL CONSTRAINT DF_inv_type DEFAULT 'other',
         initial_value   DECIMAL(18,2) NULL,
         annual_return   DECIMAL(9,4)  NULL,
+        currency        VARCHAR(10)   NULL,
         extra_json      NVARCHAR(MAX) NULL,
         CONSTRAINT UQ_investments_seq UNIQUE (seq),
         CONSTRAINT CK_investments_extra_json CHECK (extra_json IS NULL OR ISJSON(extra_json) = 1)
@@ -259,16 +260,25 @@ BEGIN
 END
 GO
 
+IF COL_LENGTH('dbo.investments', 'currency') IS NULL
+BEGIN
+    ALTER TABLE dbo.investments ADD currency VARCHAR(10) NULL;
+END
+GO
+
 IF OBJECT_ID(N'dbo.investment_transactions', N'U') IS NULL
 BEGIN
     CREATE TABLE dbo.investment_transactions (
-        id            INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_investment_transactions PRIMARY KEY,
-        investment_id NVARCHAR(50)  NOT NULL,
-        sort_order    INT           NOT NULL,
-        tx_id         NVARCHAR(50)  NULL,
-        tx_date       NVARCHAR(30)  NOT NULL,
-        amount        DECIMAL(18,2) NOT NULL CONSTRAINT DF_itx_amount DEFAULT 0,
-        tx_type       VARCHAR(20)   NOT NULL CONSTRAINT DF_itx_type DEFAULT 'deposit',
+        id              INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_investment_transactions PRIMARY KEY,
+        investment_id   NVARCHAR(50)  NOT NULL,
+        sort_order      INT           NOT NULL,
+        tx_id           NVARCHAR(50)  NULL,
+        tx_date         NVARCHAR(30)  NOT NULL,
+        amount          DECIMAL(18,2) NOT NULL CONSTRAINT DF_itx_amount DEFAULT 0,
+        tx_type         VARCHAR(20)   NOT NULL CONSTRAINT DF_itx_type DEFAULT 'deposit',
+        currency        VARCHAR(10)   NULL,
+        currency_amount DECIMAL(18,2) NULL,
+        exchange_rate   DECIMAL(9,4)  NULL,
         CONSTRAINT FK_itx_investment FOREIGN KEY (investment_id)
             REFERENCES dbo.investments (id) ON DELETE CASCADE
     );
@@ -276,19 +286,34 @@ BEGIN
 END
 GO
 
+IF COL_LENGTH('dbo.investment_transactions', 'currency') IS NULL
+BEGIN
+    ALTER TABLE dbo.investment_transactions ADD currency VARCHAR(10) NULL, currency_amount DECIMAL(18,2) NULL, exchange_rate DECIMAL(9,4) NULL;
+END
+GO
+
 IF OBJECT_ID(N'dbo.investment_snapshots', N'U') IS NULL
 BEGIN
     CREATE TABLE dbo.investment_snapshots (
-        id             INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_investment_snapshots PRIMARY KEY,
-        investment_id  NVARCHAR(50)  NOT NULL,
-        sort_order     INT           NOT NULL,
-        snapshot_id    NVARCHAR(50)  NULL,
-        snapshot_date  NVARCHAR(30)  NOT NULL,
-        snapshot_value DECIMAL(18,2) NOT NULL CONSTRAINT DF_isn_value DEFAULT 0,
+        id              INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_investment_snapshots PRIMARY KEY,
+        investment_id   NVARCHAR(50)  NOT NULL,
+        sort_order      INT           NOT NULL,
+        snapshot_id     NVARCHAR(50)  NULL,
+        snapshot_date   NVARCHAR(30)  NOT NULL,
+        snapshot_value  DECIMAL(18,2) NOT NULL CONSTRAINT DF_isn_value DEFAULT 0,
+        currency        VARCHAR(10)   NULL,
+        currency_amount DECIMAL(18,2) NULL,
+        exchange_rate   DECIMAL(9,4)  NULL,
         CONSTRAINT FK_isn_investment FOREIGN KEY (investment_id)
             REFERENCES dbo.investments (id) ON DELETE CASCADE
     );
     CREATE INDEX IX_isn_investment ON dbo.investment_snapshots (investment_id, sort_order);
+END
+GO
+
+IF COL_LENGTH('dbo.investment_snapshots', 'currency') IS NULL
+BEGIN
+    ALTER TABLE dbo.investment_snapshots ADD currency VARCHAR(10) NULL, currency_amount DECIMAL(18,2) NULL, exchange_rate DECIMAL(9,4) NULL;
 END
 GO
 

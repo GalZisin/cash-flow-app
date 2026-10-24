@@ -1,4 +1,5 @@
 export type TransactionType = 'deposit' | 'withdraw';
+export type InvestmentCurrency = 'ILS' | 'USD';
 
 export interface SimulationRule {
   id: string;
@@ -14,12 +15,18 @@ export interface Transaction {
   date: string;
   amount: number;
   type: TransactionType;
+  currency?: InvestmentCurrency;
+  currencyAmount?: number;
+  exchangeRate?: number;
 }
 
 export interface Snapshot {
   id?: string;
   date: string;
   value: number;
+  currency?: InvestmentCurrency;
+  currencyAmount?: number;
+  exchangeRate?: number;
 }
 
 /** השינוי בין צילום לצילום הקודם, מפורק להפקדות ולרווח */
@@ -39,9 +46,11 @@ export interface Investment {
   id: string;
   name: string;
   type: 'pension' | 'fund' | 'stock' | 'other';
+  currency?: InvestmentCurrency;
   transactions: Transaction[];
   snapshots: Snapshot[];
   initialValue?: number;
   annualReturn?: number;
   simulationRules?: SimulationRule[];
 }
+
