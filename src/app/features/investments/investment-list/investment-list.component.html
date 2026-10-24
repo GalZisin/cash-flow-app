@@ -13,11 +13,17 @@
         [placeholder]="'INVESTMENTS.NAME' | translate" />
     </div>
     <div class="mb-2">
-      <select aria-label="newType" class="form-select form-select-sm" [(ngModel)]="newType">
+      <select aria-label="newType" class="form-select form-select-sm" [ngModel]="newType" (ngModelChange)="onTypeChange($event)">
         <option value="pension">{{ 'INVESTMENTS.PENSION' | translate }}</option>
         <option value="fund">{{ 'INVESTMENTS.FUND' | translate }}</option>
         <option value="stock">{{ 'INVESTMENTS.STOCK' | translate }}</option>
         <option value="other">{{ 'INVESTMENTS.OTHER' | translate }}</option>
+      </select>
+    </div>
+    <div class="mb-2">
+      <select aria-label="newCurrency" class="form-select form-select-sm" [(ngModel)]="newCurrency">
+        <option value="ILS">{{ 'INVESTMENTS.CURRENCY_ILS' | translate }}</option>
+        <option value="USD">{{ 'INVESTMENTS.CURRENCY_USD' | translate }}</option>
       </select>
     </div>
     <button class="btn btn-sm btn-save-investment px-3" (click)="submit()">{{
@@ -30,12 +36,20 @@
     [matTooltip]="inv.id === selectedId ? ('INVESTMENTS.COLLAPSE' | translate) : ('INVESTMENTS.EXPAND' | translate)"
     (click)="selected.emit(inv.id)">
     <div>
-      <div class="inv-name">{{ inv.name }}</div>
+      <div class="inv-name d-flex align-items-center gap-1">
+        <span>{{ inv.name }}</span>
+        @if (inv.currency === 'USD') {
+          <span class="badge-currency" matTooltip="מנוהל בדולרים">$</span>
+        }
+      </div>
       <div class="inv-type">{{ inv.type }}</div>
     </div>
     <div class="d-flex align-items-center gap-2">
-      <div>
-        <div class="inv-value">{{ currentValue(inv) | number:'1.0-0' }} ₪</div>
+      <div class="text-end">
+        <div class="inv-value">{{ currentDisplay(inv).primary }}</div>
+        @if (currentDisplay(inv).secondary) {
+        <div class="inv-subvalue">{{ currentDisplay(inv).secondary }}</div>
+        }
         @if (pct(inv) !== null) {
         <div [class]="pct(inv)! > 0 ? 'inv-pct-pos' : pct(inv)! < 0 ? 'inv-pct-neg' : 'inv-pct-neu'"
           class="inv-pct-end">

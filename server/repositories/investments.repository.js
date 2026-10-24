@@ -4,17 +4,17 @@ const traceMethods = require('../utils/traceMethods');
 
 const PARENT_COLUMNS = [
     C.id('id'), C.str('name', 200), C.vchar('investment_type', 20), C.money('initial_value'),
-    C.pct('annual_return'), C.text('extra_json')
+    C.pct('annual_return'), C.vchar('currency', 10), C.text('extra_json')
 ];
 
 const TRANSACTION_COLUMNS = [
     C.id('investment_id'), C.int('sort_order'), C.id('tx_id'), C.str('tx_date', 30), C.money('amount'),
-    C.vchar('tx_type', 20)
+    C.vchar('tx_type', 20), C.vchar('currency', 10), C.money('currency_amount'), C.pct('exchange_rate')
 ];
 
 const SNAPSHOT_COLUMNS = [
     C.id('investment_id'), C.int('sort_order'), C.id('snapshot_id'), C.str('snapshot_date', 30),
-    C.money('snapshot_value')
+    C.money('snapshot_value'), C.vchar('currency', 10), C.money('currency_amount'), C.pct('exchange_rate')
 ];
 
 const RULE_COLUMNS = [
@@ -24,21 +24,40 @@ const RULE_COLUMNS = [
 
 const ID_FILTER = '(@id IS NULL OR {col} = @id)';
 
+let schemaEnsured = false;
+async function ensureSchema(executor) {
+    if (schemaEnsured) return;
+    try {
+        await exec(executor, `
+            IF COL_LENGTH('dbo.investment_transactions', 'currency') IS NULL
+                ALTER TABLE dbo.investment_transactions ADD currency VARCHAR(10) NULL, currency_amount DECIMAL(18,2) NULL, exchange_rate DECIMAL(9,4) NULL;
+            IF COL_LENGTH('dbo.investment_snapshots', 'currency') IS NULL
+                ALTER TABLE dbo.investment_snapshots ADD currency VARCHAR(10) NULL, currency_amount DECIMAL(18,2) NULL, exchange_rate DECIMAL(9,4) NULL;
+            IF COL_LENGTH('dbo.investments', 'currency') IS NULL
+                ALTER TABLE dbo.investments ADD currency VARCHAR(10) NULL;
+        `);
+        schemaEnsured = true;
+    } catch (_) {
+        // Ignored if permissions or mock executor
+    }
+}
+
 /** Loads investments (all, or one by id) together with transactions, snapshots and simulation rules. */
 async function load(executor, id = null) {
+    await ensureSchema(executor);
     const params = { id: [sql.NVarChar(50), id] };
     const filter = (column) => ID_FILTER.replace('{col}', column);
 
     const [parents, transactions, snapshots, rules] = await Promise.all([
         rows(executor, `
-            SELECT id, name, investment_type, initial_value, annual_return, extra_json
+            SELECT id, name, investment_type, initial_value, annual_return, currency, extra_json
             FROM dbo.investments WHERE ${filter('id')} ORDER BY seq`, params),
         rows(executor, `
-            SELECT investment_id, sort_order, tx_id, tx_date, amount, tx_type
+            SELECT investment_id, sort_order, tx_id, tx_date, amount, tx_type, currency, currency_amount, exchange_rate
             FROM dbo.investment_transactions WHERE ${filter('investment_id')}
             ORDER BY investment_id, sort_order`, params),
         rows(executor, `
-            SELECT investment_id, sort_order, snapshot_id, snapshot_date, snapshot_value
+            SELECT investment_id, sort_order, snapshot_id, snapshot_date, snapshot_value, currency, currency_amount, exchange_rate
             FROM dbo.investment_snapshots WHERE ${filter('investment_id')}
             ORDER BY investment_id, sort_order`, params),
         rows(executor, `

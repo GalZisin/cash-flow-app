@@ -330,7 +330,7 @@ function stripUndefined(obj) {
 // Investments
 // ============================================================================
 const INVESTMENT_KNOWN = [
-    'id', 'name', 'type', 'initialValue', 'annualReturn', 'transactions', 'snapshots', 'simulationRules'
+    'id', 'name', 'type', 'initialValue', 'annualReturn', 'currency', 'transactions', 'snapshots', 'simulationRules'
 ];
 
 function investmentToRows(inv) {
@@ -344,6 +344,7 @@ function investmentToRows(inv) {
             investment_type: inv.type ?? 'other',
             initial_value: numOrNull(inv.initialValue),
             annual_return: numOrNull(inv.annualReturn),
+            currency: strOrNull(inv.currency),
             extra_json: extraJson(inv, INVESTMENT_KNOWN)
         },
         transactions: asArray(inv.transactions).map((t, i) => ({
@@ -352,14 +353,20 @@ function investmentToRows(inv) {
             tx_id: strOrNull(t.id),
             tx_date: String(t.date ?? ''),
             amount: num(t.amount),
-            tx_type: t.type ?? 'deposit'
+            tx_type: t.type ?? 'deposit',
+            currency: strOrNull(t.currency),
+            currency_amount: numOrNull(t.currencyAmount),
+            exchange_rate: numOrNull(t.exchangeRate)
         })),
         snapshots: asArray(inv.snapshots).map((s, i) => ({
             investment_id: id,
             sort_order: i + 1,
             snapshot_id: strOrNull(s.id),
             snapshot_date: String(s.date ?? ''),
-            snapshot_value: num(s.value)
+            snapshot_value: num(s.value),
+            currency: strOrNull(s.currency),
+            currency_amount: numOrNull(s.currencyAmount),
+            exchange_rate: numOrNull(s.exchangeRate)
         })),
         rules: asArray(inv.simulationRules).map((r, i) => ({
             investment_id: id,
@@ -384,11 +391,17 @@ function assembleInvestments(parts) {
         inv.transactions = (txBy.get(r.id) || []).map((t) => {
             const tx = { date: t.tx_date, amount: Number(t.amount), type: t.tx_type };
             if (t.tx_id !== null) tx.id = t.tx_id;
+            if (t.currency) tx.currency = t.currency;
+            if (t.currency_amount !== null && t.currency_amount !== undefined) tx.currencyAmount = Number(t.currency_amount);
+            if (t.exchange_rate !== null && t.exchange_rate !== undefined) tx.exchangeRate = Number(t.exchange_rate);
             return tx;
         });
         inv.snapshots = (snapBy.get(r.id) || []).map((s) => {
             const snap = { date: s.snapshot_date, value: Number(s.snapshot_value) };
             if (s.snapshot_id !== null) snap.id = s.snapshot_id;
+            if (s.currency) snap.currency = s.currency;
+            if (s.currency_amount !== null && s.currency_amount !== undefined) snap.currencyAmount = Number(s.currency_amount);
+            if (s.exchange_rate !== null && s.exchange_rate !== undefined) snap.exchangeRate = Number(s.exchange_rate);
             return snap;
         });
         inv.simulationRules = (ruleBy.get(r.id) || []).map((x) => {
@@ -406,6 +419,7 @@ function assembleInvestments(parts) {
         inv.type = r.investment_type;
         setIf(inv, 'initialValue', r.initial_value === null ? null : Number(r.initial_value));
         setIf(inv, 'annualReturn', r.annual_return === null ? null : Number(r.annual_return));
+        if (r.currency) inv.currency = r.currency;
         return Object.assign(inv, parseJson(r.extra_json));
     });
 }

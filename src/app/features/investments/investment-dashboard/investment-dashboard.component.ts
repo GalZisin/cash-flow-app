@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { InvestmentService } from '../../../services/investment.service';
-import { Investment } from '../../../models/investment.model';
+import { Investment, InvestmentCurrency } from '../../../models/investment.model';
 import { InvestmentListComponent } from '../investment-list/investment-list.component';
 import { InvestmentDetailComponent } from '../investment-detail/investment-detail.component';
 import { InvestmentSimulationComponent } from '../investment-simulation/investment-simulation.component';
@@ -65,7 +65,7 @@ export class InvestmentDashboardComponent implements OnInit {
     if (this.selectedId === id) this.selectedId = null;
   }
 
-  onAdd(data: { name: string; type: Investment['type'] }) {
-    this.svc.add({ name: data.name, type: data.type, transactions: [], snapshots: [] }).subscribe();
+  onAdd(data: { name: string; type: Investment['type']; currency?: InvestmentCurrency }) {
+    this.svc.add({ name: data.name, type: data.type, currency: data.currency, transactions: [], snapshots: [] }).subscribe();
   }
 }
