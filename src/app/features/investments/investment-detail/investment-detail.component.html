@@ -15,9 +15,9 @@
       <!-- Currency display toggle -->
       <div class="btn-group btn-group-sm curr-toggle-group" role="group" [attr.aria-label]="'INVESTMENTS.VIEW_CURRENCY' | translate">
         <button type="button" class="btn btn-curr" [class.active]="viewCurrency === 'ILS'"
-          (click)="switchViewCurrency('ILS')">₪ {{ 'INVESTMENTS.CURRENCY_ILS' | translate }}</button>
+          (click)="switchViewCurrency('ILS')">{{ 'INVESTMENTS.CURRENCY_ILS' | translate }}</button>
         <button type="button" class="btn btn-curr" [class.active]="viewCurrency === 'USD'"
-          (click)="switchViewCurrency('USD')">$ {{ 'INVESTMENTS.CURRENCY_USD' | translate }}</button>
+          (click)="switchViewCurrency('USD')">{{ 'INVESTMENTS.CURRENCY_USD' | translate }}</button>
       </div>
 
       @if (cagr !== null) {

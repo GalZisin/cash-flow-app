@@ -5,6 +5,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Investment, InvestmentCurrency } from '../../../models/investment.model';
 import { InvestmentService } from '../../../services/investment.service';
+import { DEFAULT_USD_ILS_RATE, effectiveUsdIlsRate } from '../../../services/exchange-rate.service';
 
 @Component({
   selector: 'app-investment-list',
@@ -47,9 +48,10 @@ export class InvestmentListComponent {
     if (!last) return { primary: '0 ₪' };
 
     if (this.isUsd(inv)) {
+      const rate = effectiveUsdIlsRate(last.exchangeRate, DEFAULT_USD_ILS_RATE);
       const usdVal = last.currency === 'USD' && last.currencyAmount != null
         ? last.currencyAmount
-        : (last.exchangeRate ? last.value / last.exchangeRate : last.value / 3.7);
+        : last.value / rate;
       return {
         primary: `$${Math.round(usdVal).toLocaleString()}`,
         secondary: `${Math.round(last.value).toLocaleString()} ₪`

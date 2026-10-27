@@ -185,5 +185,40 @@ describe('InvestmentService.toCurrency', () => {
     // Profit in ILS: 5550 - 3700 - 370 = 1480 (which is 400 * 3.7)
     expect(periodReturnIls.profit).toBe(1480);
   });
+
+  it('converts ILS-native rows that stored exchangeRate=1 instead of repeating the shekel amount as dollars', () => {
+    const pension: Investment = {
+      id: 'pen1',
+      name: 'Pension',
+      type: 'pension',
+      currency: 'ILS',
+      snapshots: [
+        { date: '2025-01-01', value: 37000, currency: 'ILS', currencyAmount: 37000, exchangeRate: 1 }
+      ],
+      transactions: [
+        { date: '2025-01-01', amount: 3700, currency: 'ILS', currencyAmount: 3700, exchangeRate: 1, type: 'deposit' }
+      ]
+    };
+
+    const inUsd = service.toCurrency(pension, 'USD', 3.7);
+    expect(inUsd.snapshots[0].value).toBe(10000);
+    expect(inUsd.transactions[0].amount).toBe(1000);
+
+    const inIls = service.toCurrency(pension, 'ILS', 3.7);
+    expect(inIls.snapshots[0].value).toBe(37000);
+    expect(inIls.transactions[0].amount).toBe(3700);
+  });
+
+  it('does not use an implausible default rate of 1', () => {
+    const inv: Investment = {
+      id: 'ils1',
+      name: 'Fund',
+      type: 'fund',
+      snapshots: [{ date: '2025-01-01', value: 3700, currency: 'ILS' }],
+      transactions: []
+    };
+    const inUsd = service.toCurrency(inv, 'USD', 1);
+    expect(inUsd.snapshots[0].value).toBe(1000);
+  });
 });
 

@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, tap } from 'rxjs';
 import { Investment, Snapshot, Transaction, SimulationRule, PeriodReturn, InvestmentCurrency } from '../models/investment.model';
 import { environment } from '../../environments/environment';
+import { DEFAULT_USD_ILS_RATE, effectiveUsdIlsRate } from './exchange-rate.service';
 
 const MS_YEAR = 365.25 * 24 * 3600 * 1000;
 
@@ -87,21 +88,23 @@ export class InvestmentService {
   // --- Calculations ---
 
   /** Converts an investment's snapshots and transactions values to the desired currency for calculations */
-  toCurrency(inv: Investment, targetCurrency: InvestmentCurrency, defaultRate = 3.70): Investment {
+  toCurrency(inv: Investment, targetCurrency: InvestmentCurrency, defaultRate = DEFAULT_USD_ILS_RATE): Investment {
     const snaps = (inv.snapshots ?? []).map(s => {
       let val: number;
       if (targetCurrency === 'USD') {
         if (s.currency === 'USD' && s.currencyAmount != null) {
           val = s.currencyAmount;
         } else {
-          const rate = s.exchangeRate && s.exchangeRate > 0 ? s.exchangeRate : defaultRate;
+          const rate = effectiveUsdIlsRate(s.exchangeRate, defaultRate);
           val = Math.round((s.value / rate) * 100) / 100;
         }
       } else {
-        // ILS
-        if (s.currency === 'USD' && s.currencyAmount != null) {
-          const rate = s.exchangeRate && s.exchangeRate > 0 ? s.exchangeRate : defaultRate;
-          val = s.value ?? Math.round(s.currencyAmount * rate * 100) / 100;
+        // Canonical snapshot.value is ILS. Convert from USD only when ILS is missing.
+        if (s.value != null) {
+          val = s.value;
+        } else if (s.currency === 'USD' && s.currencyAmount != null) {
+          const rate = effectiveUsdIlsRate(s.exchangeRate, defaultRate);
+          val = Math.round(s.currencyAmount * rate * 100) / 100;
         } else {
           val = s.value;
         }
@@ -115,14 +118,15 @@ export class InvestmentService {
         if (t.currency === 'USD' && t.currencyAmount != null) {
           amt = t.currencyAmount;
         } else {
-          const rate = t.exchangeRate && t.exchangeRate > 0 ? t.exchangeRate : defaultRate;
+          const rate = effectiveUsdIlsRate(t.exchangeRate, defaultRate);
           amt = Math.round((t.amount / rate) * 100) / 100;
         }
       } else {
-        // ILS
-        if (t.currency === 'USD' && t.currencyAmount != null) {
-          const rate = t.exchangeRate && t.exchangeRate > 0 ? t.exchangeRate : defaultRate;
-          amt = t.amount ?? Math.round(t.currencyAmount * rate * 100) / 100;
+        if (t.amount != null) {
+          amt = t.amount;
+        } else if (t.currency === 'USD' && t.currencyAmount != null) {
+          const rate = effectiveUsdIlsRate(t.exchangeRate, defaultRate);
+          amt = Math.round(t.currencyAmount * rate * 100) / 100;
         } else {
           amt = t.amount;
         }
