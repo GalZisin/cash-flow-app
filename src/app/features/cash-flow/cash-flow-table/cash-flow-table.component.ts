@@ -561,8 +561,10 @@ export class CashFlowTableComponent implements OnInit, AfterViewInit, OnChanges 
       startingBalance: Number(ctrl.get('startingBalance')?.value) || 0,
       income: Number(ctrl.get('income')?.value) || 0,
       mortgagePayment: Number(ctrl.get('mortgagePayment')?.value) || 0,
-      loanPayment: Number(ctrl.get('manualLoanPayment')?.value) || 0, // שומרים את החלק הידני
+      loanPayment: Number(ctrl.get('loanPayment')?.value) || 0,
       manualLoanPayment: Number(ctrl.get('manualLoanPayment')?.value) || 0,
+      installmentsPayment: Number(ctrl.get('installmentsPayment')?.value) || 0,
+      additionalIncomes: ctrl.get('additionalIncomes')?.value || [],
       regularExpenses: ctrl.get('regularExpenses')?.value || [],
       specialExpenses: ctrl.get('specialExpenses')?.value || [],
       endingBalance: Number(ctrl.get('endingBalance')?.value) || 0
@@ -805,7 +807,7 @@ export class CashFlowTableComponent implements OnInit, AfterViewInit, OnChanges 
         mortgagePayment: m.mortgagePayment ?? 0,
         loanPayment: m.loanPayment ?? 0,
         manualLoanPayment: m.manualLoanPayment ?? 0,
-        installmentsPayment: 0,
+        installmentsPayment: m.installmentsPayment ?? 0,
         endingBalance: m.endingBalance ?? 0,
         rowColor: m.rowColor ?? null
       }, { emitEvent: false });
