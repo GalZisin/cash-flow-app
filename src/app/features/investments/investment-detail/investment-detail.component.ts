@@ -153,28 +153,27 @@ export class InvestmentDetailComponent implements OnChanges {
     displayValue: number;
     originalNote?: string;
   }[] {
-    const rate = this.exchangeRateSvc.usdRate();
     return this.rawSortedSnapshots.map(s => {
       let displayValue: number;
       let originalNote: string | undefined;
+      const r = this.exchangeRateSvc.effectiveRate(s.exchangeRate);
 
       if (this.viewCurrency === 'USD') {
         if (s.currency === 'USD' && s.currencyAmount != null) {
           displayValue = s.currencyAmount;
         } else {
-          const r = s.exchangeRate && s.exchangeRate > 0 ? s.exchangeRate : rate;
           displayValue = Math.round((s.value / r) * 100) / 100;
         }
-        if (s.currency === 'USD' && s.exchangeRate) {
-          originalNote = `${s.value.toLocaleString()} ₪ (@ ${s.exchangeRate})`;
-        } else if (s.currency !== 'USD') {
+        if (s.currency === 'USD') {
+          originalNote = `${s.value.toLocaleString()} ₪ (@ ${r})`;
+        } else {
           originalNote = `מקור: ${s.value.toLocaleString()} ₪`;
         }
       } else {
         // ILS view
         displayValue = s.value;
         if (s.currency === 'USD') {
-          originalNote = `$${(s.currencyAmount ?? (s.value / (s.exchangeRate || rate))).toLocaleString()} (@ ${s.exchangeRate || rate})`;
+          originalNote = `$${(s.currencyAmount ?? (s.value / r)).toLocaleString()} (@ ${r})`;
         }
       }
 
@@ -188,28 +187,27 @@ export class InvestmentDetailComponent implements OnChanges {
     displayAmount: number;
     originalNote?: string;
   }[] {
-    const rate = this.exchangeRateSvc.usdRate();
     return this.rawSortedTransactions.map(t => {
       let displayAmount: number;
       let originalNote: string | undefined;
+      const r = this.exchangeRateSvc.effectiveRate(t.exchangeRate);
 
       if (this.viewCurrency === 'USD') {
         if (t.currency === 'USD' && t.currencyAmount != null) {
           displayAmount = t.currencyAmount;
         } else {
-          const r = t.exchangeRate && t.exchangeRate > 0 ? t.exchangeRate : rate;
           displayAmount = Math.round((t.amount / r) * 100) / 100;
         }
-        if (t.currency === 'USD' && t.exchangeRate) {
-          originalNote = `${t.amount.toLocaleString()} ₪ (@ ${t.exchangeRate})`;
-        } else if (t.currency !== 'USD') {
+        if (t.currency === 'USD') {
+          originalNote = `${t.amount.toLocaleString()} ₪ (@ ${r})`;
+        } else {
           originalNote = `מקור: ${t.amount.toLocaleString()} ₪`;
         }
       } else {
         // ILS view
         displayAmount = t.amount;
         if (t.currency === 'USD') {
-          originalNote = `$${(t.currencyAmount ?? (t.amount / (t.exchangeRate || rate))).toLocaleString()} (@ ${t.exchangeRate || rate})`;
+          originalNote = `$${(t.currencyAmount ?? (t.amount / r)).toLocaleString()} (@ ${r})`;
         }
       }
 
@@ -253,7 +251,7 @@ export class InvestmentDetailComponent implements OnChanges {
   private recalc(fresh?: Investment) {
     const inv = fresh ?? this.investment;
     if (!inv) return;
-    const rate = this.exchangeRateSvc.usdRate();
+    const rate = this.exchangeRateSvc.effectiveRate();
 
     const targetInv = this.svc.toCurrency(inv, this.viewCurrency, rate);
     const snaps = targetInv.snapshots ?? [];
@@ -322,7 +320,7 @@ export class InvestmentDetailComponent implements OnChanges {
   // --- Snapshots ---
   addSnapshot() {
     if (!this.newSnapDate || this.newSnapAmount == null) return;
-    const rate = this.newSnapExchangeRate > 0 ? this.newSnapExchangeRate : this.exchangeRateSvc.usdRate();
+    const rate = this.exchangeRateSvc.effectiveRate(this.newSnapExchangeRate);
     const isUsd = this.newSnapCurrency === 'USD';
     const ilsValue = isUsd ? Math.round(this.newSnapAmount * rate * 100) / 100 : this.newSnapAmount;
 
@@ -331,7 +329,7 @@ export class InvestmentDetailComponent implements OnChanges {
       value: ilsValue,
       currency: this.newSnapCurrency,
       currencyAmount: this.newSnapAmount,
-      exchangeRate: isUsd ? rate : 1
+      exchangeRate: rate
     }).subscribe(updated => {
       this.recalc(updated);
       this.changed.emit();
@@ -344,9 +342,9 @@ export class InvestmentDetailComponent implements OnChanges {
     const s = this.rawSortedSnapshots[i];
     this.editSnapDate = s.date;
     this.editSnapCurrency = s.currency || (this.investment.currency === 'USD' ? 'USD' : 'ILS');
-    this.editSnapExchangeRate = s.exchangeRate && s.exchangeRate > 0 ? s.exchangeRate : this.exchangeRateSvc.usdRate();
+    this.editSnapExchangeRate = this.exchangeRateSvc.effectiveRate(s.exchangeRate);
     if (this.editSnapCurrency === 'USD') {
-      this.editSnapAmount = s.currencyAmount ?? (s.exchangeRate ? s.value / s.exchangeRate : Math.round((s.value / this.editSnapExchangeRate) * 100) / 100);
+      this.editSnapAmount = s.currencyAmount ?? Math.round((s.value / this.editSnapExchangeRate) * 100) / 100;
     } else {
       this.editSnapAmount = s.value;
     }
@@ -358,7 +356,7 @@ export class InvestmentDetailComponent implements OnChanges {
     const original = this.rawSortedSnapshots[i];
     if (!original.id) { console.error('Snapshot missing id', original); return; }
 
-    const rate = this.editSnapExchangeRate > 0 ? this.editSnapExchangeRate : this.exchangeRateSvc.usdRate();
+    const rate = this.exchangeRateSvc.effectiveRate(this.editSnapExchangeRate);
     const isUsd = this.editSnapCurrency === 'USD';
     const ilsValue = isUsd ? Math.round(this.editSnapAmount * rate * 100) / 100 : this.editSnapAmount;
 
@@ -367,7 +365,7 @@ export class InvestmentDetailComponent implements OnChanges {
       value: ilsValue,
       currency: this.editSnapCurrency,
       currencyAmount: this.editSnapAmount,
-      exchangeRate: isUsd ? rate : 1
+      exchangeRate: rate
     }).subscribe(updated => {
       this.recalc(updated);
       this.changed.emit();
@@ -408,7 +406,7 @@ export class InvestmentDetailComponent implements OnChanges {
   // --- Transactions ---
   addTransaction() {
     if (!this.newTxDate || this.newTxAmount == null || !this.newTxType) return;
-    const rate = this.newTxExchangeRate > 0 ? this.newTxExchangeRate : this.exchangeRateSvc.usdRate();
+    const rate = this.exchangeRateSvc.effectiveRate(this.newTxExchangeRate);
     const isUsd = this.newTxCurrency === 'USD';
     const ilsAmount = isUsd ? Math.round(this.newTxAmount * rate * 100) / 100 : this.newTxAmount;
 
@@ -418,7 +416,7 @@ export class InvestmentDetailComponent implements OnChanges {
       type: this.newTxType,
       currency: this.newTxCurrency,
       currencyAmount: this.newTxAmount,
-      exchangeRate: isUsd ? rate : 1
+      exchangeRate: rate
     }).subscribe(updated => {
       this.recalc(updated);
       this.changed.emit();
@@ -432,9 +430,9 @@ export class InvestmentDetailComponent implements OnChanges {
     this.editTxDate = t.date;
     this.editTxType = t.type;
     this.editTxCurrency = t.currency || (this.investment.currency === 'USD' ? 'USD' : 'ILS');
-    this.editTxExchangeRate = t.exchangeRate && t.exchangeRate > 0 ? t.exchangeRate : this.exchangeRateSvc.usdRate();
+    this.editTxExchangeRate = this.exchangeRateSvc.effectiveRate(t.exchangeRate);
     if (this.editTxCurrency === 'USD') {
-      this.editTxAmount = t.currencyAmount ?? (t.exchangeRate ? t.amount / t.exchangeRate : Math.round((t.amount / this.editTxExchangeRate) * 100) / 100);
+      this.editTxAmount = t.currencyAmount ?? Math.round((t.amount / this.editTxExchangeRate) * 100) / 100;
     } else {
       this.editTxAmount = t.amount;
     }
@@ -446,7 +444,7 @@ export class InvestmentDetailComponent implements OnChanges {
     const original = this.rawSortedTransactions[this.editingTxIndex];
     if (!original.id) { console.error('Transaction missing id', original); return; }
 
-    const rate = this.editTxExchangeRate > 0 ? this.editTxExchangeRate : this.exchangeRateSvc.usdRate();
+    const rate = this.exchangeRateSvc.effectiveRate(this.editTxExchangeRate);
     const isUsd = this.editTxCurrency === 'USD';
     const ilsAmount = isUsd ? Math.round(this.editTxAmount * rate * 100) / 100 : this.editTxAmount;
 
@@ -456,7 +454,7 @@ export class InvestmentDetailComponent implements OnChanges {
       type: this.editTxType,
       currency: this.editTxCurrency,
       currencyAmount: this.editTxAmount,
-      exchangeRate: isUsd ? rate : 1
+      exchangeRate: rate
     }).subscribe(updated => {
       this.recalc(updated);
       this.changed.emit();

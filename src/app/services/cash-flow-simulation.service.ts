@@ -313,7 +313,7 @@ export class CashFlowSimulationService {
                 additionalIncomes -
                 (Number(month.mortgagePayment) || 0) -
                 (Number(month.loanPayment) || 0) -
-                (Number(month.manualLoanPayment) || 0) -
+                (Number(month.installmentsPayment) || 0) -
                 totalRegular -
                 totalSpecial;
         }
